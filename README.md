@@ -39,7 +39,7 @@ General agents can write animation code, but unconstrained code generation does 
 From GitHub:
 
 ```bash
-npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.2.0/genmotion-1.2.0.tgz
+npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.3.0/genmotion-1.3.0.tgz
 genmotion doctor
 ```
 
@@ -57,6 +57,8 @@ node dist/cli.js doctor
 genmotion init launch-film \
   --title "Acme" \
   --promise "Ship verified releases without release-day chaos" \
+  --proof "Every release includes a signed deployment record" \
+  --action "Review the release workflow" \
   --audience "platform engineering teams" \
   --mode launch \
   --duration 30
@@ -77,40 +79,24 @@ genmotion plan launch-film --brief launch-film/brief.json --concepts 8
 
 The ranked concepts are preserved in `.genmotion/concepts.json`. The selected concept is compiled into `genmotion.json`.
 
-## Optional AI direction
+## Local agent direction
 
-The deterministic planner is the default. To use a real provider for creative divergence, add `genmotion.config.json`:
+Studio connects directly to Codex or Claude Code installed on the same machine. Choose the signed-in host beside the prompt bar, describe a change or ask a question, and follow the streamed result in the request panel. The conversation is persisted per project and edits are applied to the same typed Creative IR used by preview and render.
 
-```json
-{
-  "ai": {
-    "provider": "anthropic",
-    "model": "claude-sonnet-4-5",
-    "apiKeyEnv": "ANTHROPIC_API_KEY",
-    "timeoutMs": 60000,
-    "maxRetries": 2
-  },
-  "render": {
-    "quality": "high",
-    "codec": "h264"
-  }
-}
-```
-
-OpenAI-compatible providers use `provider: "openai-compatible"` and may define `baseUrl`. API keys remain process secrets and are never written into the project.
+This workflow uses the existing ChatGPT or Claude sign-in managed by the local agent. Genmotion does not request, store, or configure model API keys.
 
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
-| `init` | Create a complete renderable project from a real title and promise |
+| `init` | Create a renderable project from a real promise, proof point, and viewer action |
 | `plan` | Retrieve diverse references, generate concepts, rank them, and compile the selected direction |
 | `validate` / `check` | Validate schema, assets, timing, reference decisions, readability, and render safety |
 | `frame` | Render a native PNG at an exact timeline time |
 | `preview` | Open the interactive native-rendered timeline preview |
 | `studio` | Open the local node workflow, reference, inspector, timeline, and export workspace |
-| `requests` | List durable human feedback queued from Studio |
-| `request-resolve` | Resolve a Studio request after its change is saved and verified |
+| `requests` | List durable Studio agent conversations and externally queued feedback |
+| `request-resolve` | Close externally handled feedback after its change is saved and verified |
 | `render` | Render and encode a delivery video |
 | `probe` | Inspect codecs, dimensions, duration, frame rate, audio, and size |
 | `contact-sheet` | Generate representative visual review frames |
@@ -147,11 +133,11 @@ npm run check
 npm run benchmark
 ```
 
-The test suite covers schema behavior, deterministic timeline evaluation, creative retrieval, concept diversity, catalog integrity, provider parsing, native frame determinism, real video decoding, Studio persistence and security, preview delivery, H.264 encoding, and AAC audio muxing.
+The test suite covers schema behavior, deterministic timeline evaluation, creative retrieval, concept diversity, catalog integrity, native frame determinism, real video decoding, Studio persistence and security, local agent orchestration, preview delivery, H.264 encoding, and AAC audio muxing.
 
 ## Security
 
-Remote render assets are rejected. Freeze every asset inside the project so renders remain reproducible and cannot perform render-time network access. Paths may not escape the project directory. Provider keys are read only from the named process environment variable. See [SECURITY.md](SECURITY.md).
+Remote render assets are rejected. Freeze every asset inside the project so renders remain reproducible and cannot perform render-time network access. Paths may not escape the project directory. Studio binds to loopback by default, protects mutations with a session token, and runs local agents with project-scoped write access and network access disabled. See [SECURITY.md](SECURITY.md).
 
 ## License
 

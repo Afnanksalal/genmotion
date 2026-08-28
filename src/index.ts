@@ -18,3 +18,4 @@ export * from './catalog/references.js';
 export * from './catalog/blueprints.js';
 export * from './catalog/audit.js';
 export * from './studio/server.js';
+export * from './agent/runtime.js';

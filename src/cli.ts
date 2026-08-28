@@ -20,7 +20,7 @@ import { auditCatalog } from './catalog/audit.js';
 import { getStudioRequests, resolveStudioRequest, startStudio } from './studio/server.js';
 
 const program = new Command();
-program.name('genmotion').description('Agent-native deterministic motion design engine.').version('1.2.0').option('--json', 'Emit machine-readable JSON.');
+program.name('genmotion').description('Agent-native deterministic motion design engine.').version('1.3.0').option('--json', 'Emit machine-readable JSON.');
 
 function output(value: unknown): void {
   if (program.opts<{ json?: boolean }>().json) process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
@@ -32,11 +32,13 @@ program.command('init')
   .argument('<directory>')
   .requiredOption('--title <title>')
   .requiredOption('--promise <promise>')
+  .requiredOption('--proof <proof>', 'One verified proof point')
+  .requiredOption('--action <action>', 'Desired viewer action')
   .option('--audience <audience>', 'Primary audience', 'Product buyers and users')
   .option('--mode <mode>', 'walkthrough, launch, pitch, or explainer', 'launch')
   .option('--duration <seconds>', 'Target duration', '30')
-  .action(async (directory: string, options: { title: string; promise: string; audience: string; mode: 'walkthrough' | 'launch' | 'pitch' | 'explainer'; duration: string }) => {
-    output(await initializeProject(directory, { title: options.title, promise: options.promise, audience: options.audience, mode: options.mode, duration: Number(options.duration) }));
+  .action(async (directory: string, options: { title: string; promise: string; proof: string; action: string; audience: string; mode: 'walkthrough' | 'launch' | 'pitch' | 'explainer'; duration: string }) => {
+    output(await initializeProject(directory, { title: options.title, promise: options.promise, proof: options.proof, desiredAction: options.action, audience: options.audience, mode: options.mode, duration: Number(options.duration) }));
   });
 
 program.command('plan')
@@ -137,7 +139,7 @@ program.command('requests')
   .action(async (input: string, options: { pending?: boolean }) => {
     const loaded = await loadProject(input);
     const requests = await getStudioRequests(loaded.projectDir);
-    output(options.pending ? requests.filter((request) => request.status === 'pending') : requests);
+    output(options.pending ? requests.filter((request) => ['pending', 'queued', 'running'].includes(request.status)) : requests);
   });
 
 program.command('request-resolve')

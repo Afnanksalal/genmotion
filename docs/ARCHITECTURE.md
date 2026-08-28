@@ -52,7 +52,7 @@ A blueprint is a semantic phase structure with normalized ranges, roles, slots, 
 
 ## Creative planning
 
-The deterministic planner works without a model or network. A configured Anthropic or OpenAI-compatible provider can generate additional concepts through a strict JSON contract. Provider output is schema-validated and ranked by the same local critic.
+The deterministic planner works without a model or network. Agentic direction is supplied by the user's authenticated local Codex or Claude Code installation through Genmotion Studio, not by a provider API embedded in the renderer. The resulting Creative IR is schema-validated and ranked by the same local critic.
 
 The critic scores coherence, originality, feasibility, hierarchy, and brand fit. It also rejects unknown references, blueprints, and motion recipes. This is deliberately separate from mechanical project validation.
 

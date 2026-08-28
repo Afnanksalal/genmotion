@@ -6,8 +6,7 @@ import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promi
 import path from 'node:path';
 import YAML from 'yaml';
 import { z } from 'zod';
-import type { LoadedProject } from '../ir/loader.js';
-import { resolveProjectAsset } from '../ir/loader.js';
+import { loadProject, resolveProjectAsset, type LoadedProject } from '../ir/loader.js';
 import { projectDuration, projectSchema, type GenmotionProject } from '../ir/schema.js';
 import { compileProjectMotions } from '../engine/motion.js';
 import { renderFramePng } from '../engine/draw.js';
@@ -18,6 +17,7 @@ import { tasteReferences } from '../catalog/references.js';
 import { sceneBlueprints } from '../catalog/blueprints.js';
 import { studioHtml } from './ui.js';
 import { GenmotionError } from '../errors.js';
+import { LocalAgentRuntime, type AgentHostId, type AgentRuntime, type AgentSelection } from '../agent/runtime.js';
 
 const nodeSchema = z.object({
   id: z.string().min(1), kind: z.enum(['brief', 'scene', 'layer', 'reference', 'note', 'output']),
@@ -40,6 +40,7 @@ export type StudioState = z.infer<typeof studioStateSchema>;
 const requestSchema = z.object({
   prompt: z.string().min(3).max(20_000),
   selection: z.object({ sceneId: z.string().optional(), layerId: z.string().optional(), frame: z.number().int().nonnegative().optional() }).default({}),
+  host: z.enum(['codex', 'claude']).optional(),
 });
 const renderRequestSchema = z.object({
   filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
@@ -47,12 +48,15 @@ const renderRequestSchema = z.object({
   codec: z.enum(['h264', 'h265', 'vp9', 'prores']).default('h264'),
 });
 
-interface StudioRequestRecord {
-  id: string; prompt: string; selection: { sceneId?: string; layerId?: string; frame?: number };
-  status: 'pending' | 'resolved'; createdAt: string; resolvedAt?: string; response?: string;
+export interface StudioRequestRecord {
+  id: string; prompt: string; selection: AgentSelection;
+  status: 'pending' | 'queued' | 'running' | 'completed' | 'resolved' | 'failed' | 'interrupted';
+  createdAt: string; updatedAt?: string; startedAt?: string; completedAt?: string; resolvedAt?: string;
+  host?: AgentHostId; activity?: string; response?: string; error?: string; sessionId?: string;
+  beforeRevision?: string; afterRevision?: string;
 }
 interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed'; progress: number; output?: string; error?: string }
-export interface StudioOptions { host?: string; port?: number }
+export interface StudioOptions { host?: string; port?: number; agentRuntime?: AgentRuntime }
 export interface StudioServer { url: string; close: () => Promise<void>; server: Server }
 
 const mediaExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.mp4', '.mov', '.webm', '.mkv', '.m4v', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.woff', '.woff2', '.ttf', '.otf']);
@@ -124,12 +128,16 @@ async function listRequests(directory: string): Promise<StudioRequestRecord[]> {
   } catch { return []; }
 }
 
+async function writeRequest(directory: string, record: StudioRequestRecord): Promise<void> {
+  await atomicWrite(path.join(directory, `${record.id}.json`), `${JSON.stringify(record, null, 2)}\n`);
+}
+
 export async function resolveStudioRequest(projectDir: string, id: string, response: string): Promise<StudioRequestRecord> {
   if (!/^[a-f0-9-]{16,64}$/i.test(id)) throw new Error('Invalid request id.');
   const file = path.join(projectDir, '.genmotion', 'requests', `${id}.json`);
   const record = await readJson<StudioRequestRecord | null>(file, null);
   if (!record) throw new Error(`Studio request not found: ${id}`);
-  const resolved = { ...record, status: 'resolved' as const, response, resolvedAt: new Date().toISOString() };
+  const resolved = { ...record, status: 'resolved' as const, response, resolvedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   await atomicWrite(file, `${JSON.stringify(resolved, null, 2)}\n`);
   return resolved;
 }
@@ -154,6 +162,11 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   let studioState = studioStateSchema.parse(await readJson(stateFile, initialStudioState(sourceProject)));
   const jobs = new Map<string, RenderJob>();
   const frameCache = new Map<string, Buffer>();
+  const agentRuntime = options.agentRuntime ?? new LocalAgentRuntime(loaded.projectDir);
+  let agentHosts = await agentRuntime.hosts();
+  let agentBusy = false;
+  let agentQueue = Promise.resolve();
+  let currentAgent: { id: string; controller: AbortController } | undefined;
   const app = express();
   app.disable('x-powered-by');
 
@@ -171,22 +184,38 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   app.use('/api', express.json({ limit: '10mb', type: ['application/json', 'application/*+json'] }));
   app.use('/api/assets', express.raw({ limit: '100mb', type: 'application/octet-stream' }));
 
+  for (const record of await listRequests(requestsDir)) {
+    if (record.status === 'running' || record.status === 'queued') {
+      const interruptedAt = new Date().toISOString();
+      await writeRequest(requestsDir, { ...record, status: 'interrupted', activity: 'Interrupted', error: 'Studio stopped before this agent turn finished. Submit the request again if it is still needed.', completedAt: interruptedAt, updatedAt: interruptedAt });
+    }
+  }
+
   app.get('/', (_request, response) => { response.type('html').send(studioHtml()); });
   app.get('/favicon.ico', (_request, response) => { response.status(204).end(); });
   app.get('/api/session', (_request, response) => { response.json({ token }); });
   app.get('/api/bootstrap', async (_request, response, next) => {
     try {
+      if (!agentBusy) {
+        const refreshed = await loadProject(loaded.projectFile);
+        if (revision(refreshed.sourceProject) !== revision(sourceProject)) {
+          sourceProject = refreshed.sourceProject;
+          compiledProject = refreshed.project;
+          frameCache.clear();
+        }
+      }
       const currentLoaded = { ...loaded, project: compiledProject, sourceProject };
       response.json({
         project: sourceProject, studio: studioState, revision: revision(sourceProject),
         findings: await validateProject(currentLoaded), duration: projectDuration(sourceProject),
         catalog: { motions: motionRecipes, references: tasteReferences, blueprints: sceneBlueprints },
-        requests: await listRequests(requestsDir), jobs: [...jobs.values()], projectFile: path.basename(loaded.projectFile),
+        requests: await listRequests(requestsDir), jobs: [...jobs.values()], agents: agentHosts, projectFile: path.basename(loaded.projectFile),
       });
     } catch (error) { next(error); }
   });
   app.put('/api/project', async (request, response, next) => {
     try {
+      if (agentBusy) { response.status(423).json({ error: 'The agent is applying a project change. Editing unlocks when the turn finishes.' }); return; }
       const body = z.object({ revision: z.string(), project: projectSchema }).parse(request.body);
       const currentRevision = revision(sourceProject);
       if (body.revision !== currentRevision) { response.status(409).json({ error: 'Project changed since this Studio loaded it.', revision: currentRevision, project: sourceProject }); return; }
@@ -268,9 +297,108 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (body.selection.sceneId !== undefined) selection.sceneId = body.selection.sceneId;
       if (body.selection.layerId !== undefined) selection.layerId = body.selection.layerId;
       if (body.selection.frame !== undefined) selection.frame = body.selection.frame;
-      const record: StudioRequestRecord = { id: randomUUID(), prompt: body.prompt, selection, status: 'pending', createdAt: new Date().toISOString() };
-      await atomicWrite(path.join(requestsDir, `${record.id}.json`), `${JSON.stringify(record, null, 2)}\n`);
+      const host = body.host;
+      if (host) {
+        const available = agentHosts.find((candidate) => candidate.id === host);
+        if (!available?.installed || !available.authenticated) { response.status(409).json({ error: `${host === 'codex' ? 'Codex' : 'Claude'} is not installed and signed in on this machine.` }); return; }
+      }
+      const record: StudioRequestRecord = {
+        id: randomUUID(), prompt: body.prompt, selection, status: host ? 'queued' : 'pending', createdAt: new Date().toISOString(),
+        ...(host ? { host, activity: 'Queued', beforeRevision: revision(sourceProject) } : {}),
+      };
+      await writeRequest(requestsDir, record);
       response.status(201).json(record);
+      if (host) {
+        agentQueue = agentQueue.then(async () => {
+          const latest = await readJson<StudioRequestRecord | null>(path.join(requestsDir, `${record.id}.json`), null);
+          if (!latest || latest.status === 'interrupted') return;
+          agentBusy = true;
+          const controller = new AbortController();
+          currentAgent = { id: record.id, controller };
+          const startedAt = new Date().toISOString();
+          const running: StudioRequestRecord = { ...record, status: 'running', activity: 'Starting agent', startedAt, updatedAt: startedAt };
+          await writeRequest(requestsDir, running);
+          const beforeProjectFile = await readFile(loaded.projectFile, 'utf8');
+          let lastPersisted = 0;
+          try {
+            const result = await agentRuntime.run({
+              host, prompt: record.prompt, selection: record.selection, projectDir: loaded.projectDir,
+              projectFile: loaded.projectFile, projectTitle: sourceProject.title,
+              signal: controller.signal,
+            }, async (progress) => {
+              if (progress.message !== undefined) running.response = progress.message;
+              if (progress.activity !== undefined) running.activity = progress.activity;
+              if (progress.sessionId !== undefined) running.sessionId = progress.sessionId;
+              const now = Date.now();
+              if (now - lastPersisted >= 300) {
+                lastPersisted = now;
+                running.updatedAt = new Date(now).toISOString();
+                await writeRequest(requestsDir, running);
+              }
+            });
+            const refreshed = await loadProject(loaded.projectFile);
+            const findings = await validateProject(refreshed);
+            const errors = findings.filter((finding) => finding.severity === 'error');
+            if (errors.length > 0) throw new GenmotionError('AGENT_PROJECT_INVALID', 'The agent left validation errors in the project.', errors);
+            const afterRevision = revision(refreshed.sourceProject);
+            if (afterRevision !== running.beforeRevision) {
+              await atomicWrite(path.join(historyDir, `${running.beforeRevision ?? revision(sourceProject)}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
+              sourceProject = refreshed.sourceProject;
+              compiledProject = refreshed.project;
+              frameCache.clear();
+            }
+            const completedAt = new Date().toISOString();
+            await writeRequest(requestsDir, {
+              ...running, status: 'completed', activity: 'Complete', response: result.response,
+              sessionId: result.sessionId, afterRevision, completedAt, updatedAt: completedAt,
+            });
+          } catch (error) {
+            try {
+              const candidate = await loadProject(loaded.projectFile);
+              const candidateFindings = await validateProject(candidate);
+              if (candidateFindings.some((finding) => finding.severity === 'error')) throw new Error('invalid agent edit');
+              const candidateRevision = revision(candidate.sourceProject);
+              if (candidateRevision !== revision(sourceProject)) {
+                await atomicWrite(path.join(historyDir, `${revision(sourceProject)}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
+                sourceProject = candidate.sourceProject;
+                compiledProject = candidate.project;
+                frameCache.clear();
+                running.afterRevision = candidateRevision;
+              }
+            } catch {
+              const failedEdit = await readFile(loaded.projectFile, 'utf8').catch(() => '');
+              if (failedEdit) await atomicWrite(path.join(studioDir, 'failed-agent-edits', `${record.id}${path.extname(loaded.projectFile) || '.json'}`), failedEdit);
+              await atomicWrite(loaded.projectFile, beforeProjectFile);
+              compiledProject = compileProjectMotions(sourceProject);
+              frameCache.clear();
+            }
+            const failedAt = new Date().toISOString();
+            await writeRequest(requestsDir, {
+              ...running, status: controller.signal.aborted ? 'interrupted' : 'failed', activity: controller.signal.aborted ? 'Cancelled' : 'Failed', error: error instanceof Error ? error.message : String(error),
+              completedAt: failedAt, updatedAt: failedAt,
+            });
+          } finally { agentBusy = false; currentAgent = undefined; }
+        }).catch(() => undefined);
+      }
+    } catch (error) { next(error); }
+  });
+  app.get('/api/agents', (_request, response) => { response.json(agentHosts); });
+  app.post('/api/agents/refresh', async (_request, response, next) => {
+    try { agentHosts = await agentRuntime.hosts(); response.json(agentHosts); } catch (error) { next(error); }
+  });
+  app.post('/api/requests/:id/cancel', async (request, response, next) => {
+    try {
+      const id = request.params.id ?? '';
+      if (!/^[a-f0-9-]{16,64}$/i.test(id)) { response.status(400).json({ error: 'Invalid request id.' }); return; }
+      const file = path.join(requestsDir, `${id}.json`);
+      const record = await readJson<StudioRequestRecord | null>(file, null);
+      if (!record) { response.status(404).json({ error: 'Agent request not found.' }); return; }
+      if (!['queued', 'running'].includes(record.status)) { response.status(409).json({ error: 'Only queued or running agent turns can be cancelled.' }); return; }
+      if (currentAgent?.id === id) currentAgent.controller.abort();
+      const cancelledAt = new Date().toISOString();
+      const cancelled: StudioRequestRecord = { ...record, status: 'interrupted', activity: 'Cancelling', error: 'Cancelled by the Studio user.', completedAt: cancelledAt, updatedAt: cancelledAt };
+      await writeRequest(requestsDir, cancelled);
+      response.status(202).json(cancelled);
     } catch (error) { next(error); }
   });
   app.get('/api/requests', async (_request, response) => { response.json(await listRequests(requestsDir)); });
@@ -305,5 +433,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     instance.on('error', reject);
   });
   const actualPort = (server.address() as AddressInfo).port;
-  return { url: `http://${host}:${String(actualPort)}`, server, close: async () => { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); } };
+  return { url: `http://${host}:${String(actualPort)}`, server, close: async () => {
+    await agentRuntime.close();
+    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  } };
 }

@@ -3,14 +3,12 @@ import path from 'node:path';
 import { briefSchema } from '../creative/types.js';
 import { createConcepts } from '../creative/planner.js';
 import { composeProject } from '../creative/compose.js';
-import { loadProviderConfig } from '../creative/provider.js';
 
 export async function planProject(projectDirInput: string, briefFileInput: string, count = 8): Promise<{ conceptsFile: string; projectFile: string; selectedScore: number }> {
   const projectDir = path.resolve(projectDirInput);
   const briefFile = path.resolve(briefFileInput);
   const brief = briefSchema.parse(JSON.parse(await readFile(briefFile, 'utf8')));
-  const provider = await loadProviderConfig(projectDir);
-  const ranked = await createConcepts(brief, provider ? { count, provider } : { count });
+  const ranked = await createConcepts(brief, { count });
   const selected = ranked[0];
   if (!selected) throw new Error('No valid concepts were generated.');
   const project = composeProject(brief, selected.concept);

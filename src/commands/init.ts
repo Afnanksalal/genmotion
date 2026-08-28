@@ -4,7 +4,7 @@ import { briefSchema, type CreativeBrief } from '../creative/types.js';
 import { createConcepts } from '../creative/planner.js';
 import { composeProject } from '../creative/compose.js';
 
-export interface InitOptions { title: string; promise: string; audience: string; mode: CreativeBrief['mode']; duration: number }
+export interface InitOptions { title: string; promise: string; proof: string; desiredAction: string; audience: string; mode: CreativeBrief['mode']; duration: number }
 
 export async function initializeProject(directory: string, options: InitOptions): Promise<{ directory: string; projectFile: string; briefFile: string }> {
   const target = path.resolve(directory);
@@ -16,8 +16,8 @@ export async function initializeProject(directory: string, options: InitOptions)
     mode: options.mode,
     audience: options.audience,
     promise: options.promise,
-    proof: ['The product mechanism is shown with sourced or captured evidence.'],
-    desiredAction: `Try ${options.title}`,
+    proof: [options.proof],
+    desiredAction: options.desiredAction,
     duration: options.duration,
     energy: options.mode === 'launch' ? 'energetic' : options.mode === 'pitch' ? 'cinematic' : 'balanced',
     brand: { background: '#0b0d10', foreground: '#f5f7fa', accent: '#59e3a6', muted: '#a3abb8', primaryFont: 'Arial', displayFont: 'Arial', tone: ['clear', 'confident', 'human'] },
@@ -32,7 +32,6 @@ export async function initializeProject(directory: string, options: InitOptions)
   await Promise.all([
     writeFile(briefFile, `${JSON.stringify(brief, null, 2)}\n`, { flag: 'wx' }),
     writeFile(projectFile, `${JSON.stringify(project, null, 2)}\n`, { flag: 'wx' }),
-    writeFile(path.join(target, 'genmotion.config.json'), `${JSON.stringify({ render: { quality: 'high', codec: 'h264' } }, null, 2)}\n`, { flag: 'wx' }),
   ]);
   return { directory: target, projectFile, briefFile };
 }

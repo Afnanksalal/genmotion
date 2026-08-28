@@ -4,7 +4,7 @@ description: Create, edit, preview, validate, and render designed motion graphic
 license: MIT
 metadata:
   author: afnanksalal
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # Genmotion
@@ -24,10 +24,10 @@ Run `genmotion doctor --json`. If the command is unavailable inside a Genmotion 
 For a new project:
 
 ```bash
-genmotion init <directory> --title "<real title>" --promise "<one real promise>" --audience "<primary audience>" --mode <walkthrough|launch|pitch|explainer> --duration <seconds>
+genmotion init <directory> --title "<real title>" --promise "<one real promise>" --proof "<one verified proof point>" --action "<desired viewer action>" --audience "<primary audience>" --mode <walkthrough|launch|pitch|explainer> --duration <seconds>
 ```
 
-Replace the generated proof sentence with sourced facts, add local assets with provenance, and set real brand colors and fonts in `brief.json`. Never leave example facts in a delivery project.
+Add any additional sourced facts, local assets with provenance, and real brand colors and fonts in `brief.json`. Never introduce example facts into a delivery project.
 
 For collaborative iteration, launch the local Studio:
 
@@ -54,7 +54,9 @@ For reference selection and concept review, read [references/taste.md](reference
 
 ## Studio collaboration
 
-Studio requests are durable project artifacts. While Studio is active, check `genmotion requests <project> --pending` at meaningful handoff points. Apply requested changes to the real Creative IR, validate and inspect the affected frames, then close the loop with:
+Studio can run an authenticated local Codex or Claude Code conversation directly from its bottom chat bar. No model API key is required. Each turn carries the selected scene, layer, and frame, applies edits to the real Creative IR, and streams its response into the durable request record. Prefer this path when the user is directing work in Studio.
+
+When you are already the active agent in the user's current Codex or Claude chat, Studio requests remain durable project artifacts. Check `genmotion requests <project> --pending` at meaningful handoff points. Apply requested changes to the real Creative IR, validate and inspect the affected frames, then close the loop with:
 
 ```bash
 genmotion request-resolve <project> --id <request-id> --response "<what changed and what was verified>"

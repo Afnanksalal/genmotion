@@ -4,14 +4,23 @@ import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../../src/ir/loader.js';
 import { startStudio, type StudioServer } from '../../src/studio/server.js';
+import type { AgentRuntime } from '../../src/agent/runtime.js';
 
 let directory = '';
 let studio: StudioServer | undefined;
+const agentRuntime: AgentRuntime = {
+  hosts: () => Promise.resolve([{ id: 'codex', label: 'Codex', installed: true, authenticated: true, detail: 'Browser test session' }]),
+  run: async (_input, onProgress) => {
+    await onProgress({ activity: 'Responding', message: 'The selected scene was reviewed.', sessionId: 'browser-test-thread' });
+    return { response: 'The selected scene was reviewed.', sessionId: 'browser-test-thread' };
+  },
+  close: () => Promise.resolve(),
+};
 
 test.beforeEach(async () => {
   directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-studio-browser-'));
   await cp(path.resolve('tests/fixtures/basic'), directory, { recursive: true });
-  studio = await startStudio(await loadProject(directory), { port: 0 });
+  studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime });
 });
 
 test.afterEach(async () => {
@@ -46,14 +55,7 @@ test('edits, previews, references, and queues contextual agent work', async ({ p
     const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ motion: Array<{ start: number }> }> }> };
     return project.scenes[0]?.layers[0]?.motion[0]?.start;
   }).toBe(0.1);
-  const phaseBox = await page.locator('[data-phase]').first().boundingBox();
-  expect(phaseBox).not.toBeNull();
-  if (phaseBox) {
-    await page.mouse.move(phaseBox.x + phaseBox.width / 2, phaseBox.y + phaseBox.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(phaseBox.x + phaseBox.width / 2 + 70, phaseBox.y + phaseBox.height / 2, { steps: 4 });
-    await page.mouse.up();
-  }
+  await page.locator('[data-phase]').first().press('ArrowRight');
   await expect.poll(async () => {
     const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ motion: Array<{ start: number }> }> }> };
     return project.scenes[0]?.layers[0]?.motion[0]?.start ?? 0;
@@ -67,10 +69,11 @@ test('edits, previews, references, and queues contextual agent work', async ({ p
   });
   await expect(page.locator('#referenceGrid').getByText('direction', { exact: true })).toBeVisible();
 
-  const request = page.getByPlaceholder('Describe a change, critique this scene, or ask for new directions');
+  const request = page.locator('#agentInput');
   await request.fill('Make the selected proof hold longer and keep the landing frame still.');
   await request.press('Enter');
   await expect(page.getByText('Make the selected proof hold longer and keep the landing frame still.')).toBeVisible();
+  await expect(page.getByText('codex · Complete')).toBeVisible();
   await expect.poll(async () => {
     const files = await readdir(path.join(directory, '.genmotion', 'requests'));
     return files[0] ? readFile(path.join(directory, '.genmotion', 'requests', files[0]), 'utf8') : '';

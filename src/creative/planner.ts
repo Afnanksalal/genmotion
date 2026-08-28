@@ -3,7 +3,6 @@ import { sceneBlueprints } from '../catalog/blueprints.js';
 import { motionRecipes } from '../catalog/motions.js';
 import { conceptSchema, type CreativeBrief, type CreativeConcept, type ScoredConcept } from './types.js';
 import { retrieveReferences } from './retrieval.js';
-import { generateStructured, type ProviderConfig } from './provider.js';
 import { rankConcepts } from './critic.js';
 import { GenmotionError } from '../errors.js';
 
@@ -46,17 +45,7 @@ function deterministicConcepts(brief: CreativeBrief, count: number): CreativeCon
   });
 }
 
-export async function createConcepts(brief: CreativeBrief, options: { count?: number; provider?: ProviderConfig } = {}): Promise<ScoredConcept[]> {
+export function createConcepts(brief: CreativeBrief, options: { count?: number } = {}): Promise<ScoredConcept[]> {
   const count = Math.max(2, Math.min(options.count ?? 8, 16));
-  let concepts: CreativeConcept[];
-  if (!options.provider) concepts = deterministicConcepts(brief, count);
-  else {
-    const references = retrieveReferences(brief, 6);
-    const system = 'You are Genmotion Creative Director. Produce distinct, feasible motion-design concepts as strict JSON. References are abstract design knowledge, not visuals to copy. Every concept must state what it borrows, avoids, and transforms. Use only supplied blueprint and motion recipe IDs.';
-    const prompt = JSON.stringify({ task: `Generate ${String(count)} distinct concepts. Return {"concepts": [...]}.`, brief, references, blueprints: sceneBlueprints, motionRecipes });
-    const raw = await generateStructured(options.provider, system, prompt) as { concepts?: unknown[] };
-    if (!Array.isArray(raw.concepts)) throw new GenmotionError('PROVIDER_OUTPUT_INVALID', 'Creative provider did not return a concepts array.');
-    concepts = raw.concepts.map((concept) => conceptSchema.parse(concept));
-  }
-  return rankConcepts(brief, concepts);
+  return Promise.resolve(rankConcepts(brief, deterministicConcepts(brief, count)));
 }
