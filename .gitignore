@@ -12,3 +12,5 @@ renders/
 *.local.json
 .env*
 .tmp-*/
+output/
+.playwright-cli/

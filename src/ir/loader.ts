@@ -7,6 +7,7 @@ import { compileProjectMotions } from '../engine/motion.js';
 
 export interface LoadedProject {
   project: GenmotionProject;
+  sourceProject: GenmotionProject;
   projectDir: string;
   projectFile: string;
 }
@@ -41,7 +42,7 @@ export async function loadProject(input: string): Promise<LoadedProject> {
   if (!parsed.success) {
     throw new GenmotionError('PROJECT_INVALID', `Invalid Genmotion project: ${projectFile}`, parsed.error.issues);
   }
-  return { project: compileProjectMotions(parsed.data), projectDir: path.dirname(projectFile), projectFile };
+  return { project: compileProjectMotions(parsed.data), sourceProject: parsed.data, projectDir: path.dirname(projectFile), projectFile };
 }
 
 export function resolveProjectAsset(projectDir: string, assetPath: string): string {

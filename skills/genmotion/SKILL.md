@@ -4,7 +4,7 @@ description: Create, edit, preview, validate, and render designed motion graphic
 license: MIT
 metadata:
   author: afnanksalal
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Genmotion
@@ -12,6 +12,8 @@ metadata:
 Use Genmotion as the only constructed-motion renderer. Do not introduce Remotion, HyperFrames, HTML compositions, browser screenshots of reconstructed interfaces, or ad hoc FFmpeg filter graphs for designed scenes.
 
 Genmotion projects are typed JSON or YAML. Agents choose story, hierarchy, content, references, and named motion recipes. The engine owns layout evaluation, animation execution, media decoding, parallel native rendering, audio mixing, encoding, and output verification.
+
+Genmotion Studio is the human iteration surface. It edits the same Creative IR consumed by the renderer and persists workflow layout, reference annotations, revision history, and agent requests inside the project. Use it when the user wants to direct, compare, inspect, or fine-tune the work rather than treating feedback as a one-shot prompt.
 
 ## Start
 
@@ -25,13 +27,21 @@ genmotion init <directory> --title "<real title>" --promise "<one real promise>"
 
 Replace the generated proof sentence with sourced facts, add local assets with provenance, and set real brand colors and fonts in `brief.json`. Never leave example facts in a delivery project.
 
+For collaborative iteration, launch the local Studio:
+
+```bash
+genmotion studio <project>
+```
+
+When working in Codex, start it with `--no-open`, read the printed local URL, and open that URL in a Codex browser panel when the capability is available. Claude Code can use the default system-browser launch. Do not expose Studio on a public interface.
+
 ## Creative workflow
 
 1. Determine the viewer, one promise, proof, desired action, duration, format, energy, and real assets.
 2. Keep product claims tied to observed or supplied sources. Designed scenes may explain evidence but cannot manufacture it.
 3. Run `genmotion plan <project> --brief <brief.json> --concepts 8`.
 4. Review `.genmotion/concepts.json`. Confirm that the selected direction borrows, avoids, and transforms reference knowledge instead of imitating one reference.
-5. Read [references/authoring.md](references/authoring.md) before editing `genmotion.json` by hand.
+5. Use Studio for fine-grained human direction or read [references/authoring.md](references/authoring.md) before editing `genmotion.json` by hand. Read [references/studio.md](references/studio.md) when Studio is active.
 6. Run `genmotion validate <project> --strict` and fix every finding.
 7. Render representative frames with `genmotion frame <project> --at <seconds> --output <file>`.
 8. Use `genmotion preview <project>` to review timing, hierarchy, transitions, and holds.
@@ -39,6 +49,16 @@ Replace the generated proof sentence with sourced facts, add local assets with p
 10. Run `genmotion probe <file>` and `genmotion contact-sheet <file> --output <sheet>`; inspect the actual sheet before delivery.
 
 For reference selection and concept review, read [references/taste.md](references/taste.md). For production rendering, media, and troubleshooting, read [references/operations.md](references/operations.md).
+
+## Studio collaboration
+
+Studio requests are durable project artifacts. While Studio is active, check `genmotion requests <project> --pending` at meaningful handoff points. Apply requested changes to the real Creative IR, validate and inspect the affected frames, then close the loop with:
+
+```bash
+genmotion request-resolve <project> --id <request-id> --response "<what changed and what was verified>"
+```
+
+Do not mark a request resolved before its edit is saved and validated. Do not overwrite a revision conflict; reload the newer project and reconcile the human's changes.
 
 ## Required judgment
 
