@@ -26,7 +26,7 @@ General agents can write animation code, but unconstrained code generation does 
 - Image and video layers with local media freezing
 - Multiple audio tracks, fades, looping, voice-aware music ducking, limiting, and AAC delivery
 - Reusable native preview server with frame scrubbing
-- Local Studio with node workflows, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent output history and file-manager reveal
+- Local Studio with a real project switcher and creation flow, node workflows, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent output history and file-manager reveal
 - Output probing and contract verification after every render
 
 ## Requirements
@@ -39,7 +39,7 @@ General agents can write animation code, but unconstrained code generation does 
 From GitHub:
 
 ```bash
-npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.5.0/genmotion-1.5.0.tgz
+npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.6.0/genmotion-1.6.0.tgz
 genmotion doctor
 ```
 
@@ -70,6 +70,8 @@ genmotion render launch-film --output launch-film/renders/acme.mp4 --quality hig
 genmotion probe launch-film/renders/acme.mp4
 genmotion contact-sheet launch-film/renders/acme.mp4 --output launch-film/renders/contact-sheet.jpg
 ```
+
+Studio lists and creates projects in `~/Genmotion Projects` by default. Use `--workspace <directory>` to select another local project workspace.
 
 `init` creates a valid `brief.json`, a ranked creative direction, and a renderable `genmotion.json`. Edit the brief with real proof, assets, brand fonts, and delivery language, then regenerate:
 

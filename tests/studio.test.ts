@@ -33,6 +33,32 @@ function fakeAgent(edit: false | 'valid' | 'invalid' = false): AgentRuntime {
 }
 
 describe('Genmotion Studio', () => {
+  it('creates, discovers, and reopens projects inside the configured workspace', async () => {
+    const directory = await fixture();
+    const workspaceRoot = path.join(directory, 'workspace');
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent(), agentRuntimeFactory: () => fakeAgent(), workspaceRoot });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const headers = { 'content-type': 'application/json', 'x-genmotion-token': token };
+      const created = await fetch(`${studio.url}/api/projects`, {
+        method: 'POST', headers, body: JSON.stringify({
+          slug: 'launch-film', title: 'Launch film', mode: 'launch', duration: 24,
+          audience: 'Product teams', promise: 'Show the product clearly', proof: 'Real captured product evidence', desiredAction: 'Start a project',
+        }),
+      });
+      expect(created.status).toBe(201);
+      const createdBody = await created.json() as { url: string; project: { id: string; title: string } };
+      expect(createdBody.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+      expect(createdBody.project).toMatchObject({ title: 'Launch film' });
+      expect((await stat(path.join(workspaceRoot, 'launch-film', 'genmotion.json'))).isFile()).toBe(true);
+      const listing = await fetch(`${studio.url}/api/projects`).then((response) => response.json()) as { projects: Array<{ id: string; title: string }> };
+      expect(listing.projects).toContainEqual(expect.objectContaining({ id: createdBody.project.id, title: 'Launch film' }));
+      const reopened = await fetch(`${studio.url}/api/projects/open`, { method: 'POST', headers, body: JSON.stringify({ id: createdBody.project.id }) });
+      expect(reopened.status).toBe(200);
+      expect((await reopened.json() as { url: string }).url).toBe(createdBody.url);
+    } finally { await studio.close(); }
+  }, 30_000);
+
   it('persists validated edits, reference assets, workflow state, requests, history, and exports', async () => {
     const directory = await fixture();
     const revealed: string[] = [];
