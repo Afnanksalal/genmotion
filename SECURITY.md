@@ -16,4 +16,6 @@ The renderer rejects HTTP assets and filesystem paths that escape the project ro
 
 Preview binds to `127.0.0.1` by default. Binding it to another interface exposes rendered project frames and metadata to that network and should be an explicit operator choice.
 
+Studio also binds to `127.0.0.1` by default. It uses a per-process mutation token, optimistic project revisions, atomic writes, a restrictive Content Security Policy, project-root path confinement, upload size limits, extension allowlists, and file-signature validation. Do not reverse proxy or publicly expose Studio; it is an authenticated-by-local-process authoring surface, not a multi-tenant web service.
+
 Treat rendered media, source recordings, customer evidence, fonts, provider responses, and `.genmotion` planning artifacts according to their source confidentiality.

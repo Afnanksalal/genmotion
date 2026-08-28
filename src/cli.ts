@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -16,9 +17,10 @@ import { searchCatalog } from './commands/catalog.js';
 import { GenmotionError } from './errors.js';
 import { makeContactSheet, probeVideo } from './engine/probe.js';
 import { auditCatalog } from './catalog/audit.js';
+import { getStudioRequests, resolveStudioRequest, startStudio } from './studio/server.js';
 
 const program = new Command();
-program.name('genmotion').description('Agent-native deterministic motion design engine.').version('1.0.0').option('--json', 'Emit machine-readable JSON.');
+program.name('genmotion').description('Agent-native deterministic motion design engine.').version('1.1.0').option('--json', 'Emit machine-readable JSON.');
 
 function output(value: unknown): void {
   if (program.opts<{ json?: boolean }>().json) process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
@@ -104,6 +106,48 @@ program.command('preview')
     const preview = await startPreview(loaded, { host: options.host, port: Number(options.port) });
     output({ url: preview.url });
     await new Promise<void>((resolve) => { const stop = (): void => { void preview.close().then(resolve); }; process.once('SIGINT', stop); process.once('SIGTERM', stop); });
+  });
+
+function openBrowser(url: string): void {
+  const platform = process.platform;
+  const command = platform === 'win32' ? 'cmd' : platform === 'darwin' ? 'open' : 'xdg-open';
+  const args = platform === 'win32' ? ['/c', 'start', '', url] : [url];
+  const child = spawn(command, args, { detached: true, stdio: 'ignore', windowsHide: true });
+  child.unref();
+}
+
+program.command('studio')
+  .description('Open the local human-in-the-loop workflow and timeline editor.')
+  .argument('<project>')
+  .option('--host <host>', 'Bind host', '127.0.0.1')
+  .option('--port <port>', 'Bind port', '4180')
+  .option('--no-open', 'Do not open the system browser')
+  .action(async (input: string, options: { host: string; port: string; open: boolean }) => {
+    const loaded = await loadProject(input);
+    const studio = await startStudio(loaded, { host: options.host, port: Number(options.port) });
+    output({ url: studio.url, project: loaded.projectFile });
+    if (options.open) openBrowser(studio.url);
+    await new Promise<void>((resolve) => { const stop = (): void => { void studio.close().then(resolve); }; process.once('SIGINT', stop); process.once('SIGTERM', stop); });
+  });
+
+program.command('requests')
+  .description('List human change requests queued from Genmotion Studio.')
+  .argument('<project>')
+  .option('--pending', 'Only show pending requests')
+  .action(async (input: string, options: { pending?: boolean }) => {
+    const loaded = await loadProject(input);
+    const requests = await getStudioRequests(loaded.projectDir);
+    output(options.pending ? requests.filter((request) => request.status === 'pending') : requests);
+  });
+
+program.command('request-resolve')
+  .description('Resolve a Studio change request after applying and validating the requested edit.')
+  .argument('<project>')
+  .requiredOption('--id <id>', 'Request id')
+  .requiredOption('--response <response>', 'Concise summary of the completed change')
+  .action(async (input: string, options: { id: string; response: string }) => {
+    const loaded = await loadProject(input);
+    output(await resolveStudioRequest(loaded.projectDir, options.id, options.response));
   });
 
 program.command('catalog')

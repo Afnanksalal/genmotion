@@ -20,6 +20,14 @@ brief
 
 The renderer never asks an agent or model how to draw a frame. Every frame is an evaluation of frozen project data at an absolute timestamp.
 
+## Studio boundary
+
+Genmotion Studio is a local authoring client over the same Creative IR. It does not render HTML into video and it does not maintain a second proprietary timeline. Project edits pass through schema validation, optimistic revision locking, atomic replacement, and recoverable history before the native renderer sees them.
+
+The Studio server binds to loopback by default and issues a per-process mutation token. State-changing routes require that token. Asset uploads are size bounded, extension allowlisted, signature checked, normalized, content addressed, and confined to the project. Browser responses include a restrictive local Content Security Policy.
+
+Studio-only workflow coordinates, note nodes, reference annotations, render jobs, and agent requests live under `.genmotion/`. The deliverable project remains portable without this authoring state. Agent requests include selected scene, layer, and frame context and are resolved explicitly after the requested edit passes validation.
+
 ## Taste system
 
 The taste catalog has three maintained units.

@@ -26,6 +26,7 @@ General agents can write animation code, but unconstrained code generation does 
 - Image and video layers with local media freezing
 - Multiple audio tracks, fades, looping, voice-aware music ducking, limiting, and AAC delivery
 - Reusable native preview server with frame scrubbing
+- Local Studio with node workflows, a reference board, fine-grained inspectors, timeline playback, revision history, agent requests, and native export jobs
 - Output probing and contract verification after every render
 
 ## Requirements
@@ -38,7 +39,7 @@ General agents can write animation code, but unconstrained code generation does 
 From GitHub:
 
 ```bash
-npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.0.0/genmotion-1.0.0.tgz
+npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.1.0/genmotion-1.1.0.tgz
 genmotion doctor
 ```
 
@@ -61,6 +62,7 @@ genmotion init launch-film \
   --duration 30
 
 genmotion validate launch-film --strict
+genmotion studio launch-film
 genmotion preview launch-film
 genmotion render launch-film --output launch-film/renders/acme.mp4 --quality high
 genmotion probe launch-film/renders/acme.mp4
@@ -106,6 +108,9 @@ OpenAI-compatible providers use `provider: "openai-compatible"` and may define `
 | `validate` / `check` | Validate schema, assets, timing, reference decisions, readability, and render safety |
 | `frame` | Render a native PNG at an exact timeline time |
 | `preview` | Open the interactive native-rendered timeline preview |
+| `studio` | Open the local node workflow, reference, inspector, timeline, and export workspace |
+| `requests` | List durable human feedback queued from Studio |
+| `request-resolve` | Resolve a Studio request after its change is saved and verified |
 | `render` | Render and encode a delivery video |
 | `probe` | Inspect codecs, dimensions, duration, frame rate, audio, and size |
 | `contact-sheet` | Generate representative visual review frames |
@@ -128,7 +133,7 @@ A project is `genmotion.json`, `genmotion.yaml`, or `genmotion.yml`. It declares
 - positioned audio tracks and mixing behavior;
 - reference decisions that preserve the creative rationale.
 
-See [docs/IR.md](docs/IR.md) for the complete authoring model and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for renderer and throughput design.
+See [docs/IR.md](docs/IR.md) for the complete authoring model, [docs/STUDIO.md](docs/STUDIO.md) for the human and agent collaboration contract, and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for renderer and throughput design.
 
 ## Skills
 
@@ -142,7 +147,7 @@ npm run check
 npm run benchmark
 ```
 
-The test suite covers schema behavior, deterministic timeline evaluation, creative retrieval, concept diversity, catalog integrity, provider parsing, native frame determinism, real video decoding, preview delivery, H.264 encoding, and AAC audio muxing.
+The test suite covers schema behavior, deterministic timeline evaluation, creative retrieval, concept diversity, catalog integrity, provider parsing, native frame determinism, real video decoding, Studio persistence and security, preview delivery, H.264 encoding, and AAC audio muxing.
 
 ## Security
 
