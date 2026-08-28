@@ -104,7 +104,7 @@ function buildPrompt(input: AgentRunInput): string {
     `The typed Creative IR is ${input.projectFile}.`,
     `The user is currently focused on ${context}.`,
     '',
-    'Apply the request to the real Genmotion project when it asks for a change. Read the current files before editing. Preserve truthful product evidence, local asset provenance, deterministic rendering, existing brand decisions, and unrelated human edits. Do not create HTML, Remotion, HyperFrames, placeholder copy, fake product behavior, or unsourced claims. Do not commit, publish, install packages, access credentials, or use the network. Genmotion Studio validates and renders after your turn, so do not start servers or long-running commands.',
+    'Apply the request to the real Genmotion project when it asks for a change. Read only the files needed for this request before editing. Preserve truthful product evidence, local asset provenance, deterministic rendering, existing brand decisions, and unrelated human edits. Do not create HTML, Remotion, HyperFrames, placeholder copy, fake product behavior, or unsourced claims. Do not commit, publish, install packages, access credentials, or use the network. Genmotion Studio validates the project after your turn. For ordinary Studio edits, make the requested change and run the fastest relevant validation only. Do not render the full video, create contact sheets, start servers, or run long visual QA unless the user explicitly asks to render, export, or visually review.',
     '',
     `User request: ${input.prompt}`,
     '',
@@ -274,21 +274,25 @@ export class LocalAgentRuntime implements AgentRuntime {
     this.codexClients.add(client);
     let response = '';
     let turnError = '';
+    let workStarted = false;
+    let changesApplied = false;
     const completed = new Promise<{ status: string }>((resolve) => {
       client.onNotification((method, params) => {
         if (method === 'item/agentMessage/delta') {
           const delta = string(params.delta) ?? '';
           response = appendLimited(response, delta);
-          void onProgress({ message: response, activity: 'Responding', ...(this.sessions.codex ? { sessionId: this.sessions.codex } : {}) });
+          void onProgress({ message: response, activity: changesApplied ? 'Finishing' : 'Preparing answer', ...(this.sessions.codex ? { sessionId: this.sessions.codex } : {}) });
         } else if (method === 'item/completed') {
           const item = object(params.item);
           if (item?.type === 'agentMessage' && typeof item.text === 'string') {
             response = item.text;
-            void onProgress({ message: response, activity: 'Responding', ...(this.sessions.codex ? { sessionId: this.sessions.codex } : {}) });
+            void onProgress({ message: response, activity: changesApplied ? 'Finishing' : 'Preparing answer', ...(this.sessions.codex ? { sessionId: this.sessions.codex } : {}) });
           }
         } else if (method === 'item/started') {
           const type = string(object(params.item)?.type);
-          const activity = type === 'commandExecution' ? 'Checking project' : type === 'fileChange' ? 'Applying changes' : type === 'reasoning' ? 'Thinking' : undefined;
+          if (type === 'commandExecution') workStarted = true;
+          if (type === 'fileChange') { workStarted = true; changesApplied = true; }
+          const activity = type === 'commandExecution' ? (changesApplied ? 'Validating changes' : 'Inspecting project') : type === 'fileChange' ? 'Applying changes' : type === 'reasoning' ? (workStarted ? 'Planning next step' : 'Understanding request') : undefined;
           if (activity) void onProgress({ activity });
         } else if (method === 'error') {
           turnError = string(object(params.error)?.message) ?? 'Codex reported an error.';
@@ -388,6 +392,9 @@ export class LocalAgentRuntime implements AgentRuntime {
         const final = string(event.result);
         if (final) response = final;
         if (event.is_error === true) resultError = final || 'Claude reported an error.';
+      } else if (event.type === 'system' && event.subtype === 'api_retry' && event.error === 'authentication_failed') {
+        resultError = 'Claude authentication failed. Run claude auth login, then refresh agent connections.';
+        child.kill();
       } else if (event.type === 'system' && event.subtype === 'init') {
         void onProgress({ activity: 'Thinking', ...(sessionId ? { sessionId } : {}) });
       }

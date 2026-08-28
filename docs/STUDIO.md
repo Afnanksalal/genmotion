@@ -10,6 +10,7 @@ The project switcher discovers valid projects in the configured local workspace,
 - The inspector edits project delivery settings, brand colors, scene timing and transitions, layer geometry and content, and named motion assignments.
 - The Editor renders exact native project frames. Playback, scrubbing, scene clips, layer tracks, motion phases, and the playhead use the project's real frame rate and duration.
 - Every named motion directive is an editable phase clip beneath its owning layer. Select, drag, frame-snap, edge-trim, duplicate, remove, or tune its recipe, start, duration, intensity, and direction without creating a browser-only animation model.
+- The motion library manager imports project-local JSON libraries. Each library is schema-validated, namespaced as `library-id:motion-id`, and compiled into native transform, shape-progress, text-reveal, or numeric-count tracks. It is declarative by design and cannot execute imported JavaScript.
 - The reference board accepts local images, annotations, and tags. References connect to scenes without turning source artwork into a copied template.
 - The asset browser ingests local image, video, audio, and font files into content-addressed project storage. Visual media becomes a scene layer, audio becomes a real audio track, and fonts join the project brand library.
 - The native frame monitor exposes direct move and corner-resize controls for visual layers, including edge and center snapping plus fit, fill, center, and transform-reset actions.
@@ -32,6 +33,7 @@ Requests are serialized to prevent concurrent agents from overwriting one anothe
 - `.genmotion/history/`: recoverable previous project revisions
 - `.genmotion/requests/`: queued, active, completed, failed, and externally resolved agent conversations
 - `.genmotion/agent-sessions.json`: local Codex and Claude conversation identifiers, never credentials
+- `.genmotion/motions/`: validated custom motion library JSON files
 - `assets/studio/`: content-addressed imported assets
 - `renders/`: exported masters
 

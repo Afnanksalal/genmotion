@@ -16,6 +16,7 @@ Use the editor surfaces deliberately:
 - Inspector changes real project, scene, layer, brand, geometry, typography, motion, and timing fields.
 - References preserve human-supplied visual cues and their annotations. Connect references to the scenes they inform.
 - Agent conversations record the current scene, layer, and frame, stream progress, persist the host session, and reload validated project edits into Studio.
+- Motion libraries can be imported as declarative JSON from the Motion library manager. Custom ids are project-local and namespaced as `library-id:motion-id`; imported data must validate and never contains executable JavaScript.
 - History restores an earlier IR while preserving the current revision as another recoverable entry.
 - Export starts the same verified native render pipeline as the CLI. The dialog follows live progress, preserves a recent-file list across Studio restarts, shows each project-relative output path, and can reveal a completed file in the local operating system's file manager.
 

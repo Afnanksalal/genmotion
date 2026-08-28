@@ -11,6 +11,11 @@ export interface MotionRecipe {
   incompatibleWith: string[];
   cost: 1 | 2 | 3 | 4 | 5;
   accessibility: string[];
+  source?: 'built-in' | 'custom';
+  libraryId?: string;
+  libraryTitle?: string;
+  tracks?: Partial<Record<'x' | 'y' | 'scaleX' | 'scaleY' | 'rotation' | 'opacity' | 'blur', Array<{ at: number; value: number; ease?: 'linear' | 'sine-in-out' | 'cubic-out' | 'expo-out' | 'back-out' | 'cubic-in' | undefined; scaleWithIntensity?: boolean | undefined }>>>;
+  effect?: 'shape-progress' | 'text-words' | 'text-characters' | 'numeric-count';
 }
 
 export interface TasteReference {

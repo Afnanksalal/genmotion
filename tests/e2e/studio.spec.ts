@@ -135,6 +135,7 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
     await page.mouse.move(layerBox.x + layerBox.width / 2 + 45, layerBox.y + layerBox.height / 2, { steps: 5 });
     await page.mouse.up();
   }
+  await page.locator('[data-layerclip="accent"]').press('ArrowRight');
   await expect.poll(async () => {
     const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; start: number }> }> };
     return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.start ?? 0;
@@ -189,6 +190,7 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
 test('queues one export and announces completion once', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   await page.getByRole('button', { name: 'Export' }).click();
+  await page.locator('[data-field="render.filename"]').fill('e2e-browser-export.mp4');
   await page.locator('#startRender').evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
   await expect.poll(async () => {
     const jobs = await fetch(`${studio?.url ?? ''}/api/jobs`).then((response) => response.json()) as Array<{ status: string }>;

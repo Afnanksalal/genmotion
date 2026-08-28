@@ -4,6 +4,7 @@ import YAML from 'yaml';
 import { GenmotionError } from '../errors.js';
 import { projectSchema, type GenmotionProject } from './schema.js';
 import { compileProjectMotions } from '../engine/motion.js';
+import { loadMotionLibraries } from '../catalog/custom.js';
 
 export interface LoadedProject {
   project: GenmotionProject;
@@ -42,7 +43,9 @@ export async function loadProject(input: string): Promise<LoadedProject> {
   if (!parsed.success) {
     throw new GenmotionError('PROJECT_INVALID', `Invalid Genmotion project: ${projectFile}`, parsed.error.issues);
   }
-  return { project: compileProjectMotions(parsed.data), sourceProject: parsed.data, projectDir: path.dirname(projectFile), projectFile };
+  const projectDir = path.dirname(projectFile);
+  const catalog = await loadMotionLibraries(projectDir);
+  return { project: compileProjectMotions(parsed.data, catalog.motions), sourceProject: parsed.data, projectDir, projectFile };
 }
 
 export function resolveProjectAsset(projectDir: string, assetPath: string): string {

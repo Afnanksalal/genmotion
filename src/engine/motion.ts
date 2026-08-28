@@ -1,5 +1,6 @@
 import type { AnimatedNumber, GenmotionProject, Layer, Transform } from '../ir/schema.js';
 import { motionRecipes } from '../catalog/motions.js';
+import type { MotionRecipe } from '../catalog/types.js';
 import { GenmotionError } from '../errors.js';
 
 type NumericProperty = keyof Pick<Transform, 'x' | 'y' | 'scaleX' | 'scaleY' | 'rotation' | 'opacity' | 'blur'>;
@@ -74,18 +75,28 @@ function recipeTracks(id: string, start: number, duration: number, intensity: nu
   }
 }
 
+function customTracks(recipe: MotionRecipe, start: number, duration: number, intensity: number): Partial<Record<NumericProperty, AnimatedNumber>> {
+  const result: Partial<Record<NumericProperty, AnimatedNumber>> = {};
+  for (const [property, frames] of Object.entries(recipe.tracks ?? {}) as Array<[NumericProperty, NonNullable<MotionRecipe['tracks']>[NumericProperty]]>) {
+    if (!frames) continue;
+    result[property] = track(frames.map((frame) => ({ at: start + frame.at * duration, value: frame.scaleWithIntensity ? frame.value * intensity : frame.value, ...(frame.ease ? { ease: frame.ease } : {}) })));
+  }
+  return result;
+}
+
 function defaultValue(property: NumericProperty): number {
   return property === 'scaleX' || property === 'scaleY' || property === 'opacity' ? 1 : 0;
 }
 
-function compileLayer(layer: Layer): Layer {
+function compileLayer(layer: Layer, recipes: MotionRecipe[]): Layer {
   if (layer.motion.length === 0) return layer;
   const transform = { ...layer.transform };
   const claimed = new Set<NumericProperty>();
+  const claimedEffects = new Set<'progress' | 'reveal'>();
   for (const directive of layer.motion) {
-    const recipe = motionRecipes.find((candidate) => candidate.id === directive.recipe);
+    const recipe = recipes.find((candidate) => candidate.id === directive.recipe);
     if (!recipe) throw new GenmotionError('MOTION_RECIPE_UNKNOWN', `Unknown motion recipe ${directive.recipe} on ${layer.id}`);
-    const tracks = recipeTracks(recipe.id, directive.start, directive.duration, directive.intensity, directive.direction);
+    const tracks = recipe.tracks ? customTracks(recipe, directive.start, directive.duration, directive.intensity) : recipeTracks(recipe.id, directive.start, directive.duration, directive.intensity, directive.direction);
     for (const [key, value] of Object.entries(tracks) as Array<[NumericProperty, AnimatedNumber]>) {
       if (claimed.has(key)) throw new GenmotionError('MOTION_PROPERTY_CONFLICT', `${layer.id} has multiple motion recipes controlling ${key}. Split the visual into nested layers or choose one owner.`);
       if (typeof transform[key] !== 'number' || transform[key] !== defaultValue(key)) throw new GenmotionError('MOTION_PROPERTY_CONFLICT', `${layer.id} manually controls ${key} and also assigns it to ${directive.recipe}.`);
@@ -93,22 +104,28 @@ function compileLayer(layer: Layer): Layer {
       claimed.add(key);
     }
     const progressTrack = track([{ at: directive.start, value: 0 }, { at: directive.start + directive.duration, value: 1, ease: 'cubic-out' }]);
-    if (recipe.id === 'line-route' || recipe.id === 'scan-reveal') {
+    if (recipe.id === 'line-route' || recipe.id === 'scan-reveal' || recipe.effect === 'shape-progress') {
+      if (claimedEffects.has('progress')) throw new GenmotionError('MOTION_PROPERTY_CONFLICT', `${layer.id} has multiple motion recipes controlling progress.`);
       if (layer.type !== 'shape') throw new GenmotionError('MOTION_LAYER_MISMATCH', `${recipe.id} requires a shape layer: ${layer.id}`);
       layer = { ...layer, progress: progressTrack };
+      claimedEffects.add('progress');
     }
-    if (recipe.id === 'character-decode' || recipe.id === 'word-cascade') {
+    if (recipe.id === 'character-decode' || recipe.id === 'word-cascade' || recipe.effect === 'text-characters' || recipe.effect === 'text-words') {
+      if (claimedEffects.has('reveal')) throw new GenmotionError('MOTION_PROPERTY_CONFLICT', `${layer.id} has multiple motion recipes controlling reveal.`);
       if (layer.type !== 'text') throw new GenmotionError('MOTION_LAYER_MISMATCH', `${recipe.id} requires a text layer: ${layer.id}`);
-      layer = { ...layer, reveal: recipe.id === 'character-decode' ? 'characters' : 'words', revealProgress: progressTrack };
+      layer = { ...layer, reveal: recipe.id === 'character-decode' || recipe.effect === 'text-characters' ? 'characters' : 'words', revealProgress: progressTrack };
+      claimedEffects.add('reveal');
     }
-    if (recipe.id === 'metric-count') {
+    if (recipe.id === 'metric-count' || recipe.effect === 'numeric-count') {
+      if (claimedEffects.has('progress')) throw new GenmotionError('MOTION_PROPERTY_CONFLICT', `${layer.id} has multiple motion recipes controlling progress.`);
       if (layer.type !== 'text' || !Number.isFinite(Number(layer.text.replace(/[^0-9.+-]/g, '')))) throw new GenmotionError('MOTION_LAYER_MISMATCH', `metric-count requires a numeric text layer: ${layer.id}`);
       layer = { ...layer, countFrom: layer.countFrom ?? 0, countProgress: progressTrack };
+      claimedEffects.add('progress');
     }
   }
   return { ...layer, transform };
 }
 
-export function compileProjectMotions(project: GenmotionProject): GenmotionProject {
-  return { ...project, scenes: project.scenes.map((scene) => ({ ...scene, layers: scene.layers.map(compileLayer) })) };
+export function compileProjectMotions(project: GenmotionProject, recipes: MotionRecipe[] = motionRecipes): GenmotionProject {
+  return { ...project, scenes: project.scenes.map((scene) => ({ ...scene, layers: scene.layers.map((layer) => compileLayer(layer, recipes)) })) };
 }

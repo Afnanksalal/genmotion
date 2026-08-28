@@ -14,7 +14,7 @@ import { compileProjectMotions } from '../engine/motion.js';
 import { renderFramePng } from '../engine/draw.js';
 import { renderProject } from '../engine/render.js';
 import { validateProject } from '../ir/validate.js';
-import { motionRecipes } from '../catalog/motions.js';
+import { compileCustomLibrary, loadMotionLibraries, saveMotionLibrary } from '../catalog/custom.js';
 import { tasteReferences } from '../catalog/references.js';
 import { sceneBlueprints } from '../catalog/blueprints.js';
 import { studioHtml } from './ui.js';
@@ -49,6 +49,7 @@ const renderRequestSchema = z.object({
   filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
   quality: z.enum(['draft', 'standard', 'high']).default('high'),
   codec: z.enum(['h264', 'h265', 'vp9', 'prores']).default('h264'),
+  overwrite: z.boolean().default(false),
 });
 const revealExportSchema = z.object({
   filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
@@ -217,8 +218,9 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   const workspace = options.workspace ?? { root: path.resolve(options.workspaceRoot ?? path.join(os.homedir(), 'Genmotion Projects')), servers: new Map<string, StudioServer>() };
   await Promise.all([mkdir(historyDir, { recursive: true }), mkdir(requestsDir, { recursive: true }), mkdir(rendersDir, { recursive: true })]);
 
+  let motionCatalog = await loadMotionLibraries(loaded.projectDir);
   let sourceProject = loaded.sourceProject;
-  let compiledProject = compileProjectMotions(sourceProject);
+  let compiledProject = compileProjectMotions(sourceProject, motionCatalog.motions);
   let studioState = studioStateSchema.parse(await readJson(stateFile, initialStudioState(sourceProject)));
   const jobs = new Map<string, RenderJob>();
   const frameCache = new Map<string, Buffer>();
@@ -259,6 +261,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     try {
       if (!agentBusy) {
         const refreshed = await loadProject(loaded.projectFile);
+        motionCatalog = await loadMotionLibraries(loaded.projectDir);
         if (revision(refreshed.sourceProject) !== revision(sourceProject)) {
           sourceProject = refreshed.sourceProject;
           compiledProject = refreshed.project;
@@ -269,7 +272,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       response.json({
         project: sourceProject, studio: studioState, revision: revision(sourceProject),
         findings: await validateProject(currentLoaded), duration: projectDuration(sourceProject),
-        catalog: { motions: motionRecipes, references: tasteReferences, blueprints: sceneBlueprints },
+        catalog: { motions: motionCatalog.motions, motionLibraries: motionCatalog.libraries, references: tasteReferences, blueprints: sceneBlueprints },
         requests: await listRequests(requestsDir), jobs: [...jobs.values()], exports: await listExports(rendersDir, loaded.projectDir), projects: await discoverProjects(workspace, loaded.projectDir), workspaceRoot: workspace.root, currentProjectId: projectId(loaded.projectDir), agents: agentHosts, projectFile: path.basename(loaded.projectFile),
       });
     } catch (error) { next(error); }
@@ -281,7 +284,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const currentRevision = revision(sourceProject);
       if (body.revision !== currentRevision) { response.status(409).json({ error: 'Project changed since this Studio loaded it.', revision: currentRevision, project: sourceProject }); return; }
       const nextRevision = revision(body.project);
-      const nextCompiled = compileProjectMotions(body.project);
+      const nextCompiled = compileProjectMotions(body.project, motionCatalog.motions);
       await atomicWrite(path.join(historyDir, `${currentRevision}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
       await writeProjectFile(loaded.projectFile, body.project);
       sourceProject = body.project;
@@ -298,15 +301,16 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     } catch (error) { next(error); }
   });
   app.get('/api/history', async (_request, response) => {
-    const files = (await readdir(historyDir)).filter((file) => file.endsWith('.json')).sort().reverse();
-    response.json(await Promise.all(files.slice(0, 50).map(async (file) => ({ revision: path.basename(file, '.json'), modifiedAt: (await stat(path.join(historyDir, file))).mtime.toISOString() }))));
+    const files = (await readdir(historyDir)).filter((file) => file.endsWith('.json'));
+    const entries = await Promise.all(files.map(async (file) => ({ revision: path.basename(file, '.json'), modifiedAt: (await stat(path.join(historyDir, file))).mtime.toISOString() })));
+    response.json(entries.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt)).slice(0, 50));
   });
   app.post('/api/history/:revision/restore', async (request, response, next) => {
     try {
       const requested = request.params.revision ?? '';
       if (!/^[a-f0-9]{16}$/.test(requested)) { response.status(400).json({ error: 'Invalid revision.' }); return; }
       const restored = projectSchema.parse(JSON.parse(await readFile(path.join(historyDir, `${requested}.json`), 'utf8')));
-      const restoredCompiled = compileProjectMotions(restored);
+      const restoredCompiled = compileProjectMotions(restored, motionCatalog.motions);
       const currentRevision = revision(sourceProject);
       await atomicWrite(path.join(historyDir, `${currentRevision}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
       await writeProjectFile(loaded.projectFile, restored);
@@ -328,6 +332,21 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const relative = path.posix.join('assets', 'studio', `${hash}-${filename}`);
       await atomicWrite(path.join(loaded.projectDir, ...relative.split('/')), body);
       response.json({ path: relative, size: body.length, hash });
+    } catch (error) { next(error); }
+  });
+  app.get('/api/motion-libraries', (_request, response) => { response.json(motionCatalog.libraries); });
+  app.post('/api/motion-libraries', async (request, response, next) => {
+    try {
+      if (agentBusy) { response.status(423).json({ error: 'Wait for the active agent turn to finish before importing a motion library.' }); return; }
+      const parsed = compileCustomLibrary(request.body);
+      const prospective = [...motionCatalog.motions.filter((recipe) => recipe.libraryId !== parsed.library.id), ...parsed.recipes];
+      const nextCompiled = compileProjectMotions(sourceProject, prospective);
+      const summary = await saveMotionLibrary(loaded.projectDir, request.body);
+      const nextCatalog = await loadMotionLibraries(loaded.projectDir);
+      motionCatalog = nextCatalog;
+      compiledProject = nextCompiled;
+      frameCache.clear();
+      response.status(201).json({ library: summary, catalog: { motions: motionCatalog.motions, motionLibraries: motionCatalog.libraries } });
     } catch (error) { next(error); }
   });
   app.get('/asset/*path', (request, response, next) => {
@@ -398,6 +417,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
               }
             });
             const refreshed = await loadProject(loaded.projectFile);
+            motionCatalog = await loadMotionLibraries(loaded.projectDir);
             const findings = await validateProject(refreshed);
             const errors = findings.filter((finding) => finding.severity === 'error');
             if (errors.length > 0) throw new GenmotionError('AGENT_PROJECT_INVALID', 'The agent left validation errors in the project.', errors);
@@ -414,8 +434,12 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
               sessionId: result.sessionId, afterRevision, completedAt, updatedAt: completedAt,
             });
           } catch (error) {
+            if (host === 'claude' && error instanceof Error && /authentication failed/i.test(error.message)) {
+              agentHosts = agentHosts.map((candidate) => candidate.id === 'claude' ? { ...candidate, authenticated: false, detail: 'Run claude auth login' } : candidate);
+            }
             try {
               const candidate = await loadProject(loaded.projectFile);
+              motionCatalog = await loadMotionLibraries(loaded.projectDir);
               const candidateFindings = await validateProject(candidate);
               if (candidateFindings.some((finding) => finding.severity === 'error')) throw new Error('invalid agent edit');
               const candidateRevision = revision(candidate.sourceProject);
@@ -430,7 +454,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
               const failedEdit = await readFile(loaded.projectFile, 'utf8').catch(() => '');
               if (failedEdit) await atomicWrite(path.join(studioDir, 'failed-agent-edits', `${record.id}${path.extname(loaded.projectFile) || '.json'}`), failedEdit);
               await atomicWrite(loaded.projectFile, beforeProjectFile);
-              compiledProject = compileProjectMotions(sourceProject);
+              motionCatalog = await loadMotionLibraries(loaded.projectDir);
+              compiledProject = compileProjectMotions(sourceProject, motionCatalog.motions);
               frameCache.clear();
             }
             const failedAt = new Date().toISOString();
@@ -463,7 +488,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     } catch (error) { next(error); }
   });
   app.get('/api/requests', async (_request, response) => { response.json(await listRequests(requestsDir)); });
-  app.post('/api/render', (request, response, next) => {
+  app.post('/api/render', async (request, response, next) => {
     try {
       const body = renderRequestSchema.parse(request.body);
       const id = randomUUID();
@@ -472,6 +497,9 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if ([...jobs.values()].some((candidate) => candidate.output === relativeOutput && (candidate.status === 'queued' || candidate.status === 'rendering'))) {
         response.status(409).json({ error: 'An export for this filename is already running.' });
         return;
+      }
+      if (!body.overwrite) {
+        try { if ((await stat(output)).isFile()) { response.status(409).json({ error: 'An export with this filename already exists.', code: 'OUTPUT_EXISTS' }); return; } } catch { /* The filename is available. */ }
       }
       const job: RenderJob = { id, status: 'queued', progress: 0, output: relativeOutput };
       jobs.set(id, job); response.status(202).json(job);
@@ -542,7 +570,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   });
   app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
     void _next;
-    const message = error instanceof Error ? error.message : String(error);
+    const message = error instanceof z.ZodError ? error.issues.slice(0, 3).map((issue) => `${issue.path.join('.') || 'request'}: ${issue.message}`).join(' ') : error instanceof Error ? error.message : String(error);
     response.status(error instanceof z.ZodError || error instanceof GenmotionError ? 400 : 500).json({ error: message, details: error instanceof z.ZodError ? error.issues : error instanceof GenmotionError ? error.details : undefined });
   });
 
