@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { cp, mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../../src/ir/loader.js';
@@ -20,7 +20,7 @@ const agentRuntime: AgentRuntime = {
 test.beforeEach(async () => {
   directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-studio-browser-'));
   await cp(path.resolve('tests/fixtures/basic'), directory, { recursive: true });
-  studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime });
+  studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime, agentRuntimeFactory: () => agentRuntime, workspaceRoot: path.join(directory, 'workspace') });
 });
 
 test.afterEach(async () => {
@@ -88,6 +88,21 @@ test('keeps the inspector accessible at a compact desktop width', async ({ page 
   await page.getByRole('button', { name: 'Inspector' }).click();
   await expect(page.locator('#inspector')).toHaveClass(/open/);
   await expect(page.locator('[data-field="title"]')).toBeVisible();
+});
+
+test('creates and opens a real project from the project switcher', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('#projectSwitch').click();
+  await expect(page.locator('#projectPopover')).toContainText('Deterministic render');
+  await page.getByRole('button', { name: /New project/ }).click();
+  await page.locator('[data-field="newProject.title"]').fill('Studio launch');
+  await page.locator('[data-field="newProject.audience"]').fill('Product teams');
+  await page.locator('[data-field="newProject.promise"]').fill('Explain the product with clarity');
+  await page.locator('[data-field="newProject.proof"]').fill('Captured product evidence');
+  await page.locator('[data-field="newProject.desiredAction"]').fill('Start creating');
+  await page.locator('#createProject').click();
+  await expect(page.locator('#projectName')).toHaveText('Studio launch', { timeout: 15_000 });
+  expect((await stat(path.join(directory, 'workspace', 'studio-launch', 'genmotion.json'))).isFile()).toBe(true);
 });
 
 test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }) => {

@@ -124,10 +124,11 @@ program.command('studio')
   .argument('<project>')
   .option('--host <host>', 'Bind host', '127.0.0.1')
   .option('--port <port>', 'Bind port', '4180')
+  .option('--workspace <directory>', 'Local project workspace', path.join(os.homedir(), 'Genmotion Projects'))
   .option('--no-open', 'Do not open the system browser')
-  .action(async (input: string, options: { host: string; port: string; open: boolean }) => {
+  .action(async (input: string, options: { host: string; port: string; workspace: string; open: boolean }) => {
     const loaded = await loadProject(input);
-    const studio = await startStudio(loaded, { host: options.host, port: Number(options.port) });
+    const studio = await startStudio(loaded, { host: options.host, port: Number(options.port), workspaceRoot: options.workspace });
     output({ url: studio.url, project: loaded.projectFile });
     if (options.open) openBrowser(studio.url);
     await new Promise<void>((resolve) => { const stop = (): void => { void studio.close().then(resolve); }; process.once('SIGINT', stop); process.once('SIGTERM', stop); });

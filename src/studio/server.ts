@@ -4,6 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, readFile, readdir, realpath, rename, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import YAML from 'yaml';
 import { z } from 'zod';
@@ -19,6 +20,7 @@ import { sceneBlueprints } from '../catalog/blueprints.js';
 import { studioHtml } from './ui.js';
 import { GenmotionError } from '../errors.js';
 import { LocalAgentRuntime, type AgentHostId, type AgentRuntime, type AgentSelection } from '../agent/runtime.js';
+import { initializeProject, type InitOptions } from '../commands/init.js';
 
 const nodeSchema = z.object({
   id: z.string().min(1), kind: z.enum(['brief', 'scene', 'layer', 'reference', 'note', 'output']),
@@ -51,6 +53,17 @@ const renderRequestSchema = z.object({
 const revealExportSchema = z.object({
   filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
 });
+const createProjectSchema = z.object({
+  slug: z.string().min(1).max(64).regex(/^[a-z0-9][a-z0-9-]*$/),
+  title: z.string().min(1).max(120),
+  mode: z.enum(['walkthrough', 'launch', 'pitch', 'explainer']),
+  audience: z.string().min(2).max(300),
+  promise: z.string().min(2).max(500),
+  proof: z.string().min(2).max(500),
+  desiredAction: z.string().min(2).max(300),
+  duration: z.number().min(3).max(600),
+});
+const openProjectSchema = z.object({ id: z.string().regex(/^[a-f0-9]{16}$/) });
 
 export interface StudioRequestRecord {
   id: string; prompt: string; selection: AgentSelection;
@@ -61,7 +74,9 @@ export interface StudioRequestRecord {
 }
 interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed'; progress: number; output?: string; error?: string }
 interface ExportRecord { filename: string; output: string; size: number; modifiedAt: string }
-export interface StudioOptions { host?: string; port?: number; agentRuntime?: AgentRuntime; revealFile?: (file: string) => Promise<void> }
+interface StudioWorkspace { root: string; servers: Map<string, StudioServer> }
+interface StudioProjectSummary { id: string; title: string; directory: string; width: number; height: number; modifiedAt: string; active: boolean }
+export interface StudioOptions { host?: string; port?: number; agentRuntime?: AgentRuntime; agentRuntimeFactory?: (projectDir: string) => AgentRuntime; revealFile?: (file: string) => Promise<void>; workspaceRoot?: string; workspace?: StudioWorkspace }
 export interface StudioServer { url: string; close: () => Promise<void>; server: Server }
 
 const mediaExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.mp4', '.mov', '.webm', '.mkv', '.m4v', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.woff', '.woff2', '.ttf', '.otf']);
@@ -153,6 +168,24 @@ async function listExports(rendersDir: string, projectDir: string): Promise<Expo
   return exports.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt));
 }
 
+function projectId(directory: string): string {
+  return createHash('sha256').update(path.resolve(directory).toLowerCase()).digest('hex').slice(0, 16);
+}
+
+async function discoverProjects(workspace: StudioWorkspace, currentProjectDir: string): Promise<StudioProjectSummary[]> {
+  await mkdir(workspace.root, { recursive: true });
+  const candidates = new Set<string>([path.resolve(currentProjectDir), ...workspace.servers.keys()]);
+  for (const entry of await readdir(workspace.root, { withFileTypes: true })) if (entry.isDirectory()) candidates.add(path.join(workspace.root, entry.name));
+  const projects = await Promise.all([...candidates].map(async (directory): Promise<StudioProjectSummary | undefined> => {
+    try {
+      const loaded = await loadProject(directory);
+      const metadata = await stat(loaded.projectFile);
+      return { id: projectId(loaded.projectDir), title: loaded.sourceProject.title, directory: loaded.projectDir, width: loaded.sourceProject.width, height: loaded.sourceProject.height, modifiedAt: metadata.mtime.toISOString(), active: workspace.servers.has(path.resolve(loaded.projectDir)) };
+    } catch { return undefined; }
+  }));
+  return projects.filter((project): project is StudioProjectSummary => project !== undefined).sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt));
+}
+
 async function writeRequest(directory: string, record: StudioRequestRecord): Promise<void> {
   await atomicWrite(path.join(directory, `${record.id}.json`), `${JSON.stringify(record, null, 2)}\n`);
 }
@@ -180,6 +213,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   const historyDir = path.join(studioDir, 'history');
   const requestsDir = path.join(studioDir, 'requests');
   const rendersDir = path.join(loaded.projectDir, 'renders');
+  const ownsWorkspace = options.workspace === undefined;
+  const workspace = options.workspace ?? { root: path.resolve(options.workspaceRoot ?? path.join(os.homedir(), 'Genmotion Projects')), servers: new Map<string, StudioServer>() };
   await Promise.all([mkdir(historyDir, { recursive: true }), mkdir(requestsDir, { recursive: true }), mkdir(rendersDir, { recursive: true })]);
 
   let sourceProject = loaded.sourceProject;
@@ -187,7 +222,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   let studioState = studioStateSchema.parse(await readJson(stateFile, initialStudioState(sourceProject)));
   const jobs = new Map<string, RenderJob>();
   const frameCache = new Map<string, Buffer>();
-  const agentRuntime = options.agentRuntime ?? new LocalAgentRuntime(loaded.projectDir);
+  const agentRuntime = options.agentRuntime ?? options.agentRuntimeFactory?.(loaded.projectDir) ?? new LocalAgentRuntime(loaded.projectDir);
   const revealFile = options.revealFile ?? revealInFileManager;
   let agentHosts = await agentRuntime.hosts();
   let agentBusy = false;
@@ -235,7 +270,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
         project: sourceProject, studio: studioState, revision: revision(sourceProject),
         findings: await validateProject(currentLoaded), duration: projectDuration(sourceProject),
         catalog: { motions: motionRecipes, references: tasteReferences, blueprints: sceneBlueprints },
-        requests: await listRequests(requestsDir), jobs: [...jobs.values()], exports: await listExports(rendersDir, loaded.projectDir), agents: agentHosts, projectFile: path.basename(loaded.projectFile),
+        requests: await listRequests(requestsDir), jobs: [...jobs.values()], exports: await listExports(rendersDir, loaded.projectDir), projects: await discoverProjects(workspace, loaded.projectDir), workspaceRoot: workspace.root, currentProjectId: projectId(loaded.projectDir), agents: agentHosts, projectFile: path.basename(loaded.projectFile),
       });
     } catch (error) { next(error); }
   });
@@ -453,6 +488,39 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     } catch (error) { next(error); }
   });
   app.get('/api/jobs', (_request, response) => { response.json([...jobs.values()]); });
+  app.get('/api/projects', async (_request, response, next) => {
+    try { response.json({ projects: await discoverProjects(workspace, loaded.projectDir), workspaceRoot: workspace.root, currentProjectId: projectId(loaded.projectDir) }); } catch (error) { next(error); }
+  });
+  const launchProject = async (directory: string): Promise<StudioServer> => {
+    const resolved = path.resolve(directory);
+    const existing = workspace.servers.get(resolved);
+    if (existing) return existing;
+    return startStudio(await loadProject(resolved), { host, port: 0, workspace, ...(options.agentRuntimeFactory ? { agentRuntimeFactory: options.agentRuntimeFactory } : {}), ...(options.revealFile ? { revealFile: options.revealFile } : {}) });
+  };
+  app.post('/api/projects/open', async (request, response, next) => {
+    try {
+      const body = openProjectSchema.parse(request.body);
+      const project = (await discoverProjects(workspace, loaded.projectDir)).find((candidate) => candidate.id === body.id);
+      if (!project) { response.status(404).json({ error: 'Project not found in this local workspace.' }); return; }
+      const studio = await launchProject(project.directory);
+      response.json({ url: studio.url, project });
+    } catch (error) { next(error); }
+  });
+  app.post('/api/projects', async (request, response, next) => {
+    try {
+      const body = createProjectSchema.parse(request.body);
+      const directory = path.join(workspace.root, body.slug);
+      const relative = path.relative(workspace.root, directory);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) { response.status(400).json({ error: 'Project directory is outside the local workspace.' }); return; }
+      const exists = await stat(directory).then(() => true).catch(() => false);
+      if (exists) { response.status(409).json({ error: 'A project directory with that name already exists.' }); return; }
+      const init: InitOptions = { title: body.title, promise: body.promise, proof: body.proof, desiredAction: body.desiredAction, audience: body.audience, mode: body.mode, duration: body.duration };
+      await initializeProject(directory, init);
+      const studio = await launchProject(directory);
+      const project = (await discoverProjects(workspace, directory)).find((candidate) => path.resolve(candidate.directory) === path.resolve(directory));
+      response.status(201).json({ url: studio.url, project });
+    } catch (error) { next(error); }
+  });
   app.get('/api/exports', async (_request, response, next) => {
     try { response.json(await listExports(rendersDir, loaded.projectDir)); } catch (error) { next(error); }
   });
@@ -483,8 +551,15 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     instance.on('error', reject);
   });
   const actualPort = (server.address() as AddressInfo).port;
-  return { url: `http://${host}:${String(actualPort)}`, server, close: async () => {
+  let closed = false;
+  const studioServer: StudioServer = { url: `http://${host}:${String(actualPort)}`, server, close: async () => {
+    if (closed) return;
+    closed = true;
+    if (ownsWorkspace) for (const child of [...workspace.servers.values()]) if (child !== studioServer) await child.close();
+    workspace.servers.delete(path.resolve(loaded.projectDir));
     await agentRuntime.close();
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   } };
+  workspace.servers.set(path.resolve(loaded.projectDir), studioServer);
+  return studioServer;
 }

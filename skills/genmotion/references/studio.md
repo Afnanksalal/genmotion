@@ -4,6 +4,8 @@ Use Studio when the user needs to shape the composition interactively, compare r
 
 Start Studio on loopback. In Codex, use `genmotion studio <project> --no-open`, then open the printed URL in a browser panel when available. In Claude Code or an ordinary terminal, `genmotion studio <project>` opens the system browser. Keep the terminal process running until the review session ends.
 
+Use the project switcher in the top bar to open another valid local project or create one from a complete creative brief. New projects are saved under `~/Genmotion Projects` unless Studio was launched with `--workspace <directory>`. Creation writes a real `brief.json` and composed `genmotion.json`, then opens the new project in an isolated Studio context.
+
 The workflow canvas is production state, not a separate mockup. Scene and layer changes write the typed project through optimistic revision checks. Reference and note nodes live in `.genmotion/studio.json`; reference files live under `assets/studio/`; earlier project revisions live in `.genmotion/history/`. The renderer still consumes `genmotion.json` or YAML and never renders the Studio DOM.
 
 Use the editor surfaces deliberately:

@@ -2,6 +2,8 @@
 
 Studio supplies the fine-grained human controls that an autonomous renderer cannot infer from a brief. It is a local web application shipped inside Genmotion, launched with `genmotion studio <project>`, and backed by the exact Creative IR used for native rendering.
 
+The project switcher discovers valid projects in the configured local workspace, creates fully initialized projects from a real creative brief, and opens each project in its own isolated Studio context. The default workspace is `~/Genmotion Projects`; pass `--workspace <directory>` when launching Studio to use another location.
+
 ## Authoring surfaces
 
 - The node workflow shows the creative brief, ordered scenes, expanded layers, human references, notes, and final export relationship. Node positions and explanatory edges persist.
