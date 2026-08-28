@@ -15,26 +15,19 @@ Studio supplies the fine-grained human controls that an autonomous renderer cann
 
 ## Human and agent loop
 
-The bottom request bar writes a durable request containing the prompt and current scene, layer, and frame selection. An agent reads pending work with:
+The bottom chat bar detects authenticated local Codex and Claude Code installations. Choose a host and submit a prompt to start a real agent turn with the current scene, layer, and frame as context. Responses stream into the durable conversation record, and project edits appear in Studio after the resulting Creative IR passes validation.
 
-```bash
-genmotion requests <project> --pending
-```
+Codex uses its official stdio app-server protocol and a persistent project conversation named `Genmotion · <project>`, which appears as a normal Codex task. Claude uses its authenticated streaming print mode and a persistent project session available through Claude Code's resume flow. Both reuse the host tool's managed account sign-in, so Studio has no model API key field or secret store.
 
-After changing the real project, validating it, and inspecting affected frames, the agent resolves the request:
-
-```bash
-genmotion request-resolve <project> --id <request-id> --response "Adjusted the selected scene and verified frames 120, 138, and 164."
-```
-
-This makes iteration inspectable and asynchronous. Studio does not claim an agent is connected when no agent process is checking requests.
+Requests are serialized to prevent concurrent agents from overwriting one another. Browser writes are locked during an active turn. A failed or interrupted turn remains visible with its error and is never silently replayed on restart. The `requests` and `request-resolve` commands remain available for an agent already working in the user's current Codex or Claude chat.
 
 ## Persistence
 
 - `genmotion.json`, YAML equivalent: renderer-owned project data
 - `.genmotion/studio.json`: node layout, notes, and reference metadata
 - `.genmotion/history/`: recoverable previous project revisions
-- `.genmotion/requests/`: pending and resolved human requests
+- `.genmotion/requests/`: queued, active, completed, failed, and externally resolved agent conversations
+- `.genmotion/agent-sessions.json`: local Codex and Claude conversation identifiers, never credentials
 - `assets/studio/`: content-addressed imported assets
 - `renders/`: exported masters
 

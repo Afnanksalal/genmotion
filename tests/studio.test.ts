@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { cp, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../src/ir/loader.js';
 import { getStudioRequests, resolveStudioRequest, startStudio } from '../src/studio/server.js';
+import type { AgentRuntime } from '../src/agent/runtime.js';
 
 const cleanup: string[] = [];
 afterEach(async () => { await Promise.all(cleanup.splice(0).map((directory) => rm(directory, { recursive: true, force: true }))); });
@@ -15,10 +16,26 @@ async function fixture(): Promise<string> {
   return directory;
 }
 
+function fakeAgent(edit: false | 'valid' | 'invalid' = false): AgentRuntime {
+  return {
+    hosts: () => Promise.resolve([{ id: 'codex', label: 'Codex', installed: true, authenticated: true, detail: 'Test session' }]),
+    run: async (input, onProgress) => {
+      await onProgress({ activity: 'Applying changes', message: 'Working', sessionId: 'test-thread' });
+      if (edit) {
+        const project = JSON.parse(await readFile(input.projectFile, 'utf8')) as { title: string };
+        project.title = edit === 'valid' ? 'Changed by local agent' : '';
+        await writeFile(input.projectFile, `${JSON.stringify(project, null, 2)}\n`);
+      }
+      return { response: 'Applied and validated the requested change.', sessionId: 'test-thread' };
+    },
+    close: () => Promise.resolve(),
+  };
+}
+
 describe('Genmotion Studio', () => {
   it('persists validated edits, reference assets, workflow state, requests, history, and exports', async () => {
     const directory = await fixture();
-    const studio = await startStudio(await loadProject(directory), { port: 0 });
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });
     try {
       const html = await fetch(studio.url);
       expect(await html.text()).toContain('Genmotion Studio');
@@ -83,10 +100,83 @@ describe('Genmotion Studio', () => {
 
   it('rejects state-changing requests without the Studio session token', async () => {
     const directory = await fixture();
-    const studio = await startStudio(await loadProject(directory), { port: 0 });
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });
     try {
       const response = await fetch(`${studio.url}/api/requests`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt: 'This must not be accepted.' }) });
       expect(response.status).toBe(403);
+    } finally { await studio.close(); }
+  });
+
+  it('runs an authenticated local agent turn, reloads its validated edit, and persists the conversation', async () => {
+    const directory = await fixture();
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent('valid') });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const queued = await fetch(`${studio.url}/api/requests`, {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-genmotion-token': token },
+        body: JSON.stringify({ prompt: 'Rename this composition.', host: 'codex', selection: { frame: 0 } }),
+      });
+      expect(queued.status).toBe(201);
+      const request = await queued.json() as { id: string };
+      let record: { status: string; response?: string; afterRevision?: string } | undefined;
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        record = (await getStudioRequests(directory)).find((candidate) => candidate.id === request.id);
+        if (record?.status === 'completed' || record?.status === 'failed') break;
+      }
+      expect(record).toMatchObject({ status: 'completed', response: 'Applied and validated the requested change.' });
+      expect(record?.afterRevision).toBeTruthy();
+      const bootstrap = await fetch(`${studio.url}/api/bootstrap`).then((response) => response.json()) as { project: { title: string } };
+      expect(bootstrap.project.title).toBe('Changed by local agent');
+    } finally { await studio.close(); }
+  });
+
+  it('preserves an invalid agent edit for diagnosis and restores the last valid project', async () => {
+    const directory = await fixture();
+    const original = await readFile(path.join(directory, 'genmotion.json'), 'utf8');
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent('invalid') });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const queued = await fetch(`${studio.url}/api/requests`, {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-genmotion-token': token },
+        body: JSON.stringify({ prompt: 'Make an invalid change.', host: 'codex' }),
+      });
+      const request = await queued.json() as { id: string };
+      let status = '';
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        status = (await getStudioRequests(directory)).find((candidate) => candidate.id === request.id)?.status ?? '';
+        if (status === 'failed') break;
+      }
+      expect(status).toBe('failed');
+      expect(await readFile(path.join(directory, 'genmotion.json'), 'utf8')).toBe(original);
+      expect((await stat(path.join(directory, '.genmotion', 'failed-agent-edits', `${request.id}.json`))).size).toBeGreaterThan(0);
+    } finally { await studio.close(); }
+  });
+
+  it('cancels a running local agent turn without leaving the project locked', async () => {
+    const directory = await fixture();
+    const blockingAgent: AgentRuntime = {
+      hosts: () => Promise.resolve([{ id: 'codex', label: 'Codex', installed: true, authenticated: true, detail: 'Test session' }]),
+      run: (input) => new Promise((_resolve, reject) => {
+        const stop = (): void => reject(new Error('Agent turn cancelled.'));
+        if (input.signal?.aborted) stop();
+        else input.signal?.addEventListener('abort', stop, { once: true });
+      }),
+      close: () => Promise.resolve(),
+    };
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: blockingAgent });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const headers = { 'content-type': 'application/json', 'x-genmotion-token': token };
+      const queued = await fetch(`${studio.url}/api/requests`, { method: 'POST', headers, body: JSON.stringify({ prompt: 'Wait for cancellation.', host: 'codex' }) });
+      const request = await queued.json() as { id: string };
+      await expect.poll(async () => (await getStudioRequests(directory)).find((candidate) => candidate.id === request.id)?.status).toBe('running');
+      const cancelled = await fetch(`${studio.url}/api/requests/${request.id}/cancel`, { method: 'POST', headers });
+      expect(cancelled.status).toBe(202);
+      await expect.poll(async () => (await getStudioRequests(directory)).find((candidate) => candidate.id === request.id)?.status).toBe('interrupted');
+      const bootstrap = await fetch(`${studio.url}/api/bootstrap`);
+      expect(bootstrap.status).toBe(200);
     } finally { await studio.close(); }
   });
 });
