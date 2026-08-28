@@ -60,6 +60,7 @@ test('edits, previews, references, and queues contextual agent work', async ({ p
     const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ motion: Array<{ start: number }> }> }> };
     return project.scenes[0]?.layers[0]?.motion[0]?.start ?? 0;
   }).toBeGreaterThan(0.1);
+  await expect(page.locator('[data-phase]').first()).toBeVisible();
   await expect(page.locator('[title]')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'References' }).click();
@@ -172,15 +173,16 @@ test('uses packaged SVG controls and the selected agent brand', async ({ page })
 test('creates and opens a real project from the project switcher', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   await page.locator('#projectSwitch').click();
-  await expect(page.locator('#projectPopover')).toContainText('Deterministic render');
+  await expect(page.locator('#projectPopover')).toContainText('Agent-authored render');
   await page.getByRole('button', { name: /New project/ }).click();
   await page.locator('[data-field="newProject.title"]').fill('Studio launch');
   await page.locator('[data-field="newProject.audience"]').fill('Product teams');
   await page.locator('[data-field="newProject.promise"]').fill('Explain the product with clarity');
   await page.locator('[data-field="newProject.proof"]').fill('Captured product evidence');
   await page.locator('[data-field="newProject.desiredAction"]').fill('Start creating');
-  await page.locator('#createProject').click();
+  await page.locator('#createWithAgent').click();
   await expect(page.locator('#projectName')).toHaveText('Studio launch', { timeout: 15_000 });
+  await expect(page.getByText('codex · Complete')).toBeVisible({ timeout: 15_000 });
   expect((await stat(path.join(directory, 'workspace', 'studio-launch', 'genmotion.json'))).isFile()).toBe(true);
 });
 
@@ -192,6 +194,12 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
   await expect(page.locator('#previewImage')).toHaveJSProperty('naturalWidth', 320);
 
   await page.locator('[data-layerclip="accent"]').click();
+  await page.locator('#addTrack').click();
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; tracks?: unknown[] }> }> };
+    return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.tracks?.length ?? 0;
+  }).toBe(1);
+  await expect(page.getByText('Agent animation tracks')).toBeVisible();
   const durationField = page.locator('[data-field="duration"]');
   await durationField.fill('0.7');
   await durationField.press('Tab');
@@ -206,6 +214,7 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
     return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.start ?? 0;
   }).toBeCloseTo(1 / 30, 4);
 
+  await expect(page.locator('[data-layerclip="accent"]')).toBeVisible();
   const layerBox = await page.locator('[data-layerclip="accent"]').boundingBox();
   expect(layerBox).not.toBeNull();
   if (layerBox) {

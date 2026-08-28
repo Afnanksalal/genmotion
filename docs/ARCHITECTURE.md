@@ -5,12 +5,12 @@
 Genmotion separates creative reasoning from frame execution.
 
 ```text
-brief
-  -> contrastive taste retrieval
-  -> divergent concept generation
-  -> critic and feasibility ranking
-  -> typed Creative IR
-  -> motion compilation
+brief + local assets + references
+  -> Codex or Claude creative direction
+  -> schema discovery and revision-safe IR patches
+  -> native frame inspection and iteration
+  -> accepted typed Creative IR
+  -> optional recipe compilation + direct track evaluation
   -> validation
   -> native frame workers
   -> ordered raw-frame encoder
@@ -18,7 +18,7 @@ brief
   -> output verification
 ```
 
-The renderer never asks an agent or model how to draw a frame. Every frame is an evaluation of frozen project data at an absolute timestamp.
+The agent owns creative choices; the renderer owns faithful execution. Every accepted frame remains an evaluation of frozen project data at an absolute timestamp, so export is reproducible without constraining what the agent may design.
 
 Export resolution is a render contract separate from the logical project coordinate system. Draft renders use native project dimensions, standard renders guarantee at least a 1280-pixel long edge, and high renders guarantee at least a 1920-pixel long edge. The canvas scales before any scene drawing, so vector geometry and text are rasterized at delivery resolution instead of being enlarged after encoding. Explicit even-sized resolutions are accepted only when they preserve the project aspect ratio.
 
@@ -36,7 +36,7 @@ The taste catalog has three maintained units.
 
 ### Motion recipes
 
-A recipe describes a reusable move, its semantic roles, suitable energy, signature behavior, duration range, controlled properties, incompatible recipes, render cost, and accessibility constraints. The engine owns the actual deterministic implementation.
+A recipe describes a reusable move, its semantic roles, suitable energy, signature behavior, duration range, controlled properties, incompatible recipes, render cost, and accessibility constraints. Recipes are optional starting points. Agents can instead author direct property tracks without selecting any recipe.
 
 ### Taste references
 
@@ -52,17 +52,17 @@ Retrieval uses relevance plus maximal marginal diversity so a concept is not bui
 
 A blueprint is a semantic phase structure with normalized ranges, roles, slots, a signature move, and production constraints. It coordinates motion recipes but does not prescribe visual assets or product copy.
 
-## Creative planning
+## Agentic authoring
 
-The deterministic planner works without a model or network. Agentic direction is supplied by the user's authenticated local Codex or Claude Code installation through Genmotion Studio, not by a provider API embedded in the renderer. The resulting Creative IR is schema-validated and ranked by the same local critic.
+The primary planner is the user's authenticated local Codex or Claude Code installation, not a built-in provider call and not a template selector. Project creation starts from a neutral artboard. The agent discovers the complete schema, reads the current revision, applies granular RFC 6902 transactions, validates, receives actual PNG frames, and inspects evaluated timeline state. Studio exposes the same project to the human for direct manipulation.
 
-The critic scores coherence, originality, feasibility, hierarchy, and brand fit. It also rejects unknown references, blueprints, and motion recipes. This is deliberately separate from mechanical project validation.
+No model API key is stored by Genmotion. Claude Studio turns receive a project-scoped stdio MCP configuration; Codex Studio turns use the registered Genmotion MCP server. The older catalog planner is retained only as an explicit offline compatibility scaffold.
 
 ## Creative IR
 
-The IR is JSON or YAML and validated by Zod. Agents author content, hierarchy, layers, assets, timing, reference decisions, and named motion directives. They do not author native renderer code.
+The IR is JSON or YAML and validated by Zod. Agents author content, hierarchy, layers, assets, timing, reference decisions, SVG paths, and arbitrary numeric property tracks with replacement, additive, or multiplicative composition. Track timing supports named curves, data-defined cubic-bezier curves, springs, clamping, loops, and ping-pong playback. They do not need to author native renderer code.
 
-Motion directives compile into absolute keyframes before validation and rendering. Only one owner may control a transform property on a layer. Conflicting recipes fail compilation instead of producing order-dependent animation.
+Optional motion directives compile into absolute keyframes before validation and rendering. Direct tracks are evaluated afterward and therefore may deliberately replace, add to, or multiply the compiled value. Recipe conflicts still fail compilation instead of producing order-dependent animation.
 
 ## Native renderer
 
@@ -109,4 +109,4 @@ After encoding, ffprobe verifies resolution and duration against the project con
 
 ## Extension model
 
-New layer types belong in the schema, native drawing implementation, validator, and tests together. New motion recipes require metadata, deterministic renderer behavior, and an accessibility constraint. New blueprints must reference existing recipes and cover the full normalized timeline. `genmotion catalog-audit` enforces catalog integrity.
+New layer types belong in the schema, native drawing implementation, validator, Studio, and tests together. Most new creative behavior should be expressed as agent-authored property tracks or SVG paths rather than hardcoded renderer branches. Recipes remain useful shared motion DNA and require metadata plus accessibility guidance; they are never required for a valid composition.

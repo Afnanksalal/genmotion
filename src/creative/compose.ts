@@ -30,6 +30,7 @@ function buildMediaLayer(brief: CreativeBrief, index: number, duration: number, 
     start: 0.25, duration: Math.max(0.5, duration - 0.5), z: 10, visible: true,
     transform: { ...DEFAULT_TRANSFORM }, blendMode: 'source-over' as const, tags: ['proof', asset.role],
     motion: [{ recipe: safeMotion(motionIds, 'media'), start: 0.25, duration: Math.min(1.1, duration * 0.28), intensity: 1 }],
+    tracks: [],
     fit: 'cover' as const, radius: 34,
   };
   if (imageExtensions.has(extension)) return { ...common, type: 'image', src: asset.path };
@@ -51,6 +52,7 @@ export function composeProject(brief: CreativeBrief, concept: CreativeConcept): 
         fill: brief.brand.accent, strokeWidth: 0, radius: 0, progress: 1,
         start: 0, duration, z: 0, visible: true, transform: { ...DEFAULT_TRANSFORM, opacity: 0.14 }, blendMode: 'screen', tags: ['atmosphere'],
         motion: [{ recipe: 'ambient-breathe', start: 0, duration: Math.max(1, duration), intensity: 0.7 }],
+        tracks: [],
       },
       {
         id: `eyebrow-${String(index)}`, type: 'text', text: copy.eyebrow, x: 130, y: 150, width: textWidth, height: 55,
@@ -58,6 +60,7 @@ export function composeProject(brief: CreativeBrief, concept: CreativeConcept): 
         align: 'left', verticalAlign: 'top', lineHeight: 1, letterSpacing: 4, fit: 'shrink', reveal: 'none', revealProgress: 1, countProgress: 1,
         start: 0.1, duration: duration - 0.1, z: 20, visible: true, transform: { ...DEFAULT_TRANSFORM }, blendMode: 'source-over', tags: ['label'],
         motion: [{ recipe: 'confident-slide', start: 0.1, duration: Math.min(0.55, duration * 0.2), intensity: 0.6, direction: 'left' }],
+        tracks: [],
       },
       {
         id: `headline-${String(index)}`, type: 'text', text: copy.headline, x: 130, y: 260, width: textWidth, height: 430,
@@ -65,6 +68,7 @@ export function composeProject(brief: CreativeBrief, concept: CreativeConcept): 
         align: 'left', verticalAlign: 'middle', lineHeight: 0.98, letterSpacing: -2.2, fit: 'shrink', reveal: 'none', revealProgress: 1, countProgress: 1,
         start: 0.15, duration: duration - 0.15, z: 21, visible: true, transform: { ...DEFAULT_TRANSFORM }, blendMode: 'source-over', tags: ['headline'],
         motion: [{ recipe: safeMotion(direction.motion, 'text'), start: 0.15, duration: Math.min(0.9, duration * 0.28), intensity: 1 }],
+        tracks: [],
       },
       {
         id: `detail-${String(index)}`, type: 'text', text: copy.detail, x: 134, y: 760, width: Math.min(textWidth, 900), height: 130,
@@ -72,12 +76,14 @@ export function composeProject(brief: CreativeBrief, concept: CreativeConcept): 
         align: 'left', verticalAlign: 'top', lineHeight: 1.25, letterSpacing: 0, fit: 'shrink', reveal: 'none', revealProgress: 1, countProgress: 1,
         start: 0.55, duration: Math.max(0.2, duration - 0.55), z: 21, visible: true, transform: { ...DEFAULT_TRANSFORM }, blendMode: 'source-over', tags: ['detail'],
         motion: [{ recipe: 'masked-rise', start: 0.55, duration: Math.min(0.65, duration * 0.2), intensity: 0.65, direction: 'up' }],
+        tracks: [],
       },
       {
         id: `rule-${String(index)}`, type: 'shape', shape: 'line', x: 130, y: 930, width: hasMedia ? 820 : 1660, height: 0,
         stroke: brief.brand.accent, strokeWidth: 3, radius: 0, progress: 1,
         start: 0.35, duration: duration - 0.35, z: 18, visible: true, transform: { ...DEFAULT_TRANSFORM }, blendMode: 'source-over', tags: ['structure'],
         motion: [{ recipe: 'line-route', start: 0.35, duration: Math.min(0.85, duration * 0.25), intensity: 1 }],
+        tracks: [],
       },
     ];
     const media = buildMediaLayer(brief, index, duration, direction.motion);

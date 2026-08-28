@@ -4,7 +4,7 @@ Use Studio when the user needs to shape the composition interactively, compare r
 
 Start Studio on loopback. In Codex, use `genmotion studio <project> --no-open`, then open the printed URL in a browser panel when available. In Claude Code or an ordinary terminal, `genmotion studio <project>` opens the system browser. Keep the terminal process running until the review session ends.
 
-Use the project switcher in the top bar to open another valid local project or create one from a complete creative brief. New projects are saved under `~/Genmotion Projects` unless Studio was launched with `--workspace <directory>`. Creation writes a real `brief.json` and composed `genmotion.json`, then opens the new project in an isolated Studio context.
+Use the project switcher in the top bar to open another valid local project or create one from a complete creative brief. New projects are saved under `~/Genmotion Projects` unless Studio was launched with `--workspace <directory>`. **Create with agent** writes a real brief and neutral artboard, opens the isolated project, and immediately sends the brief to the selected local host. **Blank artboard** skips that agent turn.
 
 The workflow canvas is production state, not a separate mockup. Scene and layer changes write the typed project through optimistic revision checks. Reference and note nodes live in `.genmotion/studio.json`; reference files live under `assets/studio/`; earlier project revisions live in `.genmotion/history/`. The renderer still consumes `genmotion.json` or YAML and never renders the Studio DOM.
 
@@ -13,9 +13,9 @@ Use the editor surfaces deliberately:
 - Workflow expresses scene order, asset and reference relationships, and production notes.
 - Editor requests exact frames from the native renderer. Scrub to entrances, peak action, settled holds, and transition boundaries. Visual layers, audio tracks, and motion directives move and edge-trim on the shared timeline, remain frame-snapped, and magnetically align with the playhead and nearby edges. The Snap control disables magnetic guides but deliberately retains frame integrity.
 - Select a visual layer to move or resize it directly over the native frame. Corner handles resize freely, Shift preserves the current aspect ratio, and the inspector provides center, fit, fill, and reset actions.
-- Inspector changes real project, scene, layer, brand, geometry, typography, motion, and timing fields.
+- Inspector changes real project, scene, layer, brand, geometry, typography, direct animation tracks, optional recipes, and timing fields.
 - References preserve human-supplied visual cues and their annotations. Connect references to the scenes they inform.
-- Agent conversations record the current scene, layer, and frame, stream progress, persist the host session, and reload validated project edits into Studio.
+- Agent conversations record the current scene, layer, and frame, stream progress, persist the host session, and reload validated project edits into Studio. Claude receives a generated project-local MCP configuration; no provider API key is stored.
 - Motion libraries can be imported as declarative JSON from the Motion library manager. Custom ids are project-local and namespaced as `library-id:motion-id`; imported data must validate and never contains executable JavaScript.
 - History restores an earlier IR while preserving the current revision as another recoverable entry.
 - Export starts the same verified native render pipeline as the CLI. The dialog follows live progress, preserves a recent-file list across Studio restarts, shows each project-relative output path, and can reveal a completed file in the local operating system's file manager.

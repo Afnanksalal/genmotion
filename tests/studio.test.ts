@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { cp, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../src/ir/loader.js';
@@ -161,7 +161,7 @@ describe('Genmotion Studio', () => {
         method: 'POST', headers, body: JSON.stringify({ filename: 'studio-test.mp4' }),
       });
       expect(reveal.status).toBe(200);
-      expect(revealed).toEqual([path.resolve(directory, 'renders', 'studio-test.mp4')]);
+      expect(revealed).toEqual([await realpath(path.resolve(directory, 'renders', 'studio-test.mp4'))]);
       const invalidReveal = await fetch(`${studio.url}/api/exports/reveal`, {
         method: 'POST', headers, body: JSON.stringify({ filename: '../genmotion.json' }),
       });

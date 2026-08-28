@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "basic-render",
-  "title": "Deterministic render",
+  "title": "Agent-authored render",
   "width": 320,
   "height": 180,
   "fps": 30,
@@ -18,7 +18,7 @@
   "scenes": [
     {
       "id": "intro",
-      "purpose": "Prove deterministic native rendering.",
+      "purpose": "Prove agent-authored native rendering.",
       "duration": 1,
       "background": "#0b0d10",
       "transitionIn": { "type": "cut", "duration": 0, "ease": "linear" },

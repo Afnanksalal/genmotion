@@ -1,6 +1,6 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GENMOTION_VERSION } from '../version.js';
@@ -104,7 +104,7 @@ function buildPrompt(input: AgentRunInput): string {
     `The typed Creative IR is ${input.projectFile}.`,
     `The user is currently focused on ${context}.`,
     '',
-    'Apply the request to the real Genmotion project when it asks for a change. Read only the files needed for this request before editing. Preserve truthful product evidence, local asset provenance, deterministic rendering, existing brand decisions, and unrelated human edits. Do not create HTML, Remotion, HyperFrames, placeholder copy, fake product behavior, or unsourced claims. Do not commit, publish, install packages, access credentials, or use the network. Genmotion Studio validates the project after your turn. For ordinary Studio edits, make the requested change and run the fastest relevant validation only. Do not render the full video, create contact sheets, start servers, or run long visual QA unless the user explicitly asks to render, export, or visually review.',
+    'Apply the request to the real Genmotion project when it asks for a change. Use the genmotion MCP tools when available: read the current revision, patch precise paths transactionally, validate, and inspect rendered frames. The Creative IR is an open authoring surface: design original scenes, direct property tracks, custom cubic-bezier or spring timing, and SVG path geometry. Named recipes are optional references, never a required template. Preserve truthful product evidence, local asset provenance, reproducible frame evaluation, existing brand decisions, and unrelated human edits. Do not create HTML, Remotion, HyperFrames, placeholder copy, fake product behavior, or unsourced claims. Do not commit, publish, install packages, access credentials, or use the network. For a visual change, inspect at least one representative native frame before finishing. Do not render the full video, create contact sheets, or start servers unless the user explicitly asks to export or review the full timeline.',
     '',
     `User request: ${input.prompt}`,
     '',
@@ -353,7 +353,11 @@ export class LocalAgentRuntime implements AgentRuntime {
   }
 
   private async runClaude(input: AgentRunInput, onProgress: (progress: AgentRunProgress) => Promise<void> | void): Promise<AgentRunResult> {
-    const args = ['-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages', '--permission-mode', 'acceptEdits', '--tools', 'Read,Edit,Write,Glob,Grep'];
+    const mcpConfig = path.join(input.projectDir, '.genmotion', 'agent-mcp.json');
+    const mcpEntry = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../mcp.js');
+    await mkdir(path.dirname(mcpConfig), { recursive: true });
+    await writeFile(mcpConfig, `${JSON.stringify({ mcpServers: { genmotion: { type: 'stdio', command: process.execPath, args: [mcpEntry], env: { GENMOTION_ALLOWED_ROOTS: input.projectDir } } } }, null, 2)}\n`);
+    const args = ['-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages', '--permission-mode', 'acceptEdits', '--mcp-config', mcpConfig, '--tools', 'Read,Edit,Write,Glob,Grep,mcp__genmotion', '--allowedTools', 'mcp__genmotion'];
     if (this.sessions.claude) args.push('--resume', this.sessions.claude);
     const child = spawn('claude', args, { cwd: input.projectDir, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true, shell: false });
     this.children.add(child);

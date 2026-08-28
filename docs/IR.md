@@ -4,7 +4,7 @@
 
 `genmotion.json` and its YAML equivalents contain `schemaVersion`, identity, delivery dimensions, frame rate, deterministic seed, brand tokens, scenes, audio tracks, and string metadata.
 
-All time values are seconds. Keyframe times are local to their layer. Layer motion directives also use layer-local time.
+All time values are seconds. Keyframe times are local to their layer. Direct animation tracks and optional motion directives also use layer-local time.
 
 ## Scenes
 
@@ -21,9 +21,30 @@ Every layer has:
 - integer `z` order;
 - visibility, blend mode, optional clip, and tags;
 - an explicit transform;
-- zero or more named motion directives.
+- zero or more arbitrary property tracks;
+- zero or more optional named motion directives.
 
-The transform supports animated `x`, `y`, `scaleX`, `scaleY`, `rotation`, `opacity`, and `blur`, plus normalized anchors. An animated number is `{ "keyframes": [...] }`; a keyframe contains `at`, `value`, and `ease`.
+The transform supports animated `x`, `y`, `scaleX`, `scaleY`, `rotation`, `opacity`, and `blur`, plus normalized anchors. An animated number is `{ "keyframes": [...] }`; a keyframe contains `at`, `value`, and `ease`. Ease may be a named curve, a data-defined cubic-bezier object, or a physical spring object.
+
+## Direct animation tracks
+
+Tracks are the first-class agent animation language. They can target geometry, typography metrics, shape drawing, video playback, shadow values, or transforms. Each track owns an ID, two or more keyframes, `replace`, `add`, or `multiply` composition, and `clamp`, `loop`, or `ping-pong` playback. They do not require a catalog recipe.
+
+```json
+{
+  "id": "hero-arc",
+  "target": "transform.rotation",
+  "operation": "add",
+  "extrapolate": "clamp",
+  "enabled": true,
+  "keyframes": [
+    { "at": 0, "value": -8, "ease": "linear" },
+    { "at": 0.72, "value": 0, "ease": { "type": "spring", "mass": 1, "stiffness": 170, "damping": 26, "velocity": 0 } }
+  ]
+}
+```
+
+Shape layers also accept `shape: "path"` with local SVG path data. The native renderer scales the path bounds into the declared layer box.
 
 ### Text
 
@@ -53,7 +74,7 @@ Video layers support contain, cover, and fill fitting, rounded clipping, trim st
 }
 ```
 
-The compiler maps a recipe to renderer-owned absolute keyframes. A layer cannot give two recipes ownership of the same transform property. Split complex visuals into separate layers when independent motions need independent ownership.
+The compiler maps a recipe to renderer-owned absolute keyframes. A layer cannot give two recipes ownership of the same transform property. Direct tracks are applied after recipe compilation and can intentionally replace, add to, or multiply that value.
 
 Search the maintained vocabulary with:
 
