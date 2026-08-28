@@ -4,7 +4,7 @@ description: Create, edit, preview, validate, and render designed motion graphic
 license: MIT
 metadata:
   author: afnanksalal
-  version: "1.4.1"
+  version: "1.5.0"
 ---
 
 # Genmotion

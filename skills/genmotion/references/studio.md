@@ -15,7 +15,7 @@ Use the editor surfaces deliberately:
 - References preserve human-supplied visual cues and their annotations. Connect references to the scenes they inform.
 - Agent conversations record the current scene, layer, and frame, stream progress, persist the host session, and reload validated project edits into Studio.
 - History restores an earlier IR while preserving the current revision as another recoverable entry.
-- Export starts the same verified native render pipeline as the CLI.
+- Export starts the same verified native render pipeline as the CLI. The dialog follows live progress, preserves a recent-file list across Studio restarts, shows each project-relative output path, and can reveal a completed file in the local operating system's file manager.
 
 Use the signed-in Codex or Claude host in Studio for embedded turns. If you are already working in the user's current external chat, poll pending requests with `genmotion requests <project> --pending`. A request is not permission to fabricate product evidence, download unlicensed material, publish media, or expose Studio beyond loopback. Apply in-scope edits, validate, inspect the affected native frames, and resolve the request with a factual completion summary.
 

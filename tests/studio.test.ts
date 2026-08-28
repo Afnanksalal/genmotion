@@ -35,7 +35,8 @@ function fakeAgent(edit: false | 'valid' | 'invalid' = false): AgentRuntime {
 describe('Genmotion Studio', () => {
   it('persists validated edits, reference assets, workflow state, requests, history, and exports', async () => {
     const directory = await fixture();
-    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });
+    const revealed: string[] = [];
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent(), revealFile: (file) => { revealed.push(file); return Promise.resolve(); } });
     try {
       const html = await fetch(studio.url);
       expect(await html.text()).toContain('Genmotion Studio');
@@ -98,6 +99,17 @@ describe('Genmotion Studio', () => {
       }
       expect(status).toBe('complete');
       expect((await stat(path.join(directory, 'renders', 'studio-test.mp4'))).size).toBeGreaterThan(1000);
+      const exports = await fetch(`${studio.url}/api/exports`).then((response) => response.json()) as Array<{ filename: string; output: string; size: number }>;
+      expect(exports).toContainEqual(expect.objectContaining({ filename: 'studio-test.mp4', output: 'renders/studio-test.mp4' }));
+      const reveal = await fetch(`${studio.url}/api/exports/reveal`, {
+        method: 'POST', headers, body: JSON.stringify({ filename: 'studio-test.mp4' }),
+      });
+      expect(reveal.status).toBe(200);
+      expect(revealed).toEqual([path.resolve(directory, 'renders', 'studio-test.mp4')]);
+      const invalidReveal = await fetch(`${studio.url}/api/exports/reveal`, {
+        method: 'POST', headers, body: JSON.stringify({ filename: '../genmotion.json' }),
+      });
+      expect(invalidReveal.status).toBe(400);
       expect(savedBody.revision).not.toBe(bootstrap.revision);
     } finally { await studio.close(); }
   }, 30_000);

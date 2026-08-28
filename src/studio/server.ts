@@ -1,8 +1,9 @@
 import express from 'express';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { spawn } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, realpath, rename, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
 import { z } from 'zod';
@@ -47,6 +48,9 @@ const renderRequestSchema = z.object({
   quality: z.enum(['draft', 'standard', 'high']).default('high'),
   codec: z.enum(['h264', 'h265', 'vp9', 'prores']).default('h264'),
 });
+const revealExportSchema = z.object({
+  filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
+});
 
 export interface StudioRequestRecord {
   id: string; prompt: string; selection: AgentSelection;
@@ -56,7 +60,8 @@ export interface StudioRequestRecord {
   beforeRevision?: string; afterRevision?: string;
 }
 interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed'; progress: number; output?: string; error?: string }
-export interface StudioOptions { host?: string; port?: number; agentRuntime?: AgentRuntime }
+interface ExportRecord { filename: string; output: string; size: number; modifiedAt: string }
+export interface StudioOptions { host?: string; port?: number; agentRuntime?: AgentRuntime; revealFile?: (file: string) => Promise<void> }
 export interface StudioServer { url: string; close: () => Promise<void>; server: Server }
 
 const mediaExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.mp4', '.mov', '.webm', '.mkv', '.m4v', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.woff', '.woff2', '.ttf', '.otf']);
@@ -91,6 +96,16 @@ async function atomicWrite(file: string, content: string | Buffer): Promise<void
   const temporary = `${file}.${randomUUID()}.tmp`;
   await writeFile(temporary, content);
   await rename(temporary, file);
+}
+
+async function revealInFileManager(file: string): Promise<void> {
+  const command = process.platform === 'win32' ? 'explorer.exe' : process.platform === 'darwin' ? 'open' : 'xdg-open';
+  const args = process.platform === 'win32' ? ['/select,', file] : process.platform === 'darwin' ? ['-R', file] : [path.dirname(file)];
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(command, args, { detached: true, stdio: 'ignore', windowsHide: true });
+    child.once('spawn', () => { child.unref(); resolve(); });
+    child.once('error', reject);
+  });
 }
 
 function initialStudioState(project: GenmotionProject): StudioState {
@@ -128,6 +143,16 @@ async function listRequests(directory: string): Promise<StudioRequestRecord[]> {
   } catch { return []; }
 }
 
+async function listExports(rendersDir: string, projectDir: string): Promise<ExportRecord[]> {
+  const entries = await readdir(rendersDir, { withFileTypes: true });
+  const exports = await Promise.all(entries.filter((entry) => entry.isFile() && /\.(mp4|mov|webm)$/i.test(entry.name)).map(async (entry) => {
+    const file = path.join(rendersDir, entry.name);
+    const metadata = await stat(file);
+    return { filename: entry.name, output: path.relative(projectDir, file).replaceAll('\\', '/'), size: metadata.size, modifiedAt: metadata.mtime.toISOString() };
+  }));
+  return exports.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt));
+}
+
 async function writeRequest(directory: string, record: StudioRequestRecord): Promise<void> {
   await atomicWrite(path.join(directory, `${record.id}.json`), `${JSON.stringify(record, null, 2)}\n`);
 }
@@ -163,6 +188,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   const jobs = new Map<string, RenderJob>();
   const frameCache = new Map<string, Buffer>();
   const agentRuntime = options.agentRuntime ?? new LocalAgentRuntime(loaded.projectDir);
+  const revealFile = options.revealFile ?? revealInFileManager;
   let agentHosts = await agentRuntime.hosts();
   let agentBusy = false;
   let agentQueue = Promise.resolve();
@@ -209,7 +235,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
         project: sourceProject, studio: studioState, revision: revision(sourceProject),
         findings: await validateProject(currentLoaded), duration: projectDuration(sourceProject),
         catalog: { motions: motionRecipes, references: tasteReferences, blueprints: sceneBlueprints },
-        requests: await listRequests(requestsDir), jobs: [...jobs.values()], agents: agentHosts, projectFile: path.basename(loaded.projectFile),
+        requests: await listRequests(requestsDir), jobs: [...jobs.values()], exports: await listExports(rendersDir, loaded.projectDir), agents: agentHosts, projectFile: path.basename(loaded.projectFile),
       });
     } catch (error) { next(error); }
   });
@@ -427,6 +453,25 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     } catch (error) { next(error); }
   });
   app.get('/api/jobs', (_request, response) => { response.json([...jobs.values()]); });
+  app.get('/api/exports', async (_request, response, next) => {
+    try { response.json(await listExports(rendersDir, loaded.projectDir)); } catch (error) { next(error); }
+  });
+  app.post('/api/exports/reveal', async (request, response, next) => {
+    try {
+      const body = revealExportSchema.parse(request.body);
+      const output = path.join(rendersDir, body.filename);
+      const [realRendersDir, realOutput] = await Promise.all([realpath(rendersDir), realpath(output)]);
+      const relative = path.relative(realRendersDir, realOutput);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) { response.status(400).json({ error: 'Export path is outside the project render directory.' }); return; }
+      const outputStat = await stat(realOutput);
+      if (!outputStat.isFile()) { response.status(404).json({ error: 'Export file no longer exists.' }); return; }
+      await revealFile(realOutput);
+      response.json({ ok: true, output: path.relative(loaded.projectDir, realOutput).replaceAll('\\', '/') });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') { response.status(404).json({ error: 'Export file no longer exists.' }); return; }
+      next(error);
+    }
+  });
   app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
     void _next;
     const message = error instanceof Error ? error.message : String(error);
