@@ -1,7 +1,7 @@
 {
   "name": "genmotion",
-  "version": "1.8.0",
-  "description": "Agent-native deterministic motion design engine with a curated taste system.",
+  "version": "1.9.0",
+  "description": "Agent-native motion design engine with visual tools, an open Creative IR, and a native renderer.",
   "keywords": [
     "agentic-video",
     "motion-design",

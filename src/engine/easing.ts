@@ -8,6 +8,34 @@ function backIn(t: number): number {
 
 export function ease(name: EasingName, value: number): number {
   const t = Math.max(0, Math.min(1, value));
+  if (typeof name !== 'string') {
+    if (name.type === 'spring') {
+      const omega0 = Math.sqrt(name.stiffness / name.mass);
+      const zeta = name.damping / (2 * Math.sqrt(name.stiffness * name.mass));
+      if (zeta < 1) {
+        const omegaD = omega0 * Math.sqrt(1 - zeta * zeta);
+        const envelope = Math.exp(-zeta * omega0 * t);
+        return 1 - envelope * (Math.cos(omegaD * t) + ((zeta * omega0 - name.velocity) / omegaD) * Math.sin(omegaD * t));
+      }
+      return 1 - Math.exp(-omega0 * t) * (1 + (omega0 - name.velocity) * t);
+    }
+    const sample = (a: number, b: number, c: number, x: number): number => ((a * x + b) * x + c) * x;
+    const ax = 3 * name.x1 - 3 * name.x2 + 1;
+    const bx = 3 * name.x2 - 6 * name.x1;
+    const cx = 3 * name.x1;
+    const ay = 3 * name.y1 - 3 * name.y2 + 1;
+    const by = 3 * name.y2 - 6 * name.y1;
+    const cy = 3 * name.y1;
+    let low = 0;
+    let high = 1;
+    let parameter = t;
+    for (let index = 0; index < 18; index += 1) {
+      parameter = (low + high) / 2;
+      if (sample(ax, bx, cx, parameter) < t) low = parameter;
+      else high = parameter;
+    }
+    return sample(ay, by, cy, parameter);
+  }
   switch (name) {
     case 'linear': return t;
     case 'sine-in': return 1 - Math.cos((t * Math.PI) / 2);

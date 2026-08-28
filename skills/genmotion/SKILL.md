@@ -4,14 +4,14 @@ description: Create, edit, preview, validate, and render designed motion graphic
 license: MIT
 metadata:
   author: afnanksalal
-  version: "1.8.0"
+  version: "1.9.0"
 ---
 
 # Genmotion
 
 Use Genmotion as the only constructed-motion renderer. Do not introduce Remotion, HyperFrames, HTML compositions, browser screenshots of reconstructed interfaces, or ad hoc FFmpeg filter graphs for designed scenes.
 
-Genmotion projects are typed JSON or YAML. Agents choose story, hierarchy, content, references, and named motion recipes. The engine owns layout evaluation, animation execution, media decoding, parallel native rendering, audio mixing, encoding, and output verification.
+Genmotion projects are typed JSON or YAML. Agents own story, hierarchy, content, references, SVG geometry, property tracks, custom easing, and optional motion recipes. The engine faithfully evaluates the accepted scene graph, decodes media, renders native frames in parallel, mixes audio, encodes, and verifies output.
 
 Genmotion Studio is the human iteration surface. It edits the same Creative IR consumed by the renderer and persists workflow layout, reference annotations, revision history, and agent requests inside the project. Use it when the user wants to direct, compare, inspect, or fine-tune the work rather than treating feedback as a one-shot prompt.
 
@@ -21,7 +21,7 @@ The Editor workspace exposes visual layers, audio tracks, and named motion direc
 
 Run `genmotion doctor --json`. If the command is unavailable inside a Genmotion checkout, run `npm install && npm run build` and use `node dist/cli.js`. In a consuming project with Genmotion installed locally, use `npx genmotion`.
 
-When Genmotion MCP tools are available, call them directly instead of spawning equivalent CLI commands. The `genmotion-mcp` stdio server exposes the complete project, planning, catalog, validation, frame, render, probe, contact-sheet, Studio, preview, and request workflow without an API key. Keep its working directory at the user's project root; paths outside that root are rejected unless explicitly added through `GENMOTION_ALLOWED_ROOTS`.
+When Genmotion MCP tools are available, call them directly instead of spawning equivalent CLI commands. Start with `genmotion_schema`, create a neutral project with `genmotion_init`, read its revision, use `genmotion_project_patch` for precise transactions, validate, inspect the evaluated timeline, and examine returned PNG frames. The server also exposes full saves, rendering, probing, contact sheets, Studio, preview, catalogs, and requests without an API key. Keep its working directory at the user's project root; paths outside that root are rejected unless explicitly added through `GENMOTION_ALLOWED_ROOTS`.
 
 For a new project:
 
@@ -43,11 +43,11 @@ When working in Codex, start it with `--no-open`, read the printed local URL, an
 
 1. Determine the viewer, one promise, proof, desired action, duration, format, energy, and real assets.
 2. Keep product claims tied to observed or supplied sources. Designed scenes may explain evidence but cannot manufacture it.
-3. Run `genmotion plan <project> --brief <brief.json> --concepts 8`.
-4. Review `.genmotion/concepts.json`. Confirm that the selected direction borrows, avoids, and transforms reference knowledge instead of imitating one reference.
-5. Use Studio for fine-grained human direction or read [references/authoring.md](references/authoring.md) before editing `genmotion.json` by hand. Read [references/studio.md](references/studio.md) when Studio is active.
-6. Run `genmotion validate <project> --strict` and fix every finding.
-7. Render representative frames with `genmotion frame <project> --at <seconds> --output <file>`.
+3. Inspect `genmotion_schema` and the project revision. Build an original scene system with transactional patches. Do not start from the offline scaffold unless no agent host exists.
+4. Use direct property tracks and custom timing whenever the concept needs motion outside the recipe library. Recipes are optional motion DNA, not a gate on creativity.
+5. Render and inspect representative native PNG frames during iteration. A schema-valid project is not necessarily a well-directed composition.
+6. Use Studio for fine-grained human direction or read [references/authoring.md](references/authoring.md) before editing `genmotion.json` by hand. Read [references/studio.md](references/studio.md) when Studio is active.
+7. Run `genmotion validate <project> --strict` and fix every finding.
 8. Use `genmotion preview <project>` to review timing, hierarchy, transitions, and holds.
 9. Render the accepted timeline with `genmotion render <project> --output <file> --quality high`. High quality renders vector and type layers at a minimum 1920-pixel long edge instead of merely changing compression. Use `--resolution 3840x2160` or the matching project aspect ratio when a specific delivery size is required.
 10. Run `genmotion probe <file>` and `genmotion contact-sheet <file> --output <sheet>`; inspect the actual sheet before delivery.
@@ -69,7 +69,7 @@ Do not mark a request resolved before its edit is saved and validated. Do not ov
 ## Required judgment
 
 - Use references as contrastive knowledge. Retrieve from different visual families and explicitly record what to borrow, avoid, and transform.
-- Prefer reusable motion DNA over full-scene imitation. Search with `genmotion catalog "<semantic intent>"` before assigning motion.
+- Treat the catalog as reference material. Author direct tracks when they better express the idea; never force a scene into a named recipe.
 - One scene gets one dominant move. Supporting motion establishes hierarchy rather than competing for attention.
 - The first moving element is the first perceived priority. Order motion by meaning, not declaration order.
 - Build, breathe, and resolve. Hold the complete result long enough to understand.

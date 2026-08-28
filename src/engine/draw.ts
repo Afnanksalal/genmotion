@@ -1,10 +1,11 @@
-import { createCanvas, type SKRSContext2D } from '@napi-rs/canvas';
+import { createCanvas, Path2D, type SKRSContext2D } from '@napi-rs/canvas';
 import { access } from 'node:fs/promises';
 import type { GenmotionProject, ImageLayer, Layer, Scene, ShapeLayer, TextLayer, VideoLayer } from '../ir/schema.js';
 import { resolveProjectAsset } from '../ir/loader.js';
 import { loadCachedImage, registerProjectFonts, videoFramePath } from './assets.js';
 import { evaluateNumber, layerIsActive, locateScene } from './timeline.js';
 import { ease } from './easing.js';
+import { evaluateLayerTracks } from './animation.js';
 
 interface Box { x: number; y: number; width: number; height: number }
 
@@ -125,6 +126,21 @@ function drawShape(ctx: SKRSContext2D, layer: ShapeLayer, time: number): void {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
+  if (layer.shape === 'path' && layer.path) {
+    const vector = new Path2D(layer.path);
+    ctx.save();
+    ctx.translate(layer.x, layer.y);
+    const [left, top, right, bottom] = vector.getBounds();
+    const sourceWidth = Math.max(1, right - left);
+    const sourceHeight = Math.max(1, bottom - top);
+    ctx.scale(layer.width / sourceWidth, layer.height / sourceHeight);
+    ctx.translate(-left, -top);
+    if (layer.fill) ctx.fill(vector);
+    if (layer.stroke && layer.strokeWidth > 0) ctx.stroke(vector);
+    ctx.restore();
+    applyShadow(ctx, undefined);
+    return;
+  }
   if (layer.shape === 'ellipse') {
     ctx.beginPath();
     ctx.ellipse(layer.x + layer.width / 2, layer.y + layer.height / 2, layer.width * progress / 2, layer.height * progress / 2, 0, 0, Math.PI * 2);
@@ -188,6 +204,7 @@ async function drawVideoLayer(ctx: SKRSContext2D, layer: VideoLayer, projectDir:
 async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project: GenmotionProject, projectDir: string, sceneTime: number): Promise<void> {
   if (!layer.visible || !layerIsActive(layer.start, layer.duration, scene.duration, sceneTime)) return;
   const localTime = sceneTime - layer.start;
+  layer = evaluateLayerTracks(layer, localTime);
   const box = layerBox(layer);
   const transform = layer.transform;
   const centerX = box.x + box.width * transform.anchorX;

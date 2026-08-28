@@ -2,12 +2,12 @@
 
 Studio supplies the fine-grained human controls that an autonomous renderer cannot infer from a brief. It is a local web application shipped inside Genmotion, launched with `genmotion studio <project>`, and backed by the exact Creative IR used for native rendering.
 
-The project switcher discovers valid projects in the configured local workspace, creates fully initialized projects from a real creative brief, and opens each project in its own isolated Studio context. The default workspace is `~/Genmotion Projects`; pass `--workspace <directory>` when launching Studio to use another location.
+The project switcher discovers valid projects in the configured local workspace and creates a neutral artboard from a real creative brief. **Create with agent** immediately hands that brief to the selected signed-in Codex or Claude host; **Blank artboard** leaves it entirely to the human. The default workspace is `~/Genmotion Projects`; pass `--workspace <directory>` when launching Studio to use another location.
 
 ## Authoring surfaces
 
 - The node workflow shows the creative brief, ordered scenes, expanded layers, human references, notes, and final export relationship. Node positions and explanatory edges persist.
-- The inspector edits project delivery settings, brand colors, scene timing and transitions, layer geometry and content, and named motion assignments.
+- The inspector edits project delivery settings, brand colors, scene timing and transitions, layer geometry and content, arbitrary agent animation tracks, custom keyframes, and optional named motion assignments.
 - The Editor renders exact native project frames. Playback, scrubbing, scene clips, layer tracks, motion phases, and the playhead use the project's real frame rate and duration.
 - Every named motion directive is an editable phase clip beneath its owning layer. Select, drag, frame-snap, edge-trim, duplicate, remove, or tune its recipe, start, duration, intensity, and direction without creating a browser-only animation model.
 - The motion library manager imports project-local JSON libraries. Each library is schema-validated, namespaced as `library-id:motion-id`, and compiled into native transform, shape-progress, text-reveal, or numeric-count tracks. It is declarative by design and cannot execute imported JavaScript.
@@ -20,9 +20,9 @@ The project switcher discovers valid projects in the configured local workspace,
 
 ## Human and agent loop
 
-The bottom chat bar detects authenticated local Codex and Claude Code installations. Choose a host and submit a prompt to start a real agent turn with the current scene, layer, and frame as context. Responses stream into the durable conversation record, and project edits appear in Studio after the resulting Creative IR passes validation.
+The bottom chat bar detects authenticated local Codex and Claude Code installations. Choose a host and submit a prompt to start a real agent turn with the current scene, layer, and frame as context. The agent can discover the schema, patch the exact project revision, validate, inspect evaluated timeline values, and view native PNG frames through Genmotion's local tools. Responses stream into the durable conversation record, and project edits appear in Studio after the resulting Creative IR passes validation.
 
-Codex uses its official stdio app-server protocol and a persistent project conversation named `Genmotion · <project>`, which appears as a normal Codex task. Claude uses its authenticated streaming print mode and a persistent project session available through Claude Code's resume flow. Both reuse the host tool's managed account sign-in, so Studio has no model API key field or secret store.
+Codex uses its official stdio app-server protocol and a persistent project conversation named `Genmotion · <project>`, which appears as a normal Codex task. Claude uses its authenticated streaming print mode, a persistent project session, and an automatically generated project-scoped MCP configuration that exposes only Genmotion's local tools. Both reuse the host tool's managed account sign-in, so Studio has no model API key field or secret store.
 
 Requests are serialized to prevent concurrent agents from overwriting one another. Browser writes are locked during an active turn. A failed or interrupted turn remains visible with its error and is never silently replayed on restart. The `requests` and `request-resolve` commands remain available for an agent already working in the user's current Codex or Claude chat.
 
@@ -33,6 +33,7 @@ Requests are serialized to prevent concurrent agents from overwriting one anothe
 - `.genmotion/history/`: recoverable previous project revisions
 - `.genmotion/requests/`: queued, active, completed, failed, and externally resolved agent conversations
 - `.genmotion/agent-sessions.json`: local Codex and Claude conversation identifiers, never credentials
+- `.genmotion/agent-mcp.json`: generated local Claude tool configuration, never credentials
 - `.genmotion/motions/`: validated custom motion library JSON files
 - `assets/studio/`: content-addressed imported assets
 - `renders/`: exported masters

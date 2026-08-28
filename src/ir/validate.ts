@@ -92,6 +92,17 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
       if (animatedValues(layer.transform.opacity).some((value) => value < 0 || value > 1)) findings.push({ code: 'OPACITY_RANGE', severity: 'error', message: `${layer.id} opacity must remain between 0 and 1.`, location });
       for (const property of ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity', 'blur'] as const) validateAnimated(layer.transform[property], `${location}.transform.${property}`, findings);
       if (animatedValues(layer.transform.scaleX).some((value) => value <= 0) || animatedValues(layer.transform.scaleY).some((value) => value <= 0)) findings.push({ code: 'SCALE_NON_POSITIVE', severity: 'error', message: `${layer.id} scale must stay greater than zero.`, location });
+      const trackIds = new Set<string>();
+      for (const [trackIndex, track] of layer.tracks.entries()) {
+        const trackLocation = `${location}.tracks.${trackIndex}`;
+        if (trackIds.has(track.id)) findings.push({ code: 'DUPLICATE_TRACK_ID', severity: 'error', message: `Duplicate animation track id on ${layer.id}: ${track.id}`, location: trackLocation });
+        trackIds.add(track.id);
+        validateAnimated({ keyframes: track.keyframes }, trackLocation, findings);
+        const visibleDuration = layer.duration ?? scene.duration - layer.start;
+        if ((track.keyframes.at(-1)?.at ?? 0) > visibleDuration + 0.001 && track.extrapolate === 'clamp') findings.push({ code: 'TRACK_OVERRUN', severity: 'warning', message: `${track.id} extends past ${layer.id}'s visible duration.`, location: trackLocation });
+        if (track.operation === 'replace' && track.target === 'transform.opacity' && track.keyframes.some((keyframe) => keyframe.value < 0 || keyframe.value > 1)) findings.push({ code: 'OPACITY_RANGE', severity: 'error', message: `${track.id} drives opacity outside 0..1.`, location: trackLocation });
+        if (track.operation === 'replace' && ['transform.scaleX', 'transform.scaleY', 'width', 'height', 'fontSize', 'lineHeight', 'playbackRate'].includes(track.target) && track.keyframes.some((keyframe) => keyframe.value <= 0)) findings.push({ code: 'TRACK_NON_POSITIVE', severity: 'error', message: `${track.id} drives ${track.target} to a non-positive value.`, location: trackLocation });
+      }
 
       const assetPath = collectAsset(layer);
       if (assetPath) {

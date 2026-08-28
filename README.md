@@ -6,7 +6,7 @@
 
 <p align="center"><strong>Native motion design for agents.</strong></p>
 
-Genmotion is an agent-native motion design engine with a deterministic native renderer and a curated taste system. It turns a creative brief into divergent, reference-aware directions, compiles the selected direction into a typed timeline, renders frames through native Skia, and streams them directly into FFmpeg.
+Genmotion is an agent-native motion design engine and visual editor. Codex or Claude authors the actual scene graph, timing, vector geometry, keyframes, custom easing, media, and sound through structured local tools; humans can then direct every layer and phase in Studio. Native Skia frame workers stream the accepted composition directly into FFmpeg.
 
 High-quality export means actual delivery resolution, not a low-resolution canvas with a better codec setting. `high` renders vector, type, and procedural layers at a minimum 1920-pixel long edge and encodes H.264 at CRF 14. `standard` targets at least 1280 pixels, while `draft` preserves the project's native working size. Every master is probed after encode for dimensions, frame rate, and duration.
 
@@ -14,20 +14,22 @@ It does not render React, HTML, CSS, a browser page, Remotion, or HyperFrames.
 
 ## Why it exists
 
-General agents can write animation code, but unconstrained code generation does not create visual judgment. Genmotion moves judgment into maintained creative infrastructure:
+General agents can write animation code, but code generation alone gives them a poor iteration surface. Genmotion gives the model a visual authoring loop while keeping the output inspectable:
 
-- handcrafted motion recipes with semantic roles, constraints, cost, and accessibility guidance;
+- arbitrary agent-authored numeric property tracks with named, cubic-bezier, or spring timing;
+- SVG path geometry and native text, shape, image, and video layers;
+- optional motion recipes that act as reusable references rather than a closed animation vocabulary;
 - reference studies decomposed into composition, hierarchy, pacing, typography, surface, and motion decisions;
 - contrastive retrieval that states what to borrow, avoid, and transform;
-- divergent concept generation followed by deterministic ranking;
-- a typed Creative IR that agents edit instead of generating renderer code;
+- transactional Creative IR patches with revision checks, visual frame responses, and evaluated timeline inspection;
+- a typed Creative IR that agents and Studio edit together instead of hiding decisions in generated renderer code;
 - validation that blocks invalid assets, timelines, transitions, opacity, geometry, and unsafe render contracts.
 
 ## Renderer
 
 - Native Skia rasterization through `@napi-rs/canvas`
 - No browser, DOM, React reconciliation, or screenshot capture
-- Deterministic frame evaluation from project data, timestamp, and seed
+- Reproducible frame evaluation from project data, timestamp, and seed
 - Parallel worker-thread frame generation
 - Ordered raw RGBA streaming into FFmpeg while frames continue rendering
 - H.264, H.265, VP9, and ProRes outputs
@@ -79,7 +81,7 @@ Register it with Claude Code:
 claude mcp add genmotion --scope user -- genmotion-mcp
 ```
 
-The server exposes planning, catalog search, revision-safe Creative IR reads and writes, validation, native frames, high-resolution rendering, probing, contact sheets, Studio, preview, and durable Studio requests. It uses local stdio, needs no model API key, and rejects paths outside the current workspace unless additional roots are explicitly provided through `GENMOTION_ALLOWED_ROOTS`.
+The server exposes the complete schema, revision-safe reads, transactional RFC 6902 patches, full-document saves, evaluated timeline inspection, visual PNG responses, validation, high-resolution rendering, probing, contact sheets, Studio, preview, and durable Studio requests. It uses local stdio, needs no model API key, and rejects paths outside the current workspace unless additional roots are explicitly provided through `GENMOTION_ALLOWED_ROOTS`.
 
 ## Create a project
 
@@ -104,17 +106,19 @@ genmotion contact-sheet launch-film/renders/acme.mp4 --output launch-film/render
 
 Studio lists and creates projects in `~/Genmotion Projects` by default. Use `--workspace <directory>` to select another local project workspace.
 
-`init` creates a valid `brief.json`, a ranked creative direction, and a renderable `genmotion.json`. Edit the brief with real proof, assets, brand fonts, and delivery language, then regenerate:
+`init` creates a truthful `brief.json` and a neutral renderable artboard. It does not pretend that a fixed template is an AI-generated design. Open Studio and choose **Create with agent**, or let the calling Codex or Claude workflow inspect `genmotion_schema`, patch the project, render representative frames, and iterate visually.
+
+The legacy offline scaffold remains available for environments where no agent host exists:
 
 ```bash
 genmotion plan launch-film --brief launch-film/brief.json --concepts 8
 ```
 
-The ranked concepts are preserved in `.genmotion/concepts.json`. The selected concept is compiled into `genmotion.json`.
+That compatibility path preserves its ranked concepts in `.genmotion/concepts.json`; it is not used by the agent-first Studio or MCP workflow.
 
 ## Local agent direction
 
-Studio connects directly to Codex or Claude Code installed on the same machine. Choose the signed-in host beside the prompt bar, describe a change or ask a question, and follow the streamed result in the request panel. The conversation is persisted per project and edits are applied to the same typed Creative IR used by preview and render.
+Studio connects directly to Codex or Claude Code installed on the same machine. A new project can immediately enter **Create with agent**, which sends its real brief to the selected local host. Later prompts include the focused scene, layer, and frame. Claude receives a project-scoped Genmotion MCP configuration automatically, while Codex uses the registered Genmotion tools. The agent can patch precise properties and inspect actual native frames before finishing.
 
 This workflow uses the existing ChatGPT or Claude sign-in managed by the local agent. Genmotion does not request, store, or configure model API keys.
 
@@ -122,8 +126,8 @@ This workflow uses the existing ChatGPT or Claude sign-in managed by the local a
 
 | Command | Purpose |
 | --- | --- |
-| `init` | Create a renderable project from a real promise, proof point, and viewer action |
-| `plan` | Retrieve diverse references, generate concepts, rank them, and compile the selected direction |
+| `init` | Create a neutral artboard and real brief for agent or Studio authoring |
+| `plan` | Build the optional offline compatibility scaffold when no agent host is available |
 | `validate` / `check` | Validate schema, assets, timing, reference decisions, readability, and render safety |
 | `frame` | Render a native PNG at an exact timeline time |
 | `preview` | Open the interactive native-rendered timeline preview |
@@ -147,7 +151,7 @@ A project is `genmotion.json`, `genmotion.yaml`, or `genmotion.yml`. It declares
 - delivery dimensions, frame rate, seed, and brand tokens;
 - ordered scenes with explicit durations and transitions;
 - text, vector shape, image, and video layers;
-- absolute keyframes and named motion directives;
+- arbitrary property tracks, custom cubic-bezier or spring easing, SVG paths, direct keyframes, and optional named motion directives;
 - locally frozen assets and licensed fonts;
 - positioned audio tracks and mixing behavior;
 - reference decisions that preserve the creative rationale.
@@ -166,7 +170,7 @@ npm run check
 npm run benchmark
 ```
 
-The test suite covers schema behavior, deterministic timeline evaluation, creative retrieval, concept diversity, catalog integrity, native frame determinism, real video decoding, Studio persistence and security, local agent orchestration, preview delivery, H.264 encoding, and AAC audio muxing.
+The test suite covers agent-authored tracks, custom easing, transactional patches, schema discovery, visual MCP responses, timeline evaluation, native frame reproducibility, real video decoding, Studio persistence and security, local agent orchestration, preview delivery, H.264 encoding, and AAC audio muxing.
 
 ## Security
 

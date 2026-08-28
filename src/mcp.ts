@@ -18,7 +18,10 @@ import { renderProject } from './engine/render.js';
 import { GenmotionError } from './errors.js';
 import { loadProject } from './ir/loader.js';
 import { projectSchema } from './ir/schema.js';
+import { applyPatch, patchOperationSchema } from './ir/patch.js';
 import { hasErrors, summarizeProject, validateProject } from './ir/validate.js';
+import { evaluateLayerTracks } from './engine/animation.js';
+import { layerIsActive, locateScene } from './engine/timeline.js';
 import { getStudioRequests, resolveStudioRequest, startStudio, type StudioServer } from './studio/server.js';
 import { GENMOTION_VERSION } from './version.js';
 
@@ -29,6 +32,16 @@ const resolutionSchema = z.object({ width: z.number().int().min(2).max(8192), he
 
 function toolResult(value: ToolValue) {
   return { content: [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }], structuredContent: value };
+}
+
+function imageToolResult(value: ToolValue, images: Array<{ data: Buffer; mimeType: 'image/png' | 'image/jpeg' }>) {
+  return {
+    content: [
+      { type: 'text' as const, text: JSON.stringify(value, null, 2) },
+      ...images.map((item) => ({ type: 'image' as const, data: item.data.toString('base64'), mimeType: item.mimeType })),
+    ],
+    structuredContent: value,
+  };
 }
 
 function revision(content: string): string {
@@ -76,12 +89,12 @@ function serverFactory(): McpServer {
   }, async () => { const checks = await doctor(); return toolResult({ ok: checks.every((check) => check.ok), checks }); });
 
   server.registerTool('genmotion_init', {
-    title: 'Create Genmotion project', description: 'Create a real Genmotion project and creative brief inside the allowed workspace.',
+    title: 'Create Genmotion project', description: 'Create a neutral Genmotion artboard and truth-linked creative brief for the calling agent to author. No canned scene design is generated.',
     inputSchema: z.object({ directory: z.string().min(1), title: z.string().min(1), promise: z.string().min(1), proof: z.string().min(1), action: z.string().min(1), audience: z.string().min(1), mode: z.enum(['walkthrough', 'launch', 'pitch', 'explainer']), duration: z.number().positive().max(3600) }).strict(),
   }, async (input) => toolResult(await initializeProject(await allowedPath(input.directory, 'Project directory'), { title: input.title, promise: input.promise, proof: input.proof, desiredAction: input.action, audience: input.audience, mode: input.mode, duration: input.duration })));
 
   server.registerTool('genmotion_plan', {
-    title: 'Plan Genmotion concepts', description: 'Generate and rank deterministic creative directions from a truth-linked brief.',
+    title: 'Build offline concept scaffold', description: 'Optional compatibility scaffold for unattended CLI use. Agent workflows should inspect the brief, author the Creative IR directly, and visually iterate with frame tools.',
     inputSchema: z.object({ project: z.string().min(1), brief: z.string().min(1), concepts: z.number().int().min(2).max(24).default(8) }).strict(),
   }, async (input) => toolResult(await planProject(await allowedPath(input.project, 'Project'), await allowedPath(input.brief, 'Brief'), input.concepts)));
 
@@ -101,6 +114,17 @@ function serverFactory(): McpServer {
     const source = await readFile(loaded.projectFile, 'utf8');
     return toolResult({ projectFile: loaded.projectFile, projectDir: loaded.projectDir, revision: revision(source), project: loaded.sourceProject, summary: summarizeProject(loaded.project) });
   });
+
+  server.registerTool('genmotion_schema', {
+    title: 'Inspect Genmotion authoring schema', description: 'Return the complete machine-readable Creative IR schema and open-ended animation capabilities for agent authoring.', inputSchema: z.object({}).strict(), annotations: { readOnlyHint: true },
+  }, () => Promise.resolve(toolResult({
+    schema: z.toJSONSchema(projectSchema),
+    authoring: {
+      model: 'Agents may author complete projects, granular RFC 6902 patches, arbitrary numeric property tracks, custom cubic-bezier and spring easing, and SVG path geometry.',
+      recipePolicy: 'Named recipes are optional reusable references. Direct tracks are first-class and require no recipe.',
+      visualLoop: ['genmotion_project_read', 'genmotion_project_patch', 'genmotion_validate', 'genmotion_frame', 'genmotion_timeline_inspect'],
+    },
+  })));
 
   server.registerTool('genmotion_project_save', {
     title: 'Save Genmotion project', description: 'Validate and atomically save Creative IR using optimistic revision locking and recoverable history.',
@@ -131,6 +155,36 @@ function serverFactory(): McpServer {
     }
   });
 
+  server.registerTool('genmotion_project_patch', {
+    title: 'Patch Genmotion project', description: 'Apply an ordered RFC 6902 transaction to the Creative IR, validate it, preserve history, and reject stale revisions. Use this for precise agent iteration instead of rewriting the entire project.',
+    inputSchema: z.object({ project: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), operations: z.array(patchOperationSchema).min(1).max(500), strict: z.boolean().default(true) }).strict(),
+  }, async (input) => {
+    const loaded = await loadProject(await allowedPath(input.project, 'Project'));
+    const current = await readFile(loaded.projectFile, 'utf8');
+    const currentRevision = revision(current);
+    if (currentRevision !== input.expectedRevision) throw new GenmotionError('REVISION_CONFLICT', 'The project changed after it was read. Read the latest revision and reconcile the edit.', { expected: input.expectedRevision, actual: currentRevision });
+    const document = applyPatch(loaded.sourceProject, input.operations);
+    const parsed = projectSchema.parse(document);
+    const serialized = /\.ya?ml$/i.test(loaded.projectFile) ? YAML.stringify(parsed) : `${JSON.stringify(parsed, null, 2)}\n`;
+    const extension = path.extname(loaded.projectFile);
+    const temporary = path.join(path.dirname(loaded.projectFile), `.${path.basename(loaded.projectFile, extension)}.${randomUUID()}.tmp${extension}`);
+    await writeFile(temporary, serialized, { flag: 'wx' });
+    try {
+      const proposed = await loadProject(temporary);
+      const findings = await validateProject(proposed);
+      if (hasErrors(findings) || (input.strict && findings.length > 0)) throw new GenmotionError('VALIDATION_FAILED', 'Project patch blocked by validation findings.', findings);
+      const historyDir = path.join(loaded.projectDir, '.genmotion', 'history');
+      await mkdir(historyDir, { recursive: true });
+      await writeFile(path.join(historyDir, `${new Date().toISOString().replaceAll(':', '-')}-${currentRevision.slice(0, 12)}${extension}`), current, { flag: 'wx' });
+      await rename(temporary, loaded.projectFile);
+      return toolResult({ projectFile: loaded.projectFile, revision: revision(serialized), operationsApplied: input.operations.length, findings, summary: summarizeProject(proposed.project) });
+    } catch (error) {
+      const { rm } = await import('node:fs/promises');
+      await rm(temporary, { force: true });
+      throw error;
+    }
+  });
+
   server.registerTool('genmotion_validate', {
     title: 'Validate Genmotion project', description: 'Validate Creative IR, assets, layout, timing, motion ownership, and delivery constraints.',
     inputSchema: z.object({ project: z.string().min(1), strict: z.boolean().default(true) }).strict(), annotations: { readOnlyHint: true },
@@ -150,11 +204,24 @@ function serverFactory(): McpServer {
     const png = await renderFramePng(loaded.project, loaded.projectDir, frame, input.resolution);
     await mkdir(path.dirname(destination), { recursive: true });
     await writeFile(destination, png);
-    return toolResult({ output: destination, frame, at: frame / loaded.project.fps, resolution: input.resolution ?? { width: loaded.project.width, height: loaded.project.height } });
+    return imageToolResult({ output: destination, frame, at: frame / loaded.project.fps, resolution: input.resolution ?? { width: loaded.project.width, height: loaded.project.height } }, [{ data: png, mimeType: 'image/png' }]);
+  });
+
+  server.registerTool('genmotion_timeline_inspect', {
+    title: 'Inspect evaluated timeline', description: 'Evaluate the active scene and every visible layer at an exact time after recipe compilation and arbitrary property-track animation.',
+    inputSchema: z.object({ project: z.string().min(1), at: z.number().nonnegative() }).strict(), annotations: { readOnlyHint: true },
+  }, async (input) => {
+    const loaded = await loadProject(await allowedPath(input.project, 'Project'));
+    const active = locateScene(loaded.project, input.at);
+    const layers = active.scene.layers.filter((layer) => layer.visible && layerIsActive(layer.start, layer.duration, active.scene.duration, active.localTime)).map((layer) => ({
+      ...evaluateLayerTracks(layer, active.localTime - layer.start),
+      localTime: active.localTime - layer.start,
+    }));
+    return toolResult({ at: input.at, scene: { id: active.scene.id, purpose: active.scene.purpose, localTime: active.localTime, globalStart: active.globalStart }, layers });
   });
 
   server.registerTool('genmotion_render', {
-    title: 'Render Genmotion master', description: 'Validate and render a deterministic high-resolution video master. High quality guarantees at least a 1920-pixel long edge.',
+    title: 'Render Genmotion master', description: 'Validate and render a reproducible high-resolution video master. High quality guarantees at least a 1920-pixel long edge.',
     inputSchema: z.object({ project: z.string().min(1), output: z.string().min(1), quality: qualitySchema.default('high'), codec: codecSchema.default('h264'), resolution: resolutionSchema.optional(), workers: z.number().int().min(1).max(16).optional(), hardwareAcceleration: z.boolean().default(false), strict: z.boolean().default(true) }).strict(),
   }, async (input) => {
     const loaded = await loadProject(await allowedPath(input.project, 'Project'));

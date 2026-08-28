@@ -5,7 +5,7 @@ const nonNegative = finite.nonnegative();
 const positive = finite.positive();
 const color = z.string().regex(/^(#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|oklch\()/, 'Expected a CSS color');
 
-export const easingSchema = z.enum([
+const namedEasingSchema = z.enum([
   'linear',
   'sine-in', 'sine-out', 'sine-in-out',
   'quad-in', 'quad-out', 'quad-in-out',
@@ -13,6 +13,12 @@ export const easingSchema = z.enum([
   'quart-in', 'quart-out', 'quart-in-out',
   'expo-in', 'expo-out', 'expo-in-out',
   'back-in', 'back-out', 'back-in-out',
+]);
+
+export const easingSchema = z.union([
+  namedEasingSchema,
+  z.object({ type: z.literal('cubic-bezier'), x1: finite.min(0).max(1), y1: finite, x2: finite.min(0).max(1), y2: finite }).strict(),
+  z.object({ type: z.literal('spring'), mass: positive.default(1), stiffness: positive.default(170), damping: positive.default(26), velocity: finite.default(0) }).strict(),
 ]);
 
 export const keyframeSchema = z.object({
@@ -52,6 +58,24 @@ export const motionDirectiveSchema = z.object({
   direction: z.enum(['left', 'right', 'up', 'down', 'in', 'out']).optional(),
 });
 
+export const animationTargetSchema = z.enum([
+  'x', 'y', 'width', 'height', 'z', 'fontSize', 'letterSpacing', 'lineHeight',
+  'strokeWidth', 'radius', 'progress', 'revealProgress', 'countProgress',
+  'trimStart', 'playbackRate', 'volume',
+  'transform.x', 'transform.y', 'transform.scaleX', 'transform.scaleY',
+  'transform.rotation', 'transform.opacity', 'transform.blur',
+  'shadow.blur', 'shadow.offsetX', 'shadow.offsetY',
+]);
+
+export const animationTrackSchema = z.object({
+  id: z.string().min(1).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/),
+  target: animationTargetSchema,
+  keyframes: z.array(keyframeSchema).min(2),
+  operation: z.enum(['replace', 'add', 'multiply']).default('replace'),
+  extrapolate: z.enum(['clamp', 'loop', 'ping-pong']).default('clamp'),
+  enabled: z.boolean().default(true),
+}).strict();
+
 const baseLayerSchema = z.object({
   id: z.string().min(1).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/),
   start: nonNegative.default(0),
@@ -63,6 +87,7 @@ const baseLayerSchema = z.object({
   clip: z.object({ x: finite, y: finite, width: positive, height: positive, radius: nonNegative.default(0) }).optional(),
   tags: z.array(z.string()).default([]),
   motion: z.array(motionDirectiveSchema).default([]),
+  tracks: z.array(animationTrackSchema).default([]),
 });
 
 export const textLayerSchema = baseLayerSchema.extend({
@@ -99,7 +124,7 @@ export const textLayerSchema = baseLayerSchema.extend({
 
 export const shapeLayerSchema = baseLayerSchema.extend({
   type: z.literal('shape'),
-  shape: z.enum(['rect', 'round-rect', 'ellipse', 'line', 'polygon']),
+  shape: z.enum(['rect', 'round-rect', 'ellipse', 'line', 'polygon', 'path']),
   x: finite,
   y: finite,
   width: nonNegative,
@@ -109,9 +134,11 @@ export const shapeLayerSchema = baseLayerSchema.extend({
   strokeWidth: nonNegative.default(0),
   radius: nonNegative.default(0),
   points: z.array(z.tuple([finite, finite])).optional(),
+  path: z.string().min(1).optional(),
   progress: animatedNumberSchema.default(1),
   shadow: z.object({ color, blur: nonNegative, offsetX: finite.default(0), offsetY: finite.default(0) }).optional(),
-}).refine((shape) => shape.width > 0 || shape.height > 0, { message: 'A shape needs a non-zero width or height.' });
+}).refine((shape) => shape.width > 0 || shape.height > 0, { message: 'A shape needs a non-zero width or height.' })
+  .refine((shape) => shape.shape !== 'path' || Boolean(shape.path), { message: 'A path shape requires SVG path data.' });
 
 export const imageLayerSchema = baseLayerSchema.extend({
   type: z.literal('image'),
@@ -207,6 +234,7 @@ export const projectSchema = z.object({
 
 export type EasingName = z.infer<typeof easingSchema>;
 export type AnimatedNumber = z.infer<typeof animatedNumberSchema>;
+export type AnimationTrack = z.infer<typeof animationTrackSchema>;
 export type Transform = z.infer<typeof transformSchema>;
 export type Layer = z.infer<typeof layerSchema>;
 export type TextLayer = z.infer<typeof textLayerSchema>;

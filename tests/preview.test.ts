@@ -14,7 +14,7 @@ describe('preview server', () => {
       expect(favicon.headers.get('content-type')).toContain('image/svg+xml');
       expect(await favicon.text()).toContain('diamond-shaped keyframe');
       const metadata = await fetch(`${preview.url}/api/project`).then((response) => response.json()) as { frames: number; title: string };
-      expect(metadata).toMatchObject({ frames: 30, title: 'Deterministic render' });
+      expect(metadata).toMatchObject({ frames: 30, title: 'Agent-authored render' });
       const frame = await fetch(`${preview.url}/frame/10.png`);
       expect(frame.status).toBe(200);
       expect(frame.headers.get('content-type')).toBe('image/png');
