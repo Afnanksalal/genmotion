@@ -84,6 +84,15 @@ function customTracks(recipe: MotionRecipe, start: number, duration: number, int
   return result;
 }
 
+export function motionRecipeClaims(recipe: MotionRecipe): MotionRecipe['properties'] {
+  const tracks = recipe.tracks ? customTracks(recipe, 0, 1, 1) : recipeTracks(recipe.id, 0, 1, 1, 'left');
+  const claims = new Set<MotionRecipe['properties'][number]>();
+  for (const property of Object.keys(tracks) as NumericProperty[]) claims.add(property === 'scaleX' || property === 'scaleY' ? 'scale' : property);
+  if (recipe.id === 'line-route' || recipe.id === 'scan-reveal' || recipe.id === 'metric-count' || recipe.effect === 'shape-progress' || recipe.effect === 'numeric-count') claims.add('progress');
+  if (recipe.id === 'character-decode' || recipe.id === 'word-cascade' || recipe.effect === 'text-characters' || recipe.effect === 'text-words') claims.add('reveal');
+  return [...claims];
+}
+
 function defaultValue(property: NumericProperty): number {
   return property === 'scaleX' || property === 'scaleY' || property === 'opacity' ? 1 : 0;
 }
