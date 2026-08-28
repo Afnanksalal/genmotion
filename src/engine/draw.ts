@@ -8,6 +8,8 @@ import { ease } from './easing.js';
 
 interface Box { x: number; y: number; width: number; height: number }
 
+export interface RenderDimensions { width: number; height: number }
+
 function layerBox(layer: Layer): Box {
   return { x: layer.x, y: layer.y, width: layer.width, height: layer.height };
 }
@@ -241,10 +243,19 @@ async function drawScene(ctx: SKRSContext2D, scene: Scene, project: GenmotionPro
   ctx.restore();
 }
 
-export async function renderFrame(project: GenmotionProject, projectDir: string, frame: number): Promise<Buffer> {
+function checkedDimensions(project: GenmotionProject, dimensions?: RenderDimensions): RenderDimensions {
+  const width = dimensions?.width ?? project.width;
+  const height = dimensions?.height ?? project.height;
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 2 || height < 2) throw new Error('Render dimensions must be integers greater than one.');
+  return { width, height };
+}
+
+export async function renderFrame(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions): Promise<Buffer> {
   registerProjectFonts(project, projectDir);
-  const canvas = createCanvas(project.width, project.height);
+  const output = checkedDimensions(project, dimensions);
+  const canvas = createCanvas(output.width, output.height);
   const ctx = canvas.getContext('2d');
+  ctx.scale(output.width / project.width, output.height / project.height);
   const globalTime = frame / project.fps;
   const active = locateScene(project, globalTime);
   const identity: ScenePose = { alpha: 1, x: 0, y: 0, scale: 1, blur: 0 };
@@ -271,15 +282,16 @@ export async function renderFrame(project: GenmotionProject, projectDir: string,
     await drawScene(ctx, active.scene, project, projectDir, active.localTime, identity);
   }
 
-  return Buffer.from(ctx.getImageData(0, 0, project.width, project.height).data.buffer);
+  return Buffer.from(ctx.getImageData(0, 0, output.width, output.height).data.buffer);
 }
 
-export async function renderFramePng(project: GenmotionProject, projectDir: string, frame: number): Promise<Buffer> {
+export async function renderFramePng(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions): Promise<Buffer> {
   registerProjectFonts(project, projectDir);
-  const rgba = await renderFrame(project, projectDir, frame);
-  const canvas = createCanvas(project.width, project.height);
+  const output = checkedDimensions(project, dimensions);
+  const rgba = await renderFrame(project, projectDir, frame, output);
+  const canvas = createCanvas(output.width, output.height);
   const ctx = canvas.getContext('2d');
-  const image = ctx.createImageData(project.width, project.height);
+  const image = ctx.createImageData(output.width, output.height);
   image.data.set(rgba);
   ctx.putImageData(image, 0, 0);
   return canvas.toBuffer('image/png');

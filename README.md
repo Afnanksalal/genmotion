@@ -1,6 +1,14 @@
-# Genmotion
+<p align="center">
+  <img src="assets/genmotion-symbol.svg" width="104" height="104" alt="Genmotion symbol">
+</p>
+
+<h1 align="center">Genmotion</h1>
+
+<p align="center"><strong>Native motion design for agents.</strong></p>
 
 Genmotion is an agent-native motion design engine with a deterministic native renderer and a curated taste system. It turns a creative brief into divergent, reference-aware directions, compiles the selected direction into a typed timeline, renders frames through native Skia, and streams them directly into FFmpeg.
+
+High-quality export means actual delivery resolution, not a low-resolution canvas with a better codec setting. `high` renders vector, type, and procedural layers at a minimum 1920-pixel long edge and encodes H.264 at CRF 14. `standard` targets at least 1280 pixels, while `draft` preserves the project's native working size. Every master is probed after encode for dimensions, frame rate, and duration.
 
 It does not render React, HTML, CSS, a browser page, Remotion, or HyperFrames.
 
@@ -39,7 +47,7 @@ General agents can write animation code, but unconstrained code generation does 
 From GitHub:
 
 ```bash
-npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.7.0/genmotion-1.7.0.tgz
+npm install -g git+https://github.com/Afnanksalal/genmotion.git
 genmotion doctor
 ```
 
@@ -50,6 +58,28 @@ npm install
 npm run build
 node dist/cli.js doctor
 ```
+
+## Callable tools for Codex and Claude
+
+Genmotion ships a local MCP server with the same production engine used by the CLI and Studio:
+
+```bash
+genmotion-mcp
+```
+
+Register it with Codex:
+
+```bash
+codex mcp add genmotion -- genmotion-mcp
+```
+
+Register it with Claude Code:
+
+```bash
+claude mcp add genmotion --scope user -- genmotion-mcp
+```
+
+The server exposes planning, catalog search, revision-safe Creative IR reads and writes, validation, native frames, high-resolution rendering, probing, contact sheets, Studio, preview, and durable Studio requests. It uses local stdio, needs no model API key, and rejects paths outside the current workspace unless additional roots are explicitly provided through `GENMOTION_ALLOWED_ROOTS`.
 
 ## Create a project
 
@@ -67,6 +97,7 @@ genmotion validate launch-film --strict
 genmotion studio launch-film
 genmotion preview launch-film
 genmotion render launch-film --output launch-film/renders/acme.mp4 --quality high
+genmotion render launch-film --output launch-film/renders/acme-4k.mp4 --quality high --resolution 3840x2160
 genmotion probe launch-film/renders/acme.mp4
 genmotion contact-sheet launch-film/renders/acme.mp4 --output launch-film/renders/contact-sheet.jpg
 ```

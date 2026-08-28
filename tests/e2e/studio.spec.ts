@@ -90,6 +90,85 @@ test('keeps the inspector accessible at a compact desktop width', async ({ page 
   await expect(page.locator('[data-field="title"]')).toBeVisible();
 });
 
+test('wraps long labels and renders unclipped viewport tooltips', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 760 });
+  await page.goto(studio?.url ?? '');
+  await page.getByRole('button', { name: 'Inspector' }).click();
+  const longTitle = 'Deterministic product launch with an intentionally descriptive review title';
+  await page.locator('[data-field="title"]').fill(longTitle);
+  await page.locator('[data-field="title"]').press('Tab');
+  const projectLabel = page.locator('#sceneTree [data-select="project"] .tree-label');
+  await expect(projectLabel).toHaveText(longTitle);
+  await expect(projectLabel).toHaveAttribute('data-tooltip', longTitle);
+  await page.getByRole('button', { name: 'Inspector' }).click();
+  await page.locator('#manageMotions').hover();
+  await expect(page.locator('#appTooltip')).toHaveClass(/visible/);
+  await expect(page.locator('#appTooltip')).toHaveText('Manage libraries');
+  const [tooltip, sidebar] = await Promise.all([page.locator('#appTooltip').boundingBox(), page.locator('.sidebar').boundingBox()]);
+  expect(tooltip).not.toBeNull();
+  expect(sidebar).not.toBeNull();
+  expect((tooltip?.x ?? 0) + (tooltip?.width ?? 0)).toBeGreaterThan((sidebar?.x ?? 0) + (sidebar?.width ?? 0));
+  expect((tooltip?.x ?? 0) + (tooltip?.width ?? 0)).toBeLessThanOrEqual(900);
+});
+
+test('keeps primary chrome inside the viewport across responsive widths', async ({ page }) => {
+  for (const width of [1280, 900, 700, 480]) {
+    await page.setViewportSize({ width, height: 760 });
+    await page.goto(studio?.url ?? '');
+    const overflow = await page.evaluate(() => ({
+      body: document.body.scrollWidth - window.innerWidth,
+      document: document.documentElement.scrollWidth - window.innerWidth,
+      clippedChrome: Array.from(document.querySelectorAll<HTMLElement>('.topbar > *, .agent-bar > *'))
+        .filter((element) => {
+          const style = getComputedStyle(element);
+          if (style.display === 'none' || style.visibility === 'hidden') return false;
+          const rect = element.getBoundingClientRect();
+          return rect.left < -1 || rect.right > window.innerWidth + 1;
+        })
+        .map((element) => ({ className: element.className, text: element.textContent?.trim() })),
+    }));
+    expect(overflow, `viewport ${width}px`).toEqual({ body: 0, document: 0, clippedChrome: [] });
+  }
+});
+
+test('keeps project and export dialogs usable on a phone-sized viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 480, height: 760 });
+  await page.goto(studio?.url ?? '');
+  await page.locator('#projectSwitch').click();
+  const projectPopover = await page.locator('#projectPopover').boundingBox();
+  expect(projectPopover).not.toBeNull();
+  expect(projectPopover?.x).toBeGreaterThanOrEqual(0);
+  expect((projectPopover?.x ?? 0) + (projectPopover?.width ?? 0)).toBeLessThanOrEqual(480);
+  await page.getByRole('button', { name: /New project/ }).click();
+  await expect(page.locator('.new-project-grid')).toHaveCSS('display', 'block');
+  await expect(page.locator('.modal')).toBeInViewport();
+  await expect(page.locator('[data-field="newProject.title"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Export' }).click();
+  await expect(page.locator('.modal')).toBeInViewport();
+  const escaped = await page.locator('.modal input,.modal button').evaluateAll((elements) => elements
+    .filter((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.left < 0 || rect.right > window.innerWidth;
+    })
+    .map((element) => element.outerHTML));
+  expect(escaped).toEqual([]);
+});
+
+test('uses packaged SVG controls and the selected agent brand', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await expect(page.locator('.logo svg')).toBeVisible();
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href', '/brand/genmotion.webmanifest');
+  await expect(page.locator('#projectSwitch .chevron .ui-icon')).toBeVisible();
+  await expect(page.locator('#agentHostMark .brand-icon')).toBeVisible();
+  await page.locator('#agentHost').click();
+  await expect(page.locator('#agentPopover .agent-host-mark .brand-icon')).toBeVisible();
+  await page.getByRole('button', { name: 'Export' }).click();
+  await expect(page.locator('.select-button .ui-icon')).toHaveCount(2);
+  await expect(page.locator('#modalClose .ui-icon')).toBeVisible();
+  await expect(page.locator('body')).not.toContainText(/[✦⌄⌃↗＋✕↻▶❚❚−◆▣▤◫✎●◇▧♪]/);
+});
+
 test('creates and opens a real project from the project switcher', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   await page.locator('#projectSwitch').click();
@@ -190,10 +269,12 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
 test('queues one export and announces completion once', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   await page.getByRole('button', { name: 'Export' }).click();
+  await expect(page.getByText('1920×1080', { exact: true })).toBeVisible();
   await page.locator('[data-field="render.filename"]').fill('e2e-browser-export.mp4');
   await page.locator('#startRender').evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
   await expect.poll(async () => {
-    const jobs = await fetch(`${studio?.url ?? ''}/api/jobs`).then((response) => response.json()) as Array<{ status: string }>;
+    const jobs = await fetch(`${studio?.url ?? ''}/api/jobs`).then((response) => response.json()) as Array<{ status: string; width?: number; height?: number }>;
+    if (jobs[0]) expect(jobs[0]).toMatchObject({ width: 1920, height: 1080 });
     return jobs.length;
   }).toBe(1);
   await expect(page.getByText(/Export ready:/)).toBeVisible({ timeout: 15_000 });

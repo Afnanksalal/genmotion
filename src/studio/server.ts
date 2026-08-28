@@ -12,7 +12,7 @@ import { loadProject, resolveProjectAsset, type LoadedProject } from '../ir/load
 import { projectDuration, projectSchema, type GenmotionProject } from '../ir/schema.js';
 import { compileProjectMotions } from '../engine/motion.js';
 import { renderFramePng } from '../engine/draw.js';
-import { renderProject } from '../engine/render.js';
+import { renderProject, resolveRenderResolution } from '../engine/render.js';
 import { validateProject } from '../ir/validate.js';
 import { compileCustomLibrary, loadMotionLibraries, saveMotionLibrary } from '../catalog/custom.js';
 import { tasteReferences } from '../catalog/references.js';
@@ -21,6 +21,7 @@ import { studioHtml } from './ui.js';
 import { GenmotionError } from '../errors.js';
 import { LocalAgentRuntime, type AgentHostId, type AgentRuntime, type AgentSelection } from '../agent/runtime.js';
 import { initializeProject, type InitOptions } from '../commands/init.js';
+import { isGenmotionBrandAsset, readGenmotionBrandAsset } from '../brand.js';
 
 const nodeSchema = z.object({
   id: z.string().min(1), kind: z.enum(['brief', 'scene', 'layer', 'reference', 'note', 'output']),
@@ -50,6 +51,7 @@ const renderRequestSchema = z.object({
   quality: z.enum(['draft', 'standard', 'high']).default('high'),
   codec: z.enum(['h264', 'h265', 'vp9', 'prores']).default('h264'),
   overwrite: z.boolean().default(false),
+  resolution: z.object({ width: z.number().int().positive(), height: z.number().int().positive() }).optional(),
 });
 const revealExportSchema = z.object({
   filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
@@ -73,7 +75,7 @@ export interface StudioRequestRecord {
   host?: AgentHostId; activity?: string; response?: string; error?: string; sessionId?: string;
   beforeRevision?: string; afterRevision?: string;
 }
-interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed'; progress: number; output?: string; error?: string }
+interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed'; progress: number; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
 interface ExportRecord { filename: string; output: string; size: number; modifiedAt: string }
 interface StudioWorkspace { root: string; servers: Map<string, StudioServer> }
 interface StudioProjectSummary { id: string; title: string; directory: string; width: number; height: number; modifiedAt: string; active: boolean }
@@ -114,11 +116,16 @@ async function atomicWrite(file: string, content: string | Buffer): Promise<void
   await rename(temporary, file);
 }
 
+export function fileManagerRevealCommand(platform: NodeJS.Platform, file: string): { command: string; args: string[]; windowsHide: boolean } {
+  if (platform === 'win32') return { command: 'explorer.exe', args: [`/select,${file}`], windowsHide: false };
+  if (platform === 'darwin') return { command: 'open', args: ['-R', file], windowsHide: true };
+  return { command: 'xdg-open', args: [path.dirname(file)], windowsHide: true };
+}
+
 async function revealInFileManager(file: string): Promise<void> {
-  const command = process.platform === 'win32' ? 'explorer.exe' : process.platform === 'darwin' ? 'open' : 'xdg-open';
-  const args = process.platform === 'win32' ? ['/select,', file] : process.platform === 'darwin' ? ['-R', file] : [path.dirname(file)];
+  const { command, args, windowsHide } = fileManagerRevealCommand(process.platform, file);
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, { detached: true, stdio: 'ignore', windowsHide: true });
+    const child = spawn(command, args, { detached: true, stdio: 'ignore', windowsHide });
     child.once('spawn', () => { child.unref(); resolve(); });
     child.once('error', reject);
   });
@@ -255,7 +262,12 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   }
 
   app.get('/', (_request, response) => { response.type('html').send(studioHtml()); });
-  app.get('/favicon.ico', (_request, response) => { response.status(204).end(); });
+  app.get('/favicon.ico', (_request, response) => { response.type('image/png').set('Cache-Control', 'public, max-age=86400').send(readGenmotionBrandAsset('favicon-32.png')); });
+  app.get('/brand/:name', (request, response) => {
+    const name = request.params.name ?? '';
+    if (!isGenmotionBrandAsset(name)) { response.status(404).end(); return; }
+    response.type(path.extname(name)).set('Cache-Control', 'public, max-age=86400').send(readGenmotionBrandAsset(name));
+  });
   app.get('/api/session', (_request, response) => { response.json({ token }); });
   app.get('/api/bootstrap', async (_request, response, next) => {
     try {
@@ -501,13 +513,14 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (!body.overwrite) {
         try { if ((await stat(output)).isFile()) { response.status(409).json({ error: 'An export with this filename already exists.', code: 'OUTPUT_EXISTS' }); return; } } catch { /* The filename is available. */ }
       }
-      const job: RenderJob = { id, status: 'queued', progress: 0, output: relativeOutput };
+      const dimensions = resolveRenderResolution(compiledProject, body.quality, body.resolution);
+      const job: RenderJob = { id, status: 'queued', progress: 0, output: relativeOutput, ...dimensions, quality: body.quality };
       jobs.set(id, job); response.status(202).json(job);
       void (async () => {
         try {
           job.status = 'rendering';
           await renderProject({ ...loaded, project: compiledProject, sourceProject }, {
-            output, quality: body.quality, codec: body.codec,
+            output, quality: body.quality, codec: body.codec, ...(body.resolution ? { resolution: body.resolution } : {}),
             onProgress: (progress) => { job.progress = progress.totalFrames === 0 ? 0 : progress.encodedFrames / progress.totalFrames; },
           });
           job.status = 'complete'; job.progress = 1;

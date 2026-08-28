@@ -22,6 +22,7 @@ export interface RenderOptions {
   codec?: VideoCodec;
   workers?: number;
   hardwareAcceleration?: boolean;
+  resolution?: RenderResolution;
   signal?: AbortSignal;
   onProgress?: (progress: RenderProgress) => void;
 }
@@ -41,23 +42,47 @@ export interface RenderResult {
   elapsedMs: number;
   averageFps: number;
   renderId: string;
+  width: number;
+  height: number;
+  quality: RenderQuality;
+  codec: VideoCodec;
 }
+
+export interface RenderResolution { width: number; height: number }
 
 interface WorkerResult { frame: number; buffer?: ArrayBuffer; error?: string }
 
-function ffmpegEncoderArgs(project: GenmotionProject, codec: VideoCodec, quality: RenderQuality, output: string, hardware: boolean): string[] {
+export function resolveRenderResolution(project: Pick<GenmotionProject, 'width' | 'height'>, quality: RenderQuality, requested?: RenderResolution): RenderResolution {
+  if (requested) {
+    if (!Number.isInteger(requested.width) || !Number.isInteger(requested.height) || requested.width < 2 || requested.height < 2 || requested.width % 2 !== 0 || requested.height % 2 !== 0) {
+      throw new GenmotionError('INVALID_RENDER_RESOLUTION', 'Output width and height must be even integers greater than one.');
+    }
+    const projectRatio = project.width / project.height;
+    const outputRatio = requested.width / requested.height;
+    if (Math.abs(projectRatio - outputRatio) / projectRatio > 0.002) throw new GenmotionError('INVALID_RENDER_ASPECT', 'Output resolution must preserve the project aspect ratio.');
+    return requested;
+  }
+  const minimumLongEdge = quality === 'draft' ? 0 : quality === 'standard' ? 1280 : 1920;
+  const currentLongEdge = Math.max(project.width, project.height);
+  if (currentLongEdge >= minimumLongEdge) return { width: project.width, height: project.height };
+  const scale = minimumLongEdge / currentLongEdge;
+  const even = (value: number): number => Math.max(2, Math.round(value / 2) * 2);
+  return { width: even(project.width * scale), height: even(project.height * scale) };
+}
+
+function ffmpegEncoderArgs(project: GenmotionProject, dimensions: RenderResolution, codec: VideoCodec, quality: RenderQuality, output: string, hardware: boolean): string[] {
   const base = [
     '-hide_banner', '-loglevel', 'error', '-y',
     '-f', 'rawvideo', '-pixel_format', 'rgba',
-    '-video_size', `${String(project.width)}x${String(project.height)}`,
+    '-video_size', `${String(dimensions.width)}x${String(dimensions.height)}`,
     '-framerate', String(project.fps), '-i', 'pipe:0', '-an',
   ];
-  const preset = quality === 'draft' ? 'ultrafast' : quality === 'standard' ? 'medium' : 'slow';
-  const crf = quality === 'draft' ? '28' : quality === 'standard' ? '20' : '16';
+  const preset = quality === 'draft' ? 'veryfast' : quality === 'standard' ? 'medium' : 'slow';
+  const crf = quality === 'draft' ? '26' : quality === 'standard' ? '18' : '14';
   if (codec === 'h264') {
     if (hardware) base.push('-c:v', process.platform === 'darwin' ? 'h264_videotoolbox' : process.platform === 'win32' ? 'h264_nvenc' : 'h264_vaapi', '-b:v', quality === 'high' ? '24M' : '12M');
     else base.push('-c:v', 'libx264', '-preset', preset, '-crf', crf);
-    base.push('-pix_fmt', 'yuv420p');
+    base.push('-pix_fmt', 'yuv420p', '-profile:v', 'high');
   } else if (codec === 'h265') {
     base.push('-c:v', 'libx265', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p10le');
   } else if (codec === 'vp9') {
@@ -65,12 +90,13 @@ function ffmpegEncoderArgs(project: GenmotionProject, codec: VideoCodec, quality
   } else {
     base.push('-c:v', 'prores_ks', '-profile:v', quality === 'high' ? '3' : '2', '-pix_fmt', 'yuv422p10le');
   }
+  if (dimensions.width >= 1280 || dimensions.height >= 720) base.push('-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709');
   base.push('-movflags', '+faststart', output);
   return base;
 }
 
-function openEncoder(project: GenmotionProject, options: Required<Pick<RenderOptions, 'quality' | 'codec' | 'hardwareAcceleration'>>, output: string): ChildProcessWithoutNullStreams {
-  const child = spawn('ffmpeg', ffmpegEncoderArgs(project, options.codec, options.quality, output, options.hardwareAcceleration), {
+function openEncoder(project: GenmotionProject, dimensions: RenderResolution, options: Required<Pick<RenderOptions, 'quality' | 'codec' | 'hardwareAcceleration'>>, output: string): ChildProcessWithoutNullStreams {
+  const child = spawn('ffmpeg', ffmpegEncoderArgs(project, dimensions, options.codec, options.quality, output, options.hardwareAcceleration), {
     windowsHide: true,
     stdio: ['pipe', 'pipe', 'pipe'],
   });
@@ -103,6 +129,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   const codec = options.codec ?? 'h264';
   const hardwareAcceleration = options.hardwareAcceleration ?? false;
   const workers = Math.max(1, Math.min(options.workers ?? Math.max(1, os.availableParallelism() - 1), 16));
+  const dimensions = resolveRenderResolution(project, quality, options.resolution);
   const totalFrames = Math.ceil(projectDuration(project) * project.fps);
   const output = path.resolve(options.output);
   await mkdir(path.dirname(output), { recursive: true });
@@ -110,7 +137,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   await prepareVideoAssets(project, projectDir);
   const renderId = createHash('sha256').update(JSON.stringify(project)).digest('hex').slice(0, 16);
   const silentVideo = path.join(path.dirname(output), `.${path.basename(output)}.${renderId}.silent${codec === 'vp9' ? '.webm' : codec === 'prores' ? '.mov' : '.mp4'}`);
-  const encoder = openEncoder(project, { quality, codec, hardwareAcceleration }, silentVideo);
+  const encoder = openEncoder(project, dimensions, { quality, codec, hardwareAcceleration }, silentVideo);
 
   let nextFrame = 0;
   let expectedFrame = 0;
@@ -160,7 +187,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
 
   try {
     for (let index = 0; index < Math.min(workers, totalFrames); index += 1) {
-      const worker = new Worker(workerModuleUrl(), { workerData: { project, projectDir } });
+      const worker = new Worker(workerModuleUrl(), { workerData: { project, projectDir, dimensions } });
       pool.push(worker);
       worker.on('message', (result: WorkerResult) => {
         if (failed) return;
@@ -186,8 +213,8 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
     await closeEncoder(encoder);
     await mixAudio(project, projectDir, silentVideo, output);
     const probe = await probeVideo(output);
-    if (probe.width !== project.width || probe.height !== project.height || Math.abs(probe.duration - projectDuration(project)) > Math.max(0.12, 2 / project.fps)) {
-      throw new GenmotionError('OUTPUT_VERIFICATION_FAILED', 'Encoded output does not match the project contract.', { expected: { width: project.width, height: project.height, duration: projectDuration(project) }, actual: probe });
+    if (probe.width !== dimensions.width || probe.height !== dimensions.height || Math.abs(probe.frameRate - project.fps) > 0.01 || Math.abs(probe.duration - projectDuration(project)) > Math.max(0.12, 2 / project.fps)) {
+      throw new GenmotionError('OUTPUT_VERIFICATION_FAILED', 'Encoded output does not match the render contract.', { expected: { ...dimensions, frameRate: project.fps, duration: projectDuration(project) }, actual: probe });
     }
   } catch (error) {
     encoder.kill('SIGKILL');
@@ -197,5 +224,5 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   }
 
   const elapsedMs = performance.now() - started;
-  return { output, duration: projectDuration(project), frames: totalFrames, elapsedMs, averageFps: totalFrames / (elapsedMs / 1000), renderId };
+  return { output, duration: projectDuration(project), frames: totalFrames, elapsedMs, averageFps: totalFrames / (elapsedMs / 1000), renderId, ...dimensions, quality, codec };
 }

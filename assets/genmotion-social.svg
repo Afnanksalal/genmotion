@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Genmotion</title>
+  <desc id="desc">Native motion design for agents.</desc>
+  <rect width="1280" height="640" rx="36" fill="#09090B"/>
+  <circle cx="1080" cy="80" r="310" fill="#172554" opacity=".58"/>
+  <circle cx="1180" cy="610" r="360" fill="#0F172A"/>
+  <g transform="translate(112 176) scale(4.5)">
+    <path fill="#2563EB" d="M10.9 20.8 22.8 8.9a12.5 12.5 0 0 1 17.7 0l2.7 2.7-18 18-14.3-8.8Z"/>
+    <path fill="#60A5FA" d="m43.2 10.9 11.9 11.9a12.5 12.5 0 0 1 0 17.7l-2.7 2.7-18-18 8.8-14.3Z"/>
+    <path fill="#2563EB" d="m53.1 43.2-11.9 11.9a12.5 12.5 0 0 1-17.7 0l-2.7-2.7 18-18 14.3 8.8Z"/>
+    <path fill="#2563EB" d="M20.8 53.1 8.9 41.2a12.5 12.5 0 0 1 0-17.7l2.7-2.7 18 18-8.8 14.3Z"/>
+  </g>
+  <text x="460" y="292" fill="#FAFAFA" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="92" font-weight="760" letter-spacing="-4">Genmotion</text>
+  <text x="466" y="366" fill="#A1A1AA" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="30" font-weight="500">Native motion design for agents.</text>
+  <path d="M466 410h496" stroke="#27272A" stroke-width="2"/>
+  <text x="466" y="466" fill="#71717A" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="2">DESIGN / DIRECT / RENDER</text>
+</svg>

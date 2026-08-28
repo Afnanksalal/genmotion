@@ -5,7 +5,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { loadProject } from '../src/ir/loader.js';
 import { renderFramePng } from '../src/engine/draw.js';
-import { renderProject } from '../src/engine/render.js';
+import { renderProject, resolveRenderResolution } from '../src/engine/render.js';
 import { runProcess } from '../src/engine/process.js';
 
 const fixture = path.resolve('tests/fixtures/basic');
@@ -13,6 +13,14 @@ const temporary: string[] = [];
 afterEach(async () => { await Promise.all(temporary.splice(0).map((directory) => rm(directory, { recursive: true, force: true }))); });
 
 describe('native renderer', () => {
+  it('maps export quality to a real delivery resolution', () => {
+    expect(resolveRenderResolution({ width: 320, height: 180 }, 'draft')).toEqual({ width: 320, height: 180 });
+    expect(resolveRenderResolution({ width: 320, height: 180 }, 'standard')).toEqual({ width: 1280, height: 720 });
+    expect(resolveRenderResolution({ width: 320, height: 180 }, 'high')).toEqual({ width: 1920, height: 1080 });
+    expect(resolveRenderResolution({ width: 3840, height: 2160 }, 'high')).toEqual({ width: 3840, height: 2160 });
+    expect(() => resolveRenderResolution({ width: 320, height: 180 }, 'high', { width: 1920, height: 1200 })).toThrow(/aspect ratio/i);
+  });
+
   it('renders identical bytes for the same frame', async () => {
     const loaded = await loadProject(fixture);
     const first = await renderFramePng(loaded.project, loaded.projectDir, 14);
@@ -31,6 +39,18 @@ describe('native renderer', () => {
     const probe = await runProcess('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_name,width,height', '-of', 'json', output]);
     const parsed = JSON.parse(probe.stdout) as { streams: Array<{ codec_name: string; width: number; height: number }> };
     expect(parsed.streams[0]).toMatchObject({ codec_name: 'h264', width: 320, height: 180 });
+  });
+
+  it('renders high quality at a verified 1080p minimum instead of only changing compression', async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-high-render-'));
+    temporary.push(directory);
+    const loaded = await loadProject(fixture);
+    loaded.project = { ...loaded.project, fps: 1, scenes: loaded.project.scenes.map((scene) => ({ ...scene, duration: 1, transitionIn: { type: 'cut', duration: 0, ease: 'linear' }, transitionOut: { type: 'cut', duration: 0, ease: 'linear' } })) };
+    const result = await renderProject(loaded, { output: path.join(directory, 'high.mp4'), quality: 'high', workers: 1 });
+    expect(result).toMatchObject({ width: 1920, height: 1080, quality: 'high', codec: 'h264' });
+    const probe = await runProcess('ffprobe', ['-v', 'error', '-show_entries', 'stream=width,height', '-of', 'json', result.output]);
+    const parsed = JSON.parse(probe.stdout) as { streams: Array<{ width: number; height: number }> };
+    expect(parsed.streams[0]).toMatchObject({ width: 1920, height: 1080 });
   });
 
   it('mixes a real audio track into the encoded video', async () => {

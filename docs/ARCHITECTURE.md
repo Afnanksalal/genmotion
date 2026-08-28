@@ -20,6 +20,8 @@ brief
 
 The renderer never asks an agent or model how to draw a frame. Every frame is an evaluation of frozen project data at an absolute timestamp.
 
+Export resolution is a render contract separate from the logical project coordinate system. Draft renders use native project dimensions, standard renders guarantee at least a 1280-pixel long edge, and high renders guarantee at least a 1920-pixel long edge. The canvas scales before any scene drawing, so vector geometry and text are rasterized at delivery resolution instead of being enlarged after encoding. Explicit even-sized resolutions are accepted only when they preserve the project aspect ratio.
+
 ## Studio boundary
 
 Genmotion Studio is a local authoring client over the same Creative IR. It does not render HTML into video and it does not maintain a second proprietary timeline. Project edits pass through schema validation, optimistic revision locking, atomic replacement, and recoverable history before the native renderer sees them.

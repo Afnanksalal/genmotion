@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Genmotion</title>
+  <desc id="desc">Four directional frame segments converging around a diamond-shaped keyframe.</desc>
+  <path fill="#111827" d="M10.9 20.8 22.8 8.9a12.5 12.5 0 0 1 17.7 0l2.7 2.7-18 18-14.3-8.8Z"/>
+  <path fill="#111827" d="m43.2 10.9 11.9 11.9a12.5 12.5 0 0 1 0 17.7l-2.7 2.7-18-18 8.8-14.3Z"/>
+  <path fill="#111827" d="m53.1 43.2-11.9 11.9a12.5 12.5 0 0 1-17.7 0l-2.7-2.7 18-18 14.3 8.8Z"/>
+  <path fill="#111827" d="M20.8 53.1 8.9 41.2a12.5 12.5 0 0 1 0-17.7l2.7-2.7 18 18-8.8 14.3Z"/>
+</svg>

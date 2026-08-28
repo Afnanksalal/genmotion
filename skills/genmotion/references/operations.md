@@ -2,7 +2,7 @@
 
 Run `genmotion doctor --json` before the first render on a machine. Keep FFmpeg and ffprobe on `PATH`.
 
-Use draft quality for timing iteration and high quality for accepted delivery. Let Genmotion select worker count unless memory pressure or competing workloads justify an explicit `--workers` limit. Hardware encoding is opt-in because availability and output behavior vary by platform.
+Use draft quality for timing iteration and high quality for accepted delivery. Draft keeps the logical project size, standard guarantees at least a 1280-pixel long edge, and high guarantees at least a 1920-pixel long edge while rasterizing vectors and type directly at that size. Use `--resolution WIDTHxHEIGHT` for an exact even-sized delivery contract with the same aspect ratio. Let Genmotion select worker count unless memory pressure or competing workloads justify an explicit `--workers` limit. Hardware encoding is opt-in because availability and output behavior vary by platform.
 
 Video layers are frozen into `.genmotion/media`. If a source, trim, frame rate, duration, or playback rate changes, Genmotion invalidates and rebuilds that cache. Do not manually edit cache contents.
 

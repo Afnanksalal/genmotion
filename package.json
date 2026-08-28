@@ -1,16 +1,33 @@
 {
   "name": "genmotion",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Agent-native deterministic motion design engine with a curated taste system.",
+  "keywords": [
+    "agentic-video",
+    "motion-design",
+    "native-rendering",
+    "creative-tools",
+    "ffmpeg"
+  ],
+  "homepage": "https://github.com/Afnanksalal/genmotion#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Afnanksalal/genmotion.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Afnanksalal/genmotion/issues"
+  },
   "license": "MIT",
   "type": "module",
   "bin": {
-    "genmotion": "dist/cli.js"
+    "genmotion": "dist/cli.js",
+    "genmotion-mcp": "dist/mcp.js"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
+    "assets",
     "docs",
     "skills",
     "README.md",
@@ -22,7 +39,9 @@
   },
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "brand:render": "node scripts/render-brand-assets.mjs",
     "dev": "tsx src/cli.ts",
+    "mcp": "node dist/mcp.js",
     "test": "npm run build && vitest run",
     "test:studio-e2e": "playwright test",
     "test:coverage": "npm run build && vitest run --coverage",
@@ -34,15 +53,19 @@
     "prepack": "npm run check"
   },
   "dependencies": {
+    "@lobehub/icons-static-svg": "^1.94.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@napi-rs/canvas": "^0.1.80",
     "@radix-ui/colors": "^3.0.0",
     "commander": "^14.0.0",
     "express": "^5.1.0",
+    "lucide": "^1.35.0",
     "pino": "^9.9.0",
     "yaml": "^2.8.1",
     "zod": "^4.1.5"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
     "@playwright/test": "^1.62.1",
     "@types/express": "^5.0.3",
     "@types/node": "^22.18.0",

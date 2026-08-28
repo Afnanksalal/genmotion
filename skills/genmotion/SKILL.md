@@ -4,7 +4,7 @@ description: Create, edit, preview, validate, and render designed motion graphic
 license: MIT
 metadata:
   author: afnanksalal
-  version: "1.7.0"
+  version: "1.8.0"
 ---
 
 # Genmotion
@@ -20,6 +20,8 @@ The Editor workspace exposes visual layers, audio tracks, and named motion direc
 ## Start
 
 Run `genmotion doctor --json`. If the command is unavailable inside a Genmotion checkout, run `npm install && npm run build` and use `node dist/cli.js`. In a consuming project with Genmotion installed locally, use `npx genmotion`.
+
+When Genmotion MCP tools are available, call them directly instead of spawning equivalent CLI commands. The `genmotion-mcp` stdio server exposes the complete project, planning, catalog, validation, frame, render, probe, contact-sheet, Studio, preview, and request workflow without an API key. Keep its working directory at the user's project root; paths outside that root are rejected unless explicitly added through `GENMOTION_ALLOWED_ROOTS`.
 
 For a new project:
 
@@ -47,7 +49,7 @@ When working in Codex, start it with `--no-open`, read the printed local URL, an
 6. Run `genmotion validate <project> --strict` and fix every finding.
 7. Render representative frames with `genmotion frame <project> --at <seconds> --output <file>`.
 8. Use `genmotion preview <project>` to review timing, hierarchy, transitions, and holds.
-9. Render the accepted timeline with `genmotion render <project> --output <file> --quality high`.
+9. Render the accepted timeline with `genmotion render <project> --output <file> --quality high`. High quality renders vector and type layers at a minimum 1920-pixel long edge instead of merely changing compression. Use `--resolution 3840x2160` or the matching project aspect ratio when a specific delivery size is required.
 10. Run `genmotion probe <file>` and `genmotion contact-sheet <file> --output <sheet>`; inspect the actual sheet before delivery.
 
 For reference selection and concept review, read [references/taste.md](references/taste.md). For production rendering, media, and troubleshooting, read [references/operations.md](references/operations.md).

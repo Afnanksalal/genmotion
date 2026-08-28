@@ -8,6 +8,11 @@ describe('preview server', () => {
     const loaded = await loadProject(path.resolve('tests/fixtures/basic'));
     const preview = await startPreview(loaded, { port: 0 });
     try {
+      const html = await fetch(preview.url).then((response) => response.text());
+      expect(html).toContain('diamond-shaped keyframe');
+      const favicon = await fetch(`${preview.url}/favicon.svg`);
+      expect(favicon.headers.get('content-type')).toContain('image/svg+xml');
+      expect(await favicon.text()).toContain('diamond-shaped keyframe');
       const metadata = await fetch(`${preview.url}/api/project`).then((response) => response.json()) as { frames: number; title: string };
       expect(metadata).toMatchObject({ frames: 30, title: 'Deterministic render' });
       const frame = await fetch(`${preview.url}/frame/10.png`);

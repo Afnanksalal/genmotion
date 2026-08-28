@@ -29,6 +29,12 @@ function output(value: unknown): void {
   else process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 }
 
+function parseResolution(value: string): { width: number; height: number } {
+  const match = /^(\d{2,5})x(\d{2,5})$/i.exec(value.trim());
+  if (!match) throw new GenmotionError('INVALID_RENDER_RESOLUTION', 'Resolution must use WIDTHxHEIGHT, for example 1920x1080.');
+  return { width: Number(match[1]), height: Number(match[2]) };
+}
+
 program.command('init')
   .argument('<directory>')
   .requiredOption('--title <title>')
@@ -78,8 +84,9 @@ program.command('render')
   .option('--quality <quality>', 'draft, standard, or high', 'high')
   .option('--codec <codec>', 'h264, h265, vp9, or prores', 'h264')
   .option('--workers <count>', 'Frame workers')
+  .option('--resolution <WIDTHxHEIGHT>', 'Exact even-sized output resolution; must preserve the project aspect ratio')
   .option('--hardware', 'Require a platform hardware encoder')
-  .action(async (input: string, options: { output: string; quality: RenderQuality; codec: VideoCodec; workers?: string; hardware?: boolean }) => {
+  .action(async (input: string, options: { output: string; quality: RenderQuality; codec: VideoCodec; workers?: string; resolution?: string; hardware?: boolean }) => {
     const loaded = await loadProject(input);
     const findings = await validateProject(loaded);
     if (hasErrors(findings)) throw new GenmotionError('VALIDATION_FAILED', 'Render blocked by validation errors.', findings);
@@ -89,6 +96,7 @@ program.command('render')
     const result = await renderProject(loaded, {
       output: options.output, quality: options.quality, codec: options.codec,
       ...(options.workers ? { workers: Number(options.workers) } : {}),
+      ...(options.resolution ? { resolution: parseResolution(options.resolution) } : {}),
       hardwareAcceleration: options.hardware ?? false, signal: controller.signal,
       onProgress: (progress) => {
         if (program.opts<{ json?: boolean }>().json || performance.now() - lastReport < 500) return;
