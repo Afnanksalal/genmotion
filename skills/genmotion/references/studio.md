@@ -9,7 +9,7 @@ The workflow canvas is production state, not a separate mockup. Scene and layer 
 Use the editor surfaces deliberately:
 
 - Workflow expresses scene order, asset and reference relationships, and production notes.
-- Preview requests exact frames from the native renderer. Scrub to entrances, peak action, settled holds, and transition boundaries.
+- Editor requests exact frames from the native renderer. Scrub to entrances, peak action, settled holds, and transition boundaries. Motion directives appear as draggable, edge-trimmable phase clips beneath their owning layers and snap to the project frame rate.
 - Inspector changes real project, scene, layer, brand, geometry, typography, motion, and timing fields.
 - References preserve human-supplied visual cues and their annotations. Connect references to the scenes they inform.
 - Agent requests record the current scene, layer, and frame so feedback has precise context.

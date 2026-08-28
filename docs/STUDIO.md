@@ -6,7 +6,8 @@ Studio supplies the fine-grained human controls that an autonomous renderer cann
 
 - The node workflow shows the creative brief, ordered scenes, expanded layers, human references, notes, and final export relationship. Node positions and explanatory edges persist.
 - The inspector edits project delivery settings, brand colors, scene timing and transitions, layer geometry and content, and named motion assignments.
-- The native preview renders exact project frames. Playback, scrubbing, scene clips, and the playhead use the project's real frame rate and duration.
+- The Editor renders exact native project frames. Playback, scrubbing, scene clips, layer tracks, motion phases, and the playhead use the project's real frame rate and duration.
+- Every named motion directive is an editable phase clip beneath its owning layer. Select, drag, frame-snap, edge-trim, duplicate, remove, or tune its recipe, start, duration, intensity, and direction without creating a browser-only animation model.
 - The reference board accepts local images, annotations, and tags. References connect to scenes without turning source artwork into a copied template.
 - The asset browser ingests local image, video, audio, and font files into content-addressed project storage and can attach visual media to the active scene.
 - History stores recoverable project revisions. Browser undo and redo cover the current editing session.
@@ -40,3 +41,7 @@ This makes iteration inspectable and asynchronous. Studio does not claim an agen
 ## Security
 
 Studio binds to `127.0.0.1` unless explicitly configured otherwise. Do not bind it to a public interface. Mutations require the random session token obtained by the loaded page. Asset paths cannot escape the project and remote assets remain forbidden. Uploaded content is size limited and must match an allowlisted media or font signature. Project writes are atomic and reject stale revisions rather than silently overwriting another actor's work.
+
+## Interface foundation
+
+Studio uses Radix's maintained neutral color scales as its design-system foundation. Its graphite and steel palette intentionally avoids neon editor styling. Native selects, number spinners, range controls, textarea handles, browser tooltips, and scrollbars are replaced or normalized so the browser's default chrome does not leak into the product.

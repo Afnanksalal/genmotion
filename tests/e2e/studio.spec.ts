@@ -30,10 +30,35 @@ test('edits, previews, references, and queues contextual agent work', async ({ p
   await title.press('Tab');
   await expect.poll(async () => JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { title: string }).toMatchObject({ title: 'Studio browser proof' });
 
-  await page.getByRole('button', { name: 'Preview' }).click();
+  await page.getByRole('button', { name: 'Editor' }).click();
   await page.locator('#scrubber').fill('15');
   await expect(page.locator('#previewImage')).toHaveJSProperty('naturalWidth', 320);
   await expect(page.getByText('Frame 15')).toBeVisible();
+
+  const firstPhase = page.locator('[data-phase]').first();
+  await expect(firstPhase).toBeVisible();
+  await firstPhase.click();
+  await expect(page.locator('#selectionKind')).toHaveText('motion');
+  const phaseStart = page.locator('[data-field="motion.start"]');
+  await phaseStart.fill('0.1');
+  await phaseStart.press('Tab');
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ motion: Array<{ start: number }> }> }> };
+    return project.scenes[0]?.layers[0]?.motion[0]?.start;
+  }).toBe(0.1);
+  const phaseBox = await page.locator('[data-phase]').first().boundingBox();
+  expect(phaseBox).not.toBeNull();
+  if (phaseBox) {
+    await page.mouse.move(phaseBox.x + phaseBox.width / 2, phaseBox.y + phaseBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(phaseBox.x + phaseBox.width / 2 + 70, phaseBox.y + phaseBox.height / 2, { steps: 4 });
+    await page.mouse.up();
+  }
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ motion: Array<{ start: number }> }> }> };
+    return project.scenes[0]?.layers[0]?.motion[0]?.start ?? 0;
+  }).toBeGreaterThan(0.1);
+  await expect(page.locator('[title]')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'References' }).click();
   await page.locator('#referencePicker').setInputFiles({

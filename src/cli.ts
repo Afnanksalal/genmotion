@@ -20,7 +20,7 @@ import { auditCatalog } from './catalog/audit.js';
 import { getStudioRequests, resolveStudioRequest, startStudio } from './studio/server.js';
 
 const program = new Command();
-program.name('genmotion').description('Agent-native deterministic motion design engine.').version('1.1.0').option('--json', 'Emit machine-readable JSON.');
+program.name('genmotion').description('Agent-native deterministic motion design engine.').version('1.2.0').option('--json', 'Emit machine-readable JSON.');
 
 function output(value: unknown): void {
   if (program.opts<{ json?: boolean }>().json) process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
