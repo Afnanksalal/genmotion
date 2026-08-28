@@ -91,6 +91,34 @@ test('keeps the inspector accessible at a compact desktop width', async ({ page 
   await expect(page.locator('[data-field="title"]')).toBeVisible();
 });
 
+test('moves expanded workflow layers persistently and opens them in the canvas editor', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  const layersButton = page.getByRole('button', { name: 'Show layers' });
+  await expect(layersButton).toBeVisible();
+  await expect(page.locator('#expandLayersLabel')).toBeHidden();
+  await layersButton.click();
+
+  const layerNode = page.locator('[data-node^="layer:"]').first();
+  await expect(layerNode).toBeVisible();
+  const nodeId = await layerNode.getAttribute('data-node');
+  const before = await layerNode.boundingBox();
+  expect(before).not.toBeNull();
+  await page.mouse.move((before?.x ?? 0) + 90, (before?.y ?? 0) + 20);
+  await page.mouse.down();
+  await page.mouse.move((before?.x ?? 0) + 170, (before?.y ?? 0) + 70, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(async () => {
+    const state = JSON.parse(await readFile(path.join(directory, '.genmotion', 'studio.json'), 'utf8')) as { nodes: Array<{ id: string }> };
+    return state.nodes.some((node) => node.id === nodeId);
+  }).toBe(true);
+
+  await expect(page.locator('#editSelectedLayer')).toBeVisible();
+  await layerNode.dblclick();
+  await expect(page.getByRole('button', { name: 'Editor', exact: true })).toHaveClass(/active/);
+  await expect(page.locator('#stageOverlay .stage-selection')).toBeVisible();
+  await expect(page.locator('#editSelectedLayer')).toBeHidden();
+});
+
 test('wraps long labels and renders unclipped viewport tooltips', async ({ page }) => {
   await page.setViewportSize({ width: 900, height: 760 });
   await page.goto(studio?.url ?? '');
