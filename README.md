@@ -26,7 +26,7 @@ General agents can write animation code, but unconstrained code generation does 
 - Image and video layers with local media freezing
 - Multiple audio tracks, fades, looping, voice-aware music ducking, limiting, and AAC delivery
 - Reusable native preview server with frame scrubbing
-- Local Studio with node workflows, a reference board, fine-grained inspectors, timeline playback, revision history, agent requests, and native export jobs
+- Local Studio with node workflows, a reference board, fine-grained inspectors, a draggable frame-snapped motion-phase editor, revision history, agent requests, and native export jobs
 - Output probing and contract verification after every render
 
 ## Requirements

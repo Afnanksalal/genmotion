@@ -4,7 +4,7 @@ description: Create, edit, preview, validate, and render designed motion graphic
 license: MIT
 metadata:
   author: afnanksalal
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Genmotion
@@ -14,6 +14,8 @@ Use Genmotion as the only constructed-motion renderer. Do not introduce Remotion
 Genmotion projects are typed JSON or YAML. Agents choose story, hierarchy, content, references, and named motion recipes. The engine owns layout evaluation, animation execution, media decoding, parallel native rendering, audio mixing, encoding, and output verification.
 
 Genmotion Studio is the human iteration surface. It edits the same Creative IR consumed by the renderer and persists workflow layout, reference annotations, revision history, and agent requests inside the project. Use it when the user wants to direct, compare, inspect, or fine-tune the work rather than treating feedback as a one-shot prompt.
+
+The Editor workspace exposes every named motion directive as a frame-snapped phase clip. Use it to retime, edge-trim, duplicate, remove, or inspect phases against native rendered frames. Do not create a second browser-only motion model.
 
 ## Start
 
