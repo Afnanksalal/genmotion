@@ -39,7 +39,7 @@ General agents can write animation code, but unconstrained code generation does 
 From GitHub:
 
 ```bash
-npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.1.0/genmotion-1.1.0.tgz
+npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.2.0/genmotion-1.2.0.tgz
 genmotion doctor
 ```
 
