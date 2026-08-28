@@ -302,7 +302,7 @@ export class LocalAgentRuntime implements AgentRuntime {
     let turnTimeout: NodeJS.Timeout | undefined;
     let abortHandler: (() => void) | undefined;
     try {
-      await client.request('initialize', { clientInfo: { name: 'genmotion_studio', title: 'Genmotion Studio', version: '1.3.0' } });
+      await client.request('initialize', { clientInfo: { name: 'genmotion_studio', title: 'Genmotion Studio', version: '1.4.0' } });
       client.notify('initialized', {});
       const account = await client.request('account/read', { refreshToken: false });
       if (!object(account.account) && account.requiresOpenaiAuth === true) throw new Error('Codex is not signed in. Run codex login, then retry.');

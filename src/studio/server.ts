@@ -59,7 +59,7 @@ interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 
 export interface StudioOptions { host?: string; port?: number; agentRuntime?: AgentRuntime }
 export interface StudioServer { url: string; close: () => Promise<void>; server: Server }
 
-const mediaExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.mp4', '.mov', '.webm', '.mkv', '.m4v', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.woff', '.woff2', '.ttf', '.otf']);
+const mediaExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.mp4', '.mov', '.webm', '.mkv', '.m4v', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.woff', '.woff2', '.ttf', '.otf']);
 const referenceExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif']);
 
 function hasExpectedSignature(extension: string, body: Buffer): boolean {
@@ -407,7 +407,12 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const body = renderRequestSchema.parse(request.body);
       const id = randomUUID();
       const output = path.join(rendersDir, body.filename);
-      const job: RenderJob = { id, status: 'queued', progress: 0, output: path.relative(loaded.projectDir, output).replaceAll('\\', '/') };
+      const relativeOutput = path.relative(loaded.projectDir, output).replaceAll('\\', '/');
+      if ([...jobs.values()].some((candidate) => candidate.output === relativeOutput && (candidate.status === 'queued' || candidate.status === 'rendering'))) {
+        response.status(409).json({ error: 'An export for this filename is already running.' });
+        return;
+      }
+      const job: RenderJob = { id, status: 'queued', progress: 0, output: relativeOutput };
       jobs.set(id, job); response.status(202).json(job);
       void (async () => {
         try {

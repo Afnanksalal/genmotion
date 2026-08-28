@@ -85,6 +85,10 @@ describe('Genmotion Studio', () => {
         method: 'POST', headers, body: JSON.stringify({ filename: 'studio-test.mp4', quality: 'draft', codec: 'h264' }),
       });
       expect(render.status).toBe(202);
+      const duplicateRender = await fetch(`${studio.url}/api/render`, {
+        method: 'POST', headers, body: JSON.stringify({ filename: 'studio-test.mp4', quality: 'draft', codec: 'h264' }),
+      });
+      expect(duplicateRender.status).toBe(409);
       const job = await render.json() as { id: string };
       let status = 'queued';
       for (let attempt = 0; attempt < 80 && status !== 'complete' && status !== 'failed'; attempt += 1) {
