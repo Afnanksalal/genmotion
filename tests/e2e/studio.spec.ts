@@ -30,7 +30,8 @@ test.afterEach(async () => {
 
 test('edits, previews, references, and queues contextual agent work', async ({ page }) => {
   const errors: string[] = [];
-  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(`${message.text()} @ ${message.location().url}`); });
+  page.on('response', (response) => { if (response.status() >= 400) void response.text().then((body) => errors.push(`${response.status()} ${response.url()} ${body}`)); });
   await page.goto(studio?.url ?? '');
   await expect(page.getByText('Creative brief')).toBeVisible();
 
@@ -217,6 +218,111 @@ test('creates and opens a real project from the project switcher', async ({ page
   await expect(page.locator('#projectName')).toHaveText('Studio launch', { timeout: 15_000 });
   await expect(page.getByText('codex · Complete')).toBeVisible({ timeout: 15_000 });
   expect((await stat(path.join(directory, 'workspace', 'studio-launch', 'genmotion.json'))).isFile()).toBe(true);
+});
+
+test('creates a blank project without invoking an agent', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('#projectSwitch').click();
+  await page.getByRole('button', { name: /New project/ }).click();
+  await page.locator('[data-field="newProject.title"]').fill('Blank storyboard');
+  await page.locator('[data-field="newProject.audience"]').fill('Motion designers');
+  await page.locator('[data-field="newProject.promise"]').fill('Start from an open artboard');
+  await page.locator('[data-field="newProject.proof"]').fill('The project remains directly editable');
+  await page.locator('[data-field="newProject.desiredAction"]').fill('Direct the first scene');
+  await page.locator('#createBlank').click();
+  await expect(page.locator('#projectName')).toHaveText('Blank storyboard', { timeout: 15_000 });
+  await expect(page.locator('#requestList')).toContainText('No agent conversations yet');
+  expect((await stat(path.join(directory, 'workspace', 'blank-storyboard', 'genmotion.json'))).isFile()).toBe(true);
+});
+
+test('operates workflow, library, reference, transport, and agent controls', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(`${message.text()} @ ${message.location().url}`); });
+  page.on('response', (response) => { if (response.status() >= 400) void response.text().then((body) => errors.push(`${response.status()} ${response.url()} ${body}`)); });
+  await page.goto(studio?.url ?? '');
+
+  await page.locator('#addScene').click();
+  await page.locator('[data-field="newScene.id"]').fill('proof-scene');
+  await page.locator('[data-field="newScene.purpose"]').fill('Hold the verified product result.');
+  await page.locator('#confirmAddScene').click();
+  await expect(page.locator('#sceneTree')).toContainText('proof-scene');
+  await expect(page.locator('#saveState')).toHaveText('Saved');
+  await page.locator('[data-select="scene"][data-id="proof-scene"]').click();
+  await page.getByRole('button', { name: 'Editor', exact: true }).click();
+  await expect(page.locator('#previewImage')).toHaveAttribute('src', /\/frame\/30\.png/);
+  await page.getByRole('button', { name: 'Workflow', exact: true }).click();
+
+  await page.locator('#addNote').click();
+  await page.locator('[data-field="newNote.title"]').fill('Pacing');
+  await page.locator('[data-field="newNote.body"]').fill('Hold the result for one full reading beat.');
+  await page.locator('#confirmAddNote').click();
+  await expect(page.locator('#nodes')).toContainText('Pacing');
+  await page.locator('#fitWorkflow').click();
+  await expect(page.locator('#zoomLabel')).toHaveText(/%$/);
+
+  await page.locator('#sceneTree [data-select="layer"]').first().click();
+  const beforeMotions = await page.locator('[data-remove-motion]').count();
+  await page.locator('#motionSearch').fill('scale lock');
+  await page.locator('#motionList [data-motion]').first().click();
+  await expect(page.locator('#replaceMotion')).toBeVisible();
+  await page.locator('#replaceMotion').click();
+  await expect.poll(() => page.locator('[data-remove-motion]').count()).toBe(beforeMotions);
+  await expect(page.locator('#saveState')).toHaveText('Saved');
+
+  await page.locator('#manageMotions').click();
+  await expect(page.locator('#importMotionLibrary')).toBeVisible();
+  await page.locator('#motionLibraryPicker').setInputFiles({
+    name: 'studio-library.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({
+      schemaVersion: 1, id: 'studio-library', title: 'Studio Library', version: '1.0.0', motions: [{
+        id: 'gentle-shift', title: 'Gentle shift', roles: ['entrance'], energy: ['balanced'], signature: 'A measured horizontal arrival.',
+        duration: [0.2, 0.8], cost: 1, accessibility: ['Respect reduced motion'], tracks: { x: [{ at: 0, value: 18 }, { at: 1, value: 0, ease: 'cubic-out' }] },
+      }],
+    })),
+  });
+  await expect(page.getByText('Studio Library', { exact: true })).toBeVisible();
+  await page.locator('#modalClose').click();
+
+  await page.getByRole('button', { name: 'References' }).click();
+  const [referenceChooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.locator('#uploadReference').click(),
+  ]);
+  await referenceChooser.setFiles({
+    name: 'workflow-reference.png', mimeType: 'image/png',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64'),
+  });
+  await page.locator('[data-reference]').click();
+  await page.locator('[data-field="ref.notes"]').fill('Borrow the restrained hierarchy.');
+  await page.locator('[data-field="ref.notes"]').press('Tab');
+  await page.locator('#connectReference').click();
+  await page.locator('[data-connect-scene="intro"]').click();
+  await expect(page.locator('#saveState')).toHaveText('Saved');
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ id: string; notes: string[] }> };
+    return project.scenes.find((scene) => scene.id === 'intro')?.notes ?? [];
+  }).toContain('Studio reference workflow-reference: Borrow the restrained hierarchy.');
+
+  await page.getByRole('button', { name: 'Editor', exact: true }).click();
+  await page.locator('#playButton').click();
+  await expect(page.locator('#playButton')).toHaveAttribute('aria-label', 'Pause');
+  await page.locator('#playButton').click();
+  await expect(page.locator('#playButton')).toHaveAttribute('aria-label', 'Play');
+  await page.locator('#timelineZoomIn').click();
+  await expect(page.locator('#timelineZoomLabel')).toHaveText('125%');
+  await page.locator('#timelineZoomOut').click();
+  await expect(page.locator('#timelineZoomLabel')).toHaveText('100%');
+  await page.locator('#refreshValidation').click();
+  await expect(page.locator('#saveState')).toHaveText('Saved');
+
+  await page.locator('#agentHost').click();
+  await page.locator('#refreshAgents').click();
+  await expect(page.locator('#agentPopover')).toHaveClass(/open/);
+  await page.locator('#agentHost').click();
+  await page.locator('#agentInput').fill('Review the current selected frame.');
+  await page.locator('#sendRequest').click();
+  await expect(page.getByText('Review the current selected frame.')).toBeVisible();
+  await expect(page.getByText('codex · Complete')).toBeVisible();
+  expect(errors).toEqual([]);
 });
 
 test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }) => {

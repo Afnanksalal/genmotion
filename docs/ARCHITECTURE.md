@@ -56,7 +56,7 @@ A blueprint is a semantic phase structure with normalized ranges, roles, slots, 
 
 The primary planner is the user's authenticated local Codex or Claude Code installation, not a built-in provider call and not a template selector. Project creation starts from a neutral artboard. The agent discovers the complete schema, reads the current revision, applies granular RFC 6902 transactions, validates, receives actual PNG frames, and inspects evaluated timeline state. Studio exposes the same project to the human for direct manipulation.
 
-No model API key is stored by Genmotion. Claude Studio turns receive a project-scoped stdio MCP configuration; Codex Studio turns use the registered Genmotion MCP server. The older catalog planner is retained only as an explicit offline compatibility scaffold.
+No model API key is stored by Genmotion. Claude Studio turns receive a project-scoped stdio MCP configuration; Codex Studio turns use the registered Genmotion MCP server. Genmotion does not ship a deterministic scene planner or template-generated substitute for agent direction.
 
 ## Creative IR
 

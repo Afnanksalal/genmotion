@@ -12,7 +12,6 @@ import { renderProject, type RenderQuality, type VideoCodec } from './engine/ren
 import { startPreview } from './engine/preview.js';
 import { doctor } from './commands/doctor.js';
 import { initializeProject } from './commands/init.js';
-import { planProject } from './commands/plan.js';
 import { searchCatalog } from './commands/catalog.js';
 import { GenmotionError } from './errors.js';
 import { makeContactSheet, probeVideo } from './engine/probe.js';
@@ -47,12 +46,6 @@ program.command('init')
   .action(async (directory: string, options: { title: string; promise: string; proof: string; action: string; audience: string; mode: 'walkthrough' | 'launch' | 'pitch' | 'explainer'; duration: string }) => {
     output(await initializeProject(directory, { title: options.title, promise: options.promise, proof: options.proof, desiredAction: options.action, audience: options.audience, mode: options.mode, duration: Number(options.duration) }));
   });
-
-program.command('plan')
-  .argument('<project-directory>')
-  .requiredOption('--brief <file>')
-  .option('--concepts <count>', 'Number of divergent concepts', '8')
-  .action(async (directory: string, options: { brief: string; concepts: string }) => { output(await planProject(directory, options.brief, Number(options.concepts))); });
 
 program.command('validate').alias('check')
   .argument('<project>')

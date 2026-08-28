@@ -4,7 +4,7 @@ description: Create, edit, preview, validate, and render designed motion graphic
 license: MIT
 metadata:
   author: afnanksalal
-  version: "1.9.0"
+  version: "1.9.1"
 ---
 
 # Genmotion
@@ -43,7 +43,7 @@ When working in Codex, start it with `--no-open`, read the printed local URL, an
 
 1. Determine the viewer, one promise, proof, desired action, duration, format, energy, and real assets.
 2. Keep product claims tied to observed or supplied sources. Designed scenes may explain evidence but cannot manufacture it.
-3. Inspect `genmotion_schema` and the project revision. Build an original scene system with transactional patches. Do not start from the offline scaffold unless no agent host exists.
+3. Inspect `genmotion_schema` and the project revision. Build an original scene system with transactional patches. Genmotion does not provide a deterministic scene planner; the agent owns creative direction.
 4. Use direct property tracks and custom timing whenever the concept needs motion outside the recipe library. Recipes are optional motion DNA, not a gate on creativity.
 5. Render and inspect representative native PNG frames during iteration. A schema-valid project is not necessarily a well-directed composition.
 6. Use Studio for fine-grained human direction or read [references/authoring.md](references/authoring.md) before editing `genmotion.json` by hand. Read [references/studio.md](references/studio.md) when Studio is active.

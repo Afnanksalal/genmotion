@@ -10,7 +10,6 @@ import { auditCatalog } from './catalog/audit.js';
 import { searchCatalog } from './commands/catalog.js';
 import { doctor } from './commands/doctor.js';
 import { initializeProject } from './commands/init.js';
-import { planProject } from './commands/plan.js';
 import { renderFramePng } from './engine/draw.js';
 import { makeContactSheet, probeVideo } from './engine/probe.js';
 import { startPreview, type PreviewServer } from './engine/preview.js';
@@ -92,11 +91,6 @@ function serverFactory(): McpServer {
     title: 'Create Genmotion project', description: 'Create a neutral Genmotion artboard and truth-linked creative brief for the calling agent to author. No canned scene design is generated.',
     inputSchema: z.object({ directory: z.string().min(1), title: z.string().min(1), promise: z.string().min(1), proof: z.string().min(1), action: z.string().min(1), audience: z.string().min(1), mode: z.enum(['walkthrough', 'launch', 'pitch', 'explainer']), duration: z.number().positive().max(3600) }).strict(),
   }, async (input) => toolResult(await initializeProject(await allowedPath(input.directory, 'Project directory'), { title: input.title, promise: input.promise, proof: input.proof, desiredAction: input.action, audience: input.audience, mode: input.mode, duration: input.duration })));
-
-  server.registerTool('genmotion_plan', {
-    title: 'Build offline concept scaffold', description: 'Optional compatibility scaffold for unattended CLI use. Agent workflows should inspect the brief, author the Creative IR directly, and visually iterate with frame tools.',
-    inputSchema: z.object({ project: z.string().min(1), brief: z.string().min(1), concepts: z.number().int().min(2).max(24).default(8) }).strict(),
-  }, async (input) => toolResult(await planProject(await allowedPath(input.project, 'Project'), await allowedPath(input.brief, 'Brief'), input.concepts)));
 
   server.registerTool('genmotion_catalog', {
     title: 'Search motion catalog', description: 'Search Genmotion motions, scene blueprints, and taste references by creative intent.',

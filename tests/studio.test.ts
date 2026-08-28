@@ -137,6 +137,23 @@ describe('Genmotion Studio', () => {
       expect(upload.status).toBe(200);
       const asset = await upload.json() as { path: string };
       expect((await stat(path.join(directory, ...asset.path.split('/')))).size).toBeGreaterThan(0);
+      const servedAsset = await fetch(`${studio.url}/asset/${asset.path}`);
+      expect(servedAsset.status).toBe(200);
+      expect((await servedAsset.arrayBuffer()).byteLength).toBeGreaterThan(0);
+      expect((await fetch(`${studio.url}/asset/../genmotion.json`)).status).toBeGreaterThanOrEqual(400);
+
+      const frame = await fetch(`${studio.url}/frame/0.png`);
+      expect(frame.status).toBe(200);
+      expect(frame.headers.get('content-type')).toContain('image/png');
+      expect((await frame.arrayBuffer()).byteLength).toBeGreaterThan(100);
+      expect((await fetch(`${studio.url}/frame/999999.png`)).status).toBe(400);
+
+      const agents = await fetch(`${studio.url}/api/agents`).then((response) => response.json()) as Array<{ id: string }>;
+      expect(agents).toContainEqual(expect.objectContaining({ id: 'codex' }));
+      const refreshedAgents = await fetch(`${studio.url}/api/agents/refresh`, { method: 'POST', headers });
+      expect(refreshedAgents.status).toBe(200);
+      expect(await refreshedAgents.json()).toContainEqual(expect.objectContaining({ id: 'codex' }));
+      expect(await fetch(`${studio.url}/api/motion-libraries`).then((response) => response.json())).toEqual([]);
 
       const queued = await fetch(`${studio.url}/api/requests`, {
         method: 'POST', headers, body: JSON.stringify({ prompt: 'Increase the final proof hold by half a second.', selection: { sceneId: 'scene-1', frame: 12 } }),
@@ -145,9 +162,13 @@ describe('Genmotion Studio', () => {
       const request = await queued.json() as { id: string };
       expect((await getStudioRequests(directory))[0]).toMatchObject({ id: request.id, status: 'pending' });
       expect(await resolveStudioRequest(directory, request.id, 'Extended the hold and revalidated the timeline.')).toMatchObject({ status: 'resolved' });
+      expect(await fetch(`${studio.url}/api/requests`).then((response) => response.json())).toContainEqual(expect.objectContaining({ id: request.id, status: 'resolved' }));
 
-      const history = await fetch(`${studio.url}/api/history`).then((response) => response.json()) as unknown[];
+      const history = await fetch(`${studio.url}/api/history`).then((response) => response.json()) as Array<{ revision: string }>;
       expect(history.length).toBeGreaterThan(0);
+      const restored = await fetch(`${studio.url}/api/history/${history[0]?.revision ?? ''}/restore`, { method: 'POST', headers });
+      expect(restored.status).toBe(200);
+      expect(await restored.json()).toMatchObject({ ok: true, project: { title: 'Agent-authored render' } });
 
       const render = await fetch(`${studio.url}/api/render`, {
         method: 'POST', headers, body: JSON.stringify({ filename: 'studio-test.mp4', quality: 'draft', codec: 'h264' }),
@@ -186,12 +207,29 @@ describe('Genmotion Studio', () => {
     } finally { await studio.close(); }
   }, 30_000);
 
-  it('rejects state-changing requests without the Studio session token', async () => {
+  it('rejects every state-changing endpoint without the Studio session token', async () => {
     const directory = await fixture();
     const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });
     try {
-      const response = await fetch(`${studio.url}/api/requests`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt: 'This must not be accepted.' }) });
-      expect(response.status).toBe(403);
+      const mutations = [
+        { method: 'PUT', path: '/api/project', body: {} },
+        { method: 'PUT', path: '/api/studio', body: {} },
+        { method: 'POST', path: '/api/history/0000000000000000/restore', body: {} },
+        { method: 'POST', path: '/api/assets?purpose=asset&filename=test.png', body: {} },
+        { method: 'POST', path: '/api/motion-libraries', body: {} },
+        { method: 'POST', path: '/api/references/connect', body: {} },
+        { method: 'POST', path: '/api/requests', body: { prompt: 'This must not be accepted.' } },
+        { method: 'POST', path: '/api/agents/refresh', body: {} },
+        { method: 'POST', path: '/api/requests/00000000-0000-0000-0000-000000000000/cancel', body: {} },
+        { method: 'POST', path: '/api/render', body: {} },
+        { method: 'POST', path: '/api/projects/open', body: {} },
+        { method: 'POST', path: '/api/projects', body: {} },
+        { method: 'POST', path: '/api/exports/reveal', body: {} },
+      ];
+      for (const mutation of mutations) {
+        const response = await fetch(`${studio.url}${mutation.path}`, { method: mutation.method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(mutation.body) });
+        expect(response.status, `${mutation.method} ${mutation.path}`).toBe(403);
+      }
     } finally { await studio.close(); }
   });
 

@@ -108,14 +108,6 @@ Studio lists and creates projects in `~/Genmotion Projects` by default. Use `--w
 
 `init` creates a truthful `brief.json` and a neutral renderable artboard. It does not pretend that a fixed template is an AI-generated design. Open Studio and choose **Create with agent**, or let the calling Codex or Claude workflow inspect `genmotion_schema`, patch the project, render representative frames, and iterate visually.
 
-The legacy offline scaffold remains available for environments where no agent host exists:
-
-```bash
-genmotion plan launch-film --brief launch-film/brief.json --concepts 8
-```
-
-That compatibility path preserves its ranked concepts in `.genmotion/concepts.json`; it is not used by the agent-first Studio or MCP workflow.
-
 ## Local agent direction
 
 Studio connects directly to Codex or Claude Code installed on the same machine. A new project can immediately enter **Create with agent**, which sends its real brief to the selected local host. Later prompts include the focused scene, layer, and frame. Claude receives a project-scoped Genmotion MCP configuration automatically, while Codex uses the registered Genmotion tools. The agent can patch precise properties and inspect actual native frames before finishing.
@@ -127,7 +119,6 @@ This workflow uses the existing ChatGPT or Claude sign-in managed by the local a
 | Command | Purpose |
 | --- | --- |
 | `init` | Create a neutral artboard and real brief for agent or Studio authoring |
-| `plan` | Build the optional offline compatibility scaffold when no agent host is available |
 | `validate` / `check` | Validate schema, assets, timing, reference decisions, readability, and render safety |
 | `frame` | Render a native PNG at an exact timeline time |
 | `preview` | Open the interactive native-rendered timeline preview |

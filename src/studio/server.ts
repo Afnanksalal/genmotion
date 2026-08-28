@@ -56,6 +56,9 @@ const renderRequestSchema = z.object({
 const revealExportSchema = z.object({
   filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
 });
+const connectReferenceSchema = z.object({
+  revision: z.string().regex(/^[a-f0-9]{16}$/), referenceId: z.string().min(1), sceneId: z.string().min(1), studio: studioStateSchema,
+}).strict();
 const createProjectSchema = z.object({
   slug: z.string().min(1).max(64).regex(/^[a-z0-9][a-z0-9-]*$/),
   title: z.string().min(1).max(120),
@@ -310,6 +313,33 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       studioState = studioStateSchema.parse({ ...request.body, updatedAt: new Date().toISOString() });
       await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
       response.json({ ok: true, studio: studioState });
+    } catch (error) { next(error); }
+  });
+  app.post('/api/references/connect', async (request, response, next) => {
+    try {
+      if (agentBusy) { response.status(423).json({ error: 'The agent is applying a project change. Editing unlocks when the turn finishes.' }); return; }
+      const body = connectReferenceSchema.parse(request.body);
+      const currentRevision = revision(sourceProject);
+      if (body.revision !== currentRevision) { response.status(409).json({ error: 'Project changed since this Studio loaded it.', revision: currentRevision, project: sourceProject, studio: studioState }); return; }
+      const nextStudio = studioStateSchema.parse({ ...body.studio, updatedAt: new Date().toISOString() });
+      const reference = nextStudio.references.find((item) => item.id === body.referenceId);
+      const nextProject = structuredClone(sourceProject);
+      const scene = nextProject.scenes.find((item) => item.id === body.sceneId);
+      if (!reference || !scene) { response.status(404).json({ error: 'Reference or scene no longer exists.' }); return; }
+      const edgeExists = nextStudio.edges.some((edge) => edge.from === `reference:${reference.id}` && edge.to === `scene:${scene.id}`);
+      if (!edgeExists) nextStudio.edges.push({ id: `refedge:${randomUUID()}`, from: `reference:${reference.id}`, to: `scene:${scene.id}`, label: 'informs' });
+      const decision = `Studio reference ${reference.title}: ${reference.notes || reference.tags.join(', ')}`;
+      if (!scene.notes.includes(decision)) scene.notes.push(decision);
+      const nextCompiled = compileProjectMotions(nextProject, motionCatalog.motions);
+      const findings = await validateProject({ ...loaded, project: nextCompiled, sourceProject: nextProject });
+      const nextRevision = revision(nextProject);
+      await Promise.all([
+        atomicWrite(path.join(historyDir, `${currentRevision}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`),
+        writeProjectFile(loaded.projectFile, nextProject),
+        atomicWrite(stateFile, `${JSON.stringify(nextStudio, null, 2)}\n`),
+      ]);
+      sourceProject = nextProject; compiledProject = nextCompiled; studioState = nextStudio; frameCache.clear();
+      response.json({ ok: true, revision: nextRevision, project: sourceProject, studio: studioState, findings });
     } catch (error) { next(error); }
   });
   app.get('/api/history', async (_request, response) => {
