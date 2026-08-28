@@ -9,7 +9,8 @@ The workflow canvas is production state, not a separate mockup. Scene and layer 
 Use the editor surfaces deliberately:
 
 - Workflow expresses scene order, asset and reference relationships, and production notes.
-- Editor requests exact frames from the native renderer. Scrub to entrances, peak action, settled holds, and transition boundaries. Motion directives appear as draggable, edge-trimmable phase clips beneath their owning layers and snap to the project frame rate.
+- Editor requests exact frames from the native renderer. Scrub to entrances, peak action, settled holds, and transition boundaries. Visual layers, audio tracks, and motion directives move and edge-trim on the shared timeline, remain frame-snapped, and magnetically align with the playhead and nearby edges. The Snap control disables magnetic guides but deliberately retains frame integrity.
+- Select a visual layer to move or resize it directly over the native frame. Corner handles resize freely, Shift preserves the current aspect ratio, and the inspector provides center, fit, fill, and reset actions.
 - Inspector changes real project, scene, layer, brand, geometry, typography, motion, and timing fields.
 - References preserve human-supplied visual cues and their annotations. Connect references to the scenes they inform.
 - Agent conversations record the current scene, layer, and frame, stream progress, persist the host session, and reload validated project edits into Studio.

@@ -39,7 +39,7 @@ test('edits, previews, references, and queues contextual agent work', async ({ p
   await title.press('Tab');
   await expect.poll(async () => JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { title: string }).toMatchObject({ title: 'Studio browser proof' });
 
-  await page.getByRole('button', { name: 'Editor' }).click();
+  await page.getByRole('button', { name: 'Editor', exact: true }).click();
   await page.locator('#scrubber').fill('15');
   await expect(page.locator('#previewImage')).toHaveJSProperty('naturalWidth', 320);
   await expect(page.getByText('Frame 15')).toBeVisible();
@@ -88,4 +88,97 @@ test('keeps the inspector accessible at a compact desktop width', async ({ page 
   await page.getByRole('button', { name: 'Inspector' }).click();
   await expect(page.locator('#inspector')).toHaveClass(/open/);
   await expect(page.locator('[data-field="title"]')).toBeVisible();
+});
+
+test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  await page.goto(studio?.url ?? '');
+  await page.getByRole('button', { name: 'Editor', exact: true }).click();
+  await expect(page.locator('#previewImage')).toHaveJSProperty('naturalWidth', 320);
+
+  await page.locator('[data-layerclip="accent"]').click();
+  const durationField = page.locator('[data-field="duration"]');
+  await durationField.fill('0.7');
+  await durationField.press('Tab');
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; duration?: number }> }> };
+    return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.duration;
+  }).toBe(0.7);
+
+  await page.locator('[data-layerclip="accent"]').press('ArrowRight');
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; start: number }> }> };
+    return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.start ?? 0;
+  }).toBeCloseTo(1 / 30, 4);
+
+  const layerBox = await page.locator('[data-layerclip="accent"]').boundingBox();
+  expect(layerBox).not.toBeNull();
+  if (layerBox) {
+    await page.mouse.move(layerBox.x + layerBox.width / 2, layerBox.y + layerBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(layerBox.x + layerBox.width / 2 + 45, layerBox.y + layerBox.height / 2, { steps: 5 });
+    await page.mouse.up();
+  }
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; start: number }> }> };
+    return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.start ?? 0;
+  }).toBeGreaterThan(1 / 30);
+
+  const trimHandle = page.locator('[data-layerclip="accent"] [data-layer-handle="right"]');
+  await trimHandle.press('ArrowLeft');
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; duration?: number }> }> };
+    return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.duration ?? 1;
+  }).toBeLessThan(0.7);
+
+  const stageBox = await page.locator('[data-stage-layer="accent"]').boundingBox();
+  expect(stageBox).not.toBeNull();
+  if (stageBox) {
+    await page.mouse.move(stageBox.x + stageBox.width / 2, stageBox.y + stageBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(stageBox.x + stageBox.width / 2 + 20, stageBox.y + stageBox.height / 2, { steps: 4 });
+    await page.mouse.up();
+  }
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; x: number }> }> };
+    return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.x ?? 18;
+  }).toBeGreaterThan(18);
+
+  const beforeWidth = await page.locator('[data-field="width"]').inputValue();
+  const resizeHandle = page.locator('[data-stage-handle="se"]');
+  await resizeHandle.press('Shift+ArrowLeft');
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; width: number }> }> };
+    return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.width ?? Number(beforeWidth);
+  }).toBeLessThan(Number(beforeWidth));
+
+  await expect(page.locator('#snapToggle')).toHaveClass(/active/);
+  await page.locator('#snapToggle').click();
+  await expect(page.locator('#snapToggle')).not.toHaveClass(/active/);
+  await page.locator('#snapToggle').click();
+
+  await page.getByRole('button', { name: 'Assets' }).click();
+  await page.locator('#assetPicker').setInputFiles({ name: 'music.wav', mimeType: 'audio/wav', buffer: Buffer.from('RIFF0000WAVEfmt ') });
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { audio: Array<{ id: string }> };
+    return project.audio.length;
+  }).toBe(1);
+  await page.getByRole('button', { name: 'Editor', exact: true }).click();
+  await expect(page.locator('[data-audioclip]')).toBeVisible();
+  await page.locator('[data-audioclip]').press('ArrowRight');
+  await expect(page.locator('#selectionKind')).toHaveText('audio');
+  expect(errors).toEqual([]);
+});
+
+test('queues one export and announces completion once', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.getByRole('button', { name: 'Export' }).click();
+  await page.locator('#startRender').evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
+  await expect.poll(async () => {
+    const jobs = await fetch(`${studio?.url ?? ''}/api/jobs`).then((response) => response.json()) as Array<{ status: string }>;
+    return jobs.length;
+  }).toBe(1);
+  await expect(page.getByText(/Export ready:/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Export ready:/)).toHaveCount(1);
 });

@@ -9,9 +9,11 @@ Studio supplies the fine-grained human controls that an autonomous renderer cann
 - The Editor renders exact native project frames. Playback, scrubbing, scene clips, layer tracks, motion phases, and the playhead use the project's real frame rate and duration.
 - Every named motion directive is an editable phase clip beneath its owning layer. Select, drag, frame-snap, edge-trim, duplicate, remove, or tune its recipe, start, duration, intensity, and direction without creating a browser-only animation model.
 - The reference board accepts local images, annotations, and tags. References connect to scenes without turning source artwork into a copied template.
-- The asset browser ingests local image, video, audio, and font files into content-addressed project storage and can attach visual media to the active scene.
+- The asset browser ingests local image, video, audio, and font files into content-addressed project storage. Visual media becomes a scene layer, audio becomes a real audio track, and fonts join the project brand library.
+- The native frame monitor exposes direct move and corner-resize controls for visual layers, including edge and center snapping plus fit, fill, center, and transform-reset actions.
+- The timeline moves and edge-trims visual layers, audio tracks, and motion phases. Edits stay frame-snapped, magnetically align with nearby edges and the playhead, preserve source trim offsets, and support keyboard nudging.
 - History stores recoverable project revisions. Browser undo and redo cover the current editing session.
-- Export runs the native render pipeline as a background job and reports progress without blocking authoring.
+- Export runs the native render pipeline as a background job and reports progress without blocking authoring. Duplicate submissions for the same active output are rejected and completion is announced once per job transition.
 
 ## Human and agent loop
 
