@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.genmotion/
+renders/
+*.mp4
+*.mov
+*.webm
+*.log
+.DS_Store
+*.local.json
+.env*
+.tmp-*/
