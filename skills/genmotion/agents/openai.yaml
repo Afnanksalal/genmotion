@@ -1,7 +1,7 @@
 interface:
   display_name: "Genmotion"
   short_description: "Native motion graphics with encoded taste"
-  brand_color: "#59E3A6"
+  brand_color: "#2563EB"
   default_prompt: "Use $genmotion to create and verify a polished motion-design composition from this brief."
 policy:
   allow_implicit_invocation: true

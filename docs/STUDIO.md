@@ -16,7 +16,7 @@ The project switcher discovers valid projects in the configured local workspace,
 - The native frame monitor exposes direct move and corner-resize controls for visual layers, including edge and center snapping plus fit, fill, center, and transform-reset actions.
 - The timeline moves and edge-trims visual layers, audio tracks, and motion phases. Edits stay frame-snapped, magnetically align with nearby edges and the playhead, preserve source trim offsets, and support keyboard nudging.
 - History stores recoverable project revisions. Browser undo and redo cover the current editing session.
-- Export runs the native render pipeline as a background job and keeps the open dialog synchronized through queued, rendering, failed, and complete states. Completed files remain listed after Studio restarts and can be revealed in the operating system's file manager. Duplicate submissions for the same active output are rejected and completion is announced once per job transition.
+- Export runs the native render pipeline as a background job and shows the exact output dimensions before queueing. Draft uses native project size, standard guarantees at least a 1280-pixel long edge, and high guarantees at least a 1920-pixel long edge with a high-detail encode. The dialog remains synchronized through queued, rendering, failed, and complete states. Completed files remain listed after Studio restarts and can be revealed in the operating system's file manager. Duplicate submissions for the same active output are rejected and completion is announced once per job transition.
 
 ## Human and agent loop
 

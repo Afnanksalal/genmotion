@@ -3,11 +3,26 @@ import { cp, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../src/ir/loader.js';
-import { getStudioRequests, resolveStudioRequest, startStudio } from '../src/studio/server.js';
+import { fileManagerRevealCommand, getStudioRequests, resolveStudioRequest, startStudio } from '../src/studio/server.js';
 import type { AgentRuntime } from '../src/agent/runtime.js';
 
 const cleanup: string[] = [];
 afterEach(async () => { await Promise.all(cleanup.splice(0).map((directory) => rm(directory, { recursive: true, force: true }))); });
+
+describe('file manager reveal commands', () => {
+  it('uses a visible Explorer selection command on Windows', () => {
+    expect(fileManagerRevealCommand('win32', 'C:\\renders\\launch.mp4')).toEqual({
+      command: 'explorer.exe',
+      args: ['/select,C:\\renders\\launch.mp4'],
+      windowsHide: false,
+    });
+  });
+
+  it('uses native reveal commands on macOS and Linux', () => {
+    expect(fileManagerRevealCommand('darwin', '/renders/launch.mp4')).toEqual({ command: 'open', args: ['-R', '/renders/launch.mp4'], windowsHide: true });
+    expect(fileManagerRevealCommand('linux', '/renders/launch.mp4')).toEqual({ command: 'xdg-open', args: ['/renders'], windowsHide: true });
+  });
+});
 
 async function fixture(): Promise<string> {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-studio-'));
@@ -65,8 +80,18 @@ describe('Genmotion Studio', () => {
     const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent(), revealFile: (file) => { revealed.push(file); return Promise.resolve(); } });
     try {
       const html = await fetch(studio.url);
-      expect(await html.text()).toContain('Genmotion Studio');
+      const htmlBody = await html.text();
+      expect(htmlBody).toContain('Genmotion Studio');
+      expect(htmlBody).toContain('/brand/genmotion-social.png');
+      expect(htmlBody).toContain('/brand/genmotion-symbol.svg');
       expect(html.headers.get('content-security-policy')).toContain("default-src 'self'");
+      const favicon = await fetch(`${studio.url}/favicon.ico`);
+      expect(favicon.headers.get('content-type')).toContain('image/png');
+      expect((await favicon.arrayBuffer()).byteLength).toBeGreaterThan(100);
+      const symbol = await fetch(`${studio.url}/brand/genmotion-symbol.svg`);
+      expect(symbol.headers.get('content-type')).toContain('image/svg+xml');
+      expect(await symbol.text()).toContain('diamond-shaped keyframe');
+      expect((await fetch(`${studio.url}/brand/not-an-asset.svg`)).status).toBe(404);
 
       const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
       const headers = { 'content-type': 'application/json', 'x-genmotion-token': token };
