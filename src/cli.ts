@@ -18,9 +18,10 @@ import { GenmotionError } from './errors.js';
 import { makeContactSheet, probeVideo } from './engine/probe.js';
 import { auditCatalog } from './catalog/audit.js';
 import { getStudioRequests, resolveStudioRequest, startStudio } from './studio/server.js';
+import { GENMOTION_VERSION } from './version.js';
 
 const program = new Command();
-program.name('genmotion').description('Agent-native deterministic motion design engine.').version('1.3.0').option('--json', 'Emit machine-readable JSON.');
+program.name('genmotion').description('Agent-native deterministic motion design engine.').version(GENMOTION_VERSION).option('--json', 'Emit machine-readable JSON.');
 
 function output(value: unknown): void {
   if (program.opts<{ json?: boolean }>().json) process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);

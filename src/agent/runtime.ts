@@ -3,6 +3,7 @@ import { createInterface } from 'node:readline';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { GENMOTION_VERSION } from '../version.js';
 
 export type AgentHostId = 'codex' | 'claude';
 
@@ -302,7 +303,7 @@ export class LocalAgentRuntime implements AgentRuntime {
     let turnTimeout: NodeJS.Timeout | undefined;
     let abortHandler: (() => void) | undefined;
     try {
-      await client.request('initialize', { clientInfo: { name: 'genmotion_studio', title: 'Genmotion Studio', version: '1.4.0' } });
+      await client.request('initialize', { clientInfo: { name: 'genmotion_studio', title: 'Genmotion Studio', version: GENMOTION_VERSION } });
       client.notify('initialized', {});
       const account = await client.request('account/read', { refreshToken: false });
       if (!object(account.account) && account.requiresOpenaiAuth === true) throw new Error('Codex is not signed in. Run codex login, then retry.');
