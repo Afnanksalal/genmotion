@@ -108,8 +108,13 @@ test('moves expanded workflow layers persistently and opens them in the canvas e
   await page.mouse.move((before?.x ?? 0) + 170, (before?.y ?? 0) + 70, { steps: 8 });
   await page.mouse.up();
   await expect.poll(async () => {
-    const state = JSON.parse(await readFile(path.join(directory, '.genmotion', 'studio.json'), 'utf8')) as { nodes: Array<{ id: string }> };
-    return state.nodes.some((node) => node.id === nodeId);
+    try {
+      const state = JSON.parse(await readFile(path.join(directory, '.genmotion', 'studio.json'), 'utf8')) as { nodes: Array<{ id: string }> };
+      return state.nodes.some((node) => node.id === nodeId);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;
+      throw error;
+    }
   }).toBe(true);
 
   await expect(page.locator('#editSelectedLayer')).toBeVisible();
