@@ -31,6 +31,22 @@ async function fixture(): Promise<string> {
   return directory;
 }
 
+async function waitForRequest(
+  directory: string,
+  requestId: string,
+  terminal: ReadonlySet<string> = new Set(['completed', 'failed']),
+  timeoutMs = 10_000,
+): Promise<{ status: string; response?: string; afterRevision?: string }> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const record = (await getStudioRequests(directory)).find((candidate) => candidate.id === requestId);
+    if (record && terminal.has(record.status)) return record;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  const record = (await getStudioRequests(directory)).find((candidate) => candidate.id === requestId);
+  throw new Error(`Request ${requestId} did not reach ${[...terminal].join(' or ')} within ${timeoutMs}ms; last status was ${record?.status ?? 'missing'}.`);
+}
+
 function fakeAgent(edit: false | 'valid' | 'invalid' = false): AgentRuntime {
   return {
     hosts: () => Promise.resolve([{ id: 'codex', label: 'Codex', installed: true, authenticated: true, detail: 'Test session' }]),
@@ -190,12 +206,7 @@ describe('Genmotion Studio', () => {
       });
       expect(queued.status).toBe(201);
       const request = await queued.json() as { id: string };
-      let record: { status: string; response?: string; afterRevision?: string } | undefined;
-      for (let attempt = 0; attempt < 40; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 25));
-        record = (await getStudioRequests(directory)).find((candidate) => candidate.id === request.id);
-        if (record?.status === 'completed' || record?.status === 'failed') break;
-      }
+      const record = await waitForRequest(directory, request.id);
       expect(record).toMatchObject({ status: 'completed', response: 'Applied and validated the requested change.' });
       expect(record?.afterRevision).toBeTruthy();
       const bootstrap = await fetch(`${studio.url}/api/bootstrap`).then((response) => response.json()) as { project: { title: string } };
@@ -214,13 +225,8 @@ describe('Genmotion Studio', () => {
         body: JSON.stringify({ prompt: 'Make an invalid change.', host: 'codex' }),
       });
       const request = await queued.json() as { id: string };
-      let status = '';
-      for (let attempt = 0; attempt < 40; attempt += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 25));
-        status = (await getStudioRequests(directory)).find((candidate) => candidate.id === request.id)?.status ?? '';
-        if (status === 'failed') break;
-      }
-      expect(status).toBe('failed');
+      const record = await waitForRequest(directory, request.id, new Set(['failed']));
+      expect(record.status).toBe('failed');
       expect(await readFile(path.join(directory, 'genmotion.json'), 'utf8')).toBe(original);
       expect((await stat(path.join(directory, '.genmotion', 'failed-agent-edits', `${request.id}.json`))).size).toBeGreaterThan(0);
     } finally { await studio.close(); }
