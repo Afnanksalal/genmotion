@@ -26,7 +26,7 @@ General agents can write animation code, but unconstrained code generation does 
 - Image and video layers with local media freezing
 - Multiple audio tracks, fades, looping, voice-aware music ducking, limiting, and AAC delivery
 - Reusable native preview server with frame scrubbing
-- Local Studio with a real project switcher and creation flow, node workflows, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent output history and file-manager reveal
+- Local Studio with a real project switcher and creation flow, node workflows, project-local JSON motion libraries, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent output history and file-manager reveal
 - Output probing and contract verification after every render
 
 ## Requirements
@@ -39,7 +39,7 @@ General agents can write animation code, but unconstrained code generation does 
 From GitHub:
 
 ```bash
-npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.6.0/genmotion-1.6.0.tgz
+npm install -g https://github.com/Afnanksalal/genmotion/releases/download/v1.7.0/genmotion-1.7.0.tgz
 genmotion doctor
 ```
 

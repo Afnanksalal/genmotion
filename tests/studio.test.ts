@@ -125,6 +125,11 @@ describe('Genmotion Studio', () => {
       }
       expect(status).toBe('complete');
       expect((await stat(path.join(directory, 'renders', 'studio-test.mp4'))).size).toBeGreaterThan(1000);
+      const existingRender = await fetch(`${studio.url}/api/render`, {
+        method: 'POST', headers, body: JSON.stringify({ filename: 'studio-test.mp4', quality: 'draft', codec: 'h264' }),
+      });
+      expect(existingRender.status).toBe(409);
+      expect(await existingRender.json()).toMatchObject({ code: 'OUTPUT_EXISTS' });
       const exports = await fetch(`${studio.url}/api/exports`).then((response) => response.json()) as Array<{ filename: string; output: string; size: number }>;
       expect(exports).toContainEqual(expect.objectContaining({ filename: 'studio-test.mp4', output: 'renders/studio-test.mp4' }));
       const reveal = await fetch(`${studio.url}/api/exports/reveal`, {
