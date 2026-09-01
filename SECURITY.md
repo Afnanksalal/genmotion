@@ -16,7 +16,7 @@ The renderer rejects HTTP assets and filesystem paths that escape the project ro
 
 Preview binds to `127.0.0.1` by default. Binding it to another interface exposes rendered project frames and metadata to that network and should be an explicit operator choice.
 
-Studio also binds to `127.0.0.1` by default. It uses a per-process mutation token, optimistic project revisions, atomic writes, a restrictive Content Security Policy, project-root path confinement, upload size limits, extension allowlists, and file-signature validation. Do not reverse proxy or publicly expose Studio; it is an authenticated-by-local-process authoring surface, not a multi-tenant web service.
+Studio also binds to `127.0.0.1` by default. It uses a per-process mutation token, same-origin and Fetch Metadata enforcement, per-response script nonces, optimistic project revisions, atomic writes, a restrictive Content Security Policy and Permissions Policy, project-root path confinement, upload size limits, extension allowlists, file-signature validation, bounded queues, and bounded preview memory. Do not publicly expose Studio without an authenticated reverse proxy; it is a local authoring surface, not a multi-tenant web service.
 
 The Studio agent bridge invokes the locally installed Codex app-server or Claude Code process without a shell. Those tools reuse their own managed sign-in. Agent turns run in the selected project directory, Codex receives a workspace-write sandbox with network disabled, and Claude receives only local read and edit tools. Unexpected approval requests are declined. Studio locks browser project writes while an agent turn is active and validates the resulting IR before accepting it.
 

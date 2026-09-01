@@ -8,6 +8,17 @@ import type { AgentRuntime } from '../../src/agent/runtime.js';
 
 let directory = '';
 let studio: StudioServer | undefined;
+function toneWav(): Buffer {
+  const sampleRate = 8_000;
+  const samples = sampleRate / 4;
+  const body = Buffer.alloc(samples * 2);
+  for (let index = 0; index < samples; index += 1) body.writeInt16LE(Math.round(Math.sin(index / sampleRate * Math.PI * 880) * 12_000), index * 2);
+  const header = Buffer.alloc(44);
+  header.write('RIFF', 0); header.writeUInt32LE(36 + body.length, 4); header.write('WAVEfmt ', 8); header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20); header.writeUInt16LE(1, 22); header.writeUInt32LE(sampleRate, 24); header.writeUInt32LE(sampleRate * 2, 28);
+  header.writeUInt16LE(2, 32); header.writeUInt16LE(16, 34); header.write('data', 36); header.writeUInt32LE(body.length, 40);
+  return Buffer.concat([header, body]);
+}
 const agentRuntime: AgentRuntime = {
   hosts: () => Promise.resolve([{ id: 'codex', label: 'Codex', installed: true, authenticated: true, detail: 'Browser test session' }]),
   run: async (input, onProgress) => {
@@ -65,15 +76,17 @@ test('scales workflow navigation, asset discovery, easing inspection, and audio 
   await page.locator('[data-select="scene"]').first().click();
   await expect(page.locator('#inspectorBody .easing-card>svg')).toHaveCount(2);
 
-  await page.getByRole('button', { name: 'Assets' }).click();
-  await page.locator('#assetPicker').setInputFiles({ name: 'mix.wav', mimeType: 'audio/wav', buffer: Buffer.from('RIFF0000WAVEfmt ') });
-  await page.getByRole('button', { name: 'Assets' }).click();
+  await page.getByRole('tab', { name: 'Assets' }).click();
+  await page.locator('#assetPicker').setInputFiles({ name: 'mix.wav', mimeType: 'audio/wav', buffer: toneWav() });
+  await page.getByRole('tab', { name: 'Assets' }).click();
   await page.locator('#assetSearch').fill('mix');
   await expect(page.getByText('Audio · 1 use')).toBeVisible();
   await page.locator('[data-asset]').click();
   await expect(page.locator('[data-field="pan"]')).toBeVisible();
   await expect(page.locator('[data-bool-field="muted"]')).toBeVisible();
   await expect(page.locator('[data-bool-field="solo"]')).toBeVisible();
+  await expect(page.locator('.audio-waveform')).toBeVisible();
+  await expect.poll(() => page.locator('.audio-waveform').evaluate((canvas: HTMLCanvasElement) => canvas.width)).toBeGreaterThan(1);
 });
 
 test('edits, previews, references, and queues contextual agent work', async ({ page }) => {
@@ -88,7 +101,7 @@ test('edits, previews, references, and queues contextual agent work', async ({ p
   await title.press('Tab');
   await expect.poll(async () => JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { title: string }).toMatchObject({ title: 'Studio browser proof' });
 
-  await page.getByRole('button', { name: 'Editor', exact: true }).click();
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
   await page.locator('#scrubber').fill('15');
   await expect(page.locator('#previewImage')).toHaveJSProperty('naturalWidth', 320);
   await expect(page.getByText('Frame 15')).toBeVisible();
@@ -112,7 +125,7 @@ test('edits, previews, references, and queues contextual agent work', async ({ p
   await expect(page.locator('[data-phase]').first()).toBeVisible();
   await expect(page.locator('[title]')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'References' }).click();
+  await page.getByRole('tab', { name: 'References' }).click();
   await page.locator('#referencePicker').setInputFiles({
     name: 'direction.png', mimeType: 'image/png',
     buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64'),
@@ -196,6 +209,23 @@ test('authors the complete IR from Studio without relying on agent chat', async 
     const layer = saved.scenes[0]?.layers.filter((item) => item.type === 'text').at(-1);
     return layer?.tracks?.[0]?.keyframes[0]?.ease;
   }).toMatchObject({ type: 'spring', stiffness: 170 });
+  await page.locator('[data-ease-kind]').nth(1).click();
+  await page.locator('[data-ease-choice="cubic-bezier"]').click();
+  const curve = page.locator('[data-ease-curve]').first();
+  const handle = curve.locator('[data-ease-handle="1"]');
+  await expect(handle).toBeVisible();
+  const box = await handle.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move((box?.x ?? 0) + 3, (box?.y ?? 0) + 3);
+  await page.mouse.down();
+  await page.mouse.move((box?.x ?? 0) + 35, (box?.y ?? 0) - 12, { steps: 5 });
+  await page.mouse.up();
+  await expect.poll(async () => {
+    const saved = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ type: string; tracks?: Array<{ keyframes: Array<{ ease: unknown }> }> }> }> };
+    const layer = saved.scenes[0]?.layers.filter((item) => item.type === 'text').at(-1);
+    return layer?.tracks?.[0]?.keyframes[1]?.ease;
+  }).toMatchObject({ type: 'cubic-bezier' });
+  await expect(page.locator('[data-field$=".ease.x1"]').first()).not.toHaveValue('0.2');
   expect(errors).toEqual([]);
 });
 
@@ -227,7 +257,7 @@ test('moves expanded workflow layers persistently and opens them in the canvas e
 
   await expect(page.locator('#editSelectedLayer')).toBeVisible();
   await layerNode.dblclick();
-  await expect(page.getByRole('button', { name: 'Editor', exact: true })).toHaveClass(/active/);
+  await expect(page.getByRole('tab', { name: 'Editor', exact: true })).toHaveClass(/active/);
   await expect(page.locator('#stageOverlay .stage-selection')).toBeVisible();
   await expect(page.locator('#editSelectedLayer')).toBeHidden();
 });
@@ -297,6 +327,22 @@ test('keeps project and export dialogs usable on a phone-sized viewport', async 
   expect(escaped).toEqual([]);
 });
 
+test('supports keyboard tab navigation and focus-contained dialogs', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  const workflow = page.getByRole('tab', { name: 'Workflow' });
+  await workflow.focus();
+  await workflow.press('ArrowRight');
+  await expect(page.getByRole('tab', { name: 'Editor' })).toHaveAttribute('aria-selected', 'true');
+  const exportButton = page.getByRole('button', { name: 'Export' });
+  await exportButton.focus();
+  await exportButton.press('Enter');
+  await expect(page.locator('.modal')).toHaveAttribute('aria-modal', 'true');
+  await expect(page.locator('.modal')).toContainText('Export master');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#modal')).not.toHaveClass(/open/);
+  await expect(exportButton).toBeFocused();
+});
+
 test('uses packaged SVG controls and the selected agent brand', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   await expect(page.locator('.logo svg')).toBeVisible();
@@ -355,9 +401,9 @@ test('operates workflow, library, reference, transport, and agent controls', asy
   await expect(page.locator('#sceneTree')).toContainText('proof-scene');
   await expect(page.locator('#saveState')).toHaveText('Saved');
   await page.locator('[data-select="scene"][data-id="proof-scene"]').click();
-  await page.getByRole('button', { name: 'Editor', exact: true }).click();
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
   await expect(page.locator('#previewImage')).toHaveAttribute('src', /\/frame\/30\.png/);
-  await page.getByRole('button', { name: 'Workflow', exact: true }).click();
+  await page.getByRole('tab', { name: 'Workflow', exact: true }).click();
 
   await page.locator('#addNote').click();
   await page.locator('[data-field="newNote.title"]').fill('Pacing');
@@ -389,7 +435,7 @@ test('operates workflow, library, reference, transport, and agent controls', asy
   await expect(page.getByText('Studio Library', { exact: true })).toBeVisible();
   await page.locator('#modalClose').click();
 
-  await page.getByRole('button', { name: 'References' }).click();
+  await page.getByRole('tab', { name: 'References' }).click();
   const [referenceChooser] = await Promise.all([
     page.waitForEvent('filechooser'),
     page.locator('#uploadReference').click(),
@@ -409,7 +455,7 @@ test('operates workflow, library, reference, transport, and agent controls', asy
     return project.scenes.find((scene) => scene.id === 'intro')?.notes ?? [];
   }).toContain('Studio reference workflow-reference: Borrow the restrained hierarchy.');
 
-  await page.getByRole('button', { name: 'Editor', exact: true }).click();
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
   await page.locator('#playButton').click();
   await expect(page.locator('#playButton')).toHaveAttribute('aria-label', 'Pause');
   await page.locator('#playButton').click();
@@ -436,7 +482,7 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto(studio?.url ?? '');
-  await page.getByRole('button', { name: 'Editor', exact: true }).click();
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
   await expect(page.locator('#previewImage')).toHaveJSProperty('naturalWidth', 320);
 
   await page.locator('[data-layerclip="accent"]').click();
@@ -508,13 +554,13 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
   await expect(page.locator('#snapToggle')).not.toHaveClass(/active/);
   await page.locator('#snapToggle').click();
 
-  await page.getByRole('button', { name: 'Assets' }).click();
+  await page.getByRole('tab', { name: 'Assets' }).click();
   await page.locator('#assetPicker').setInputFiles({ name: 'music.wav', mimeType: 'audio/wav', buffer: Buffer.from('RIFF0000WAVEfmt ') });
   await expect.poll(async () => {
     const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { audio: Array<{ id: string }> };
     return project.audio.length;
   }).toBe(1);
-  await page.getByRole('button', { name: 'Editor', exact: true }).click();
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
   await expect(page.locator('[data-audioclip]')).toBeVisible();
   await page.locator('[data-audioclip]').press('ArrowRight');
   await expect(page.locator('#selectionKind')).toHaveText('audio');
