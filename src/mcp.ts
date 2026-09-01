@@ -116,13 +116,17 @@ function serverFactory(): McpServer {
     authoring: {
       model: 'Agents may author complete projects, granular RFC 6902 patches, arbitrary numeric property tracks, custom cubic-bezier and spring easing, and SVG path geometry.',
       recipePolicy: 'Named recipes are optional reusable references. Direct tracks are first-class and require no recipe.',
+      canonicalExample: {
+        textLayer: { id: 'headline', type: 'text', text: 'Sound, shaped.', x: 240, y: 390, width: 1440, height: 220, fontFamily: 'Arial', fontSize: 96, color: '#f7f5ef' },
+        track: { id: 'headline-rise', target: 'transform.y', keyframes: [{ at: 0, value: 36, ease: 'cubic-out' }, { at: 0.8, value: 0, ease: { type: 'cubic-bezier', x1: 0.22, y1: 1, x2: 0.36, y2: 1 } }] },
+      },
       visualLoop: ['genmotion_project_read', 'genmotion_project_patch', 'genmotion_validate', 'genmotion_frame', 'genmotion_timeline_inspect'],
     },
   })));
 
   server.registerTool('genmotion_project_save', {
-    title: 'Save Genmotion project', description: 'Validate and atomically save Creative IR using optimistic revision locking and recoverable history.',
-    inputSchema: z.object({ project: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), document: z.unknown(), strict: z.boolean().default(true) }).strict(),
+    title: 'Save Genmotion project', description: 'Validate and atomically save a complete Creative IR document using optimistic revision locking and recoverable history. The document parameter exposes the authoritative nested schema: text layers require x, y, width, height, fontFamily, fontSize, and color; tracks require id, target, and keyframes using at/value/ease.',
+    inputSchema: z.object({ project: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), document: projectSchema, strict: z.boolean().default(true) }).strict(),
   }, async (input) => {
     const loaded = await loadProject(await allowedPath(input.project, 'Project'));
     const current = await readFile(loaded.projectFile, 'utf8');
