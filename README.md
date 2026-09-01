@@ -34,6 +34,7 @@ General agents can write animation code, but code generation alone gives them a 
 - Symlink- and junction-safe CLI execution for local and global development installs
 - Parallel worker-thread frame generation
 - Ordered raw RGBA streaming into FFmpeg while frames continue rendering
+- Cancellation-safe export cleanup with no partial masters or hidden silent intermediates
 - H.264, H.265, VP9, and ProRes outputs
 - Image and video layers with local media freezing
 - Multiple audio tracks with mute, solo, constant-power stereo pan, fades, looping, voice-aware music ducking, limiting, and AAC delivery

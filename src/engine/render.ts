@@ -123,6 +123,7 @@ async function closeEncoder(child: ChildProcessWithoutNullStreams): Promise<void
 }
 
 export async function renderProject(loaded: LoadedProject, options: RenderOptions): Promise<RenderResult> {
+  if (options.signal?.aborted) throw new GenmotionError('RENDER_ABORTED', 'Render was aborted before it started.');
   const started = performance.now();
   const { project, projectDir } = loaded;
   const quality = options.quality ?? 'high';
@@ -150,6 +151,16 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   const done = new Promise<void>((resolve, reject) => { resolveDone = resolve; rejectDone = reject; });
   let writing = false;
   let failed = false;
+  const fail = (error: unknown): void => {
+    if (failed) return;
+    failed = true;
+    rejectDone?.(error instanceof Error ? error : new Error(String(error)));
+  };
+  const abort = (): void => { fail(new GenmotionError('RENDER_ABORTED', 'Render was aborted.')); };
+  const encoderError = (error: Error): void => { fail(new GenmotionError('ENCODE_FAILED', 'FFmpeg failed while receiving rendered frames.', error)); };
+  options.signal?.addEventListener('abort', abort, { once: true });
+  encoder.once('error', encoderError);
+  encoder.stdin.once('error', encoderError);
 
   const report = (): void => {
     const elapsedMs = performance.now() - started;
@@ -171,8 +182,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
       }
       if (encodedFrames === totalFrames) resolveDone?.();
     } catch (error) {
-      failed = true;
-      rejectDone?.(error instanceof Error ? error : new Error(String(error)));
+      fail(error);
     } finally {
       writing = false;
     }
@@ -192,8 +202,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
       worker.on('message', (result: WorkerResult) => {
         if (failed) return;
         if (result.error || !result.buffer) {
-          failed = true;
-          rejectDone?.(new GenmotionError('FRAME_RENDER_FAILED', `Frame ${String(result.frame)} failed: ${result.error ?? 'No pixel buffer returned.'}`));
+          fail(new GenmotionError('FRAME_RENDER_FAILED', `Frame ${String(result.frame)} failed: ${result.error ?? 'No pixel buffer returned.'}`));
           return;
         }
         ready.set(result.frame, Buffer.from(result.buffer));
@@ -201,14 +210,11 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
         assign(worker);
         void flush();
       });
-      worker.on('error', (error) => { if (!failed) { failed = true; rejectDone?.(error); } });
+      worker.on('error', fail);
       assign(worker);
     }
 
-    const abort = (): void => { if (!failed) { failed = true; rejectDone?.(new GenmotionError('RENDER_ABORTED', 'Render was aborted.')); } };
-    options.signal?.addEventListener('abort', abort, { once: true });
     await done;
-    options.signal?.removeEventListener('abort', abort);
     await Promise.all(pool.map(async (worker) => worker.terminate()));
     await closeEncoder(encoder);
     await mixAudio(project, projectDir, silentVideo, output);
@@ -219,8 +225,12 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   } catch (error) {
     encoder.kill('SIGKILL');
     await Promise.all(pool.map(async (worker) => worker.terminate()));
+    await rm(output, { force: true });
     throw error;
   } finally {
+    options.signal?.removeEventListener('abort', abort);
+    encoder.off('error', encoderError);
+    encoder.stdin.off('error', encoderError);
     await rm(silentVideo, { force: true });
   }
 
