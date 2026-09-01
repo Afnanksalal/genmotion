@@ -38,6 +38,9 @@ describe('Genmotion MCP server', () => {
         'genmotion_render', 'genmotion_probe', 'genmotion_contact_sheet', 'genmotion_studio_start',
       ]));
       expect(new Set(names).size).toBe(names.length);
+      const saveTool = listed.tools.find((tool) => tool.name === 'genmotion_project_save');
+      const saveProperties = saveTool?.inputSchema.properties as Record<string, { properties?: Record<string, unknown> }> | undefined;
+      expect(Object.keys(saveProperties?.document?.properties ?? {})).toEqual(expect.arrayContaining(['scenes', 'brand']));
 
       const doctor = await client.callTool({ name: 'genmotion_doctor', arguments: {} });
       expect(doctor.structuredContent).toMatchObject({ ok: true });
@@ -65,8 +68,10 @@ describe('Genmotion MCP server', () => {
       expect(staleSave.isError).toBe(true);
 
       const schema = await client.callTool({ name: 'genmotion_schema', arguments: {} });
-      const schemaContent = schema.structuredContent as { authoring?: { recipePolicy?: string } };
+      const schemaContent = schema.structuredContent as { authoring?: { recipePolicy?: string; canonicalExample?: { textLayer?: Record<string, unknown>; track?: Record<string, unknown> } } };
       expect(schemaContent.authoring?.recipePolicy).toContain('optional');
+      expect(schemaContent.authoring?.canonicalExample?.textLayer).toMatchObject({ width: 1440, fontFamily: 'Arial', color: '#f7f5ef' });
+      expect(schemaContent.authoring?.canonicalExample?.track).toMatchObject({ target: 'transform.y', keyframes: [{ at: 0 }, { at: 0.8 }] });
       const savedContent = saved.structuredContent as { revision: string };
       const patched = await client.callTool({ name: 'genmotion_project_patch', arguments: { project, expectedRevision: savedContent.revision, operations: [{ op: 'add', path: '/metadata/agentic', value: 'true' }], strict: false } });
       expect(patched.structuredContent).toMatchObject({ operationsApplied: 1 });

@@ -13,6 +13,8 @@ describe('local agent bridge', () => {
     expect(prompt).toContain('Do not commit, publish, install packages, access credentials, or use the network.');
     expect(prompt).toContain('Do not render the full video');
     expect(prompt).toContain('genmotion MCP tools');
+    expect(prompt).toContain('Before the first write in every authoring turn, call genmotion_schema and genmotion_project_read');
+    expect(prompt).toContain('Build a schema-valid static scene system first');
     expect(prompt).toContain('Named recipes are optional references');
     expect(prompt).toContain('inspect at least one representative native frame');
     expect(prompt).not.toMatch(/API[_ -]?key/i);
