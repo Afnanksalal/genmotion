@@ -80,7 +80,7 @@ npm install -g git+https://github.com/Afnanksalal/genmotion.git
 genmotion doctor
 ```
 
-Each tagged GitHub release publishes a tested `.tgz` package artifact and `SHA256SUMS`. Release packaging enforces that the tag matches `package.json`, performs a clean package-install smoke test, and reruns the unit, integration, native render, example verification, and Studio browser suites before attaching the artifact.
+Each tagged GitHub release publishes a tested `.tgz` package artifact and `SHA256SUMS`. The package carries a publishable shrinkwrap for reproducible runtime dependency resolution. Release packaging enforces that the tag matches `package.json`, performs a clean package-install smoke test, and reruns the unit, integration, native render, example verification, and Studio browser suites before attaching the artifact.
 
 Or work from a checkout:
 
