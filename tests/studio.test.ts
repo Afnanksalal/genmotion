@@ -3,7 +3,8 @@ import { cp, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/pr
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../src/ir/loader.js';
-import { fileManagerRevealCommand, getStudioRequests, resolveStudioRequest, startStudio } from '../src/studio/server.js';
+import { fileManagerRevealCommand, getStudioRequests, requestedOutcomeGaps, resolveStudioRequest, startStudio } from '../src/studio/server.js';
+import type { GenmotionProject } from '../src/ir/schema.js';
 import type { AgentRuntime } from '../src/agent/runtime.js';
 
 const cleanup: string[] = [];
@@ -64,6 +65,25 @@ function fakeAgent(edit: false | 'valid' | 'invalid' = false): AgentRuntime {
 }
 
 describe('Genmotion Studio', () => {
+  it('detects omitted motion and visual techniques in an otherwise valid static scene system', async () => {
+    const directory = await fixture();
+    const project = (await loadProject(directory)).sourceProject;
+    const baseScene = project.scenes[0];
+    if (!baseScene) throw new Error('Fixture needs one scene.');
+    const staticProject = {
+      ...project,
+      scenes: [4, 4, 4, 3].map((duration, index) => ({
+        ...baseScene, id: `scene-${index.toString()}`, duration,
+        layers: baseScene.layers.map((layer, layerIndex) => ({ ...layer, id: `layer-${index.toString()}-${layerIndex.toString()}`, motion: [], tracks: [] })),
+      })),
+    } as GenmotionProject;
+    const gaps = requestedOutcomeGaps('Create a 15-second film. Build four scenes with direct animation tracks, custom easing, vector paths, clipping, shadows, blend modes, and camera movements.', staticProject);
+    expect(gaps).toEqual(expect.arrayContaining([
+      expect.stringContaining('direct animation tracks'), expect.stringContaining('custom easing'), expect.stringContaining('vector paths'),
+      expect.stringContaining('clipping'), expect.stringContaining('shadows'), expect.stringContaining('blend modes'), expect.stringContaining('transform motion'),
+    ]));
+  });
+
   it('creates, discovers, and reopens projects inside the configured workspace', async () => {
     const directory = await fixture();
     const workspaceRoot = path.join(directory, 'workspace');

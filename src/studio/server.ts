@@ -35,8 +35,10 @@ const nodeSchema = z.object({
 
 const countWords: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
 
-function requestedOutcomeGaps(prompt: string, project: GenmotionProject): string[] {
+export function requestedOutcomeGaps(prompt: string, project: GenmotionProject): string[] {
   const gaps: string[] = [];
+  const layers = project.scenes.flatMap((scene) => scene.layers);
+  const tracks = layers.flatMap((layer) => layer.tracks);
   const durationMatch = prompt.match(/\b(\d+(?:\.\d+)?)\s*[- ]?second\s+(?:\d+:\d+\s+)?(?:launch\s+)?(?:film|video|animation|composition|spot|promo)\b/i);
   if (durationMatch) {
     const requested = Number(durationMatch[1]);
@@ -49,6 +51,13 @@ function requestedOutcomeGaps(prompt: string, project: GenmotionProject): string
     const requested = countWords[requestedSceneCount.toLowerCase()] ?? Number(requestedSceneCount);
     if (Number.isFinite(requested) && project.scenes.length !== requested) gaps.push(`requested ${requested} scenes, actual ${project.scenes.length}`);
   }
+  if (/\bdirect animation tracks?\b/i.test(prompt) && tracks.length < project.scenes.length) gaps.push(`requested direct animation tracks across the scene system, actual track count ${tracks.length}`);
+  if (/\bcustom easing\b/i.test(prompt) && !tracks.some((track) => track.keyframes.some((keyframe) => typeof keyframe.ease === 'object' || keyframe.ease !== 'linear'))) gaps.push('requested custom easing, but no non-linear or custom-eased keyframe exists');
+  if (/\bvector paths?\b/i.test(prompt) && !layers.some((layer) => layer.type === 'shape' && layer.shape === 'path')) gaps.push('requested vector paths, but no path shape exists');
+  if (/\b(?:clipping|masked reveal|mask wipes?)\b/i.test(prompt) && !layers.some((layer) => layer.clip !== undefined)) gaps.push('requested clipping or masking, but no layer clip exists');
+  if (/\bshadows?\b/i.test(prompt) && !layers.some((layer) => 'shadow' in layer && layer.shadow !== undefined)) gaps.push('requested shadows, but no layer shadow exists');
+  if (/\bblend modes?\b/i.test(prompt) && !layers.some((layer) => layer.blendMode !== 'source-over')) gaps.push('requested blend modes, but every layer uses source-over');
+  if (/\b(?:camera movements?|camera pushes?|parallax|layered transforms?)\b/i.test(prompt) && !tracks.some((track) => track.target.startsWith('transform.'))) gaps.push('requested camera or layered transform motion, but no transform track exists');
   return gaps;
 }
 const studioStateSchema = z.object({
@@ -474,11 +483,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
           const beforeProjectFile = await readFile(loaded.projectFile, 'utf8');
           let lastPersisted = 0;
           try {
-            const result = await agentRuntime.run({
-              host, prompt: record.prompt, selection: record.selection, projectDir: loaded.projectDir,
-              projectFile: loaded.projectFile, projectTitle: sourceProject.title,
-              signal: controller.signal,
-            }, async (progress) => {
+            const reportProgress = async (progress: { message?: string; activity?: string; sessionId?: string }): Promise<void> => {
               if (progress.message !== undefined) running.response = progress.message;
               if (progress.activity !== undefined) running.activity = progress.activity;
               if (progress.sessionId !== undefined) running.sessionId = progress.sessionId;
@@ -488,15 +493,42 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
                 running.updatedAt = new Date(now).toISOString();
                 await writeRequest(requestsDir, running);
               }
-            });
-            const refreshed = await loadProject(loaded.projectFile);
+            };
+            let result: Awaited<ReturnType<AgentRuntime['run']>> | undefined;
+            let refreshed: LoadedProject | undefined;
+            let outcomeGaps: string[] = [];
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+              const prompt = attempt === 0 ? record.prompt : [
+                'Continue and finish the original request. The persisted project failed the production acceptance check:',
+                ...outcomeGaps.map((gap) => `- ${gap}`),
+                'Use the live schema and project tools to repair every listed gap, validate, inspect native frames, and reread the final project. Do not defer any requested work to a later turn.',
+                `Original request: ${record.prompt}`,
+              ].join('\n');
+              if (attempt > 0) {
+                running.activity = `Repairing production gaps (${attempt.toString()}/2)`;
+                running.updatedAt = new Date().toISOString();
+                await writeRequest(requestsDir, running);
+              }
+              result = await agentRuntime.run({
+                host, prompt, selection: record.selection, projectDir: loaded.projectDir,
+                projectFile: loaded.projectFile, projectTitle: sourceProject.title,
+                signal: controller.signal,
+              }, reportProgress);
+              refreshed = await loadProject(loaded.projectFile);
+              const attemptFindings = await validateProject(refreshed);
+              const attemptErrors = attemptFindings.filter((finding) => finding.severity === 'error');
+              if (attemptErrors.length > 0) throw new GenmotionError('AGENT_PROJECT_INVALID', 'The agent left validation errors in the project.', attemptErrors);
+              outcomeGaps = requestedOutcomeGaps(record.prompt, refreshed.sourceProject);
+              if (isNonExecutionResponse(result.response)) outcomeGaps.push('agent response admitted refusal or partial completion');
+              if (outcomeGaps.length === 0) break;
+            }
+            if (!result || !refreshed) throw new GenmotionError('AGENT_REQUEST_INCOMPLETE', 'The agent did not return a project result.');
             motionCatalog = await loadMotionLibraries(loaded.projectDir);
             const findings = await validateProject(refreshed);
             const errors = findings.filter((finding) => finding.severity === 'error');
             if (errors.length > 0) throw new GenmotionError('AGENT_PROJECT_INVALID', 'The agent left validation errors in the project.', errors);
-            const outcomeGaps = requestedOutcomeGaps(record.prompt, refreshed.sourceProject);
-            if (outcomeGaps.length > 0 || isNonExecutionResponse(result.response)) {
-              throw new GenmotionError('AGENT_REQUEST_INCOMPLETE', 'The agent ended the turn without satisfying the requested production contract.', outcomeGaps.length > 0 ? outcomeGaps : [result.response]);
+            if (outcomeGaps.length > 0) {
+              throw new GenmotionError('AGENT_REQUEST_INCOMPLETE', 'The agent ended the turn without satisfying the requested production contract.', outcomeGaps);
             }
             const afterRevision = revision(refreshed.sourceProject);
             if (afterRevision === running.beforeRevision && requestRequiresProjectChange(record.prompt)) {
