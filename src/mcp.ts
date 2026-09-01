@@ -110,9 +110,15 @@ function serverFactory(): McpServer {
   });
 
   server.registerTool('genmotion_schema', {
-    title: 'Inspect Genmotion authoring schema', description: 'Return the complete machine-readable Creative IR schema and open-ended animation capabilities for agent authoring.', inputSchema: z.object({}).strict(), annotations: { readOnlyHint: true },
-  }, () => Promise.resolve(toolResult({
-    schema: z.toJSONSchema(projectSchema),
+    title: 'Inspect Genmotion authoring schema', description: 'Return a compact authoritative Creative IR authoring contract by default. Request full=true only when the inline save-tool schema does not answer a field-level question.', inputSchema: z.object({ full: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true },
+  }, (input) => Promise.resolve(toolResult({
+    ...(input.full ? { schema: z.toJSONSchema(projectSchema) } : { schemaSummary: {
+      project: ['schemaVersion', 'id', 'title', 'width', 'height', 'fps', 'seed', 'brand', 'scenes', 'audio', 'metadata'],
+      scene: ['id', 'purpose', 'duration', 'background', 'layers', 'transitionIn', 'transitionOut'],
+      textRequired: ['id', 'type=text', 'text', 'x', 'y', 'width', 'height', 'fontFamily', 'fontSize', 'color'],
+      shapeRequired: ['id', 'type=shape', 'shape', 'x', 'y', 'width', 'height'],
+      trackRequired: ['id', 'target', 'keyframes[{at,value,ease}]'],
+    } }),
     authoring: {
       model: 'Agents may author complete projects, granular RFC 6902 patches, arbitrary numeric property tracks, custom cubic-bezier and spring easing, and SVG path geometry.',
       transformSemantics: 'Layer x/y are absolute layout coordinates. transform.x/transform.y are additional offsets around that layout position and should normally start at 0; never copy layer x/y into transform x/y. Direct transform tracks animate those offsets.',
