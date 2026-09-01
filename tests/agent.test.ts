@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPrompt } from '../src/agent/runtime.js';
+import { buildPrompt, isNonExecutionResponse, requestRequiresProjectChange } from '../src/agent/runtime.js';
 
 describe('local agent bridge', () => {
   it('builds bounded production context without credentials or fabricated permissions', () => {
@@ -16,5 +16,18 @@ describe('local agent bridge', () => {
     expect(prompt).toContain('Named recipes are optional references');
     expect(prompt).toContain('inspect at least one representative native frame');
     expect(prompt).not.toMatch(/API[_ -]?key/i);
+  });
+
+  it('authorizes requested full-timeline review and rejects scope-only blockers', () => {
+    const prompt = buildPrompt({
+      host: 'hermes', prompt: 'Create a four-scene launch film, render it, and inspect every transition boundary.',
+      selection: { frame: 0 }, projectDir: '/project', projectFile: '/project/genmotion.json', projectTitle: 'Arc One',
+    });
+    expect(prompt).toContain('This is an authoring request. Begin with the project tools');
+    expect(prompt).toContain('The user explicitly requested rendering or full-timeline review.');
+    expect(prompt).toContain('Scope, iteration count, an initially blank artboard, and the need to inspect your own work are not blockers.');
+    expect(requestRequiresProjectChange('Create a premium four-scene launch film.')).toBe(true);
+    expect(requestRequiresProjectChange('Review the current frame and explain the spacing.')).toBe(false);
+    expect(isNonExecutionResponse('**Exact blocker:** This cannot be completed safely in one pass.')).toBe(true);
   });
 });

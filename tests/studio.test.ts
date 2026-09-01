@@ -36,7 +36,7 @@ async function waitForRequest(
   requestId: string,
   terminal: ReadonlySet<string> = new Set(['completed', 'failed']),
   timeoutMs = 10_000,
-): Promise<{ status: string; response?: string; afterRevision?: string }> {
+): Promise<{ status: string; response?: string; error?: string; afterRevision?: string }> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const record = (await getStudioRequests(directory)).find((candidate) => candidate.id === requestId);
@@ -251,6 +251,22 @@ describe('Genmotion Studio', () => {
       expect(record?.afterRevision).toBeTruthy();
       const bootstrap = await fetch(`${studio.url}/api/bootstrap`).then((response) => response.json()) as { project: { title: string } };
       expect(bootstrap.project.title).toBe('Changed by local agent');
+    } finally { await studio.close(); }
+  });
+
+  it('does not report a requested edit as complete when the agent changed nothing', async () => {
+    const directory = await fixture();
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const queued = await fetch(`${studio.url}/api/requests`, {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-genmotion-token': token },
+        body: JSON.stringify({ prompt: 'Create a complete four-scene launch film.', host: 'codex' }),
+      });
+      const request = await queued.json() as { id: string };
+      const record = await waitForRequest(directory, request.id, new Set(['failed']));
+      expect(record).toMatchObject({ status: 'failed' });
+      expect(record.error).toContain('without applying the requested project change');
     } finally { await studio.close(); }
   });
 

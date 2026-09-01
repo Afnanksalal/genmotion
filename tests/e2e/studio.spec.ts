@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { cp, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../../src/ir/loader.js';
@@ -10,8 +10,13 @@ let directory = '';
 let studio: StudioServer | undefined;
 const agentRuntime: AgentRuntime = {
   hosts: () => Promise.resolve([{ id: 'codex', label: 'Codex', installed: true, authenticated: true, detail: 'Browser test session' }]),
-  run: async (_input, onProgress) => {
+  run: async (input, onProgress) => {
     await onProgress({ activity: 'Responding', message: 'The selected scene was reviewed.', sessionId: 'browser-test-thread' });
+    if (/\b(?:create|make|change|edit|author|design|animate|add|remove|apply|fix|update)\b/i.test(input.prompt)) {
+      const project = JSON.parse(await readFile(input.projectFile, 'utf8')) as { metadata?: Record<string, string> };
+      project.metadata = { ...project.metadata, browserAgentEdit: 'applied' };
+      await writeFile(input.projectFile, `${JSON.stringify(project, null, 2)}\n`);
+    }
     return { response: 'The selected scene was reviewed.', sessionId: 'browser-test-thread' };
   },
   close: () => Promise.resolve(),
