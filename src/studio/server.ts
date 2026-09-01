@@ -190,9 +190,17 @@ export function reconcileStudioState(project: GenmotionProject, state: StudioSta
   const sceneIds = new Set(project.scenes.map((scene) => scene.id));
   const layerIds = new Set(project.scenes.flatMap((scene) => scene.layers.map((layer) => `layer:${scene.id}:${layer.id}`)));
   const referenceIds = new Set(state.references.map((reference) => `reference:${reference.id}`));
+  const existingSceneIds = state.nodes.filter((node) => node.kind === 'scene').map((node) => node.sceneId).filter((id): id is string => id !== undefined);
+  const topologyMatches = existingSceneIds.length === project.scenes.length && existingSceneIds.every((id, index) => id === project.scenes[index]?.id);
+  const rightmostSceneX = Math.max(...state.nodes.filter((node) => node.kind === 'scene' && sceneIds.has(node.sceneId ?? '')).map((node) => node.x), Number.NEGATIVE_INFINITY);
   const core = defaults.nodes.map((fallback) => {
     const current = existing.get(fallback.id);
-    return current ? { ...fallback, x: current.x, y: current.y, color: current.color } : fallback;
+    const preservePosition = current && (
+      fallback.kind === 'brief'
+      || (fallback.kind === 'scene' && topologyMatches)
+      || (fallback.kind === 'output' && topologyMatches && current.x > rightmostSceneX)
+    );
+    return current ? { ...fallback, x: preservePosition ? current.x : fallback.x, y: preservePosition ? current.y : fallback.y, color: current.color } : fallback;
   });
   const custom = state.nodes.filter((node) => {
     if (node.kind === 'brief' || node.kind === 'scene' || node.kind === 'output') return false;
