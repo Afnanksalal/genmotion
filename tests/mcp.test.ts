@@ -68,11 +68,15 @@ describe('Genmotion MCP server', () => {
       expect(staleSave.isError).toBe(true);
 
       const schema = await client.callTool({ name: 'genmotion_schema', arguments: {} });
-      const schemaContent = schema.structuredContent as { authoring?: { recipePolicy?: string; transformSemantics?: string; canonicalExample?: { textLayer?: Record<string, unknown>; track?: Record<string, unknown> } } };
+      const schemaContent = schema.structuredContent as { schema?: unknown; schemaSummary?: { trackRequired?: string[] }; authoring?: { recipePolicy?: string; transformSemantics?: string; canonicalExample?: { textLayer?: Record<string, unknown>; track?: Record<string, unknown> } } };
+      expect(schemaContent.schema).toBeUndefined();
+      expect(schemaContent.schemaSummary?.trackRequired).toContain('id');
       expect(schemaContent.authoring?.recipePolicy).toContain('optional');
       expect(schemaContent.authoring?.transformSemantics).toContain('additional offsets');
       expect(schemaContent.authoring?.canonicalExample?.textLayer).toMatchObject({ width: 1440, fontFamily: 'Arial', color: '#f7f5ef' });
       expect(schemaContent.authoring?.canonicalExample?.track).toMatchObject({ target: 'transform.y', keyframes: [{ at: 0 }, { at: 0.8 }] });
+      const fullSchema = await client.callTool({ name: 'genmotion_schema', arguments: { full: true } });
+      expect((fullSchema.structuredContent as { schema?: unknown }).schema).toBeDefined();
       const savedContent = saved.structuredContent as { revision: string };
       const patched = await client.callTool({ name: 'genmotion_project_patch', arguments: { project, expectedRevision: savedContent.revision, operations: [{ op: 'add', path: '/metadata/agentic', value: 'true' }], strict: false } });
       expect(patched.structuredContent).toMatchObject({ operationsApplied: 1 });
