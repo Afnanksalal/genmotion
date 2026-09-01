@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import path from 'node:path';
 import YAML from 'yaml';
 import { GenmotionError } from '../errors.js';
@@ -57,6 +58,17 @@ export function resolveProjectAsset(projectDir: string, assetPath: string): stri
   const relative = path.relative(root, resolved);
   if (relative.startsWith('..') || path.isAbsolute(relative)) {
     throw new GenmotionError('ASSET_OUTSIDE_PROJECT', `Asset must stay inside the project directory: ${assetPath}`);
+  }
+  try {
+    const canonicalRoot = realpathSync.native(root);
+    const canonicalAsset = realpathSync.native(resolved);
+    const canonicalRelative = path.relative(canonicalRoot, canonicalAsset);
+    if (canonicalRelative.startsWith('..') || path.isAbsolute(canonicalRelative)) {
+      throw new GenmotionError('ASSET_OUTSIDE_PROJECT', `Asset symlink or junction escapes the project directory: ${assetPath}`);
+    }
+  } catch (error) {
+    if (error instanceof GenmotionError) throw error;
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
   }
   return resolved;
 }

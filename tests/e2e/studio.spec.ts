@@ -87,6 +87,13 @@ test('scales workflow navigation, asset discovery, easing inspection, and audio 
   await expect(page.locator('[data-bool-field="solo"]')).toBeVisible();
   await expect(page.locator('.audio-waveform')).toBeVisible();
   await expect.poll(() => page.locator('.audio-waveform').evaluate((canvas: HTMLCanvasElement) => canvas.width)).toBeGreaterThan(1);
+  await page.locator('#deleteSelection').click();
+  await page.getByRole('tab', { name: 'Assets' }).click();
+  await page.locator('#assetSearch').fill('mix');
+  await expect(page.getByRole('button', { name: 'Delete unused' })).toBeVisible();
+  await page.getByRole('button', { name: 'Delete unused' }).click();
+  await expect(page.locator('[data-asset]')).toHaveCount(0);
+  await expect.poll(async () => readdir(path.join(directory, 'assets', 'studio'))).toEqual([]);
 });
 
 test('edits, previews, references, and queues contextual agent work', async ({ page }) => {
@@ -214,18 +221,14 @@ test('authors the complete IR from Studio without relying on agent chat', async 
   const curve = page.locator('[data-ease-curve]').first();
   const handle = curve.locator('[data-ease-handle="1"]');
   await expect(handle).toBeVisible();
-  const box = await handle.boundingBox();
-  expect(box).not.toBeNull();
-  await page.mouse.move((box?.x ?? 0) + 3, (box?.y ?? 0) + 3);
-  await page.mouse.down();
-  await page.mouse.move((box?.x ?? 0) + 35, (box?.y ?? 0) - 12, { steps: 5 });
-  await page.mouse.up();
+  await handle.focus();
+  await handle.press('Shift+ArrowRight');
   await expect.poll(async () => {
     const saved = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ type: string; tracks?: Array<{ keyframes: Array<{ ease: unknown }> }> }> }> };
     const layer = saved.scenes[0]?.layers.filter((item) => item.type === 'text').at(-1);
     return layer?.tracks?.[0]?.keyframes[1]?.ease;
   }).toMatchObject({ type: 'cubic-bezier' });
-  await expect(page.locator('[data-field$=".ease.x1"]').first()).not.toHaveValue('0.2');
+  await expect(page.locator('[data-field$=".ease.x1"]').first()).toHaveValue('0.3');
   expect(errors).toEqual([]);
 });
 

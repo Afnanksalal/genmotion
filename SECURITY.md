@@ -12,7 +12,7 @@ Do not open a public issue for a suspected vulnerability. Use GitHub private vul
 
 Genmotion executes local native modules and FFmpeg with the permissions of the invoking user. Only install the package and skill from a reviewed source.
 
-The renderer rejects HTTP assets and filesystem paths that escape the project root. Freeze licensed assets locally before rendering. Genmotion has no model API-key configuration or credential store.
+The renderer rejects HTTP assets, lexical parent-directory escapes, and existing symlink or junction targets outside the canonical project root. Freeze licensed assets locally before rendering. Genmotion has no model API-key configuration or credential store.
 
 Preview binds to `127.0.0.1` by default. Binding it to another interface exposes rendered project frames and metadata to that network and should be an explicit operator choice.
 
