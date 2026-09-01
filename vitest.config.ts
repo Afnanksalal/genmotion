@@ -18,7 +18,7 @@ export default defineConfig({
         'src/engine/worker.ts',
         'src/agent/runtime.ts',
       ],
-      thresholds: { lines: 75, functions: 75, statements: 75, branches: 65 },
+      thresholds: { lines: 85, functions: 90, statements: 85, branches: 70 },
     },
   },
 });
