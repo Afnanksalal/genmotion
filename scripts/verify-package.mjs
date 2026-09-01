@@ -11,7 +11,7 @@ const scratch = await mkdtemp(path.join(os.tmpdir(), 'genmotion-package-'));
 try {
   const packed = await exec('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', scratch], { cwd: root, shell: process.platform === 'win32' });
   const [{ filename, files }] = JSON.parse(packed.stdout);
-  const required = ['dist/cli.js', 'dist/mcp.js', 'dist/index.js', 'npm-shrinkwrap.json', 'README.md', 'SECURITY.md', 'LICENSE', 'skills/genmotion/SKILL.md'];
+  const required = ['dist/cli.js', 'dist/mcp.js', 'dist/index.js', 'npm-shrinkwrap.json', 'CHANGELOG.md', 'README.md', 'SECURITY.md', 'LICENSE', 'skills/genmotion/SKILL.md'];
   const packaged = new Set(files.map((file) => file.path));
   for (const requiredPath of required) {
     if (!packaged.has(requiredPath)) throw new Error(`Package is missing ${requiredPath}`);
