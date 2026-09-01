@@ -121,6 +121,7 @@ export function isTransientAgentFailure(error: unknown): boolean {
 }
 interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed'; progress: number; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
 interface ExportRecord { filename: string; output: string; size: number; modifiedAt: string }
+interface AssetRecord { path: string; size: number; modifiedAt: string; kind: 'image' | 'video' | 'audio' | 'font' | 'asset'; uses: number }
 interface StudioWorkspace { root: string; servers: Map<string, StudioServer> }
 interface StudioProjectSummary { id: string; title: string; directory: string; width: number; height: number; modifiedAt: string; active: boolean }
 export interface StudioOptions { host?: string; port?: number; agentRuntime?: AgentRuntime; agentRuntimeFactory?: (projectDir: string) => AgentRuntime; revealFile?: (file: string) => Promise<void>; workspaceRoot?: string; workspace?: StudioWorkspace }
@@ -176,6 +177,46 @@ function hasExpectedSignature(extension: string, body: Buffer): boolean {
   if (extension === '.otf') return ascii(0, 4) === 'OTTO';
   if (extension === '.ttf') return body.subarray(0, 4).equals(Buffer.from([0x00, 0x01, 0x00, 0x00]));
   return false;
+}
+
+function assetKind(file: string): AssetRecord['kind'] {
+  const extension = path.extname(file).toLowerCase();
+  if (['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif'].includes(extension)) return 'image';
+  if (['.mp4', '.mov', '.webm', '.mkv', '.m4v'].includes(extension)) return 'video';
+  if (['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac'].includes(extension)) return 'audio';
+  if (['.woff', '.woff2', '.ttf', '.otf'].includes(extension)) return 'font';
+  return 'asset';
+}
+
+async function listProjectAssets(projectDir: string, project: GenmotionProject, studio: StudioState): Promise<AssetRecord[]> {
+  const usage = new Map<string, number>();
+  const use = (file: string | undefined): void => { if (file) usage.set(file, (usage.get(file) ?? 0) + 1); };
+  for (const scene of project.scenes) for (const layer of scene.layers) { if ('src' in layer) use(layer.src); if (layer.type === 'text') use(layer.fontFile); }
+  for (const track of project.audio) use(track.src);
+  for (const font of project.brand.fonts) use(font.file);
+  for (const reference of studio.references) use(reference.path);
+
+  const files = new Set(usage.keys());
+  const assetsRoot = path.join(projectDir, 'assets');
+  const pending = [assetsRoot];
+  while (pending.length > 0 && files.size < 10_000) {
+    const directory = pending.pop();
+    if (!directory) break;
+    const entries = await readdir(directory, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      const absolute = path.join(directory, entry.name);
+      if (entry.isDirectory()) pending.push(absolute);
+      else if (entry.isFile()) files.add(path.relative(projectDir, absolute).replaceAll('\\', '/'));
+    }
+  }
+  const records = await Promise.all([...files].map(async (file): Promise<AssetRecord | undefined> => {
+    try {
+      const info = await stat(resolveProjectAsset(projectDir, file));
+      if (!info.isFile()) return undefined;
+      return { path: file, size: info.size, modifiedAt: info.mtime.toISOString(), kind: assetKind(file), uses: usage.get(file) ?? 0 };
+    } catch { return undefined; }
+  }));
+  return records.filter((record): record is AssetRecord => record !== undefined).sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt));
 }
 
 function revision(project: GenmotionProject): string {
@@ -472,7 +513,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
         project: sourceProject, studio: studioState, revision: revision(sourceProject),
         findings: await validateProject(currentLoaded), duration: projectDuration(sourceProject),
         catalog: { motions: motionCatalog.motions, motionLibraries: motionCatalog.libraries, references: tasteReferences, blueprints: sceneBlueprints },
-        requests: await listRequests(requestsDir), jobs: [...jobs.values()], exports: await listExports(rendersDir, loaded.projectDir), projects: await discoverProjects(workspace, loaded.projectDir), workspaceRoot: workspace.root, currentProjectId: projectId(loaded.projectDir), agents: agentHosts, projectFile: path.basename(loaded.projectFile),
+        requests: await listRequests(requestsDir), jobs: [...jobs.values()], exports: await listExports(rendersDir, loaded.projectDir), assets: await listProjectAssets(loaded.projectDir, sourceProject, studioState), projects: await discoverProjects(workspace, loaded.projectDir), workspaceRoot: workspace.root, currentProjectId: projectId(loaded.projectDir), agents: agentHosts, projectFile: path.basename(loaded.projectFile),
       });
     } catch (error) { next(error); }
   });
@@ -568,6 +609,21 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const relative = path.posix.join('assets', 'studio', `${hash}-${filename}`);
       await atomicWrite(path.join(loaded.projectDir, ...relative.split('/')), body);
       response.json({ path: relative, size: body.length, hash });
+    } catch (error) { next(error); }
+  });
+  app.get('/api/assets', async (_request, response, next) => {
+    try { response.json(await listProjectAssets(loaded.projectDir, sourceProject, studioState)); } catch (error) { next(error); }
+  });
+  app.delete('/api/assets', async (request, response, next) => {
+    try {
+      const body = z.object({ path: z.string().min(1) }).strict().parse(request.body);
+      if (!body.path.replaceAll('\\', '/').startsWith('assets/studio/')) { response.status(403).json({ error: 'Only Studio-imported assets can be deleted here.' }); return; }
+      const inventory = await listProjectAssets(loaded.projectDir, sourceProject, studioState);
+      const asset = inventory.find((record) => record.path === body.path);
+      if (!asset) { response.status(404).json({ error: 'Asset not found.' }); return; }
+      if (asset.uses > 0) { response.status(409).json({ error: `Asset is still used ${String(asset.uses)} time${asset.uses === 1 ? '' : 's'}. Remove or replace those uses first.` }); return; }
+      await rm(resolveProjectAsset(loaded.projectDir, asset.path), { force: true });
+      response.json({ ok: true, assets: await listProjectAssets(loaded.projectDir, sourceProject, studioState) });
     } catch (error) { next(error); }
   });
   app.get('/api/motion-libraries', (_request, response) => { response.json(motionCatalog.libraries); });

@@ -343,6 +343,7 @@ describe('Genmotion Studio', () => {
         { method: 'POST', path: '/api/studio/auto-layout', body: {} },
         { method: 'POST', path: '/api/history/0000000000000000/restore', body: {} },
         { method: 'POST', path: '/api/assets?purpose=asset&filename=test.png', body: {} },
+        { method: 'DELETE', path: '/api/assets', body: { path: 'assets/studio/test.png' } },
         { method: 'POST', path: '/api/motion-libraries', body: {} },
         { method: 'POST', path: '/api/references/connect', body: {} },
         { method: 'POST', path: '/api/requests', body: { prompt: 'This must not be accepted.' } },

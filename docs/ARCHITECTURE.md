@@ -85,7 +85,7 @@ This architecture scales with useful local concurrency without splitting each re
 
 ## Media and audio
 
-Image and video assets must resolve inside the project directory. Remote URLs and parent-directory escapes are rejected.
+Image and video assets must resolve inside the project directory. Remote URLs, parent-directory escapes, and existing symlink or junction targets outside the canonical project root are rejected.
 
 Video layers are decoded once into a content-aware local cache based on source file size, modification time, frame rate, trim, duration, and playback rate. The render workers reuse those frames.
 
