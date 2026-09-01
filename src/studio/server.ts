@@ -12,6 +12,9 @@ import { loadProject, resolveProjectAsset, type LoadedProject } from '../ir/load
 import { projectDuration, projectSchema, type GenmotionProject } from '../ir/schema.js';
 import { compileProjectMotions } from '../engine/motion.js';
 import { renderFramePng } from '../engine/draw.js';
+import { evaluateLayerTracks } from '../engine/animation.js';
+import { layerIsActive, locateScene } from '../engine/timeline.js';
+import { makeContactSheet, probeVideo } from '../engine/probe.js';
 import { renderProject, resolveRenderResolution } from '../engine/render.js';
 import { validateProject } from '../ir/validate.js';
 import { compileCustomLibrary, loadMotionLibraries, saveMotionLibrary } from '../catalog/custom.js';
@@ -56,6 +59,9 @@ const renderRequestSchema = z.object({
 const revealExportSchema = z.object({
   filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
 });
+const contactSheetSchema = z.object({
+  count: z.number().int().min(4).max(40).default(12), columns: z.number().int().min(2).max(8).default(4),
+}).strict();
 const connectReferenceSchema = z.object({
   revision: z.string().regex(/^[a-f0-9]{16}$/), referenceId: z.string().min(1), sceneId: z.string().min(1), studio: studioStateSchema,
 }).strict();
@@ -559,6 +565,40 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     } catch (error) { next(error); }
   });
   app.get('/api/jobs', (_request, response) => { response.json([...jobs.values()]); });
+  app.get('/api/timeline', (request, response, next) => {
+    try {
+      const { at } = z.object({ at: z.coerce.number().nonnegative() }).parse(request.query);
+      const active = locateScene(compiledProject, at);
+      const layers = active.scene.layers
+        .filter((layer) => layer.visible && layerIsActive(layer.start, layer.duration, active.scene.duration, active.localTime))
+        .map((layer) => ({ ...evaluateLayerTracks(layer, active.localTime - layer.start), localTime: active.localTime - layer.start }));
+      response.json({ at, scene: { id: active.scene.id, purpose: active.scene.purpose, localTime: active.localTime, globalStart: active.globalStart }, layers });
+    } catch (error) { next(error); }
+  });
+  app.get('/api/exports/:filename/probe', async (request, response, next) => {
+    try {
+      const { filename } = revealExportSchema.parse(request.params);
+      response.json(await probeVideo(path.join(rendersDir, filename)));
+    } catch (error) { next(error); }
+  });
+  app.post('/api/exports/:filename/contact-sheet', async (request, response, next) => {
+    try {
+      const { filename } = revealExportSchema.parse(request.params);
+      const body = contactSheetSchema.parse(request.body);
+      const basename = `${path.parse(filename).name}-contact-sheet.png`;
+      await makeContactSheet(path.join(rendersDir, filename), path.join(rendersDir, basename), body.count, body.columns);
+      response.json({ filename: basename, source: filename, count: body.count, columns: body.columns, url: `/api/contact-sheets/${encodeURIComponent(basename)}` });
+    } catch (error) { next(error); }
+  });
+  app.get('/api/contact-sheets/:filename', async (request, response, next) => {
+    try {
+      const filename = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*-contact-sheet\.png$/).parse(request.params.filename);
+      const [realRendersDir, realOutput] = await Promise.all([realpath(rendersDir), realpath(path.join(rendersDir, filename))]);
+      const relative = path.relative(realRendersDir, realOutput);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) { response.status(400).json({ error: 'Contact sheet path is outside the project render directory.' }); return; }
+      response.sendFile(realOutput);
+    } catch (error) { next(error); }
+  });
   app.get('/api/projects', async (_request, response, next) => {
     try { response.json({ projects: await discoverProjects(workspace, loaded.projectDir), workspaceRoot: workspace.root, currentProjectId: projectId(loaded.projectDir) }); } catch (error) { next(error); }
   });
