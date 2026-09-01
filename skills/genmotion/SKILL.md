@@ -4,7 +4,7 @@ description: Create, edit, preview, validate, and render designed motion graphic
 license: MIT
 metadata:
   author: afnanksalal
-  version: "1.9.1"
+  version: "1.9.2"
 ---
 
 # Genmotion
@@ -48,7 +48,7 @@ When working in Codex, start it with `--no-open`, read the printed local URL, an
 5. Render and inspect representative native PNG frames during iteration. A schema-valid project is not necessarily a well-directed composition.
 6. Use Studio for fine-grained human direction or read [references/authoring.md](references/authoring.md) before editing `genmotion.json` by hand. Read [references/studio.md](references/studio.md) when Studio is active.
 7. Run `genmotion validate <project> --strict` and fix every finding.
-8. Use `genmotion preview <project>` to review timing, hierarchy, transitions, and holds.
+8. Use `genmotion preview <project>` to review timing, hierarchy, transitions, and holds. For multi-scene work, inspect the frame immediately before, at, and after every boundary; read [references/operations.md](references/operations.md) for the boundary gate.
 9. Render the accepted timeline with `genmotion render <project> --output <file> --quality high`. High quality renders vector and type layers at a minimum 1920-pixel long edge instead of merely changing compression. Use `--resolution 3840x2160` or the matching project aspect ratio when a specific delivery size is required.
 10. Run `genmotion probe <file>` and `genmotion contact-sheet <file> --output <sheet>`; inspect the actual sheet before delivery.
 
@@ -75,8 +75,8 @@ Do not mark a request resolved before its edit is saved and validated. Do not ov
 - Build, breathe, and resolve. Hold the complete result long enough to understand.
 - Use real product footage or supplied evidence when the scene claims product behavior. Never reconstruct a functioning interface as proof.
 - Keep assets local and licensed. Remote render assets are invalid.
-- A successful render is not delivery. Probe it and inspect representative frames.
+- A successful render is not delivery. Probe it, inspect representative frames, and review the encoded output wherever cadence, transitions, source video, or audio matter.
 
 ## Completion gate
 
-Do not report completion until the project validates, the final encode matches its resolution and duration contract, the contact sheet has been inspected, audio starts and ends cleanly, captions remain inside safe areas, product evidence is truthful, and no example copy or unsourced claim remains.
+Do not report completion until the project validates, the final encode matches its resolution and duration contract, the contact sheet has been inspected, every scene boundary advances without a blank/restart/backward jump, audio starts and ends cleanly, captions remain inside safe areas, product evidence is truthful, and no example copy or unsourced claim remains.

@@ -30,6 +30,7 @@ General agents can write animation code, but code generation alone gives them a 
 - Native Skia rasterization through `@napi-rs/canvas`
 - No browser, DOM, React reconciliation, or screenshot capture
 - Reproducible frame evaluation from project data, timestamp, and seed
+- Continuous cross-scene transition evaluation with boundary mismatch validation
 - Parallel worker-thread frame generation
 - Ordered raw RGBA streaming into FFmpeg while frames continue rendering
 - H.264, H.265, VP9, and ProRes outputs
@@ -161,7 +162,7 @@ npm run check
 npm run benchmark
 ```
 
-The test suite covers agent-authored tracks, custom easing, transactional patches, schema discovery, visual MCP responses, timeline evaluation, native frame reproducibility, real video decoding, Studio persistence and security, local agent orchestration, preview delivery, H.264 encoding, and AAC audio muxing.
+The test suite covers agent-authored tracks, custom easing, transactional patches, schema discovery, visual MCP responses, timeline evaluation, pixel-level transition continuity, native frame reproducibility, real video decoding, Studio persistence and security, local agent orchestration, preview delivery, H.264 encoding, and AAC audio muxing.
 
 ## Security
 

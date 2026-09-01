@@ -235,7 +235,10 @@ interface ScenePose { alpha: number; x: number; y: number; scale: number; blur: 
 
 function transitionPose(type: Scene['transitionIn']['type'], progress: number, width: number, height: number, incoming: boolean): ScenePose {
   const p = Math.max(0, Math.min(1, progress));
-  const alpha = incoming ? p : 1 - p;
+  // Scenes always paint an opaque background. Keeping the outgoing scene fully
+  // opaque and compositing the incoming scene over it produces a true crossfade
+  // without the luminance dip caused by fading both canvases over black.
+  const alpha = incoming ? p : 1;
   switch (type) {
     case 'cut': return { alpha: incoming ? 1 : 0, x: 0, y: 0, scale: 1, blur: 0 };
     case 'crossfade': return { alpha, x: 0, y: 0, scale: 1, blur: 0 };
@@ -247,16 +250,70 @@ function transitionPose(type: Scene['transitionIn']['type'], progress: number, w
   }
 }
 
-async function drawScene(ctx: SKRSContext2D, scene: Scene, project: GenmotionProject, projectDir: string, time: number, pose: ScenePose): Promise<void> {
+interface BoundaryTransition {
+  previous: Scene;
+  next: Scene;
+  previousTime: number;
+  nextTime: number;
+  type: Scene['transitionIn']['type'];
+  progress: number;
+}
+
+function locateBoundaryTransition(project: GenmotionProject, active: ReturnType<typeof locateScene>, globalTime: number): BoundaryTransition | undefined {
+  const candidates = active.index > 0 ? [active.index - 1, active.index] : [active.index];
+  for (const previousIndex of candidates) {
+    const previous = project.scenes[previousIndex];
+    const next = project.scenes[previousIndex + 1];
+    if (!previous || !next) continue;
+
+    const boundary = previousIndex === active.index ? active.globalStart + previous.duration : active.globalStart;
+    const outgoingDuration = previous.transitionOut.type === 'cut' ? 0 : previous.transitionOut.duration;
+    const incomingDuration = next.transitionIn.type === 'cut' ? 0 : next.transitionIn.duration;
+    const duration = outgoingDuration + incomingDuration;
+    const start = boundary - outgoingDuration;
+    const end = boundary + incomingDuration;
+    if (duration <= 0 || globalTime < start || globalTime >= end) continue;
+
+    const transition = outgoingDuration > 0 && previous.transitionOut.type !== 'cut'
+      ? previous.transitionOut
+      : next.transitionIn;
+    const raw = (globalTime - start) / duration;
+    const previousLastFrame = Math.max(0, previous.duration - 1 / project.fps);
+    return {
+      previous,
+      next,
+      previousTime: Math.max(0, Math.min(previousLastFrame, globalTime - (boundary - previous.duration))),
+      nextTime: Math.max(0, Math.min(next.duration, globalTime - boundary)),
+      type: transition.type,
+      progress: ease(transition.ease, raw),
+    };
+  }
+  return undefined;
+}
+
+async function drawSceneContents(ctx: SKRSContext2D, scene: Scene, project: GenmotionProject, projectDir: string, time: number): Promise<void> {
+  ctx.fillStyle = scene.background;
+  ctx.fillRect(0, 0, project.width, project.height);
+  for (const layer of [...scene.layers].sort((a, b) => a.z - b.z)) await drawLayer(ctx, layer, scene, project, projectDir, time);
+}
+
+async function drawScene(ctx: SKRSContext2D, scene: Scene, project: GenmotionProject, projectDir: string, time: number, pose: ScenePose, output: RenderDimensions): Promise<void> {
+  if (pose.alpha <= 0) return;
   ctx.save();
   ctx.globalAlpha = pose.alpha;
   ctx.filter = `blur(${String(pose.blur)}px)`;
   ctx.translate(project.width / 2 + pose.x, project.height / 2 + pose.y);
   ctx.scale(pose.scale, pose.scale);
   ctx.translate(-project.width / 2, -project.height / 2);
-  ctx.fillStyle = scene.background;
-  ctx.fillRect(0, 0, project.width, project.height);
-  for (const layer of [...scene.layers].sort((a, b) => a.z - b.z)) await drawLayer(ctx, layer, scene, project, projectDir, time);
+  if (pose.alpha < 1 || pose.blur > 0) {
+    const sceneCanvas = createCanvas(output.width, output.height);
+    const sceneContext = sceneCanvas.getContext('2d');
+    sceneContext.scale(output.width / project.width, output.height / project.height);
+    await drawSceneContents(sceneContext, scene, project, projectDir, time);
+    ctx.drawImage(sceneCanvas, 0, 0, project.width, project.height);
+  } else {
+    await drawSceneContents(ctx, scene, project, projectDir, time);
+  }
   ctx.restore();
 }
 
@@ -277,26 +334,12 @@ export async function renderFrame(project: GenmotionProject, projectDir: string,
   const active = locateScene(project, globalTime);
   const identity: ScenePose = { alpha: 1, x: 0, y: 0, scale: 1, blur: 0 };
 
-  const outgoingDuration = active.scene.transitionOut.duration;
-  const inOutgoing = outgoingDuration > 0 && active.index < project.scenes.length - 1 && active.localTime >= active.scene.duration - outgoingDuration;
-  const incomingDuration = active.scene.transitionIn.duration;
-  const inIncoming = incomingDuration > 0 && active.index > 0 && active.localTime < incomingDuration;
-
-  if (inOutgoing) {
-    const next = project.scenes[active.index + 1];
-    if (!next) throw new Error('Missing next scene.');
-    const raw = (active.localTime - (active.scene.duration - outgoingDuration)) / outgoingDuration;
-    const progress = ease(active.scene.transitionOut.ease, raw);
-    await drawScene(ctx, active.scene, project, projectDir, active.localTime, transitionPose(active.scene.transitionOut.type, progress, project.width, project.height, false));
-    await drawScene(ctx, next, project, projectDir, raw * next.transitionIn.duration, transitionPose(active.scene.transitionOut.type, progress, project.width, project.height, true));
-  } else if (inIncoming) {
-    const previous = project.scenes[active.index - 1];
-    if (!previous) throw new Error('Missing previous scene.');
-    const progress = ease(active.scene.transitionIn.ease, active.localTime / incomingDuration);
-    await drawScene(ctx, previous, project, projectDir, Math.max(0, previous.duration - 0.5 / project.fps), transitionPose(active.scene.transitionIn.type, progress, project.width, project.height, false));
-    await drawScene(ctx, active.scene, project, projectDir, active.localTime, transitionPose(active.scene.transitionIn.type, progress, project.width, project.height, true));
+  const boundary = locateBoundaryTransition(project, active, globalTime);
+  if (boundary) {
+    await drawScene(ctx, boundary.previous, project, projectDir, boundary.previousTime, transitionPose(boundary.type, boundary.progress, project.width, project.height, false), output);
+    await drawScene(ctx, boundary.next, project, projectDir, boundary.nextTime, transitionPose(boundary.type, boundary.progress, project.width, project.height, true), output);
   } else {
-    await drawScene(ctx, active.scene, project, projectDir, active.localTime, identity);
+    await drawScene(ctx, active.scene, project, projectDir, active.localTime, identity, output);
   }
 
   return Buffer.from(ctx.getImageData(0, 0, output.width, output.height).data.buffer);
