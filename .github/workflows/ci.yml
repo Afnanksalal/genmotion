@@ -35,6 +35,8 @@ jobs:
       - run: npm run benchmark
       - run: npm run examples:verify
         if: matrix.node == 22
+      - run: npm run package:verify
+        if: matrix.node == 22
   studio-e2e:
     runs-on: ubuntu-latest
     steps:

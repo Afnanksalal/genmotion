@@ -70,7 +70,7 @@ One command on macOS or Linux:
 curl -fsSL https://raw.githubusercontent.com/Afnanksalal/genmotion/main/scripts/install.sh | sh
 ```
 
-The installers resolve the latest published GitHub release, verify Node.js 22+, install FFmpeg when a supported package manager is available, install Genmotion globally, and finish by running `genmotion doctor`. Review the scripts before executing them in a managed environment.
+The installers resolve the latest published GitHub release, verify Node.js 22+, install FFmpeg when a supported package manager is available, download the packaged CLI, verify it against the release's SHA-256 manifest, install it globally, and finish by running `genmotion doctor`. Review the scripts before executing them in a managed environment.
 
 From npm and GitHub when the runtime is already installed:
 
@@ -79,7 +79,7 @@ npm install -g git+https://github.com/Afnanksalal/genmotion.git
 genmotion doctor
 ```
 
-Each tagged GitHub release also publishes a tested `.tgz` package artifact. Release packaging reruns the complete unit, integration, native render, and Studio browser suites before attaching the artifact.
+Each tagged GitHub release publishes a tested `.tgz` package artifact and `SHA256SUMS`. Release packaging enforces that the tag matches `package.json`, performs a clean package-install smoke test, and reruns the unit, integration, native render, example verification, and Studio browser suites before attaching the artifact.
 
 Or work from a checkout:
 
