@@ -22,7 +22,7 @@ import { tasteReferences } from '../catalog/references.js';
 import { sceneBlueprints } from '../catalog/blueprints.js';
 import { studioHtml } from './ui.js';
 import { GenmotionError } from '../errors.js';
-import { LocalAgentRuntime, type AgentHostId, type AgentRuntime, type AgentSelection } from '../agent/runtime.js';
+import { LocalAgentRuntime, requestRequiresProjectChange, type AgentHostId, type AgentRuntime, type AgentSelection } from '../agent/runtime.js';
 import { initializeProject, type InitOptions } from '../commands/init.js';
 import { isGenmotionBrandAsset, readGenmotionBrandAsset } from '../brand.js';
 
@@ -476,6 +476,9 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
             const errors = findings.filter((finding) => finding.severity === 'error');
             if (errors.length > 0) throw new GenmotionError('AGENT_PROJECT_INVALID', 'The agent left validation errors in the project.', errors);
             const afterRevision = revision(refreshed.sourceProject);
+            if (afterRevision === running.beforeRevision && requestRequiresProjectChange(record.prompt)) {
+              throw new GenmotionError('AGENT_NO_PROJECT_CHANGE', 'The agent ended the turn without applying the requested project change. Retry the turn or choose another agent runtime.');
+            }
             if (afterRevision !== running.beforeRevision) {
               await atomicWrite(path.join(historyDir, `${running.beforeRevision ?? revision(sourceProject)}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
               sourceProject = refreshed.sourceProject;
@@ -678,7 +681,10 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     if (ownsWorkspace) for (const child of [...workspace.servers.values()]) if (child !== studioServer) await child.close();
     workspace.servers.delete(path.resolve(loaded.projectDir));
     await agentRuntime.close();
-    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => error ? reject(error) : resolve());
+      server.closeAllConnections();
+    });
   } };
   workspace.servers.set(path.resolve(loaded.projectDir), studioServer);
   return studioServer;

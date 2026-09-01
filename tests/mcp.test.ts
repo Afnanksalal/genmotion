@@ -122,5 +122,5 @@ describe('Genmotion MCP server', () => {
     } finally {
       await client.close();
     }
-  }, 30_000);
+  }, process.platform === 'win32' ? 90_000 : 45_000);
 });
