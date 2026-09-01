@@ -3,7 +3,7 @@ import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { mkdir, readFile, readdir, realpath, rename, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import YAML from 'yaml';
@@ -128,6 +128,35 @@ export interface StudioServer { url: string; close: () => Promise<void>; server:
 
 const mediaExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.mp4', '.mov', '.webm', '.mkv', '.m4v', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.woff', '.woff2', '.ttf', '.otf']);
 const referenceExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif']);
+
+export class ByteLruCache {
+  private readonly entries = new Map<string, Buffer>();
+  private bytes = 0;
+  constructor(private readonly maxBytes: number, private readonly maxEntries: number) {}
+  get(key: string): Buffer | undefined {
+    const value = this.entries.get(key);
+    if (!value) return undefined;
+    this.entries.delete(key);
+    this.entries.set(key, value);
+    return value;
+  }
+  set(key: string, value: Buffer): void {
+    const previous = this.entries.get(key);
+    if (previous) this.bytes -= previous.byteLength;
+    this.entries.delete(key);
+    this.entries.set(key, value);
+    this.bytes += value.byteLength;
+    while (this.bytes > this.maxBytes || this.entries.size > this.maxEntries) {
+      const oldest = this.entries.entries().next().value;
+      if (!oldest) break;
+      this.entries.delete(oldest[0]);
+      this.bytes -= oldest[1].byteLength;
+    }
+  }
+  clear(): void { this.entries.clear(); this.bytes = 0; }
+  get size(): number { return this.entries.size; }
+  get byteLength(): number { return this.bytes; }
+}
 
 function hasExpectedSignature(extension: string, body: Buffer): boolean {
   const ascii = (start: number, end: number): string => body.subarray(start, end).toString('ascii');
@@ -371,23 +400,39 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
   };
   const jobs = new Map<string, RenderJob>();
-  const frameCache = new Map<string, Buffer>();
+  const frameCache = new ByteLruCache(128 * 1024 * 1024, 120);
+  let renderQueue = Promise.resolve();
   const agentRuntime = options.agentRuntime ?? options.agentRuntimeFactory?.(loaded.projectDir) ?? new LocalAgentRuntime(loaded.projectDir);
   const revealFile = options.revealFile ?? revealInFileManager;
   let agentHosts = await agentRuntime.hosts();
   let agentBusy = false;
   let agentQueue = Promise.resolve();
   let currentAgent: { id: string; controller: AbortController } | undefined;
+  const writeHistory = async (projectRevision: string, project: GenmotionProject): Promise<void> => {
+    await atomicWrite(path.join(historyDir, `${projectRevision}.json`), `${JSON.stringify(project, null, 2)}\n`);
+    const files = await readdir(historyDir);
+    const histories = await Promise.all(files.filter((file) => /^[a-f0-9]{16}\.json$/.test(file)).map(async (file) => ({ file, modified: (await stat(path.join(historyDir, file))).mtimeMs })));
+    await Promise.all(histories.sort((a, b) => b.modified - a.modified).slice(100).map((entry) => rm(path.join(historyDir, entry.file), { force: true })));
+  };
   const app = express();
   app.disable('x-powered-by');
 
   app.use((request, response, next) => {
+    const scriptNonce = randomBytes(18).toString('base64');
+    response.locals.scriptNonce = scriptNonce;
     response.set({
       'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
       'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Resource-Policy': 'same-origin',
-      'Content-Security-Policy': "default-src 'self'; img-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+      'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+      'Content-Security-Policy': `default-src 'self'; img-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'nonce-${scriptNonce}'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`,
       'Cache-Control': 'no-store',
     });
+    const fetchSite = request.header('sec-fetch-site');
+    if (fetchSite && !['same-origin', 'same-site', 'none'].includes(fetchSite)) { response.status(403).json({ error: 'Cross-site Studio requests are not allowed.' }); return; }
+    const origin = request.header('origin');
+    if (origin) {
+      try { if (new URL(origin).host !== request.header('host')) { response.status(403).json({ error: 'Studio request origin does not match this host.' }); return; } } catch { response.status(403).json({ error: 'Studio request origin is invalid.' }); return; }
+    }
     if (!request.path.startsWith('/api/') || request.method === 'GET') { next(); return; }
     if (request.header('x-genmotion-token') !== token) { response.status(403).json({ error: 'Invalid Studio session token.' }); return; }
     next();
@@ -402,7 +447,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     }
   }
 
-  app.get('/', (_request, response) => { response.type('html').send(studioHtml()); });
+  app.get('/', (_request, response) => { response.type('html').send(studioHtml(String(response.locals.scriptNonce ?? ''))); });
   app.get('/favicon.ico', (_request, response) => { response.type('image/png').set('Cache-Control', 'public, max-age=86400').send(readGenmotionBrandAsset('favicon-32.png')); });
   app.get('/brand/:name', (request, response) => {
     const name = request.params.name ?? '';
@@ -439,7 +484,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (body.revision !== currentRevision) { response.status(409).json({ error: 'Project changed since this Studio loaded it.', revision: currentRevision, project: sourceProject }); return; }
       const nextRevision = revision(body.project);
       const nextCompiled = compileProjectMotions(body.project, motionCatalog.motions);
-      await atomicWrite(path.join(historyDir, `${currentRevision}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
+      await writeHistory(currentRevision, sourceProject);
       await writeProjectFile(loaded.projectFile, body.project);
       sourceProject = body.project;
       compiledProject = nextCompiled;
@@ -482,7 +527,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const findings = await validateProject({ ...loaded, project: nextCompiled, sourceProject: nextProject });
       const nextRevision = revision(nextProject);
       await Promise.all([
-        atomicWrite(path.join(historyDir, `${currentRevision}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`),
+        writeHistory(currentRevision, sourceProject),
         writeProjectFile(loaded.projectFile, nextProject),
         atomicWrite(stateFile, `${JSON.stringify(nextStudio, null, 2)}\n`),
       ]);
@@ -502,7 +547,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const restored = projectSchema.parse(JSON.parse(await readFile(path.join(historyDir, `${requested}.json`), 'utf8')));
       const restoredCompiled = compileProjectMotions(restored, motionCatalog.motions);
       const currentRevision = revision(sourceProject);
-      await atomicWrite(path.join(historyDir, `${currentRevision}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
+      await writeHistory(currentRevision, sourceProject);
       await writeProjectFile(loaded.projectFile, restored);
       sourceProject = restored; compiledProject = restoredCompiled; frameCache.clear();
       await reconcileAndPersistStudio(sourceProject);
@@ -556,13 +601,14 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (!png) {
         png = await renderFramePng(compiledProject, loaded.projectDir, frame);
         frameCache.set(key, png);
-        if (frameCache.size > 120) frameCache.delete(frameCache.keys().next().value ?? '');
       }
       response.type('png').set('Cache-Control', 'private, max-age=31536000, immutable').send(png);
     } catch (error) { next(error); }
   });
   app.post('/api/requests', async (request, response, next) => {
     try {
+      const activeRequests = (await listRequests(requestsDir)).filter((record) => record.status === 'queued' || record.status === 'running');
+      if (activeRequests.length >= 20) { response.status(429).json({ error: 'The agent queue is full. Wait for an active turn to finish or cancel queued work.' }); return; }
       const body = requestSchema.parse(request.body);
       const selection: StudioRequestRecord['selection'] = {};
       if (body.selection.sceneId !== undefined) selection.sceneId = body.selection.sceneId;
@@ -665,7 +711,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
               throw new GenmotionError('AGENT_NO_PROJECT_CHANGE', 'The agent ended the turn without applying the requested project change. Retry the turn or choose another agent runtime.');
             }
             if (afterRevision !== running.beforeRevision) {
-              await atomicWrite(path.join(historyDir, `${running.beforeRevision ?? revision(sourceProject)}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
+              await writeHistory(running.beforeRevision ?? revision(sourceProject), sourceProject);
               sourceProject = refreshed.sourceProject;
               compiledProject = refreshed.project;
               frameCache.clear();
@@ -690,7 +736,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
               if (candidateFindings.some((finding) => finding.severity === 'error')) throw new Error('invalid agent edit');
               const candidateRevision = revision(candidate.sourceProject);
               if (candidateRevision !== revision(sourceProject)) {
-                await atomicWrite(path.join(historyDir, `${revision(sourceProject)}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
+                await writeHistory(revision(sourceProject), sourceProject);
                 sourceProject = candidate.sourceProject;
                 compiledProject = candidate.project;
                 frameCache.clear();
@@ -737,6 +783,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   app.get('/api/requests', async (_request, response) => { response.json(await listRequests(requestsDir)); });
   app.post('/api/render', async (request, response, next) => {
     try {
+      if ([...jobs.values()].filter((job) => job.status === 'queued' || job.status === 'rendering').length >= 8) { response.status(429).json({ error: 'The render queue is full. Wait for an export to finish.' }); return; }
       const body = renderRequestSchema.parse(request.body);
       const id = randomUUID();
       const output = path.join(rendersDir, body.filename);
@@ -750,8 +797,13 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       }
       const dimensions = resolveRenderResolution(compiledProject, body.quality, body.resolution);
       const job: RenderJob = { id, status: 'queued', progress: 0, output: relativeOutput, ...dimensions, quality: body.quality };
-      jobs.set(id, job); response.status(202).json(job);
-      void (async () => {
+      jobs.set(id, job);
+      if (jobs.size > 100) {
+        const removable = [...jobs.entries()].find(([, candidate]) => candidate.status === 'complete' || candidate.status === 'failed');
+        if (removable) jobs.delete(removable[0]);
+      }
+      response.status(202).json(job);
+      renderQueue = renderQueue.then(async () => {
         try {
           job.status = 'rendering';
           await renderProject({ ...loaded, project: compiledProject, sourceProject }, {
@@ -760,7 +812,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
           });
           job.status = 'complete'; job.progress = 1;
         } catch (error) { job.status = 'failed'; job.error = error instanceof Error ? error.message : String(error); }
-      })();
+      });
     } catch (error) { next(error); }
   });
   app.get('/api/jobs', (_request, response) => { response.json([...jobs.values()]); });

@@ -3,12 +3,28 @@ import { cp, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/pr
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../src/ir/loader.js';
-import { autoLayoutStudioState, fileManagerRevealCommand, getStudioRequests, isTransientAgentFailure, reconcileStudioState, requestedOutcomeGaps, resolveStudioRequest, startStudio, type StudioState } from '../src/studio/server.js';
+import { autoLayoutStudioState, ByteLruCache, fileManagerRevealCommand, getStudioRequests, isTransientAgentFailure, reconcileStudioState, requestedOutcomeGaps, resolveStudioRequest, startStudio, type StudioState } from '../src/studio/server.js';
 import type { GenmotionProject } from '../src/ir/schema.js';
 import type { AgentRuntime } from '../src/agent/runtime.js';
 
 const cleanup: string[] = [];
 afterEach(async () => { await Promise.all(cleanup.splice(0).map((directory) => rm(directory, { recursive: true, force: true }))); });
+
+describe('bounded Studio frame cache', () => {
+  it('evicts least-recently-used frames by bytes and entry count', () => {
+    const cache = new ByteLruCache(8, 2);
+    cache.set('a', Buffer.alloc(3));
+    cache.set('b', Buffer.alloc(3));
+    expect(cache.get('a')).toHaveLength(3);
+    cache.set('c', Buffer.alloc(3));
+    expect(cache.get('b')).toBeUndefined();
+    expect(cache.size).toBe(2);
+    cache.set('large', Buffer.alloc(8));
+    expect(cache.get('a')).toBeUndefined();
+    expect(cache.get('c')).toBeUndefined();
+    expect(cache.byteLength).toBe(8);
+  });
+});
 
 describe('file manager reveal commands', () => {
   it('uses a visible Explorer selection command on Windows', () => {
@@ -198,7 +214,14 @@ describe('Genmotion Studio', () => {
       expect(htmlBody).toContain('Genmotion Studio');
       expect(htmlBody).toContain('/brand/genmotion-social.png');
       expect(htmlBody).toContain('/brand/genmotion-symbol.svg');
-      expect(html.headers.get('content-security-policy')).toContain("default-src 'self'");
+      const policy = html.headers.get('content-security-policy') ?? '';
+      expect(policy).toContain("default-src 'self'");
+      expect(policy).toMatch(/script-src 'self' 'nonce-[^']+'/);
+      expect(policy).not.toContain("script-src 'self' 'unsafe-inline'");
+      const nonce = policy.match(/script-src 'self' 'nonce-([^']+)'/)?.[1];
+      expect(nonce).toBeTruthy();
+      expect(htmlBody).toContain(`<script nonce="${nonce}">`);
+      expect(html.headers.get('permissions-policy')).toContain('camera=()');
       const favicon = await fetch(`${studio.url}/favicon.ico`);
       expect(favicon.headers.get('content-type')).toContain('image/png');
       expect((await favicon.arrayBuffer()).byteLength).toBeGreaterThan(100);
@@ -334,6 +357,17 @@ describe('Genmotion Studio', () => {
         const response = await fetch(`${studio.url}${mutation.path}`, { method: mutation.method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(mutation.body) });
         expect(response.status, `${mutation.method} ${mutation.path}`).toBe(403);
       }
+    } finally { await studio.close(); }
+  });
+
+  it('rejects cross-site browser requests before exposing Studio state', async () => {
+    const directory = await fixture();
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });
+    try {
+      const fetchSite = await fetch(`${studio.url}/api/session`, { headers: { 'sec-fetch-site': 'cross-site' } });
+      expect(fetchSite.status).toBe(403);
+      const origin = await fetch(`${studio.url}/api/session`, { headers: { origin: 'https://attacker.invalid' } });
+      expect(origin.status).toBe(403);
     } finally { await studio.close(); }
   });
 

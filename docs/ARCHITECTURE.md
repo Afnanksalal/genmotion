@@ -26,9 +26,11 @@ Export resolution is a render contract separate from the logical project coordin
 
 Genmotion Studio is a local authoring client over the same Creative IR. It does not render HTML into video and it does not maintain a second proprietary timeline. Project edits pass through schema validation, optimistic revision locking, atomic replacement, and recoverable history before the native renderer sees them.
 
-The Studio server binds to loopback by default and issues a per-process mutation token. State-changing routes require that token. Asset uploads are size bounded, extension allowlisted, signature checked, normalized, content addressed, and confined to the project. Browser responses include a restrictive local Content Security Policy.
+The Studio server binds to loopback by default and issues a per-process mutation token. State-changing routes require that token. Requests with cross-site fetch metadata or a mismatched browser origin are rejected. The application script receives a per-response CSP nonce; browser capabilities not used by Studio are disabled through Permissions Policy. Asset uploads are size bounded, extension allowlisted, signature checked, normalized, content addressed, and confined to the project. Browser responses include a restrictive local Content Security Policy.
 
 Studio-only workflow coordinates, note nodes, reference annotations, render jobs, and agent requests live under `.genmotion/`. The deliverable project remains portable without this authoring state. Agent requests include selected scene, layer, and frame context and are resolved explicitly after the requested edit passes validation.
+
+Interactive frame previews use an LRU cache bounded by both encoded byte size and entry count. Project history retains a fixed recent window. Full renders execute through one serialized queue because each render already uses a native worker pool sized to local CPU capacity; this avoids nested oversubscription while preserving parallel frame generation inside each job. Agent and render queues reject excess work with explicit backpressure instead of accumulating unbounded local tasks.
 
 ## Taste system
 
