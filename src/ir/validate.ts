@@ -3,6 +3,8 @@ import type { GenmotionProject, Layer } from './schema.js';
 import { projectDuration } from './schema.js';
 import { resolveProjectAsset, type LoadedProject } from './loader.js';
 import { tasteReferences } from '../catalog/references.js';
+import { evaluateLayerTracks } from '../engine/animation.js';
+import { evaluateNumber } from '../engine/timeline.js';
 
 export type Severity = 'error' | 'warning';
 
@@ -52,6 +54,26 @@ function validateAnimated(value: Layer['transform']['opacity'], location: string
     const current = value.keyframes[index];
     if (previous && current && current.at <= previous.at) findings.push({ code: 'KEYFRAMES_UNORDERED', severity: 'error', message: 'Keyframe times must be strictly increasing.', location });
   }
+}
+
+function layerBox(layer: Layer): { x: number; y: number; width: number; height: number } {
+  return { x: layer.x, y: layer.y, width: layer.width, height: layer.height };
+}
+
+function layerIsAlwaysOutsideFrame(layer: Layer, sceneDuration: number, width: number, height: number): boolean {
+  const visibleDuration = layer.duration ?? sceneDuration - layer.start;
+  const times = new Set([0, Math.max(0, visibleDuration - 0.001)]);
+  for (const property of [layer.transform.x, layer.transform.y]) {
+    if (typeof property !== 'number') for (const keyframe of property.keyframes) times.add(Math.min(visibleDuration, keyframe.at));
+  }
+  for (const track of layer.tracks) for (const keyframe of track.keyframes) times.add(Math.min(visibleDuration, keyframe.at));
+  const box = layerBox(layer);
+  return [...times].every((time) => {
+    const evaluated = evaluateLayerTracks(layer, time);
+    const x = box.x + evaluateNumber(evaluated.transform.x, time);
+    const y = box.y + evaluateNumber(evaluated.transform.y, time);
+    return x >= width || y >= height || x + box.width <= 0 || y + box.height <= 0;
+  });
 }
 
 export async function validateProject(loaded: LoadedProject): Promise<Finding[]> {
@@ -107,6 +129,7 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
       if (animatedValues(layer.transform.opacity).some((value) => value < 0 || value > 1)) findings.push({ code: 'OPACITY_RANGE', severity: 'error', message: `${layer.id} opacity must remain between 0 and 1.`, location });
       for (const property of ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity', 'blur'] as const) validateAnimated(layer.transform[property], `${location}.transform.${property}`, findings);
       if (animatedValues(layer.transform.scaleX).some((value) => value <= 0) || animatedValues(layer.transform.scaleY).some((value) => value <= 0)) findings.push({ code: 'SCALE_NON_POSITIVE', severity: 'error', message: `${layer.id} scale must stay greater than zero.`, location });
+      if (layerIsAlwaysOutsideFrame(layer, scene.duration, project.width, project.height)) findings.push({ code: 'LAYER_ALWAYS_OUTSIDE_FRAME', severity: 'error', message: `${layer.id} remains outside the delivery frame at every authored transform keyframe. Layer x/y are absolute layout coordinates; transform x/y are additional offsets.`, location });
       const trackIds = new Set<string>();
       for (const [trackIndex, track] of layer.tracks.entries()) {
         const trackLocation = `${location}.tracks.${trackIndex}`;

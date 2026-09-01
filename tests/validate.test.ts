@@ -30,6 +30,7 @@ describe('production validation findings', () => {
     text.y = -1;
     text.width = project.width + 10;
     text.height = project.height + 10;
+    text.transform.x = project.width * 2;
     text.color = scene.background;
     scene.layers.push(...Array.from({ length: 5 }, (_, index) => ({ ...structuredClone(shape), id: `dense-${index}`, z: 0, start: 0, duration: 0.5, tracks: [] })));
     project.audio = [{ id: 'missing-audio', src: 'assets/missing.wav', start: 0, trimStart: 0, duration: 1, volume: 1, fadeIn: 0.75, fadeOut: 0.75, loop: false, duckUnderVoice: false, kind: 'music' }];
@@ -39,7 +40,7 @@ describe('production validation findings', () => {
     expect([...codes]).toEqual(expect.arrayContaining([
       'FONT_MISSING', 'TRANSITION_TOO_LONG', 'REFERENCE_UNKNOWN', 'REFERENCE_DECISION_INCOMPLETE', 'LAYER_OUTSIDE_SCENE',
       'LAYER_OVERRUN', 'OPACITY_RANGE', 'KEYFRAMES_UNORDERED', 'SCALE_NON_POSITIVE', 'DUPLICATE_TRACK_ID', 'TRACK_OVERRUN',
-      'TRACK_NON_POSITIVE', 'ASSET_MISSING', 'TEXT_TOO_SMALL', 'TEXT_OUTSIDE_FRAME', 'TEXT_CONTRAST', 'TEXT_SAFE_AREA',
+      'TRACK_NON_POSITIVE', 'LAYER_ALWAYS_OUTSIDE_FRAME', 'ASSET_MISSING', 'TEXT_TOO_SMALL', 'TEXT_OUTSIDE_FRAME', 'TEXT_CONTRAST', 'TEXT_SAFE_AREA',
       'DENSE_Z_PLANE', 'AUDIO_MISSING', 'AUDIO_FADE_OVERLAP',
     ]));
     expect(hasErrors(findings)).toBe(true);
