@@ -31,6 +31,7 @@ General agents can write animation code, but code generation alone gives them a 
 - No browser, DOM, React reconciliation, or screenshot capture
 - Reproducible frame evaluation from project data, timestamp, and seed
 - Continuous cross-scene transition evaluation with boundary mismatch validation
+- Symlink- and junction-safe CLI execution for local and global development installs
 - Parallel worker-thread frame generation
 - Ordered raw RGBA streaming into FFmpeg while frames continue rendering
 - H.264, H.265, VP9, and ProRes outputs
