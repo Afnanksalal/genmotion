@@ -504,10 +504,16 @@ export class LocalAgentRuntime implements AgentRuntime {
 
   private async runHermes(input: AgentRunInput, onProgress: (progress: AgentRunProgress) => Promise<void> | void): Promise<AgentRunResult> {
     this.hermesClient ??= new HermesAcpClient(this.projectDir, this.sessions.hermes);
-    const result = await this.hermesClient.run(`$genmotion\n\n${buildPrompt(input)}`, onProgress, input.signal);
-    this.sessions.hermes = result.sessionId;
-    await this.saveSessions();
-    return result;
+    try {
+      const result = await this.hermesClient.run(`$genmotion\n\n${buildPrompt(input)}`, onProgress, input.signal);
+      this.sessions.hermes = result.sessionId;
+      await this.saveSessions();
+      return result;
+    } catch (error) {
+      this.hermesClient.close();
+      this.hermesClient = undefined;
+      throw error;
+    }
   }
 
   private async runClaude(input: AgentRunInput, onProgress: (progress: AgentRunProgress) => Promise<void> | void): Promise<AgentRunResult> {
