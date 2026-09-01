@@ -61,6 +61,7 @@ describe('Studio workflow reconciliation', () => {
       'brief', 'scene:opening', 'scene:reveal', 'scene:details', 'scene:lockup', 'note:direction', 'output',
     ]);
     expect(result.nodes.find((node) => node.id === 'brief')).toMatchObject({ x: 10, y: 20, color: '#111111' });
+    expect(result.nodes.find((node) => node.id === 'output')).toMatchObject({ x: 1660, y: 170, color: '#555555' });
     expect(result.edges).toEqual([
       { id: 'custom-direction', from: 'note:direction', to: 'brief', label: 'informs' },
       { id: 'edge:sequence:opening', from: 'brief', to: 'scene:opening', label: 'direction' },
