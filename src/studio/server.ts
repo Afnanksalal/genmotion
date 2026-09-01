@@ -184,6 +184,43 @@ function initialStudioState(project: GenmotionProject): StudioState {
   return { version: 1, nodes, edges, references: [], updatedAt: new Date().toISOString() };
 }
 
+export function reconcileStudioState(project: GenmotionProject, state: StudioState): StudioState {
+  const defaults = initialStudioState(project);
+  const existing = new Map(state.nodes.map((node) => [node.id, node]));
+  const sceneIds = new Set(project.scenes.map((scene) => scene.id));
+  const layerIds = new Set(project.scenes.flatMap((scene) => scene.layers.map((layer) => `layer:${scene.id}:${layer.id}`)));
+  const referenceIds = new Set(state.references.map((reference) => `reference:${reference.id}`));
+  const core = defaults.nodes.map((fallback) => {
+    const current = existing.get(fallback.id);
+    return current ? { ...fallback, x: current.x, y: current.y, color: current.color } : fallback;
+  });
+  const custom = state.nodes.filter((node) => {
+    if (node.kind === 'brief' || node.kind === 'scene' || node.kind === 'output') return false;
+    if (node.kind === 'layer') return layerIds.has(node.id) && node.sceneId !== undefined && sceneIds.has(node.sceneId);
+    if (node.kind === 'reference') return referenceIds.has(node.id);
+    return true;
+  });
+  const nodes = [...core.slice(0, -1), ...custom, ...core.slice(-1)];
+  const nodeKinds = new Map(nodes.map((node) => [node.id, node.kind]));
+  const isSequenceEdge = (edge: StudioState['edges'][number]): boolean => {
+    const from = nodeKinds.get(edge.from);
+    const to = nodeKinds.get(edge.to);
+    return (from === 'brief' || from === 'scene') && (to === 'scene' || to === 'output');
+  };
+  const edges = state.edges.filter((edge) => nodeKinds.has(edge.from) && nodeKinds.has(edge.to) && !isSequenceEdge(edge));
+  project.scenes.forEach((scene, index) => {
+    edges.push({
+      id: `edge:sequence:${scene.id}`,
+      from: index === 0 ? 'brief' : `scene:${project.scenes[index - 1]?.id ?? ''}`,
+      to: `scene:${scene.id}`,
+      label: index === 0 ? 'direction' : 'then',
+    });
+  });
+  const last = project.scenes.at(-1);
+  if (last) edges.push({ id: 'edge:output:sequence', from: `scene:${last.id}`, to: 'output', label: 'render' });
+  return studioStateSchema.parse({ ...state, nodes, edges });
+}
+
 async function readJson<T>(file: string, fallback: T): Promise<T> {
   try { return JSON.parse(await readFile(file, 'utf8')) as T; } catch { return fallback; }
 }
@@ -267,7 +304,18 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   let motionCatalog = await loadMotionLibraries(loaded.projectDir);
   let sourceProject = loaded.sourceProject;
   let compiledProject = compileProjectMotions(sourceProject, motionCatalog.motions);
-  let studioState = studioStateSchema.parse(await readJson(stateFile, initialStudioState(sourceProject)));
+  const storedStudioState = studioStateSchema.parse(await readJson(stateFile, initialStudioState(sourceProject)));
+  let studioState = reconcileStudioState(sourceProject, storedStudioState);
+  if (JSON.stringify(studioState) !== JSON.stringify(storedStudioState)) {
+    studioState = { ...studioState, updatedAt: new Date().toISOString() };
+    await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
+  }
+  const reconcileAndPersistStudio = async (project: GenmotionProject): Promise<void> => {
+    const reconciled = reconcileStudioState(project, studioState);
+    if (JSON.stringify(reconciled) === JSON.stringify(studioState)) return;
+    studioState = { ...reconciled, updatedAt: new Date().toISOString() };
+    await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
+  };
   const jobs = new Map<string, RenderJob>();
   const frameCache = new Map<string, Buffer>();
   const agentRuntime = options.agentRuntime ?? options.agentRuntimeFactory?.(loaded.projectDir) ?? new LocalAgentRuntime(loaded.projectDir);
@@ -317,6 +365,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
           sourceProject = refreshed.sourceProject;
           compiledProject = refreshed.project;
           frameCache.clear();
+          await reconcileAndPersistStudio(sourceProject);
         }
       }
       const currentLoaded = { ...loaded, project: compiledProject, sourceProject };
@@ -341,12 +390,14 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       sourceProject = body.project;
       compiledProject = nextCompiled;
       frameCache.clear();
-      response.json({ ok: true, revision: nextRevision, project: sourceProject, findings: await validateProject({ ...loaded, project: compiledProject, sourceProject }) });
+      await reconcileAndPersistStudio(sourceProject);
+      response.json({ ok: true, revision: nextRevision, project: sourceProject, studio: studioState, findings: await validateProject({ ...loaded, project: compiledProject, sourceProject }) });
     } catch (error) { next(error); }
   });
   app.put('/api/studio', async (request, response, next) => {
     try {
-      studioState = studioStateSchema.parse({ ...request.body, updatedAt: new Date().toISOString() });
+      const submitted = studioStateSchema.parse({ ...request.body, updatedAt: new Date().toISOString() });
+      studioState = reconcileStudioState(sourceProject, submitted);
       await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
       response.json({ ok: true, studio: studioState });
     } catch (error) { next(error); }
@@ -357,7 +408,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const body = connectReferenceSchema.parse(request.body);
       const currentRevision = revision(sourceProject);
       if (body.revision !== currentRevision) { response.status(409).json({ error: 'Project changed since this Studio loaded it.', revision: currentRevision, project: sourceProject, studio: studioState }); return; }
-      const nextStudio = studioStateSchema.parse({ ...body.studio, updatedAt: new Date().toISOString() });
+      const nextStudio = reconcileStudioState(sourceProject, studioStateSchema.parse({ ...body.studio, updatedAt: new Date().toISOString() }));
       const reference = nextStudio.references.find((item) => item.id === body.referenceId);
       const nextProject = structuredClone(sourceProject);
       const scene = nextProject.scenes.find((item) => item.id === body.sceneId);
@@ -393,7 +444,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       await atomicWrite(path.join(historyDir, `${currentRevision}.json`), `${JSON.stringify(sourceProject, null, 2)}\n`);
       await writeProjectFile(loaded.projectFile, restored);
       sourceProject = restored; compiledProject = restoredCompiled; frameCache.clear();
-      response.json({ ok: true, revision: revision(restored), project: restored });
+      await reconcileAndPersistStudio(sourceProject);
+      response.json({ ok: true, revision: revision(restored), project: restored, studio: studioState });
     } catch (error) { next(error); }
   });
   app.post('/api/assets', async (request, response, next) => {
@@ -539,6 +591,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
               sourceProject = refreshed.sourceProject;
               compiledProject = refreshed.project;
               frameCache.clear();
+              await reconcileAndPersistStudio(sourceProject);
             }
             const completedAt = new Date().toISOString();
             await writeRequest(requestsDir, {
@@ -563,6 +616,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
                 sourceProject = candidate.sourceProject;
                 compiledProject = candidate.project;
                 frameCache.clear();
+                await reconcileAndPersistStudio(sourceProject);
                 running.afterRevision = candidateRevision;
               }
             } catch {
@@ -646,6 +700,15 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     try {
       const { filename } = revealExportSchema.parse(request.params);
       response.json(await probeVideo(path.join(rendersDir, filename)));
+    } catch (error) { next(error); }
+  });
+  app.get('/api/exports/:filename/download', async (request, response, next) => {
+    try {
+      const { filename } = revealExportSchema.parse(request.params);
+      const file = path.join(rendersDir, filename);
+      const info = await stat(file);
+      if (!info.isFile()) { response.status(404).json({ error: 'Export not found.' }); return; }
+      response.download(file, filename);
     } catch (error) { next(error); }
   });
   app.post('/api/exports/:filename/contact-sheet', async (request, response, next) => {

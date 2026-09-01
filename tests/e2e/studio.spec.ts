@@ -507,7 +507,10 @@ test('queues one export and announces completion once', async ({ page }) => {
   await expect(page.getByText(/Export ready:/)).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/Export ready:/)).toHaveCount(1);
   await expect(page.locator('#renderProgress')).toContainText('Export complete');
-  await expect(page.locator('#renderProgress').getByRole('button', { name: 'Show in folder' })).toBeVisible();
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#renderProgress').getByRole('button', { name: 'Download' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('e2e-browser-export.mp4');
   await expect(page.locator('#startRender')).toHaveText('Export again');
   await page.locator('#modalClose').click();
   await page.getByRole('button', { name: 'Inspect', exact: true }).click();

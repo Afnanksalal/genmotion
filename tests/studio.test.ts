@@ -3,7 +3,7 @@ import { cp, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/pr
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../src/ir/loader.js';
-import { fileManagerRevealCommand, getStudioRequests, requestedOutcomeGaps, resolveStudioRequest, startStudio } from '../src/studio/server.js';
+import { fileManagerRevealCommand, getStudioRequests, reconcileStudioState, requestedOutcomeGaps, resolveStudioRequest, startStudio, type StudioState } from '../src/studio/server.js';
 import type { GenmotionProject } from '../src/ir/schema.js';
 import type { AgentRuntime } from '../src/agent/runtime.js';
 
@@ -22,6 +22,53 @@ describe('file manager reveal commands', () => {
   it('uses native reveal commands on macOS and Linux', () => {
     expect(fileManagerRevealCommand('darwin', '/renders/launch.mp4')).toEqual({ command: 'open', args: ['-R', '/renders/launch.mp4'], windowsHide: true });
     expect(fileManagerRevealCommand('linux', '/renders/launch.mp4')).toEqual({ command: 'xdg-open', args: ['/renders'], windowsHide: true });
+  });
+});
+
+describe('Studio workflow reconciliation', () => {
+  it('rebuilds the project sequence, preserves valid custom nodes, and removes stale generated nodes', async () => {
+    const directory = await fixture();
+    const project = (await loadProject(directory)).sourceProject;
+    const source = project.scenes[0];
+    if (!source) throw new Error('Fixture needs one scene.');
+    const expanded = {
+      ...project,
+      scenes: ['opening', 'reveal', 'details', 'lockup'].map((id, index) => ({
+        ...structuredClone(source), id, purpose: `${id} purpose`,
+        layers: source.layers.map((layer) => ({ ...structuredClone(layer), id: `${id}-${layer.id}` })),
+        transitionIn: index === 0 ? source.transitionIn : { ...source.transitionIn, type: 'crossfade' as const, duration: 0.1 },
+      })),
+    } satisfies GenmotionProject;
+    const state: StudioState = {
+      version: 1,
+      nodes: [
+        { id: 'brief', kind: 'brief', x: 10, y: 20, label: 'Old brief', note: '', color: '#111111' },
+        { id: 'scene:canvas', kind: 'scene', sceneId: 'canvas', x: 40, y: 50, label: 'canvas', note: '', color: '#222222' },
+        { id: 'layer:canvas:artboard', kind: 'layer', sceneId: 'canvas', layerId: 'artboard', x: 60, y: 70, label: 'artboard', note: '', color: '#333333' },
+        { id: 'note:direction', kind: 'note', x: 80, y: 90, label: 'Direction', note: 'Keep this.', color: '#444444' },
+        { id: 'output', kind: 'output', x: 100, y: 110, label: 'Old output', note: '', color: '#555555' },
+      ],
+      edges: [
+        { id: 'old-sequence', from: 'brief', to: 'scene:canvas', label: 'direction' },
+        { id: 'old-output', from: 'scene:canvas', to: 'output', label: 'render' },
+        { id: 'custom-direction', from: 'note:direction', to: 'brief', label: 'informs' },
+      ],
+      references: [], updatedAt: new Date().toISOString(),
+    };
+
+    const result = reconcileStudioState(expanded, state);
+    expect(result.nodes.map((node) => node.id)).toEqual([
+      'brief', 'scene:opening', 'scene:reveal', 'scene:details', 'scene:lockup', 'note:direction', 'output',
+    ]);
+    expect(result.nodes.find((node) => node.id === 'brief')).toMatchObject({ x: 10, y: 20, color: '#111111' });
+    expect(result.edges).toEqual([
+      { id: 'custom-direction', from: 'note:direction', to: 'brief', label: 'informs' },
+      { id: 'edge:sequence:opening', from: 'brief', to: 'scene:opening', label: 'direction' },
+      { id: 'edge:sequence:reveal', from: 'scene:opening', to: 'scene:reveal', label: 'then' },
+      { id: 'edge:sequence:details', from: 'scene:reveal', to: 'scene:details', label: 'then' },
+      { id: 'edge:sequence:lockup', from: 'scene:details', to: 'scene:lockup', label: 'then' },
+      { id: 'edge:output:sequence', from: 'scene:lockup', to: 'output', label: 'render' },
+    ]);
   });
 });
 
@@ -216,6 +263,11 @@ describe('Genmotion Studio', () => {
       expect(await existingRender.json()).toMatchObject({ code: 'OUTPUT_EXISTS' });
       const exports = await fetch(`${studio.url}/api/exports`).then((response) => response.json()) as Array<{ filename: string; output: string; size: number }>;
       expect(exports).toContainEqual(expect.objectContaining({ filename: 'studio-test.mp4', output: 'renders/studio-test.mp4' }));
+      const download = await fetch(`${studio.url}/api/exports/studio-test.mp4/download`);
+      expect(download.status).toBe(200);
+      expect(download.headers.get('content-disposition')).toContain('attachment; filename="studio-test.mp4"');
+      expect((await download.arrayBuffer()).byteLength).toBeGreaterThan(1000);
+      expect((await fetch(`${studio.url}/api/exports/not-a-video.txt/download`)).status).toBe(400);
       const reveal = await fetch(`${studio.url}/api/exports/reveal`, {
         method: 'POST', headers, body: JSON.stringify({ filename: 'studio-test.mp4' }),
       });
