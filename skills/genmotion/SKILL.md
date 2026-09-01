@@ -73,6 +73,9 @@ Do not mark a request resolved before its edit is saved and validated. Do not ov
 - One scene gets one dominant move. Supporting motion establishes hierarchy rather than competing for attention.
 - The first moving element is the first perceived priority. Order motion by meaning, not declaration order.
 - Build, breathe, and resolve. Hold the complete result long enough to understand.
+- Treat a camera state as continuity, not decoration. When adjacent scenes reuse the same source or camera coordinate system, the outgoing final crop, position, scale, rotation, fit, and anchor must equal the incoming initial state throughout the host transition. A crossfade does not conceal a mismatched transform.
+- Do not reset a focused shot to neutral merely to prepare the next scene. Finish the move, settle, hold, and carry that state forward; begin the next pan or zoom only after the host transition clears unless the seam is intentionally a new shot.
+- The host transition owns the boundary. Do not start an incoming zoom, pan, text entrance, or other internal animation during the same overlap unless both sides were authored as one continuous matched handoff.
 - Use real product footage or supplied evidence when the scene claims product behavior. Never reconstruct a functioning interface as proof.
 - Keep assets local and licensed. Remote render assets are invalid.
 - A successful render is not delivery. Probe it, inspect representative frames, and review the encoded output wherever cadence, transitions, source video, or audio matter.

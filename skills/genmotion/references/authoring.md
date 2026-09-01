@@ -15,3 +15,13 @@ Use `genmotion_schema` before authoring unfamiliar fields, `genmotion_project_pa
 Use a shape line only when it connects or emphasizes something meaningful. Use background atmosphere to create depth, but keep it subordinate to the focal message. Avoid equal card grids, generic gradient blobs, fake HUD readouts, random particles, repeated spring entrances, and constant ambient motion.
 
 For captured product media, establish the whole surface before a deep crop. Land camera movement on a real feature or result and hold it. Do not leave half a navigation bar or panel edge in frame.
+
+## Camera moves and scene handoffs
+
+Author camera motion as four phases: establish, travel, settle, and hold. A move should reach its subject before explanatory copy appears. Use a small settle only when it improves physicality; do not add an automatic overshoot, yoyo, or return to `scale: 1` at the end of every scene.
+
+When consecutive scenes use the same image, video, or camera coordinate system, treat them as one continuous shot even if they serve different narrative purposes. The outgoing layer's final `src`, `fit`, crop/media time, `x`, `y`, `scaleX`, `scaleY`, `rotation`, `anchorX`, and `anchorY` must match the incoming layer's initial values for the whole transition overlap. Hold the incoming state until the host transition has finished, then begin the next camera move. Delay labels and callouts until that move settles.
+
+If the next scene genuinely needs a discontinuous composition, make it an intentional new shot with a cut or a visibly motivated transition. Never crossfade two differently transformed copies of the same source: the result reads as double exposure, a crop snap, or an accidental second zoom.
+
+Do not perform a fast zoom-out solely to reach a convenient neutral state before a seam. Carry the focused pose forward, use a shallow exit that remains continuous, or keep the entire camera move in one scene.
