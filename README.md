@@ -6,7 +6,7 @@
 
 <p align="center"><strong>Native motion design for agents.</strong></p>
 
-Genmotion is an agent-native motion design engine and visual editor. Codex or Claude authors the actual scene graph, timing, vector geometry, keyframes, custom easing, media, and sound through structured local tools; humans can then direct every layer and phase in Studio. Native Skia frame workers stream the accepted composition directly into FFmpeg.
+Genmotion is an agent-native motion design engine and visual editor. Hermes ACP, Codex, or Claude authors the actual scene graph, timing, vector geometry, keyframes, custom easing, media, and sound through structured local tools; humans can then direct every layer and phase in Studio. Native Skia frame workers stream the accepted composition directly into FFmpeg.
 
 High-quality export means actual delivery resolution, not a low-resolution canvas with a better codec setting. `high` renders vector, type, and procedural layers at a minimum 1920-pixel long edge and encodes H.264 at CRF 14. `standard` targets at least 1280 pixels, while `draft` preserves the project's native working size. Every master is probed after encode for dimensions, frame rate, and duration.
 
@@ -38,7 +38,7 @@ General agents can write animation code, but code generation alone gives them a 
 - Image and video layers with local media freezing
 - Multiple audio tracks, fades, looping, voice-aware music ducking, limiting, and AAC delivery
 - Reusable native preview server with frame scrubbing
-- Local Studio with a real project switcher and creation flow, node workflows, project-local JSON motion libraries, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent output history and file-manager reveal
+- Local Studio with visual color wells, CapCut-style canvas formats that reframe the real scene graph, a real project switcher and creation flow, node workflows, project-local JSON motion libraries, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent output history and file-manager reveal
 - Output probing and contract verification after every render
 
 ## Requirements
@@ -108,11 +108,11 @@ genmotion contact-sheet launch-film/renders/acme.mp4 --output launch-film/render
 
 Studio lists and creates projects in `~/Genmotion Projects` by default. Use `--workspace <directory>` to select another local project workspace.
 
-`init` creates a truthful `brief.json` and a neutral renderable artboard. It does not pretend that a fixed template is an AI-generated design. Open Studio and choose **Create with agent**, or let the calling Codex or Claude workflow inspect `genmotion_schema`, patch the project, render representative frames, and iterate visually.
+`init` creates a truthful `brief.json` and a neutral renderable artboard. It does not pretend that a fixed template is an AI-generated design. Open Studio and choose **Create with agent**, or let the calling Hermes, Codex, or Claude workflow inspect `genmotion_schema`, patch the project, render representative frames, and iterate visually.
 
 ## Local agent direction
 
-Studio connects directly to Codex or Claude Code installed on the same machine. A new project can immediately enter **Create with agent**, which sends its real brief to the selected local host. Later prompts include the focused scene, layer, and frame. Claude receives a project-scoped Genmotion MCP configuration automatically, while Codex uses the registered Genmotion tools. The agent can patch precise properties and inspect actual native frames before finishing.
+Studio connects directly to Hermes through ACP and to Codex or Claude Code installed on the same machine. A new project can immediately enter **Create with agent**, which sends its real brief to the selected host. Later prompts include the focused scene, layer, and frame. Hermes receives Genmotion's project-scoped MCP server over its native ACP session, Claude receives a generated project-scoped MCP configuration, and Codex uses the registered Genmotion tools. Every host can patch precise properties and inspect actual native frames before finishing.
 
 This workflow uses the existing ChatGPT or Claude sign-in managed by the local agent. Genmotion does not request, store, or configure model API keys.
 

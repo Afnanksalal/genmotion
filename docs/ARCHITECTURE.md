@@ -6,7 +6,7 @@ Genmotion separates creative reasoning from frame execution.
 
 ```text
 brief + local assets + references
-  -> Codex or Claude creative direction
+  -> Hermes ACP, Codex, or Claude creative direction
   -> schema discovery and revision-safe IR patches
   -> native frame inspection and iteration
   -> accepted typed Creative IR
@@ -54,9 +54,9 @@ A blueprint is a semantic phase structure with normalized ranges, roles, slots, 
 
 ## Agentic authoring
 
-The primary planner is the user's authenticated local Codex or Claude Code installation, not a built-in provider call and not a template selector. Project creation starts from a neutral artboard. The agent discovers the complete schema, reads the current revision, applies granular RFC 6902 transactions, validates, receives actual PNG frames, and inspects evaluated timeline state. Studio exposes the same project to the human for direct manipulation.
+The primary planner is the user's configured Hermes runtime or authenticated local Codex or Claude Code installation, not a built-in provider call and not a template selector. Project creation starts from a neutral artboard. The agent discovers the complete schema, reads the current revision, applies granular RFC 6902 transactions, validates, receives actual PNG frames, and inspects evaluated timeline state. Studio exposes the same project to the human for direct manipulation.
 
-No model API key is stored by Genmotion. Claude Studio turns receive a project-scoped stdio MCP configuration; Codex Studio turns use the registered Genmotion MCP server. Genmotion does not ship a deterministic scene planner or template-generated substitute for agent direction.
+No model API key is stored by Genmotion. Hermes Studio turns use the official ACP SDK over private stdio and receive a project-scoped Genmotion MCP server during session creation. Permission requests are limited to Genmotion tools, read-only reasoning, and edits whose reported paths remain inside the project. Claude Studio turns receive a project-scoped stdio MCP configuration; Codex Studio turns use the registered Genmotion MCP server. Genmotion does not ship a deterministic scene planner or template-generated substitute for agent direction.
 
 ## Creative IR
 

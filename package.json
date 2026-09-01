@@ -53,6 +53,7 @@
     "prepack": "npm run check"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "^1.4.0",
     "@lobehub/icons-static-svg": "^1.94.0",
     "@modelcontextprotocol/server": "^2.0.0",
     "@napi-rs/canvas": "^0.1.80",
