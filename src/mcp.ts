@@ -121,7 +121,9 @@ function serverFactory(): McpServer {
     } }),
     authoring: {
       model: 'Agents may author complete projects, granular RFC 6902 patches, arbitrary numeric property tracks, custom cubic-bezier and spring easing, and SVG path geometry.',
-      transformSemantics: 'Layer x/y are absolute layout coordinates. transform.x/transform.y are additional offsets around that layout position and should normally start at 0; never copy layer x/y into transform x/y. Direct transform tracks animate those offsets.',
+      layoutSemantics: 'For every layer, x/y are the top-left corner of its layout box, never its center. Text align and verticalAlign work inside that box; anchorX/anchorY only select the transform pivot.',
+      transformSemantics: 'transform.x/transform.y are additional offsets around the layer layout position and should normally start at 0; never copy layer x/y into transform x/y. Direct transform tracks animate those offsets.',
+      trackTimeSemantics: 'A direct track keyframe at is layer-local time: 0 is the layer entrance and layer.duration is its final instant. Do not use scene or global composition timestamps for layer tracks.',
       recipePolicy: 'Named recipes are optional reusable references. Direct tracks are first-class and require no recipe.',
       canonicalExample: {
         textLayer: { id: 'headline', type: 'text', text: 'Sound, shaped.', x: 240, y: 390, width: 1440, height: 220, fontFamily: 'Arial', fontSize: 96, color: '#f7f5ef' },
