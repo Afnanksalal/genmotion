@@ -117,6 +117,14 @@ function isNonExecutionResponse(response: string): boolean {
   return /(?:\*\*Exact blocker:\*\*|cannot be completed|cannot complete|not possible to complete|would violate|unsafe (?:to|in) (?:one|a single) pass|partially (?:applied|completed|implemented|created)|where possible)/i.test(response);
 }
 
+function agentProviderFailure(response: string): string | undefined {
+  const normalized = response.trim();
+  return /^(?:API call failed(?: after \d+ retries)?:\s*)?HTTP (?:4\d\d|5\d\d):/i.test(normalized)
+    || /^API call failed\b/i.test(normalized)
+    ? normalized
+    : undefined;
+}
+
 function buildPrompt(input: AgentRunInput): string {
   const context = [
     input.selection.sceneId ? `scene ${input.selection.sceneId}` : '',
@@ -327,7 +335,10 @@ class HermesAcpClient {
         }),
       ]);
       if (signal?.aborted || result.stopReason === 'cancelled') throw new Error('Agent turn cancelled.');
-      return { response: this.response.trim() || 'The Hermes turn completed without a text response.', sessionId: this.sessionId };
+      const response = this.response.trim() || 'The Hermes turn completed without a text response.';
+      const providerFailure = agentProviderFailure(response);
+      if (providerFailure) throw new Error(providerFailure);
+      return { response, sessionId: this.sessionId };
     } catch (error) {
       if (this.child.exitCode !== null) throw new Error(this.stderr.trim() || `Hermes ACP exited with code ${String(this.child.exitCode)}.`);
       const diagnostics = this.stderr.trim().split(/\r?\n/).slice(-12).join('\n');
@@ -613,4 +624,4 @@ export class LocalAgentRuntime implements AgentRuntime {
   }
 }
 
-export { buildPrompt, isNonExecutionResponse, requestRequiresProjectChange, requestsFullTimelineReview };
+export { agentProviderFailure, buildPrompt, isNonExecutionResponse, requestRequiresProjectChange, requestsFullTimelineReview };
