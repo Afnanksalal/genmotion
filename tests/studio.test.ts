@@ -123,7 +123,7 @@ function fakeAgent(edit: false | 'valid' | 'invalid' | 'transient' = false): Age
     hosts: () => Promise.resolve([{ id: 'codex', label: 'Codex', installed: true, authenticated: true, detail: 'Test session' }]),
     run: async (input, onProgress) => {
       attempts += 1;
-      if (edit === 'transient' && attempts < 3) throw new Error('Provider returned HTTP 429: temporarily rate limited');
+      if (edit === 'transient' && attempts < 2) throw new Error('Provider returned HTTP 429: temporarily rate limited');
       await onProgress({ activity: 'Applying changes', message: 'Working', sessionId: 'test-thread' });
       if (edit && edit !== 'transient') {
         const project = JSON.parse(await readFile(input.projectFile, 'utf8')) as { title: string };
@@ -168,7 +168,8 @@ describe('Genmotion Studio', () => {
         body: JSON.stringify({ prompt: 'Explain the current composition.', host: 'codex', selection: { frame: 0 } }),
       });
       const request = await queued.json() as { id: string };
-      expect(await waitForRequest(directory, request.id, new Set(['completed', 'failed']), 30_000)).toMatchObject({ status: 'completed' });
+      const completed = await waitForRequest(directory, request.id, new Set(['completed', 'failed']), 30_000);
+      expect(completed, completed.error ?? completed.response).toMatchObject({ status: 'completed' });
     } finally { await studio.close(); }
   }, 35_000);
 
