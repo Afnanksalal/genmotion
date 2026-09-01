@@ -13,8 +13,23 @@ const agentRuntime: AgentRuntime = {
   run: async (input, onProgress) => {
     await onProgress({ activity: 'Responding', message: 'The selected scene was reviewed.', sessionId: 'browser-test-thread' });
     if (/\b(?:create|make|change|edit|author|design|animate|add|remove|apply|fix|update)\b/i.test(input.prompt)) {
-      const project = JSON.parse(await readFile(input.projectFile, 'utf8')) as { metadata?: Record<string, string> };
+      const project = JSON.parse(await readFile(input.projectFile, 'utf8')) as {
+        metadata?: Record<string, string>;
+        scenes?: Array<{ layers: Array<Record<string, unknown>> }>;
+      };
       project.metadata = { ...project.metadata, browserAgentEdit: 'applied' };
+      if (/\bfull Creative IR\b/i.test(input.prompt)) {
+        const layer = project.scenes?.[0]?.layers[0];
+        if (layer) {
+          Object.assign(layer, {
+            type: 'shape', shape: 'path', path: 'M 10 90 C 60 10 260 10 310 90',
+            fill: '#00000000', stroke: '#59e3a6', strokeWidth: 2, radius: 0, progress: 1,
+            tracks: [{ id: 'agent-camera-track', target: 'transform.x', keyframes: [
+              { at: 0, value: 12, ease: 'sine-out' }, { at: 1, value: 0, ease: 'cubic-out' },
+            ] }],
+          });
+        }
+      }
       await writeFile(input.projectFile, `${JSON.stringify(project, null, 2)}\n`);
     }
     return { response: 'The selected scene was reviewed.', sessionId: 'browser-test-thread' };
