@@ -119,7 +119,7 @@ export function isTransientAgentFailure(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return /(?:\b429\b|rate.?limit|too many requests|\b50[234]\b|service unavailable|gateway timeout|connection (?:reset|closed|refused)|socket hang up|timed? ?out|temporar(?:y|ily)|provider overloaded)/i.test(message);
 }
-interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed'; progress: number; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
+interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed' | 'cancelled'; progress: number; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
 interface ExportRecord { filename: string; output: string; size: number; modifiedAt: string }
 interface AssetRecord { path: string; size: number; modifiedAt: string; kind: 'image' | 'video' | 'audio' | 'font' | 'asset'; uses: number }
 interface StudioWorkspace { root: string; servers: Map<string, StudioServer> }
@@ -396,6 +396,14 @@ async function discoverProjects(workspace: StudioWorkspace, currentProjectDir: s
 
 async function writeRequest(directory: string, record: StudioRequestRecord): Promise<void> {
   await atomicWrite(path.join(directory, `${record.id}.json`), `${JSON.stringify(record, null, 2)}\n`);
+  if (['completed', 'resolved', 'failed', 'interrupted'].includes(record.status)) await pruneTerminalRequests(directory);
+}
+
+const requestRetentionLimit = 500;
+async function pruneTerminalRequests(directory: string): Promise<void> {
+  const records = await listRequests(directory);
+  const terminal = records.filter((candidate) => ['completed', 'resolved', 'failed', 'interrupted'].includes(candidate.status));
+  await Promise.all(terminal.slice(requestRetentionLimit).map((candidate) => rm(path.join(directory, `${candidate.id}.json`), { force: true })));
 }
 
 export async function resolveStudioRequest(projectDir: string, id: string, response: string): Promise<StudioRequestRecord> {
@@ -404,7 +412,7 @@ export async function resolveStudioRequest(projectDir: string, id: string, respo
   const record = await readJson<StudioRequestRecord | null>(file, null);
   if (!record) throw new Error(`Studio request not found: ${id}`);
   const resolved = { ...record, status: 'resolved' as const, response, resolvedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-  await atomicWrite(file, `${JSON.stringify(resolved, null, 2)}\n`);
+  await writeRequest(path.dirname(file), resolved);
   return resolved;
 }
 
@@ -441,6 +449,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
   };
   const jobs = new Map<string, RenderJob>();
+  const renderControllers = new Map<string, AbortController>();
   const frameCache = new ByteLruCache(128 * 1024 * 1024, 120);
   let renderQueue = Promise.resolve();
   const agentRuntime = options.agentRuntime ?? options.agentRuntimeFactory?.(loaded.projectDir) ?? new LocalAgentRuntime(loaded.projectDir);
@@ -853,25 +862,43 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       }
       const dimensions = resolveRenderResolution(compiledProject, body.quality, body.resolution);
       const job: RenderJob = { id, status: 'queued', progress: 0, output: relativeOutput, ...dimensions, quality: body.quality };
+      const controller = new AbortController();
       jobs.set(id, job);
+      renderControllers.set(id, controller);
       if (jobs.size > 100) {
-        const removable = [...jobs.entries()].find(([, candidate]) => candidate.status === 'complete' || candidate.status === 'failed');
+        const removable = [...jobs.entries()].find(([, candidate]) => ['complete', 'failed', 'cancelled'].includes(candidate.status));
         if (removable) jobs.delete(removable[0]);
       }
       response.status(202).json(job);
       renderQueue = renderQueue.then(async () => {
         try {
+          if (controller.signal.aborted) return;
           job.status = 'rendering';
           await renderProject({ ...loaded, project: compiledProject, sourceProject }, {
             output, quality: body.quality, codec: body.codec, ...(body.resolution ? { resolution: body.resolution } : {}),
+            signal: controller.signal,
             onProgress: (progress) => { job.progress = progress.totalFrames === 0 ? 0 : progress.encodedFrames / progress.totalFrames; },
           });
+          if (controller.signal.aborted) return;
           job.status = 'complete'; job.progress = 1;
-        } catch (error) { job.status = 'failed'; job.error = error instanceof Error ? error.message : String(error); }
+        } catch (error) {
+          if (controller.signal.aborted) { job.status = 'cancelled'; job.error = 'Export cancelled.'; }
+          else { job.status = 'failed'; job.error = error instanceof Error ? error.message : String(error); }
+        } finally { renderControllers.delete(id); }
       });
     } catch (error) { next(error); }
   });
   app.get('/api/jobs', (_request, response) => { response.json([...jobs.values()]); });
+  app.post('/api/jobs/:id/cancel', (request, response) => {
+    const id = request.params.id ?? '';
+    if (!/^[a-f0-9-]{16,64}$/i.test(id)) { response.status(400).json({ error: 'Invalid render job id.' }); return; }
+    const job = jobs.get(id);
+    if (!job) { response.status(404).json({ error: 'Render job not found.' }); return; }
+    if (!['queued', 'rendering'].includes(job.status)) { response.status(409).json({ error: 'Only queued or rendering exports can be cancelled.' }); return; }
+    job.status = 'cancelled'; job.error = 'Export cancelled.';
+    renderControllers.get(id)?.abort();
+    response.status(202).json(job);
+  });
   app.get('/api/timeline', (request, response, next) => {
     try {
       const { at } = z.object({ at: z.coerce.number().nonnegative() }).parse(request.query);
@@ -984,6 +1011,12 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     closed = true;
     if (ownsWorkspace) for (const child of [...workspace.servers.values()]) if (child !== studioServer) await child.close();
     workspace.servers.delete(path.resolve(loaded.projectDir));
+    for (const [id, controller] of renderControllers) {
+      const job = jobs.get(id);
+      if (job && ['queued', 'rendering'].includes(job.status)) { job.status = 'cancelled'; job.error = 'Studio closed before the export completed.'; }
+      controller.abort();
+    }
+    await renderQueue;
     await agentRuntime.close();
     await new Promise<void>((resolve, reject) => {
       server.close((error) => error ? reject(error) : resolve());

@@ -600,3 +600,21 @@ test('queues one export and announces completion once', async ({ page }) => {
   await expect(sheet).toBeVisible({ timeout: 15_000 });
   await expect.poll(() => sheet.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(1_000);
 });
+
+test('cancels an export from Studio and returns the dialog to a reusable state', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.getByRole('button', { name: 'Export' }).click();
+  await page.locator('[data-field="render.filename"]').fill('e2e-cancelled-export.mp4');
+  await page.locator('#startRender').click();
+  const cancel = page.getByRole('button', { name: 'Cancel export' });
+  await expect(cancel).toBeVisible();
+  await cancel.click();
+  await expect(page.locator('#renderProgress')).toContainText('Export cancelled');
+  await expect(page.locator('#startRender')).toBeEnabled();
+  await expect(page.locator('#startRender')).toHaveText('Start render');
+  await expect.poll(async () => {
+    const jobs = await fetch(`${studio?.url ?? ''}/api/jobs`).then((response) => response.json()) as Array<{ output?: string; status: string }>;
+    return jobs.find((job) => job.output?.endsWith('e2e-cancelled-export.mp4'))?.status;
+  }).toBe('cancelled');
+  await expect(stat(path.join(directory ?? '', 'renders', 'e2e-cancelled-export.mp4'))).rejects.toMatchObject({ code: 'ENOENT' });
+});

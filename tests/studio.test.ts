@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { cp, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../src/ir/loader.js';
@@ -137,6 +137,21 @@ function fakeAgent(edit: false | 'valid' | 'invalid' | 'transient' = false): Age
 }
 
 describe('Genmotion Studio', () => {
+  it('bounds retained terminal agent requests while preserving recent history', async () => {
+    const directory = await fixture();
+    const requestsDir = path.join(directory, '.genmotion', 'requests');
+    await mkdir(requestsDir, { recursive: true });
+    for (let index = 0; index < 501; index += 1) {
+      const id = index.toString(16).padStart(16, '0');
+      await writeFile(path.join(requestsDir, `${id}.json`), JSON.stringify({ id, prompt: 'Archived request', selection: {}, status: 'completed', createdAt: new Date(index * 1_000).toISOString() }));
+    }
+    await resolveStudioRequest(directory, (500).toString(16).padStart(16, '0'), 'Retained response');
+    const requests = await getStudioRequests(directory);
+    expect(requests).toHaveLength(500);
+    expect(requests[0]).toMatchObject({ status: 'resolved', response: 'Retained response' });
+    expect(requests.some((request) => request.id === '0000000000000000')).toBe(false);
+  });
+
   it('classifies only bounded provider failures as transient', () => {
     expect(isTransientAgentFailure(new Error('HTTP 429 too many requests'))).toBe(true);
     expect(isTransientAgentFailure(new Error('gateway timeout from provider'))).toBe(true);
@@ -350,6 +365,7 @@ describe('Genmotion Studio', () => {
         { method: 'POST', path: '/api/agents/refresh', body: {} },
         { method: 'POST', path: '/api/requests/00000000-0000-0000-0000-000000000000/cancel', body: {} },
         { method: 'POST', path: '/api/render', body: {} },
+        { method: 'POST', path: '/api/jobs/00000000-0000-0000-0000-000000000000/cancel', body: {} },
         { method: 'POST', path: '/api/projects/open', body: {} },
         { method: 'POST', path: '/api/projects', body: {} },
         { method: 'POST', path: '/api/exports/reveal', body: {} },
@@ -360,6 +376,28 @@ describe('Genmotion Studio', () => {
       }
     } finally { await studio.close(); }
   });
+
+  it('cancels an export without retaining a partial master', async () => {
+    const directory = await fixture();
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const headers = { 'content-type': 'application/json', 'x-genmotion-token': token };
+      const started = await fetch(`${studio.url}/api/render`, {
+        method: 'POST', headers, body: JSON.stringify({ filename: 'cancelled.mp4', quality: 'high', codec: 'h264' }),
+      });
+      expect(started.status).toBe(202);
+      const job = await started.json() as { id: string };
+      const cancelled = await fetch(`${studio.url}/api/jobs/${job.id}/cancel`, { method: 'POST', headers });
+      expect(cancelled.status).toBe(202);
+      expect(await cancelled.json()).toMatchObject({ id: job.id, status: 'cancelled' });
+      await expect.poll(async () => {
+        const jobs = await fetch(`${studio.url}/api/jobs`).then((response) => response.json()) as Array<{ id: string; status: string }>;
+        return jobs.find((candidate) => candidate.id === job.id)?.status;
+      }).toBe('cancelled');
+      await expect(stat(path.join(directory, 'renders', 'cancelled.mp4'))).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally { await studio.close(); }
+  }, 20_000);
 
   it('rejects cross-site browser requests before exposing Studio state', async () => {
     const directory = await fixture();
