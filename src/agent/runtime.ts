@@ -313,6 +313,8 @@ class HermesAcpClient {
       return { response: this.response.trim() || 'The Hermes turn completed without a text response.', sessionId: this.sessionId };
     } catch (error) {
       if (this.child.exitCode !== null) throw new Error(this.stderr.trim() || `Hermes ACP exited with code ${String(this.child.exitCode)}.`);
+      const diagnostics = this.stderr.trim().split(/\r?\n/).slice(-12).join('\n');
+      if (diagnostics) throw new Error(`${error instanceof Error ? error.message : String(error)}\n${diagnostics}`);
       throw error;
     } finally {
       if (timeout) clearTimeout(timeout);
