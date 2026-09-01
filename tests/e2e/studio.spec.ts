@@ -465,4 +465,14 @@ test('queues one export and announces completion once', async ({ page }) => {
   await expect(page.locator('#renderProgress')).toContainText('Export complete');
   await expect(page.locator('#renderProgress').getByRole('button', { name: 'Show in folder' })).toBeVisible();
   await expect(page.locator('#startRender')).toHaveText('Export again');
+  await page.locator('#modalClose').click();
+  await page.getByRole('button', { name: 'Inspect', exact: true }).click();
+  await expect(page.getByText('Evaluated frame 0')).toBeVisible();
+  await page.locator('[data-inspect-export="e2e-browser-export.mp4"]').click();
+  await expect(page.getByText('Encoded contract')).toBeVisible();
+  await expect(page.locator('#modalBody')).toContainText('1920');
+  await page.locator('#createContactSheet').click();
+  const sheet = page.getByRole('img', { name: 'Contact sheet for e2e-browser-export.mp4' });
+  await expect(sheet).toBeVisible({ timeout: 15_000 });
+  await expect.poll(() => sheet.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(1_000);
 });
