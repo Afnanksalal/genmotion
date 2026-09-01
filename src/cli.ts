@@ -4,7 +4,6 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { loadProject } from './ir/loader.js';
 import { hasErrors, summarizeProject, validateProject } from './ir/validate.js';
 import { renderFramePng } from './engine/draw.js';
@@ -16,6 +15,7 @@ import { searchCatalog } from './commands/catalog.js';
 import { GenmotionError } from './errors.js';
 import { makeContactSheet, probeVideo } from './engine/probe.js';
 import { auditCatalog } from './catalog/audit.js';
+import { isEntrypoint } from './entrypoint.js';
 import { getStudioRequests, resolveStudioRequest, startStudio } from './studio/server.js';
 import { GENMOTION_VERSION } from './version.js';
 
@@ -214,5 +214,4 @@ async function main(): Promise<void> {
   }
 }
 
-const invoked = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : '';
-if (import.meta.url === invoked) await main();
+if (isEntrypoint(import.meta.url, process.argv[1])) await main();
