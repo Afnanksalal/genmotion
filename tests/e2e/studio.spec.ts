@@ -48,6 +48,34 @@ test.afterEach(async () => {
   await rm(directory, { recursive: true, force: true });
 });
 
+test('scales workflow navigation, asset discovery, easing inspection, and audio mixing controls', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('#autoLayout').click();
+  await expect(page.getByText(/Workflow arranged for 1 scenes/)).toBeVisible();
+  await expect(page.locator('[data-node^="layer:intro:"]')).toHaveCount(2);
+  await expect.poll(async () => {
+    const state = JSON.parse(await readFile(path.join(directory, '.genmotion', 'studio.json'), 'utf8')) as { nodes: Array<{ kind: string }> };
+    return state.nodes.filter((node) => node.kind === 'layer').length;
+  }).toBe(2);
+
+  await page.locator('#sceneSearch').fill('title');
+  await expect(page.locator('[data-select="layer"][data-id="title"]')).toBeVisible();
+  await expect(page.locator('[data-select="layer"][data-id="accent"]')).toHaveCount(0);
+  await page.locator('#sceneSearch').fill('');
+  await page.locator('[data-select="scene"]').first().click();
+  await expect(page.locator('#inspectorBody .easing-card>svg')).toHaveCount(2);
+
+  await page.getByRole('button', { name: 'Assets' }).click();
+  await page.locator('#assetPicker').setInputFiles({ name: 'mix.wav', mimeType: 'audio/wav', buffer: Buffer.from('RIFF0000WAVEfmt ') });
+  await page.getByRole('button', { name: 'Assets' }).click();
+  await page.locator('#assetSearch').fill('mix');
+  await expect(page.getByText('Audio · 1 use')).toBeVisible();
+  await page.locator('[data-asset]').click();
+  await expect(page.locator('[data-field="pan"]')).toBeVisible();
+  await expect(page.locator('[data-bool-field="muted"]')).toBeVisible();
+  await expect(page.locator('[data-bool-field="solo"]')).toBeVisible();
+});
+
 test('edits, previews, references, and queues contextual agent work', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(`${message.text()} @ ${message.location().url}`); });

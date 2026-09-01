@@ -36,9 +36,9 @@ General agents can write animation code, but code generation alone gives them a 
 - Ordered raw RGBA streaming into FFmpeg while frames continue rendering
 - H.264, H.265, VP9, and ProRes outputs
 - Image and video layers with local media freezing
-- Multiple audio tracks, fades, looping, voice-aware music ducking, limiting, and AAC delivery
+- Multiple audio tracks with mute, solo, constant-power stereo pan, fades, looping, voice-aware music ducking, limiting, and AAC delivery
 - Reusable native preview server with frame scrubbing
-- Local Studio with visual color wells, CapCut-style canvas formats that reframe the real scene graph, a real project switcher and creation flow, node workflows, project-local JSON motion libraries, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent output history and file-manager reveal
+- Local Studio with visual color wells, CapCut-style canvas formats that reframe the real scene graph, searchable large-project navigation, automatic hierarchical workflow layout, visual easing curves, usage-aware asset search, project-local JSON motion libraries, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent downloadable masters
 - Output probing and contract verification after every render
 
 ## Requirements
@@ -48,12 +48,28 @@ General agents can write animation code, but code generation alone gives them a 
 
 ## Install
 
-From GitHub:
+One command on Windows:
+
+```powershell
+irm https://raw.githubusercontent.com/Afnanksalal/genmotion/main/scripts/install.ps1 | iex
+```
+
+One command on macOS or Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Afnanksalal/genmotion/main/scripts/install.sh | sh
+```
+
+The installers resolve the latest published GitHub release, verify Node.js 22+, install FFmpeg when a supported package manager is available, install Genmotion globally, and finish by running `genmotion doctor`. Review the scripts before executing them in a managed environment.
+
+From npm and GitHub when the runtime is already installed:
 
 ```bash
 npm install -g git+https://github.com/Afnanksalal/genmotion.git
 genmotion doctor
 ```
+
+Each tagged GitHub release also publishes a tested `.tgz` package artifact. Release packaging reruns the complete unit, integration, native render, and Studio browser suites before attaching the artifact.
 
 Or work from a checkout:
 
