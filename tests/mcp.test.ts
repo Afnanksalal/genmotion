@@ -68,8 +68,9 @@ describe('Genmotion MCP server', () => {
       expect(staleSave.isError).toBe(true);
 
       const schema = await client.callTool({ name: 'genmotion_schema', arguments: {} });
-      const schemaContent = schema.structuredContent as { authoring?: { recipePolicy?: string; canonicalExample?: { textLayer?: Record<string, unknown>; track?: Record<string, unknown> } } };
+      const schemaContent = schema.structuredContent as { authoring?: { recipePolicy?: string; transformSemantics?: string; canonicalExample?: { textLayer?: Record<string, unknown>; track?: Record<string, unknown> } } };
       expect(schemaContent.authoring?.recipePolicy).toContain('optional');
+      expect(schemaContent.authoring?.transformSemantics).toContain('additional offsets');
       expect(schemaContent.authoring?.canonicalExample?.textLayer).toMatchObject({ width: 1440, fontFamily: 'Arial', color: '#f7f5ef' });
       expect(schemaContent.authoring?.canonicalExample?.track).toMatchObject({ target: 'transform.y', keyframes: [{ at: 0 }, { at: 0.8 }] });
       const savedContent = saved.structuredContent as { revision: string };

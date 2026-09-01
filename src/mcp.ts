@@ -115,6 +115,7 @@ function serverFactory(): McpServer {
     schema: z.toJSONSchema(projectSchema),
     authoring: {
       model: 'Agents may author complete projects, granular RFC 6902 patches, arbitrary numeric property tracks, custom cubic-bezier and spring easing, and SVG path geometry.',
+      transformSemantics: 'Layer x/y are absolute layout coordinates. transform.x/transform.y are additional offsets around that layout position and should normally start at 0; never copy layer x/y into transform x/y. Direct transform tracks animate those offsets.',
       recipePolicy: 'Named recipes are optional reusable references. Direct tracks are first-class and require no recipe.',
       canonicalExample: {
         textLayer: { id: 'headline', type: 'text', text: 'Sound, shaped.', x: 240, y: 390, width: 1440, height: 220, fontFamily: 'Arial', fontSize: 96, color: '#f7f5ef' },
