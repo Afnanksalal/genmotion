@@ -22,7 +22,7 @@ import { tasteReferences } from '../catalog/references.js';
 import { sceneBlueprints } from '../catalog/blueprints.js';
 import { studioHtml } from './ui.js';
 import { GenmotionError } from '../errors.js';
-import { LocalAgentRuntime, requestRequiresProjectChange, type AgentHostId, type AgentRuntime, type AgentSelection } from '../agent/runtime.js';
+import { isNonExecutionResponse, LocalAgentRuntime, requestRequiresProjectChange, type AgentHostId, type AgentRuntime, type AgentSelection } from '../agent/runtime.js';
 import { initializeProject, type InitOptions } from '../commands/init.js';
 import { isGenmotionBrandAsset, readGenmotionBrandAsset } from '../brand.js';
 
@@ -32,6 +32,25 @@ const nodeSchema = z.object({
   sceneId: z.string().optional(), layerId: z.string().optional(), referenceId: z.string().optional(),
   note: z.string().default(''), color: z.string().default('#8b5cf6'),
 });
+
+const countWords: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+
+function requestedOutcomeGaps(prompt: string, project: GenmotionProject): string[] {
+  const gaps: string[] = [];
+  const durationMatch = prompt.match(/\b(\d+(?:\.\d+)?)\s*[- ]?second\s+(?:\d+:\d+\s+)?(?:launch\s+)?(?:film|video|animation|composition|spot|promo)\b/i);
+  if (durationMatch) {
+    const requested = Number(durationMatch[1]);
+    const actual = projectDuration(project);
+    if (Math.abs(actual - requested) > 1 / project.fps) gaps.push(`requested duration ${requested}s, actual duration ${actual}s`);
+  }
+  const sceneMatch = prompt.match(/\b(?:build|create|make)\s+(?:exactly\s+)?(one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+(?:\w+\s+){0,2}scenes?\b/i);
+  const requestedSceneCount = sceneMatch?.[1];
+  if (requestedSceneCount) {
+    const requested = countWords[requestedSceneCount.toLowerCase()] ?? Number(requestedSceneCount);
+    if (Number.isFinite(requested) && project.scenes.length !== requested) gaps.push(`requested ${requested} scenes, actual ${project.scenes.length}`);
+  }
+  return gaps;
+}
 const studioStateSchema = z.object({
   version: z.literal(1),
   nodes: z.array(nodeSchema),
@@ -475,6 +494,10 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
             const findings = await validateProject(refreshed);
             const errors = findings.filter((finding) => finding.severity === 'error');
             if (errors.length > 0) throw new GenmotionError('AGENT_PROJECT_INVALID', 'The agent left validation errors in the project.', errors);
+            const outcomeGaps = requestedOutcomeGaps(record.prompt, refreshed.sourceProject);
+            if (outcomeGaps.length > 0 || isNonExecutionResponse(result.response)) {
+              throw new GenmotionError('AGENT_REQUEST_INCOMPLETE', 'The agent ended the turn without satisfying the requested production contract.', outcomeGaps.length > 0 ? outcomeGaps : [result.response]);
+            }
             const afterRevision = revision(refreshed.sourceProject);
             if (afterRevision === running.beforeRevision && requestRequiresProjectChange(record.prompt)) {
               throw new GenmotionError('AGENT_NO_PROJECT_CHANGE', 'The agent ended the turn without applying the requested project change. Retry the turn or choose another agent runtime.');

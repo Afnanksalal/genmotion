@@ -29,5 +29,6 @@ describe('local agent bridge', () => {
     expect(requestRequiresProjectChange('Create a premium four-scene launch film.')).toBe(true);
     expect(requestRequiresProjectChange('Review the current frame and explain the spacing.')).toBe(false);
     expect(isNonExecutionResponse('**Exact blocker:** This cannot be completed safely in one pass.')).toBe(true);
+    expect(isNonExecutionResponse('The four-scene structure was partially applied where possible.')).toBe(true);
   });
 });
