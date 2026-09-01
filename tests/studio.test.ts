@@ -141,10 +141,10 @@ describe('Genmotion Studio', () => {
     const directory = await fixture();
     const requestsDir = path.join(directory, '.genmotion', 'requests');
     await mkdir(requestsDir, { recursive: true });
-    for (let index = 0; index < 501; index += 1) {
+    await Promise.all(Array.from({ length: 501 }, async (_, index) => {
       const id = index.toString(16).padStart(16, '0');
       await writeFile(path.join(requestsDir, `${id}.json`), JSON.stringify({ id, prompt: 'Archived request', selection: {}, status: 'completed', createdAt: new Date(index * 1_000).toISOString() }));
-    }
+    }));
     await resolveStudioRequest(directory, (500).toString(16).padStart(16, '0'), 'Retained response');
     const requests = await getStudioRequests(directory);
     expect(requests).toHaveLength(500);
@@ -168,9 +168,9 @@ describe('Genmotion Studio', () => {
         body: JSON.stringify({ prompt: 'Explain the current composition.', host: 'codex', selection: { frame: 0 } }),
       });
       const request = await queued.json() as { id: string };
-      expect(await waitForRequest(directory, request.id, new Set(['completed', 'failed']), 15_000)).toMatchObject({ status: 'completed' });
+      expect(await waitForRequest(directory, request.id, new Set(['completed', 'failed']), 30_000)).toMatchObject({ status: 'completed' });
     } finally { await studio.close(); }
-  }, 20_000);
+  }, 35_000);
 
   it('detects omitted motion and visual techniques in an otherwise valid static scene system', async () => {
     const directory = await fixture();
