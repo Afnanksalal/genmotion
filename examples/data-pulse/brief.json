@@ -1,0 +1,12 @@
+{
+  "title": "Data Pulse",
+  "audience": "Motion designers evaluating Genmotion",
+  "promise": "Introduce one measurable signal with no dashboard clutter.",
+  "proof": "The checked-in Creative IR renders with the native Genmotion pipeline.",
+  "desiredAction": "Inspect, remix, and render the source project.",
+  "mode": "data-story",
+  "duration": 14,
+  "sources": [
+    "Creative IR and renderer output in this directory"
+  ]
+}

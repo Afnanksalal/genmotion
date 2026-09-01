@@ -55,8 +55,17 @@ function wrapText(ctx: SKRSContext2D, text: string, width: number, letterSpacing
   return lines;
 }
 
+export function canvasFontWeight(weight: TextLayer['fontWeight']): TextLayer['fontWeight'] {
+  if (typeof weight !== 'number') return weight;
+  // Skia's CSS font shorthand parser accepts the CSS2 weight ladder. Passing
+  // intermediate values such as 450, 650, or 850 can be misread as a size and
+  // draw glyphs at enormous dimensions even though measurement used the
+  // requested size. Preserve the closest supported visual weight explicitly.
+  return Math.max(100, Math.min(900, Math.round(weight / 100) * 100));
+}
+
 function fontString(layer: TextLayer, size: number): string {
-  return `${layer.fontStyle} ${String(layer.fontWeight)} ${String(size)}px "${layer.fontFamily}"`;
+  return `${layer.fontStyle} ${String(canvasFontWeight(layer.fontWeight))} ${String(size)}px "${layer.fontFamily}"`;
 }
 
 function resolveTextLayout(ctx: SKRSContext2D, layer: TextLayer): { lines: string[]; fontSize: number; lineHeight: number } {

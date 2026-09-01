@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -71,5 +71,6 @@ describe('native renderer', () => {
     const probe = await runProcess('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=codec_name,channels', '-of', 'json', output]);
     const parsed = JSON.parse(probe.stdout) as { streams: Array<{ codec_name: string; channels: number }> };
     expect(parsed.streams[0]).toMatchObject({ codec_name: 'aac', channels: 2 });
+    expect((await readdir(directory)).filter((entry) => entry.includes('.silent.'))).toEqual([]);
   });
 });

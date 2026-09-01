@@ -219,8 +219,9 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   } catch (error) {
     encoder.kill('SIGKILL');
     await Promise.all(pool.map(async (worker) => worker.terminate()));
-    await rm(silentVideo, { force: true });
     throw error;
+  } finally {
+    await rm(silentVideo, { force: true });
   }
 
   const elapsedMs = performance.now() - started;

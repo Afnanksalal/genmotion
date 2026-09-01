@@ -33,6 +33,8 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run benchmark
+      - run: npm run examples:verify
+        if: matrix.node == 22
   studio-e2e:
     runs-on: ubuntu-latest
     steps:
