@@ -103,18 +103,17 @@ test('picks colors visually and reframes the real project with canvas presets', 
   await expect(page.locator('#monitor')).toHaveCSS('aspect-ratio', '1080 / 1920');
 
   await page.locator('[data-select="layer"][data-id="accent"]').click();
-  const picker = page.locator('[data-color-field="fill"]');
-  await expect(picker).toBeVisible();
-  await picker.evaluate((input: HTMLInputElement) => {
-    input.value = '#ff2d55';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-  });
+  const picker = page.locator('[data-color-open="fill"]');
+  await picker.click();
+  await expect(page.locator('#colorPopover')).toBeVisible();
+  await page.locator('[data-color-hex]').fill('#ff2d55');
+  await page.locator('[data-color-hex]').press('Tab');
+  await page.locator('[data-color-apply]').click();
   await expect.poll(async () => {
     const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; fill?: string }> }> };
     return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.fill;
   }).toBe('#ff2d55');
-  await expect(page.locator('[data-color-field="fill"]').locator('..').locator('.color-chip')).toHaveCSS('background-color', 'rgb(255, 45, 85)');
+  await expect(page.locator('[data-color-open="fill"] .color-chip')).toHaveCSS('background-color', 'rgb(255, 45, 85)');
 });
 
 test('authors the complete IR from Studio without relying on agent chat', async ({ page }) => {
