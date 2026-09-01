@@ -20,11 +20,21 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: npm ci
       - run: npm run check
+      - run: npm run examples:verify
+      - run: npm run package:verify
       - run: npx playwright install --with-deps chromium
       - run: npm run test:studio-e2e
+      - name: Verify tag matches package version
+        run: test "${GITHUB_REF_NAME}" = "v$(node -p \"require('./package.json').version\")"
       - name: Build distributable package
-        run: mkdir -p release && npm pack --pack-destination release
-      - name: Attach package to GitHub release
+        run: |
+          mkdir -p release
+          npm pack --ignore-scripts --pack-destination release
+          cd release
+          sha256sum *.tgz > SHA256SUMS
+      - name: Create release and attach verified package
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${GITHUB_REF_NAME}" release/*.tgz --clobber
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 || gh release create "${GITHUB_REF_NAME}" --verify-tag --generate-notes --title "Genmotion ${GITHUB_REF_NAME#v}"
+          gh release upload "${GITHUB_REF_NAME}" release/*.tgz release/SHA256SUMS --clobber
