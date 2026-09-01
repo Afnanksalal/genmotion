@@ -105,7 +105,7 @@ async function capture(command: string, args: string[], cwd: string, timeoutMs =
 }
 
 function requestRequiresProjectChange(prompt: string): boolean {
-  return /\b(?:create|build|make|replace|change|edit|author|design|animate|add|remove|delete|reframe|resize|convert|apply|fix|refine|polish|update)\b/i.test(prompt)
+  return /\b(?:create|build|make|replace|change|edit|author|design|animate|add|remove|delete|reframe|resize|convert|apply|fix|refine|polish|update|finish|complete)\b/i.test(prompt)
     && !/^\s*(?:explain|describe|review|critique|inspect|answer|tell me|what|why|how)\b/i.test(prompt);
 }
 
@@ -114,7 +114,7 @@ function requestsFullTimelineReview(prompt: string): boolean {
 }
 
 function isNonExecutionResponse(response: string): boolean {
-  return /(?:\*\*Exact blocker:\*\*|cannot be completed|cannot complete|not possible to complete|would violate|unsafe (?:to|in) (?:one|a single) pass)/i.test(response);
+  return /(?:\*\*Exact blocker:\*\*|cannot be completed|cannot complete|not possible to complete|would violate|unsafe (?:to|in) (?:one|a single) pass|partially (?:applied|completed|implemented|created)|where possible)/i.test(response);
 }
 
 function buildPrompt(input: AgentRunInput): string {
@@ -132,7 +132,7 @@ function buildPrompt(input: AgentRunInput): string {
     `The user is currently focused on ${context}.`,
     '',
     'Apply the request to the real Genmotion project when it asks for a change. Use the genmotion MCP tools when available: read the current revision, patch precise paths transactionally, validate, and inspect rendered frames. The Creative IR is an open authoring surface: design original scenes, direct property tracks, custom cubic-bezier or spring timing, and SVG path geometry. Named recipes are optional references, never a required template. Preserve truthful product evidence, local asset provenance, reproducible frame evaluation, existing brand decisions, and unrelated human edits. Do not create HTML, Remotion, HyperFrames, placeholder copy, fake product behavior, or unsourced claims. Do not commit, publish, install packages, access credentials, or use the network. For a visual change, inspect at least one representative native frame before finishing, and inspect each affected scene or transition when the scope spans several. Do not render the full video, create contact sheets, or start servers unless the user explicitly asks to export or review the full timeline.',
-    changeRequested ? 'This is an authoring request. Begin with the project tools and complete it through as many transactional edits and inspection passes as needed. Scope, iteration count, an initially blank artboard, and the need to inspect your own work are not blockers. Do not answer with a feasibility disclaimer instead of authoring. A valid blocker must be a specific missing input, unavailable capability, or safety constraint that remains after attempting the available tools.' : '',
+    changeRequested ? 'This is an authoring request. Begin with the project tools and complete it through as many transactional edits and inspection passes as needed. For a wholesale composition or multi-scene replacement, read the current document and use genmotion_project_save to write the complete valid Creative IR in one revision-safe transaction; use patches for later refinements. Scope, iteration count, an initially blank artboard, and the need to inspect your own work are not blockers. Do not answer with a feasibility disclaimer instead of authoring. Before summarizing, read the final project again and verify its scene count, total duration, dimensions, required text, and removal of any neutral artboard against the request. Never claim a change that is absent from that final read. A valid blocker must be a specific missing input, unavailable capability, or safety constraint that remains after attempting the available tools.' : '',
     fullReviewRequested ? 'The user explicitly requested rendering or full-timeline review. You are authorized and expected to render, inspect scene and transition frames, and use a contact sheet or final encode when useful. The general restriction on unsolicited full renders does not apply to this turn.' : '',
     '',
     `User request: ${input.prompt}`,
@@ -527,8 +527,8 @@ export class LocalAgentRuntime implements AgentRuntime {
         await onProgress({ activity: 'Continuing authoring', sessionId: result.sessionId });
         result = await this.hermesClient.run([
           'Continue the same request now using the Genmotion project tools.',
-          'Your previous feasibility response was not a valid blocker: a multi-step authoring and inspection workflow is exactly what this ACP session supports.',
-          'Make the requested project changes, validate them, inspect the resulting native frames, and only then summarize the completed work.',
+          'Your previous response was a refusal or admitted partial completion. A multi-step authoring and inspection workflow is exactly what this ACP session supports.',
+          'Read the current project. For a wholesale composition, use genmotion_project_save with the complete requested Creative IR, then patch refinements. Validate, inspect the resulting native frames, reread the final project, and only summarize facts present in that final document.',
           `Original request: ${input.prompt}`,
         ].join('\n\n'), onProgress, input.signal);
       }

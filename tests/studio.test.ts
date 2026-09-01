@@ -270,6 +270,22 @@ describe('Genmotion Studio', () => {
     } finally { await studio.close(); }
   });
 
+  it('rejects an agent result that misses explicit duration and scene-count acceptance criteria', async () => {
+    const directory = await fixture();
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent('valid') });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const queued = await fetch(`${studio.url}/api/requests`, {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-genmotion-token': token },
+        body: JSON.stringify({ prompt: 'Create a 15-second launch film. Build four connected scenes.', host: 'codex' }),
+      });
+      const request = await queued.json() as { id: string };
+      const record = await waitForRequest(directory, request.id, new Set(['failed']));
+      expect(record).toMatchObject({ status: 'failed' });
+      expect(record.error).toContain('without satisfying the requested production contract');
+    } finally { await studio.close(); }
+  });
+
   it('preserves an invalid agent edit for diagnosis and restores the last valid project', async () => {
     const directory = await fixture();
     const original = await readFile(path.join(directory, 'genmotion.json'), 'utf8');
