@@ -41,6 +41,16 @@ General agents can write animation code, but code generation alone gives them a 
 - Local Studio with visual color wells, CapCut-style canvas formats that reframe the real scene graph, searchable large-project navigation, automatic hierarchical workflow layout, visual easing curves, usage-aware asset search, project-local JSON motion libraries, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent downloadable masters
 - Output probing and contract verification after every render
 
+## Public examples
+
+The [`examples/`](examples/) gallery contains three complete, editable projects with frozen assets, strict validation, high-quality 1920×1080 masters, and inspected contact sheets:
+
+- **Kinetic Type** demonstrates clipped typography, direct property tracks, custom easing, and scene rhythm.
+- **Data Pulse** demonstrates animated counters, chart geometry, SVG path drawing, and staged evidence.
+- **Arc One** demonstrates original vector product geometry, shadows, blend modes, macro movement, stable lockups, and a mixed stereo soundtrack.
+
+Every project is reproducible with `npm run examples:build` and verified with `npm run examples:verify`; no remote render asset or external template is required.
+
 ## Requirements
 
 - Node.js 22 or newer

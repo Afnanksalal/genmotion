@@ -1,0 +1,12 @@
+{
+  "title": "Kinetic Type",
+  "audience": "Motion designers evaluating Genmotion",
+  "promise": "Establish typography as the primary physical object.",
+  "proof": "The checked-in Creative IR renders with the native Genmotion pipeline.",
+  "desiredAction": "Inspect, remix, and render the source project.",
+  "mode": "kinetic-typography",
+  "duration": 12,
+  "sources": [
+    "Creative IR and renderer output in this directory"
+  ]
+}

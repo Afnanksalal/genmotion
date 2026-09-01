@@ -1,0 +1,12 @@
+{
+  "title": "Arc One",
+  "audience": "Motion designers evaluating Genmotion",
+  "promise": "Open with a restrained product promise.",
+  "proof": "The checked-in Creative IR renders with the native Genmotion pipeline.",
+  "desiredAction": "Inspect, remix, and render the source project.",
+  "mode": "product-launch",
+  "duration": 15,
+  "sources": [
+    "Creative IR and renderer output in this directory"
+  ]
+}

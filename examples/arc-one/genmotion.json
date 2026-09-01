@@ -1,0 +1,1532 @@
+{
+  "schemaVersion": 1,
+  "id": "arc-one",
+  "title": "Arc One",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "seed": 17,
+  "brand": {
+    "background": "#07090d",
+    "foreground": "#f4f6f8",
+    "accent": "#5fa8ff",
+    "muted": "#8f93a2",
+    "fonts": [
+      {
+        "family": "Inter",
+        "file": "assets/Inter.ttf"
+      }
+    ],
+    "radius": 28,
+    "tone": [
+      "precise",
+      "editorial",
+      "controlled"
+    ]
+  },
+  "scenes": [
+    {
+      "id": "promise",
+      "purpose": "Open with a restrained product promise.",
+      "duration": 3.5,
+      "background": "#07090d",
+      "layers": [
+        {
+          "id": "halo",
+          "start": 0,
+          "duration": 3.5,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "screen",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "halo-breathe",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.72,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.5,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.5,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "halo-breathe-y",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.72,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.5,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.5,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 620,
+          "y": 230,
+          "width": 680,
+          "height": 680,
+          "fill": "#102746",
+          "stroke": "#5fa8ff55",
+          "strokeWidth": 3,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "promise-copy",
+          "start": 0,
+          "duration": 3.5,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "clip": {
+            "x": 280,
+            "y": 430,
+            "width": 1360,
+            "height": 230,
+            "radius": 0
+          },
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "promise-rise",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 160,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.95,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.5,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "text",
+          "text": "Sound, shaped.",
+          "x": 300,
+          "y": 430,
+          "width": 1320,
+          "height": 220,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 142,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f5ef",
+          "align": "center",
+          "verticalAlign": "middle",
+          "lineHeight": 1,
+          "letterSpacing": -6,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        }
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "crossfade",
+        "duration": 0.35,
+        "ease": "sine-in-out"
+      },
+      "referenceDecisions": [
+        {
+          "referenceId": "editorial-monument",
+          "borrow": [
+            "decisive typographic hierarchy",
+            "one dominant move per beat"
+          ],
+          "avoid": [
+            "serif imitation",
+            "constant ornamental motion"
+          ],
+          "transform": [
+            "use sparse geometry and generous holds"
+          ]
+        },
+        {
+          "referenceId": "product-theater",
+          "borrow": [
+            "controlled detail-led pacing",
+            "focused camera hierarchy"
+          ],
+          "avoid": [
+            "interface reconstruction",
+            "brand imitation"
+          ],
+          "transform": [
+            "express material and depth with native vector geometry"
+          ]
+        }
+      ],
+      "notes": []
+    },
+    {
+      "id": "object",
+      "purpose": "Reveal an original vector speaker silhouette and material system.",
+      "duration": 4.2,
+      "background": "#090c12",
+      "layers": [
+        {
+          "id": "speaker-shadow",
+          "start": 0,
+          "duration": 4.2,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "shadow-in",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.9,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.2,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 560,
+          "y": 842,
+          "width": 800,
+          "height": 90,
+          "fill": "#00000099",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "speaker-body",
+          "start": 0,
+          "duration": 4.2,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "body-scale",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.78,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.1,
+                  "value": 1,
+                  "ease": {
+                    "type": "spring",
+                    "mass": 1,
+                    "stiffness": 150,
+                    "damping": 22,
+                    "velocity": 0
+                  }
+                },
+                {
+                  "at": 4.2,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "body-scale-y",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.78,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.1,
+                  "value": 1,
+                  "ease": {
+                    "type": "spring",
+                    "mass": 1,
+                    "stiffness": 150,
+                    "damping": 22,
+                    "velocity": 0
+                  }
+                },
+                {
+                  "at": 4.2,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "body-tilt",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -8,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.2,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.2,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 670,
+          "y": 140,
+          "width": 580,
+          "height": 720,
+          "fill": "#b7bcc5",
+          "stroke": "#f8fafc",
+          "strokeWidth": 3,
+          "radius": 86,
+          "progress": 1,
+          "shadow": {
+            "color": "#000000aa",
+            "blur": 70,
+            "offsetX": 0,
+            "offsetY": 30
+          }
+        },
+        {
+          "id": "speaker-grille",
+          "start": 0,
+          "duration": 4.2,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "grille-draw",
+              "target": "progress",
+              "keyframes": [
+                {
+                  "at": 0.45,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.65,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.2,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "shape",
+          "shape": "path",
+          "x": 670,
+          "y": 190,
+          "width": 580,
+          "height": 550,
+          "fill": "#151a23",
+          "stroke": "#697385",
+          "strokeWidth": 4,
+          "radius": 0,
+          "path": "M 30 0 L 550 0 Q 580 0 580 30 L 580 520 Q 580 550 550 550 L 30 550 Q 0 550 0 520 L 0 30 Q 0 0 30 0 M 84 88 L 496 88 M 84 156 L 496 156 M 84 224 L 496 224 M 84 292 L 496 292 M 84 360 L 496 360 M 84 428 L 496 428",
+          "progress": 1
+        },
+        {
+          "id": "product-name",
+          "start": 1.1,
+          "duration": 3.1,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "name-in",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.5,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.1,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "text",
+          "text": "ARC ONE",
+          "x": 120,
+          "y": 830,
+          "width": 450,
+          "height": 70,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 40,
+          "fontWeight": 650,
+          "fontStyle": "normal",
+          "color": "#5fa8ff",
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1,
+          "letterSpacing": 6,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        }
+      ],
+      "transitionIn": {
+        "type": "crossfade",
+        "duration": 0.35,
+        "ease": "sine-in-out"
+      },
+      "transitionOut": {
+        "type": "crossfade",
+        "duration": 0.35,
+        "ease": "sine-in-out"
+      },
+      "referenceDecisions": [
+        {
+          "referenceId": "editorial-monument",
+          "borrow": [
+            "decisive typographic hierarchy",
+            "one dominant move per beat"
+          ],
+          "avoid": [
+            "serif imitation",
+            "constant ornamental motion"
+          ],
+          "transform": [
+            "use sparse geometry and generous holds"
+          ]
+        },
+        {
+          "referenceId": "product-theater",
+          "borrow": [
+            "controlled detail-led pacing",
+            "focused camera hierarchy"
+          ],
+          "avoid": [
+            "interface reconstruction",
+            "brand imitation"
+          ],
+          "transform": [
+            "express material and depth with native vector geometry"
+          ]
+        }
+      ],
+      "notes": []
+    },
+    {
+      "id": "details",
+      "purpose": "Show three product attributes with a controlled macro push.",
+      "duration": 4.3,
+      "background": "#dfe3e8",
+      "layers": [
+        {
+          "id": "detail-body",
+          "start": 0,
+          "duration": 4.3,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "macro-push",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.94,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.25,
+                  "value": 1.08,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.3,
+                  "value": 1.08,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "macro-push-y",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.94,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.25,
+                  "value": 1.08,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.3,
+                  "value": 1.08,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 930,
+          "y": -180,
+          "width": 950,
+          "height": 1320,
+          "fill": "#9ea6b2",
+          "stroke": "#ffffff",
+          "strokeWidth": 4,
+          "radius": 130,
+          "progress": 1,
+          "shadow": {
+            "color": "#52607066",
+            "blur": 80,
+            "offsetX": -20,
+            "offsetY": 30
+          }
+        },
+        {
+          "id": "detail-one",
+          "start": 0,
+          "duration": 4.3,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "detail-one-in",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.5,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "text",
+          "text": "SEAMLESS\nALUMINUM",
+          "x": 120,
+          "y": 145,
+          "width": 750,
+          "height": 250,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 92,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#111720",
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 0.92,
+          "letterSpacing": -3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        },
+        {
+          "id": "detail-two",
+          "start": 0.75,
+          "duration": 3.55,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "detail-two-in",
+              "target": "transform.x",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.55,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "text",
+          "text": "SPATIAL AUDIO",
+          "x": 120,
+          "y": 500,
+          "width": 760,
+          "height": 95,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 54,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#35506f",
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1,
+          "letterSpacing": 2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        },
+        {
+          "id": "detail-three",
+          "start": 1.55,
+          "duration": 2.75,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "detail-three-in",
+              "target": "transform.x",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.55,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.75,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "text",
+          "text": "30-HOUR BATTERY",
+          "x": 120,
+          "y": 630,
+          "width": 760,
+          "height": 95,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 54,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#35506f",
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1,
+          "letterSpacing": 2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        }
+      ],
+      "transitionIn": {
+        "type": "crossfade",
+        "duration": 0.35,
+        "ease": "sine-in-out"
+      },
+      "transitionOut": {
+        "type": "crossfade",
+        "duration": 0.35,
+        "ease": "sine-in-out"
+      },
+      "referenceDecisions": [
+        {
+          "referenceId": "editorial-monument",
+          "borrow": [
+            "decisive typographic hierarchy",
+            "one dominant move per beat"
+          ],
+          "avoid": [
+            "serif imitation",
+            "constant ornamental motion"
+          ],
+          "transform": [
+            "use sparse geometry and generous holds"
+          ]
+        },
+        {
+          "referenceId": "product-theater",
+          "borrow": [
+            "controlled detail-led pacing",
+            "focused camera hierarchy"
+          ],
+          "avoid": [
+            "interface reconstruction",
+            "brand imitation"
+          ],
+          "transform": [
+            "express material and depth with native vector geometry"
+          ]
+        }
+      ],
+      "notes": []
+    },
+    {
+      "id": "lockup",
+      "purpose": "End with a completely stable product lockup.",
+      "duration": 3,
+      "background": "#07090d",
+      "layers": [
+        {
+          "id": "lockup-mark",
+          "start": 0,
+          "duration": 3,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "mark-in",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.01,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.55,
+                  "value": 1,
+                  "ease": {
+                    "type": "spring",
+                    "mass": 1,
+                    "stiffness": 150,
+                    "damping": 22,
+                    "velocity": 0
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "mark-in-y",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.01,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.55,
+                  "value": 1,
+                  "ease": {
+                    "type": "spring",
+                    "mass": 1,
+                    "stiffness": 150,
+                    "damping": 22,
+                    "velocity": 0
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "shape",
+          "shape": "path",
+          "x": 885,
+          "y": 230,
+          "width": 150,
+          "height": 172,
+          "fill": "#5fa8ff",
+          "strokeWidth": 0,
+          "radius": 0,
+          "path": "M 50 0 L 100 86 L 50 172 L 0 86 Z",
+          "progress": 1
+        },
+        {
+          "id": "arc-lockup",
+          "start": 0,
+          "duration": 3,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "lockup-in",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.45,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "text",
+          "text": "Arc One",
+          "x": 360,
+          "y": 450,
+          "width": 1200,
+          "height": 220,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 160,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f5ef",
+          "align": "center",
+          "verticalAlign": "middle",
+          "lineHeight": 1,
+          "letterSpacing": -6,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        },
+        {
+          "id": "arc-tagline",
+          "start": 0.55,
+          "duration": 2.45,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "tagline-in",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.35,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.45,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "type": "text",
+          "text": "Hear the space between.",
+          "x": 520,
+          "y": 680,
+          "width": 880,
+          "height": 80,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 44,
+          "fontWeight": 450,
+          "fontStyle": "normal",
+          "color": "#9ea9b9",
+          "align": "center",
+          "verticalAlign": "middle",
+          "lineHeight": 1,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        }
+      ],
+      "transitionIn": {
+        "type": "crossfade",
+        "duration": 0.35,
+        "ease": "sine-in-out"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [
+        {
+          "referenceId": "editorial-monument",
+          "borrow": [
+            "decisive typographic hierarchy",
+            "one dominant move per beat"
+          ],
+          "avoid": [
+            "serif imitation",
+            "constant ornamental motion"
+          ],
+          "transform": [
+            "use sparse geometry and generous holds"
+          ]
+        },
+        {
+          "referenceId": "product-theater",
+          "borrow": [
+            "controlled detail-led pacing",
+            "focused camera hierarchy"
+          ],
+          "avoid": [
+            "interface reconstruction",
+            "brand imitation"
+          ],
+          "transform": [
+            "express material and depth with native vector geometry"
+          ]
+        }
+      ],
+      "notes": [
+        "All animation finishes by 0.9 seconds, leaving a stable 2.1-second hold."
+      ]
+    }
+  ],
+  "audio": [
+    {
+      "id": "original-bed",
+      "src": "assets/original-bed.wav",
+      "start": 0,
+      "trimStart": 0,
+      "duration": 15,
+      "volume": 0.42,
+      "fadeIn": 0.35,
+      "fadeOut": 0.8,
+      "loop": false,
+      "duckUnderVoice": false,
+      "muted": false,
+      "solo": false,
+      "pan": 0,
+      "kind": "music"
+    }
+  ],
+  "metadata": {
+    "publicExample": "true",
+    "selectedConcept": "arc-one-direction-a",
+    "family": "product-launch",
+    "duration": "15",
+    "soundtrack": "deterministic-original"
+  }
+}

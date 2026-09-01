@@ -49,6 +49,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "check": "npm run lint && npm run typecheck && npm test",
     "benchmark": "node dist/cli.js benchmark tests/fixtures/basic --frames 60",
+    "examples:build": "npm run build && node scripts/build-example-projects.mjs",
+    "examples:verify": "npm run build && node scripts/verify-examples.mjs",
     "prepare": "npm run build",
     "prepack": "npm run check"
   },
