@@ -92,6 +92,41 @@ test('keeps the inspector accessible at a compact desktop width', async ({ page 
   await expect(page.locator('[data-field="title"]')).toBeVisible();
 });
 
+test('authors the complete IR from Studio without relying on agent chat', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+  await page.goto(studio?.url ?? '');
+
+  await page.getByRole('button', { name: 'Source', exact: true }).click();
+  const source = page.locator('#projectSource');
+  const project = JSON.parse(await source.inputValue()) as { metadata: Record<string, string>; scenes: Array<{ transitionOut: unknown }> };
+  project.metadata.studioParity = 'verified';
+  project.scenes[0]!.transitionOut = { type: 'blur', duration: 0.2, ease: { type: 'spring', mass: 1, stiffness: 180, damping: 28, velocity: 0 } };
+  await source.fill(JSON.stringify(project, null, 2));
+  await page.locator('#applyProjectSource').click();
+  await expect.poll(async () => {
+    const saved = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { metadata: Record<string, string> };
+    return saved.metadata.studioParity;
+  }).toBe('verified');
+
+  await page.locator('#addLayer').click();
+  await page.locator('[data-new-layer="text"]').click();
+  await expect.poll(async () => {
+    const saved = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ type: string }> }> };
+    return saved.scenes[0]?.layers.filter((layer) => layer.type === 'text').length;
+  }).toBe(2);
+  await expect(page.getByText('Direct animation tracks')).toBeVisible();
+  await page.locator('#addTrack').click();
+  await page.locator('[data-ease-kind]').first().click();
+  await page.locator('[data-ease-choice="spring"]').click();
+  await expect.poll(async () => {
+    const saved = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ type: string; tracks?: Array<{ keyframes: Array<{ ease: unknown }> }> }> }> };
+    const layer = saved.scenes[0]?.layers.filter((item) => item.type === 'text').at(-1);
+    return layer?.tracks?.[0]?.keyframes[0]?.ease;
+  }).toMatchObject({ type: 'spring', stiffness: 170 });
+  expect(errors).toEqual([]);
+});
+
 test('moves expanded workflow layers persistently and opens them in the canvas editor', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   const layersButton = page.getByRole('button', { name: 'Show layers' });
@@ -338,7 +373,7 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
     const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; tracks?: unknown[] }> }> };
     return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.tracks?.length ?? 0;
   }).toBe(1);
-  await expect(page.getByText('Agent animation tracks')).toBeVisible();
+  await expect(page.getByText('Direct animation tracks')).toBeVisible();
   const durationField = page.locator('[data-field="duration"]');
   await durationField.fill('0.7');
   await durationField.press('Tab');
