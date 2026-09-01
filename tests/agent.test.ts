@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPrompt, isNonExecutionResponse, requestRequiresProjectChange } from '../src/agent/runtime.js';
+import { agentProviderFailure, buildPrompt, isNonExecutionResponse, requestRequiresProjectChange } from '../src/agent/runtime.js';
 
 describe('local agent bridge', () => {
   it('builds bounded production context without credentials or fabricated permissions', () => {
@@ -33,5 +33,11 @@ describe('local agent bridge', () => {
     expect(requestRequiresProjectChange('Review the current frame and explain the spacing.')).toBe(false);
     expect(isNonExecutionResponse('**Exact blocker:** This cannot be completed safely in one pass.')).toBe(true);
     expect(isNonExecutionResponse('The four-scene structure was partially applied where possible.')).toBe(true);
+  });
+
+  it('classifies ACP provider failures instead of presenting them as completed turns', () => {
+    expect(agentProviderFailure('API call failed after 3 retries: HTTP 429: rate limit exceeded')).toContain('HTTP 429');
+    expect(agentProviderFailure('HTTP 503: upstream unavailable')).toContain('HTTP 503');
+    expect(agentProviderFailure('The project is valid and contains four scenes.')).toBeUndefined();
   });
 });
