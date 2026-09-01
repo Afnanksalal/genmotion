@@ -30,7 +30,7 @@ The Studio server binds to loopback by default and issues a per-process mutation
 
 Studio-only workflow coordinates, note nodes, reference annotations, render jobs, and agent requests live under `.genmotion/`. The deliverable project remains portable without this authoring state. Agent requests include selected scene, layer, and frame context and are resolved explicitly after the requested edit passes validation.
 
-Interactive frame previews use an LRU cache bounded by both encoded byte size and entry count. Project history retains a fixed recent window. Full renders execute through one serialized queue because each render already uses a native worker pool sized to local CPU capacity; this avoids nested oversubscription while preserving parallel frame generation inside each job. Agent and render queues reject excess work with explicit backpressure instead of accumulating unbounded local tasks.
+Interactive frame previews use an LRU cache bounded by both encoded byte size and entry count. Project history and terminal agent conversations retain fixed recent windows; queued and running conversations are never pruned. Full renders execute through one serialized queue because each render already uses a native worker pool sized to local CPU capacity; this avoids nested oversubscription while preserving parallel frame generation inside each job. Every job owns an abort signal, allowing queued and active cancellation and deterministic shutdown cleanup. Agent and render queues reject excess work with explicit backpressure instead of accumulating unbounded local tasks.
 
 ## Taste system
 

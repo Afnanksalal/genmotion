@@ -39,7 +39,7 @@ General agents can write animation code, but code generation alone gives them a 
 - Image and video layers with local media freezing
 - Multiple audio tracks with mute, solo, constant-power stereo pan, fades, looping, voice-aware music ducking, limiting, and AAC delivery
 - Reusable native preview server with frame scrubbing
-- Local Studio with visual color wells, CapCut-style canvas formats that reframe the real scene graph, searchable large-project navigation, automatic hierarchical workflow layout, visual easing curves, usage-aware asset search, project-local JSON motion libraries, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, revision history, agent conversations, and native export jobs with persistent downloadable masters
+- Local Studio with visual color wells, CapCut-style canvas formats that reframe the real scene graph, searchable large-project navigation, automatic hierarchical workflow layout, visual easing curves, usage-aware asset search, project-local JSON motion libraries, a reference board, direct canvas transforms, magnetic frame-snapped layer, audio, and motion timelines, source-aware trimming, bounded revision and conversation history, agent conversations, and cancellable native export jobs with persistent downloadable masters
 - Output probing and contract verification after every render
 
 ## Public examples
