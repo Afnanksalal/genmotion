@@ -73,4 +73,25 @@ describe('native renderer', () => {
     expect(parsed.streams[0]).toMatchObject({ codec_name: 'aac', channels: 2 });
     expect((await readdir(directory)).filter((entry) => entry.includes('.silent.'))).toEqual([]);
   });
+
+  it('rejects pre-cancelled work without creating an output', async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-abort-'));
+    temporary.push(directory);
+    const controller = new AbortController();
+    controller.abort();
+    const output = path.join(directory, 'cancelled.mp4');
+    await expect(renderProject(await loadProject(fixture), { output, quality: 'draft', signal: controller.signal })).rejects.toThrow(/aborted/i);
+    expect(await readdir(directory)).toEqual([]);
+  });
+
+  it('removes partial outputs and intermediates when audio muxing fails', async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-failed-mux-'));
+    temporary.push(directory);
+    const source = JSON.parse(await readFile(path.join(fixture, 'genmotion.json'), 'utf8')) as Record<string, unknown>;
+    source.audio = [{ id: 'missing', src: 'missing.wav', start: 0, trimStart: 0, duration: 1, volume: 1, pan: 0, fadeIn: 0, fadeOut: 0, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' }];
+    await writeFile(path.join(directory, 'genmotion.json'), JSON.stringify(source));
+    const output = path.join(directory, 'failed.mp4');
+    await expect(renderProject(await loadProject(directory), { output, quality: 'draft', workers: 1 })).rejects.toThrow();
+    expect((await readdir(directory)).filter((entry) => entry.endsWith('.mp4'))).toEqual([]);
+  });
 });

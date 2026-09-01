@@ -79,7 +79,8 @@ The coordinator:
 3. holds only the small out-of-order window produced by active workers;
 4. writes contiguous raw frames to FFmpeg as soon as they are ready;
 5. overlaps rasterization and encoding with stream backpressure;
-6. terminates every worker on success, error, or cancellation.
+6. terminates every worker on success, error, or cancellation;
+7. removes silent intermediates and incomplete final outputs on every failure path, including cancellation and audio mux failure.
 
 This architecture scales with useful local concurrency without splitting each render into expensive process launches.
 
