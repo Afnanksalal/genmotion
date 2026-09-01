@@ -53,4 +53,19 @@ describe('production validation findings', () => {
     const findings = await validateProject({ ...loaded, project, sourceProject: project });
     expect(findings).toContainEqual(expect.objectContaining({ code: 'DURATION_EXCESSIVE', severity: 'warning' }));
   });
+
+  it('rejects conflicting transition definitions on the same scene boundary', async () => {
+    const loaded = await loadProject(path.resolve('tests/fixtures/basic'));
+    const project = structuredClone(loaded.project);
+    const first = project.scenes[0]!;
+    const second = structuredClone(first);
+    second.id = 'second-scene';
+    second.layers = second.layers.map((layer) => ({ ...layer, id: `second-${layer.id}` }));
+    first.transitionOut = { type: 'crossfade', duration: 0.2, ease: 'linear' };
+    second.transitionIn = { type: 'slide-left', duration: 0.2, ease: 'cubic-in-out' };
+    project.scenes.push(second);
+
+    const findings = await validateProject({ ...loaded, project, sourceProject: project });
+    expect(findings).toContainEqual(expect.objectContaining({ code: 'TRANSITION_BOUNDARY_MISMATCH', severity: 'error' }));
+  });
 });

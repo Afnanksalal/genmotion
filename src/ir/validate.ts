@@ -75,6 +75,21 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
     if (ids.has(scene.id)) findings.push({ code: 'DUPLICATE_ID', severity: 'error', message: `Duplicate id: ${scene.id}`, location: `scenes.${sceneIndex}` });
     ids.add(scene.id);
     if (scene.transitionIn.duration > scene.duration / 2 || scene.transitionOut.duration > scene.duration / 2) findings.push({ code: 'TRANSITION_TOO_LONG', severity: 'error', message: `${scene.id} transition consumes more than half the scene.`, location: `scenes.${sceneIndex}` });
+    const previousScene = project.scenes[sceneIndex - 1];
+    if (previousScene) {
+      const outgoing = previousScene.transitionOut;
+      const incoming = scene.transitionIn;
+      const hasOutgoing = outgoing.type !== 'cut' && outgoing.duration > 0;
+      const hasIncoming = incoming.type !== 'cut' && incoming.duration > 0;
+      if (hasOutgoing && hasIncoming && (outgoing.type !== incoming.type || JSON.stringify(outgoing.ease) !== JSON.stringify(incoming.ease))) {
+        findings.push({
+          code: 'TRANSITION_BOUNDARY_MISMATCH',
+          severity: 'error',
+          message: `${previousScene.id} transitionOut and ${scene.id} transitionIn must use the same type and easing when both sides are active.`,
+          location: `scenes.${sceneIndex}.transitionIn`,
+        });
+      }
+    }
     for (const decision of scene.referenceDecisions) {
       if (!referenceIds.has(decision.referenceId)) findings.push({ code: 'REFERENCE_UNKNOWN', severity: 'error', message: `Unknown taste reference: ${decision.referenceId}`, location: `scenes.${sceneIndex}.referenceDecisions` });
       if (decision.borrow.length === 0 || decision.avoid.length === 0 || decision.transform.length === 0) findings.push({ code: 'REFERENCE_DECISION_INCOMPLETE', severity: 'warning', message: `${decision.referenceId} should state borrow, avoid, and transform decisions.`, location: `scenes.${sceneIndex}.referenceDecisions` });

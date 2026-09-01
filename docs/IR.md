@@ -10,7 +10,7 @@ All time values are seconds. Keyframe times are local to their layer. Direct ani
 
 A scene owns a background, duration, ordered layers, inbound and outbound transitions, creative reference decisions, and production notes. Layer order is first determined by `z` and then declaration order.
 
-Supported transitions are `cut`, `crossfade`, `slide-left`, `slide-right`, `push-up`, `zoom`, and `blur`. Transitions are evaluated from absolute scene time and remain seekable.
+Supported transitions are `cut`, `crossfade`, `slide-left`, `slide-right`, `push-up`, `zoom`, and `blur`. Transitions are evaluated from absolute scene time and remain seekable. A boundary is one continuous transition: the previous scene's `transitionOut.duration` supplies the pre-boundary span and the next scene's `transitionIn.duration` supplies the post-boundary span. When both spans are active, their type and easing must match. Define only one side when a one-sided transition is sufficient. `cut` is instantaneous; its duration does not extend a boundary transition.
 
 ## Layers
 
