@@ -1,11 +1,13 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { Readable, Writable } from 'node:stream';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as acp from '@agentclientprotocol/sdk';
 import { GENMOTION_VERSION } from '../version.js';
 
-export type AgentHostId = 'codex' | 'claude';
+export type AgentHostId = 'codex' | 'claude' | 'hermes';
 
 export interface AgentHostStatus {
   id: AgentHostId;
@@ -52,12 +54,22 @@ interface StoredSessions {
   version: 1;
   codex?: string;
   claude?: string;
+  hermes?: string;
 }
 
 interface JsonObject { [key: string]: unknown }
 
 const MAX_CAPTURE = 120_000;
 const PROCESS_TIMEOUT = 15 * 60_000;
+
+function hermesCommand(): string {
+  return process.env.GENMOTION_HERMES_COMMAND?.trim() || (process.platform === 'win32' ? 'hermes.exe' : 'hermes');
+}
+
+function hermesArgs(...args: string[]): string[] {
+  const profile = process.env.GENMOTION_HERMES_PROFILE?.trim();
+  return profile ? ['-p', profile, ...args] : args;
+}
 
 function object(value: unknown): JsonObject | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value) ? value as JsonObject : undefined;
@@ -207,12 +219,141 @@ class CodexClient {
   }
 }
 
+class HermesAcpClient {
+  private readonly child: ChildProcessWithoutNullStreams;
+  private readonly connection: acp.ClientConnection;
+  private readonly context: acp.ClientContext;
+  private readonly cwd: string;
+  private readonly mcpServers: acp.McpServer[];
+  private sessionId: string | undefined;
+  private response = '';
+  private progress: (progress: AgentRunProgress) => Promise<void> | void = () => undefined;
+  private stderr = '';
+  private ready: Promise<void>;
+
+  constructor(cwd: string, previousSessionId?: string) {
+    this.cwd = cwd;
+    this.sessionId = previousSessionId;
+    const command = hermesCommand();
+    this.child = spawn(command, hermesArgs('acp'), {
+      cwd,
+      env: { ...process.env, HERMES_NO_INTERACTIVE: '1' },
+      stdio: ['pipe', 'pipe', 'pipe'],
+      windowsHide: true,
+      shell: false,
+    });
+    this.child.stderr.on('data', (chunk: Buffer) => { this.stderr = appendLimited(this.stderr, chunk.toString()); });
+    const client = acp.client({ name: 'genmotion-studio' })
+      .onRequest(acp.methods.client.session.requestPermission, ({ params }) => {
+        const tool = params.toolCall;
+        const locations = tool.locations ?? [];
+        const insideProject = locations.every((location) => {
+          const relative = path.relative(this.cwd, path.resolve(location.path));
+          return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+        });
+        const namedGenmotionTool = /(?:^|__)genmotion(?:_|$)/i.test(tool.name ?? '');
+        const readOnlyKind = ['read', 'search', 'think'].includes(tool.kind ?? '');
+        const scopedEdit = tool.kind === 'edit' && locations.length > 0 && insideProject;
+        const option = insideProject && (namedGenmotionTool || readOnlyKind || scopedEdit)
+          ? params.options.find((candidate) => candidate.kind === 'allow_once')
+          : undefined;
+        return { outcome: option ? { outcome: 'selected' as const, optionId: option.optionId } : { outcome: 'cancelled' as const } };
+      })
+      .onNotification(acp.methods.client.session.update, ({ params }) => {
+        if (params.sessionId !== this.sessionId) return;
+        const update = params.update;
+        if (update.sessionUpdate === 'agent_message_chunk' && update.content.type === 'text') {
+          this.response = appendLimited(this.response, update.content.text);
+          void this.progress({ message: this.response, activity: 'Responding', sessionId: this.sessionId });
+        } else if (update.sessionUpdate === 'agent_thought_chunk') {
+          void this.progress({ activity: 'Thinking', sessionId: this.sessionId });
+        } else if (update.sessionUpdate === 'tool_call') {
+          void this.progress({ activity: update.title || 'Using Genmotion tools', sessionId: this.sessionId });
+        } else if (update.sessionUpdate === 'tool_call_update') {
+          const activity = update.status === 'completed' ? 'Checking changes' : update.title || 'Applying changes';
+          void this.progress({ activity, sessionId: this.sessionId });
+        } else if (update.sessionUpdate === 'plan' || update.sessionUpdate === 'plan_update') {
+          void this.progress({ activity: 'Planning changes', sessionId: this.sessionId });
+        }
+      });
+    const input = Writable.toWeb(this.child.stdin) as WritableStream<Uint8Array>;
+    const output = Readable.toWeb(this.child.stdout) as ReadableStream<Uint8Array>;
+    const stream = acp.ndJsonStream(input, output);
+    this.connection = client.connect(stream);
+    this.context = this.connection.agent;
+    const mcpEntry = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../mcp.js');
+    this.mcpServers = [{
+      name: 'genmotion', command: process.execPath, args: [mcpEntry],
+      env: [{ name: 'GENMOTION_ALLOWED_ROOTS', value: cwd }],
+    }];
+    this.ready = this.initialize();
+  }
+
+  async run(prompt: string, onProgress: (progress: AgentRunProgress) => Promise<void> | void, signal?: AbortSignal): Promise<AgentRunResult> {
+    await this.ready;
+    if (!this.sessionId) throw new Error('Hermes ACP did not establish a session.');
+    this.response = '';
+    this.progress = onProgress;
+    await onProgress({ activity: 'Thinking', sessionId: this.sessionId });
+    let timeout: NodeJS.Timeout | undefined;
+    const cancel = (): void => { if (this.sessionId) void this.context.notify(acp.methods.agent.session.cancel, { sessionId: this.sessionId }); };
+    if (signal?.aborted) cancel();
+    else signal?.addEventListener('abort', cancel, { once: true });
+    try {
+      const result = await Promise.race([
+        this.context.request(acp.methods.agent.session.prompt, {
+          sessionId: this.sessionId,
+          prompt: [{ type: 'text', text: prompt }],
+        }, { ...(signal ? { cancellationSignal: signal } : {}) }),
+        new Promise<never>((_resolve, reject) => {
+          timeout = setTimeout(() => { cancel(); reject(new Error('Hermes ACP turn timed out after 15 minutes.')); }, PROCESS_TIMEOUT);
+        }),
+      ]);
+      if (signal?.aborted || result.stopReason === 'cancelled') throw new Error('Agent turn cancelled.');
+      return { response: this.response.trim() || 'The Hermes turn completed without a text response.', sessionId: this.sessionId };
+    } catch (error) {
+      if (this.child.exitCode !== null) throw new Error(this.stderr.trim() || `Hermes ACP exited with code ${String(this.child.exitCode)}.`);
+      throw error;
+    } finally {
+      if (timeout) clearTimeout(timeout);
+      signal?.removeEventListener('abort', cancel);
+      this.progress = () => undefined;
+    }
+  }
+
+  close(): void {
+    this.connection.close();
+    this.child.kill();
+  }
+
+  private async initialize(): Promise<void> {
+    await this.context.request(acp.methods.agent.initialize, {
+      protocolVersion: acp.PROTOCOL_VERSION,
+      clientCapabilities: { terminal: false, plan: {} },
+      clientInfo: { name: 'genmotion-studio', version: GENMOTION_VERSION },
+    });
+    if (this.sessionId) {
+      try {
+        await this.context.request(acp.methods.agent.session.resume, {
+          sessionId: this.sessionId, cwd: this.cwd, mcpServers: this.mcpServers,
+        });
+        return;
+      } catch { this.sessionId = undefined; }
+    }
+    const created = await this.context.request(acp.methods.agent.session.new, {
+      cwd: this.cwd, mcpServers: this.mcpServers,
+    });
+    this.sessionId = created.sessionId;
+  }
+}
+
 export class LocalAgentRuntime implements AgentRuntime {
   private readonly projectDir: string;
   private readonly sessionsFile: string;
   private readonly skillFile: string;
   private readonly children = new Set<ChildProcessWithoutNullStreams>();
   private readonly codexClients = new Set<CodexClient>();
+  private hermesClient: HermesAcpClient | undefined;
   private sessions: StoredSessions = { version: 1 };
   private sessionsLoaded = false;
 
@@ -223,21 +364,25 @@ export class LocalAgentRuntime implements AgentRuntime {
   }
 
   async hosts(): Promise<AgentHostStatus[]> {
-    const [codex, claude] = await Promise.all([
+    const [codex, claude, hermes] = await Promise.all([
       capture('codex', ['login', 'status'], this.projectDir),
       capture('claude', ['auth', 'status', '--json'], this.projectDir),
+      capture(hermesCommand(), hermesArgs('acp', '--check'), this.projectDir),
     ]);
     let claudeAuthenticated = false;
     try { claudeAuthenticated = object(JSON.parse(claude.stdout))?.loggedIn === true; } catch { claudeAuthenticated = false; }
     return [
       { id: 'codex', label: 'Codex', installed: codex.code !== -1, authenticated: codex.code === 0 && /logged in/i.test(codex.stdout + codex.stderr), detail: codex.code === 0 ? 'Uses your local ChatGPT sign-in' : 'Run codex login' },
       { id: 'claude', label: 'Claude', installed: claude.code !== -1, authenticated: claude.code === 0 && claudeAuthenticated, detail: claudeAuthenticated ? 'Uses your local Claude sign-in' : 'Run claude auth login' },
+      { id: 'hermes', label: 'Hermes', installed: hermes.code !== -1, authenticated: hermes.code === 0, detail: hermes.code === 0 ? 'Native ACP · project-scoped Genmotion tools' : 'Hermes ACP is unavailable' },
     ];
   }
 
   async run(input: AgentRunInput, onProgress: (progress: AgentRunProgress) => Promise<void> | void): Promise<AgentRunResult> {
     await this.loadSessions();
-    return input.host === 'codex' ? this.runCodex(input, onProgress) : this.runClaude(input, onProgress);
+    if (input.host === 'codex') return this.runCodex(input, onProgress);
+    if (input.host === 'claude') return this.runClaude(input, onProgress);
+    return this.runHermes(input, onProgress);
   }
 
   close(): Promise<void> {
@@ -245,6 +390,8 @@ export class LocalAgentRuntime implements AgentRuntime {
     this.codexClients.clear();
     for (const child of this.children) child.kill();
     this.children.clear();
+    this.hermesClient?.close();
+    this.hermesClient = undefined;
     return Promise.resolve();
   }
 
@@ -257,6 +404,7 @@ export class LocalAgentRuntime implements AgentRuntime {
         this.sessions = { version: 1 };
         if (typeof parsed.codex === 'string') this.sessions.codex = parsed.codex;
         if (typeof parsed.claude === 'string') this.sessions.claude = parsed.claude;
+        if (typeof parsed.hermes === 'string') this.sessions.hermes = parsed.hermes;
       }
     } catch { this.sessions = { version: 1 }; }
   }
@@ -350,6 +498,14 @@ export class LocalAgentRuntime implements AgentRuntime {
       client.close();
       this.codexClients.delete(client);
     }
+  }
+
+  private async runHermes(input: AgentRunInput, onProgress: (progress: AgentRunProgress) => Promise<void> | void): Promise<AgentRunResult> {
+    this.hermesClient ??= new HermesAcpClient(this.projectDir, this.sessions.hermes);
+    const result = await this.hermesClient.run(`$genmotion\n\n${buildPrompt(input)}`, onProgress, input.signal);
+    this.sessions.hermes = result.sessionId;
+    await this.saveSessions();
+    return result;
   }
 
   private async runClaude(input: AgentRunInput, onProgress: (progress: AgentRunProgress) => Promise<void> | void): Promise<AgentRunResult> {

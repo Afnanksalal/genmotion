@@ -75,6 +75,7 @@ describe('Genmotion Studio', () => {
         method: 'POST', headers, body: JSON.stringify({
           slug: 'launch-film', title: 'Launch film', mode: 'launch', duration: 24,
           audience: 'Product teams', promise: 'Show the product clearly', proof: 'Real captured product evidence', desiredAction: 'Start a project',
+          width: 1080, height: 1920,
         }),
       });
       expect(created.status).toBe(201);
@@ -82,6 +83,7 @@ describe('Genmotion Studio', () => {
       expect(createdBody.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
       expect(createdBody.project).toMatchObject({ title: 'Launch film' });
       expect((await stat(path.join(workspaceRoot, 'launch-film', 'genmotion.json'))).isFile()).toBe(true);
+      expect(JSON.parse(await readFile(path.join(workspaceRoot, 'launch-film', 'genmotion.json'), 'utf8'))).toMatchObject({ width: 1080, height: 1920, scenes: [{ layers: [{ width: 1080, height: 1920 }] }] });
       const listing = await fetch(`${studio.url}/api/projects`).then((response) => response.json()) as { projects: Array<{ id: string; title: string }> };
       expect(listing.projects).toContainEqual(expect.objectContaining({ id: createdBody.project.id, title: 'Launch film' }));
       const reopened = await fetch(`${studio.url}/api/projects/open`, { method: 'POST', headers, body: JSON.stringify({ id: createdBody.project.id }) });

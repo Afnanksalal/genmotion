@@ -47,7 +47,7 @@ export type StudioState = z.infer<typeof studioStateSchema>;
 const requestSchema = z.object({
   prompt: z.string().min(3).max(20_000),
   selection: z.object({ sceneId: z.string().optional(), layerId: z.string().optional(), frame: z.number().int().nonnegative().optional() }).default({}),
-  host: z.enum(['codex', 'claude']).optional(),
+  host: z.enum(['codex', 'claude', 'hermes']).optional(),
 });
 const renderRequestSchema = z.object({
   filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
@@ -74,6 +74,8 @@ const createProjectSchema = z.object({
   proof: z.string().min(2).max(500),
   desiredAction: z.string().min(2).max(300),
   duration: z.number().min(3).max(600),
+  width: z.number().int().min(64).max(8192).default(1920),
+  height: z.number().int().min(64).max(8192).default(1080),
 });
 const openProjectSchema = z.object({ id: z.string().regex(/^[a-f0-9]{16}$/) });
 
@@ -428,7 +430,11 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const host = body.host;
       if (host) {
         const available = agentHosts.find((candidate) => candidate.id === host);
-        if (!available?.installed || !available.authenticated) { response.status(409).json({ error: `${host === 'codex' ? 'Codex' : 'Claude'} is not installed and signed in on this machine.` }); return; }
+        if (!available?.installed || !available.authenticated) {
+          const label = host === 'codex' ? 'Codex' : host === 'claude' ? 'Claude' : 'Hermes ACP';
+          response.status(409).json({ error: `${label} is not available on this machine.` });
+          return;
+        }
       }
       const record: StudioRequestRecord = {
         id: randomUUID(), prompt: body.prompt, selection, status: host ? 'queued' : 'pending', createdAt: new Date().toISOString(),
@@ -484,6 +490,9 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
           } catch (error) {
             if (host === 'claude' && error instanceof Error && /authentication failed/i.test(error.message)) {
               agentHosts = agentHosts.map((candidate) => candidate.id === 'claude' ? { ...candidate, authenticated: false, detail: 'Run claude auth login' } : candidate);
+            }
+            if (host === 'hermes' && error instanceof Error && /(?:auth|credential|provider|ACP exited)/i.test(error.message)) {
+              agentHosts = agentHosts.map((candidate) => candidate.id === 'hermes' ? { ...candidate, authenticated: false, detail: 'Check the Hermes provider and ACP runtime' } : candidate);
             }
             try {
               const candidate = await loadProject(loaded.projectFile);
@@ -625,7 +634,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (relative.startsWith('..') || path.isAbsolute(relative)) { response.status(400).json({ error: 'Project directory is outside the local workspace.' }); return; }
       const exists = await stat(directory).then(() => true).catch(() => false);
       if (exists) { response.status(409).json({ error: 'A project directory with that name already exists.' }); return; }
-      const init: InitOptions = { title: body.title, promise: body.promise, proof: body.proof, desiredAction: body.desiredAction, audience: body.audience, mode: body.mode, duration: body.duration };
+      const init: InitOptions = { title: body.title, promise: body.promise, proof: body.proof, desiredAction: body.desiredAction, audience: body.audience, mode: body.mode, duration: body.duration, width: body.width, height: body.height };
       await initializeProject(directory, init);
       const studio = await launchProject(directory);
       const project = (await discoverProjects(workspace, directory)).find((candidate) => path.resolve(candidate.directory) === path.resolve(directory));

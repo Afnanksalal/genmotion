@@ -92,6 +92,31 @@ test('keeps the inspector accessible at a compact desktop width', async ({ page 
   await expect(page.locator('[data-field="title"]')).toBeVisible();
 });
 
+test('picks colors visually and reframes the real project with canvas presets', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await expect(page.locator('[data-canvas-width="1080"][data-canvas-height="1920"]')).toBeVisible();
+  await page.locator('[data-canvas-width="1080"][data-canvas-height="1920"]').click();
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { width: number; height: number };
+    return [project.width, project.height];
+  }).toEqual([1080, 1920]);
+  await expect(page.locator('#monitor')).toHaveCSS('aspect-ratio', '1080 / 1920');
+
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  const picker = page.locator('[data-color-field="fill"]');
+  await expect(picker).toBeVisible();
+  await picker.evaluate((input: HTMLInputElement) => {
+    input.value = '#ff2d55';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; fill?: string }> }> };
+    return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.fill;
+  }).toBe('#ff2d55');
+  await expect(page.locator('[data-color-field="fill"]').locator('..').locator('.color-chip')).toHaveCSS('background-color', 'rgb(255, 45, 85)');
+});
+
 test('authors the complete IR from Studio without relying on agent chat', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
