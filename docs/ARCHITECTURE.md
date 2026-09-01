@@ -87,7 +87,7 @@ Image and video assets must resolve inside the project directory. Remote URLs an
 
 Video layers are decoded once into a content-aware local cache based on source file size, modification time, frame rate, trim, duration, and playback rate. The render workers reuse those frames.
 
-Audio tracks support positioning, trimming, bounded looping, gain, fades, and roles. Voice tracks can drive sidechain compression on marked music tracks. All tracks are mixed without normalization inflation, limited to a safe peak, trimmed to the project duration, and encoded as AAC.
+Audio tracks support positioning, trimming, bounded looping, gain, constant-power stereo pan, mute, solo, fades, and roles. Voice tracks can drive sidechain compression on marked music tracks. Muted and non-solo tracks are removed before asset resolution and FFmpeg graph construction. All active tracks are mixed without normalization inflation, limited to a safe peak, trimmed to the project duration, and encoded as 320 kbps stereo AAC.
 
 ## Validation
 

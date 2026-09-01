@@ -207,6 +207,9 @@ export const audioTrackSchema = z.object({
   fadeOut: nonNegative.default(0),
   loop: z.boolean().default(false),
   duckUnderVoice: z.boolean().default(false),
+  muted: z.boolean().default(false),
+  solo: z.boolean().default(false),
+  pan: z.number().finite().min(-1).max(1).default(0),
   kind: z.enum(['music', 'voice', 'sfx', 'source']).default('music'),
 });
 

@@ -8,7 +8,9 @@ import { runProcess } from './process.js';
 interface PositionedTrack extends AudioTrack { source: string }
 
 function collectTracks(project: GenmotionProject, projectDir: string): PositionedTrack[] {
-  const tracks = project.audio.map((track) => ({ ...track, source: resolveProjectAsset(projectDir, track.src) }));
+  const authored = project.audio.filter((track) => !track.muted);
+  const soloed = authored.some((track) => track.solo);
+  const tracks = authored.filter((track) => !soloed || track.solo).map((track) => ({ ...track, source: resolveProjectAsset(projectDir, track.src) }));
   let sceneStart = 0;
   for (const scene of project.scenes) {
     for (const layer of scene.layers) {
@@ -25,6 +27,9 @@ function collectTracks(project: GenmotionProject, projectDir: string): Positione
         fadeOut: 0,
         loop: false,
         duckUnderVoice: false,
+        muted: false,
+        solo: false,
+        pan: 0,
         kind: 'source',
       });
     }
@@ -42,6 +47,9 @@ function trackFilter(track: PositionedTrack, index: number, totalDuration: numbe
     'asetpts=PTS-STARTPTS',
     `volume=${String(track.volume)}`,
   ];
+  const left = Math.cos((track.pan + 1) * Math.PI / 4);
+  const right = Math.sin((track.pan + 1) * Math.PI / 4);
+  filters.push(`aformat=channel_layouts=stereo,pan=stereo|c0=${left.toFixed(6)}*c0|c1=${right.toFixed(6)}*c1`);
   if (track.fadeIn > 0) filters.push(`afade=t=in:st=0:d=${String(track.fadeIn)}`);
   if (track.fadeOut > 0) filters.push(`afade=t=out:st=${String(Math.max(0, playable - track.fadeOut))}:d=${String(track.fadeOut)}`);
   const delay = Math.round(track.start * 1000);

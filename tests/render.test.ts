@@ -53,20 +53,23 @@ describe('native renderer', () => {
     expect(parsed.streams[0]).toMatchObject({ width: 1920, height: 1080 });
   });
 
-  it('mixes a real audio track into the encoded video', async () => {
+  it('mixes, pans, and solos a real audio track into the encoded video', async () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-audio-'));
     temporary.push(directory);
     const audio = path.join(directory, 'tone.wav');
     await runProcess('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=1', audio]);
     const source = JSON.parse(await readFile(path.join(fixture, 'genmotion.json'), 'utf8')) as Record<string, unknown>;
-    source.audio = [{ id: 'tone', src: 'tone.wav', start: 0, trimStart: 0, duration: 1, volume: 0.1, fadeIn: 0.05, fadeOut: 0.05, loop: false, duckUnderVoice: false, kind: 'music' }];
+    source.audio = [
+      { id: 'tone', src: 'tone.wav', start: 0, trimStart: 0, duration: 1, volume: 0.1, pan: 0.75, fadeIn: 0.05, fadeOut: 0.05, muted: false, solo: true, loop: false, duckUnderVoice: false, kind: 'music' },
+      { id: 'excluded', src: 'missing.wav', start: 0, trimStart: 0, duration: 1, volume: 1, pan: 0, fadeIn: 0, fadeOut: 0, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'sfx' },
+    ];
     await writeFile(path.join(directory, 'genmotion.json'), JSON.stringify(source));
     await writeFile(path.join(directory, 'tone.wav'), await readFile(audio));
     const loaded = await loadProject(directory);
     const output = path.join(directory, 'with-audio.mp4');
     await renderProject(loaded, { output, quality: 'draft', workers: 2 });
-    const probe = await runProcess('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=codec_name', '-of', 'json', output]);
-    const parsed = JSON.parse(probe.stdout) as { streams: Array<{ codec_name: string }> };
-    expect(parsed.streams[0]?.codec_name).toBe('aac');
+    const probe = await runProcess('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=codec_name,channels', '-of', 'json', output]);
+    const parsed = JSON.parse(probe.stdout) as { streams: Array<{ codec_name: string; channels: number }> };
+    expect(parsed.streams[0]).toMatchObject({ codec_name: 'aac', channels: 2 });
   });
 });

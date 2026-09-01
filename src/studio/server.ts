@@ -114,6 +114,11 @@ export interface StudioRequestRecord {
   host?: AgentHostId; activity?: string; response?: string; error?: string; sessionId?: string;
   beforeRevision?: string; afterRevision?: string;
 }
+
+export function isTransientAgentFailure(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /(?:\b429\b|rate.?limit|too many requests|\b50[234]\b|service unavailable|gateway timeout|connection (?:reset|closed|refused)|socket hang up|timed? ?out|temporar(?:y|ily)|provider overloaded)/i.test(message);
+}
 interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed'; progress: number; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
 interface ExportRecord { filename: string; output: string; size: number; modifiedAt: string }
 interface StudioWorkspace { root: string; servers: Map<string, StudioServer> }
@@ -227,6 +232,47 @@ export function reconcileStudioState(project: GenmotionProject, state: StudioSta
   const last = project.scenes.at(-1);
   if (last) edges.push({ id: 'edge:output:sequence', from: `scene:${last.id}`, to: 'output', label: 'render' });
   return studioStateSchema.parse({ ...state, nodes, edges });
+}
+
+export function autoLayoutStudioState(project: GenmotionProject, state: StudioState): StudioState {
+  const reconciled = reconcileStudioState(project, state);
+  const nodes = new Map(reconciled.nodes.map((node) => [node.id, { ...node }]));
+  const columns = Math.max(1, Math.min(4, Math.ceil(Math.sqrt(project.scenes.length))));
+  const columnWidth = 330;
+  const rowHeights: number[] = [];
+  project.scenes.forEach((scene, index) => {
+    const row = Math.floor(index / columns);
+    rowHeights[row] = Math.max(rowHeights[row] ?? 0, 190 + scene.layers.length * 58);
+  });
+  const rowOffsets = rowHeights.map((_, row) => 100 + rowHeights.slice(0, row).reduce((sum, height) => sum + height + 90, 0));
+  const brief = nodes.get('brief');
+  if (brief) Object.assign(brief, { x: 40, y: 100 });
+  project.scenes.forEach((scene, index) => {
+    const row = Math.floor(index / columns);
+    const column = index % columns;
+    const x = 360 + column * columnWidth;
+    const y = rowOffsets[row] ?? 100;
+    const sceneNode = nodes.get(`scene:${scene.id}`);
+    if (sceneNode) Object.assign(sceneNode, { x, y });
+    scene.layers.forEach((layer, layerIndex) => {
+      const id = `layer:${scene.id}:${layer.id}`;
+      const current = nodes.get(id);
+      nodes.set(id, {
+        id, kind: 'layer', sceneId: scene.id, layerId: layer.id, x: x + 32, y: y + 118 + layerIndex * 58,
+        label: layer.id, note: '', color: current?.color ?? '#38bdf8',
+      });
+    });
+  });
+  const lastIndex = Math.max(0, project.scenes.length - 1);
+  const lastRow = Math.floor(lastIndex / columns);
+  const lastColumn = lastIndex % columns;
+  const output = nodes.get('output');
+  if (output) Object.assign(output, { x: 360 + (lastColumn + 1) * columnWidth, y: rowOffsets[lastRow] ?? 100 });
+  const generated = new Set(['brief', 'output', ...project.scenes.map((scene) => `scene:${scene.id}`), ...project.scenes.flatMap((scene) => scene.layers.map((layer) => `layer:${scene.id}:${layer.id}`))]);
+  const custom = [...nodes.values()].filter((node) => !generated.has(node.id));
+  const customY = (rowOffsets.at(-1) ?? 100) + (rowHeights.at(-1) ?? 0) + 110;
+  custom.forEach((node, index) => Object.assign(node, { x: 40 + (index % columns) * columnWidth, y: customY + Math.floor(index / columns) * 130 }));
+  return studioStateSchema.parse({ ...reconciled, nodes: [...nodes.values()], updatedAt: new Date().toISOString() });
 }
 
 async function readJson<T>(file: string, fallback: T): Promise<T> {
@@ -410,6 +456,13 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       response.json({ ok: true, studio: studioState });
     } catch (error) { next(error); }
   });
+  app.post('/api/studio/auto-layout', async (request, response, next) => {
+    try {
+      studioState = autoLayoutStudioState(sourceProject, studioState);
+      await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
+      response.json({ ok: true, studio: studioState });
+    } catch (error) { next(error); }
+  });
   app.post('/api/references/connect', async (request, response, next) => {
     try {
       if (agentBusy) { response.status(423).json({ error: 'The agent is applying a project change. Editing unlocks when the turn finishes.' }); return; }
@@ -569,11 +622,28 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
                 running.updatedAt = new Date().toISOString();
                 await writeRequest(requestsDir, running);
               }
-              result = await agentRuntime.run({
-                host, prompt, selection: record.selection, projectDir: loaded.projectDir,
-                projectFile: loaded.projectFile, projectTitle: sourceProject.title,
-                signal: controller.signal,
-              }, reportProgress);
+              const revisionBeforeCall = revision((await loadProject(loaded.projectFile)).sourceProject);
+              for (let providerAttempt = 0; providerAttempt < 3; providerAttempt += 1) {
+                try {
+                  result = await agentRuntime.run({
+                    host, prompt, selection: record.selection, projectDir: loaded.projectDir,
+                    projectFile: loaded.projectFile, projectTitle: sourceProject.title,
+                    signal: controller.signal,
+                  }, reportProgress);
+                  break;
+                } catch (error) {
+                  const current = await loadProject(loaded.projectFile);
+                  const safeToRetry = revision(current.sourceProject) === revisionBeforeCall;
+                  if (providerAttempt >= 2 || !safeToRetry || !isTransientAgentFailure(error) || controller.signal.aborted) throw error;
+                  running.activity = `Provider unavailable; retrying (${(providerAttempt + 1).toString()}/2)`;
+                  running.error = error instanceof Error ? error.message : String(error);
+                  running.updatedAt = new Date().toISOString();
+                  await writeRequest(requestsDir, running);
+                  await new Promise((resolve) => setTimeout(resolve, 750 * (providerAttempt + 1)));
+                }
+              }
+              if (!result) throw new GenmotionError('AGENT_PROVIDER_UNAVAILABLE', 'The selected agent provider did not return a result after bounded retries.');
+              delete running.error;
               refreshed = await loadProject(loaded.projectFile);
               const attemptFindings = await validateProject(refreshed);
               const attemptErrors = attemptFindings.filter((finding) => finding.severity === 'error');

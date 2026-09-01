@@ -33,7 +33,7 @@ describe('production validation findings', () => {
     text.transform.x = project.width * 2;
     text.color = scene.background;
     scene.layers.push(...Array.from({ length: 5 }, (_, index) => ({ ...structuredClone(shape), id: `dense-${index}`, z: 0, start: 0, duration: 0.5, tracks: [] })));
-    project.audio = [{ id: 'missing-audio', src: 'assets/missing.wav', start: 0, trimStart: 0, duration: 1, volume: 1, fadeIn: 0.75, fadeOut: 0.75, loop: false, duckUnderVoice: false, kind: 'music' }];
+    project.audio = [{ id: 'missing-audio', src: 'assets/missing.wav', start: 0, trimStart: 0, duration: 1, volume: 1, pan: 0, fadeIn: 0.75, fadeOut: 0.75, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' }];
 
     const findings = await validateProject({ ...loaded, project, sourceProject: project });
     const codes = new Set(findings.map((finding) => finding.code));

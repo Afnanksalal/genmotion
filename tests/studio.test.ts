@@ -3,7 +3,7 @@ import { cp, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/pr
 import os from 'node:os';
 import path from 'node:path';
 import { loadProject } from '../src/ir/loader.js';
-import { fileManagerRevealCommand, getStudioRequests, reconcileStudioState, requestedOutcomeGaps, resolveStudioRequest, startStudio, type StudioState } from '../src/studio/server.js';
+import { autoLayoutStudioState, fileManagerRevealCommand, getStudioRequests, isTransientAgentFailure, reconcileStudioState, requestedOutcomeGaps, resolveStudioRequest, startStudio, type StudioState } from '../src/studio/server.js';
 import type { GenmotionProject } from '../src/ir/schema.js';
 import type { AgentRuntime } from '../src/agent/runtime.js';
 
@@ -70,6 +70,11 @@ describe('Studio workflow reconciliation', () => {
       { id: 'edge:sequence:lockup', from: 'scene:details', to: 'scene:lockup', label: 'then' },
       { id: 'edge:output:sequence', from: 'scene:lockup', to: 'output', label: 'render' },
     ]);
+    const laidOut = autoLayoutStudioState(expanded, result);
+    expect(laidOut.nodes.filter((node) => node.kind === 'layer')).toHaveLength(expanded.scenes.reduce((sum, scene) => sum + scene.layers.length, 0));
+    expect(laidOut.nodes.find((node) => node.id === 'scene:opening')).toMatchObject({ x: 360, y: 100 });
+    expect(laidOut.nodes.find((node) => node.id === 'scene:lockup')?.x).toBeGreaterThan(360);
+    expect(laidOut.nodes.find((node) => node.id === 'output')?.x).toBeGreaterThan(laidOut.nodes.find((node) => node.id === 'scene:lockup')?.x ?? 0);
   });
 });
 
@@ -96,12 +101,15 @@ async function waitForRequest(
   throw new Error(`Request ${requestId} did not reach ${[...terminal].join(' or ')} within ${timeoutMs}ms; last status was ${record?.status ?? 'missing'}.`);
 }
 
-function fakeAgent(edit: false | 'valid' | 'invalid' = false): AgentRuntime {
+function fakeAgent(edit: false | 'valid' | 'invalid' | 'transient' = false): AgentRuntime {
+  let attempts = 0;
   return {
     hosts: () => Promise.resolve([{ id: 'codex', label: 'Codex', installed: true, authenticated: true, detail: 'Test session' }]),
     run: async (input, onProgress) => {
+      attempts += 1;
+      if (edit === 'transient' && attempts < 3) throw new Error('Provider returned HTTP 429: temporarily rate limited');
       await onProgress({ activity: 'Applying changes', message: 'Working', sessionId: 'test-thread' });
-      if (edit) {
+      if (edit && edit !== 'transient') {
         const project = JSON.parse(await readFile(input.projectFile, 'utf8')) as { title: string };
         project.title = edit === 'valid' ? 'Changed by local agent' : '';
         await writeFile(input.projectFile, `${JSON.stringify(project, null, 2)}\n`);
@@ -113,6 +121,26 @@ function fakeAgent(edit: false | 'valid' | 'invalid' = false): AgentRuntime {
 }
 
 describe('Genmotion Studio', () => {
+  it('classifies only bounded provider failures as transient', () => {
+    expect(isTransientAgentFailure(new Error('HTTP 429 too many requests'))).toBe(true);
+    expect(isTransientAgentFailure(new Error('gateway timeout from provider'))).toBe(true);
+    expect(isTransientAgentFailure(new Error('Creative IR schema validation failed'))).toBe(false);
+  });
+
+  it('retries transient provider failures without replaying a changed project', async () => {
+    const directory = await fixture();
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent('transient') });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const queued = await fetch(`${studio.url}/api/requests`, {
+        method: 'POST', headers: { 'content-type': 'application/json', 'x-genmotion-token': token },
+        body: JSON.stringify({ prompt: 'Explain the current composition.', host: 'codex', selection: { frame: 0 } }),
+      });
+      const request = await queued.json() as { id: string };
+      expect(await waitForRequest(directory, request.id, new Set(['completed', 'failed']), 15_000)).toMatchObject({ status: 'completed' });
+    } finally { await studio.close(); }
+  }, 20_000);
+
   it('detects omitted motion and visual techniques in an otherwise valid static scene system', async () => {
     const directory = await fixture();
     const project = (await loadProject(directory)).sourceProject;
@@ -289,6 +317,7 @@ describe('Genmotion Studio', () => {
       const mutations = [
         { method: 'PUT', path: '/api/project', body: {} },
         { method: 'PUT', path: '/api/studio', body: {} },
+        { method: 'POST', path: '/api/studio/auto-layout', body: {} },
         { method: 'POST', path: '/api/history/0000000000000000/restore', body: {} },
         { method: 'POST', path: '/api/assets?purpose=asset&filename=test.png', body: {} },
         { method: 'POST', path: '/api/motion-libraries', body: {} },

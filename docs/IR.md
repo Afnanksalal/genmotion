@@ -88,7 +88,7 @@ Every reference decision contains a catalog reference ID and non-empty `borrow`,
 
 ## Audio
 
-Tracks declare a local asset, position, trim, optional duration, volume, fade lengths, loop behavior, role, and whether music should duck under voice. Supported roles are `music`, `voice`, `sfx`, and `source`.
+Tracks declare a local asset, position, trim, optional duration, volume, constant-power stereo `pan` from `-1` to `1`, `muted` and `solo` state, fade lengths, loop behavior, role, and whether music should duck under voice. Supported roles are `music`, `voice`, `sfx`, and `source`. When any authored track is soloed, only unmuted solo tracks enter the mix. The final mix is stereo, voice-aware, peak-limited, and trimmed to the project duration.
 
 ## Determinism
 
