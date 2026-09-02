@@ -17,7 +17,11 @@ It does not render React, HTML, CSS, a browser page, Remotion, or HyperFrames.
 General agents can write animation code, but code generation alone gives them a poor iteration surface. Genmotion gives the model a visual authoring loop while keeping the output inspectable:
 
 - arbitrary agent-authored numeric property tracks with named, cubic-bezier, or spring timing;
-- SVG path geometry, native cubic Bezier connectors, shared endpoint and marker anchors, and native text, shape, image, and video layers;
+- reusable nested compositions with local time offset, scaling, looping, deterministic cycle rejection, and one shared Creative IR;
+- typed parameters, named variants, layer bindings, CLI/MCP overrides, and deterministic batch variant rendering;
+- measured SVG path geometry with native trim drawing, point/tangent sampling, path-follow motion, cubic Bezier connectors, and shared anchors;
+- first-class caption layers with word timing/highlighting and provider-neutral SRT, WebVTT, and timed-JSON conversion;
+- transition timing separated from presentation, including native iris and directional wipe presentations;
 - optional motion recipes that act as reusable references rather than a closed animation vocabulary;
 - reference studies decomposed into composition, hierarchy, pacing, typography, surface, and motion decisions;
 - contrastive retrieval that states what to borrow, avoid, and transform;
@@ -44,11 +48,12 @@ General agents can write animation code, but code generation alone gives them a 
 
 ## Public examples
 
-The [`examples/`](examples/) gallery contains three complete, editable projects with frozen assets, strict validation, high-quality 1920×1080 masters, and inspected contact sheets:
+The [`examples/`](examples/) gallery contains four complete, editable projects with frozen assets, strict validation, rendered masters, and inspected contact sheets:
 
 - **Kinetic Type** demonstrates clipped typography, direct property tracks, custom easing, and scene rhythm.
 - **Data Pulse** demonstrates animated counters, converging signal fields, SVG path drawing, blend modes, and an editorial data-story resolve.
 - **Arc One** demonstrates original vector product geometry, shadows, blend modes, macro movement, stable lockups, and a mixed stereo soundtrack.
+- **Native Milestones** is an asset-free integration fixture for reusable compositions, typed variants, measured path motion, captions, and transition presentations.
 
 Every project is reproducible with `npm run examples:build` and verified with `npm run examples:verify`; no remote render asset or external template is required.
 
@@ -128,6 +133,8 @@ genmotion validate launch-film --strict
 genmotion studio launch-film
 genmotion preview launch-film
 genmotion render launch-film --output launch-film/renders/acme.mp4 --quality high
+genmotion render launch-film --variant social --params '{"headline":"A precise launch"}' --output launch-film/renders/acme-social.mp4
+genmotion render-variants launch-film --output launch-film/renders/variants --quality standard
 genmotion render launch-film --output launch-film/renders/acme-4k.mp4 --quality high --resolution 3840x2160
 genmotion probe launch-film/renders/acme.mp4
 genmotion contact-sheet launch-film/renders/acme.mp4 --output launch-film/renders/contact-sheet.jpg
@@ -155,6 +162,9 @@ This workflow uses the existing ChatGPT or Claude sign-in managed by the local a
 | `requests` | List durable Studio agent conversations and externally queued feedback |
 | `request-resolve` | Close externally handled feedback after its change is saved and verified |
 | `render` | Render and encode a delivery video |
+| `render-variants` | Render every named typed variant into a deterministic output set |
+| `captions-import` | Parse SRT, WebVTT, or timed JSON into Creative IR cues |
+| `captions-export` | Export a caption layer as SRT, WebVTT, or timed JSON |
 | `probe` | Inspect codecs, dimensions, duration, frame rate, audio, and size |
 | `contact-sheet` | Generate representative visual review frames |
 | `catalog` | Search motions, blueprints, and taste references by creative intent |
@@ -168,9 +178,9 @@ Every command supports top-level `--json` output for agent and CI use.
 
 A project is `genmotion.json`, `genmotion.yaml`, or `genmotion.yml`. It declares:
 
-- delivery dimensions, frame rate, seed, and brand tokens;
+- delivery dimensions, frame rate, seed, brand tokens, typed parameters, and named variants;
 - ordered scenes with explicit durations and transitions;
-- text, vector shape, image, and video layers;
+- reusable compositions plus text, caption, vector shape, image, video, and composition-instance layers;
 - arbitrary property tracks, custom cubic-bezier or spring easing, SVG paths, direct keyframes, and optional named motion directives;
 - locally frozen assets and licensed fonts;
 - positioned audio tracks and mixing behavior;

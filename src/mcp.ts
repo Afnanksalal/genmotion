@@ -23,11 +23,16 @@ import { evaluateLayerTracks } from './engine/animation.js';
 import { layerIsActive, locateScene } from './engine/timeline.js';
 import { getStudioRequests, resolveStudioRequest, startStudio, type StudioServer } from './studio/server.js';
 import { GENMOTION_VERSION } from './version.js';
+import { parseCaptions, serializeCaptions } from './captions.js';
+import { flattenPath, normalizePath, pathMetrics, samplePath } from './engine/path.js';
+import type { ParameterValue } from './ir/parameters.js';
+import { compositionDependencyGraph, compositionUses } from './ir/compositions.js';
 
 type ToolValue = Record<string, unknown>;
 const qualitySchema = z.enum(['draft', 'standard', 'high']);
 const codecSchema = z.enum(['h264', 'h265', 'vp9', 'prores']);
 const resolutionSchema = z.object({ width: z.number().int().min(2).max(8192), height: z.number().int().min(2).max(8192) }).strict();
+const parameterValuesSchema = z.record(z.string(), z.union([z.string(), z.number().finite(), z.boolean()]));
 
 function toolResult(value: ToolValue) {
   return { content: [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }], structuredContent: value };
@@ -78,6 +83,13 @@ async function allowedPath(input: string, label: string): Promise<string> {
   return candidate;
 }
 
+async function loadConfiguredProject(input: string, parameters: Record<string, ParameterValue> = {}, variantId?: string) {
+  const initial = await loadProject(input);
+  const variant = variantId ? initial.sourceProject.variants.find((candidate) => candidate.id === variantId) : undefined;
+  if (variantId && !variant) throw new GenmotionError('VARIANT_UNKNOWN', `Unknown project variant: ${variantId}`);
+  return loadProject(input, { ...(variant?.values ?? {}), ...parameters });
+}
+
 function serverFactory(): McpServer {
   const server = new McpServer({ name: 'genmotion', version: GENMOTION_VERSION }, { capabilities: { tools: {} } });
   const previews = new Map<string, PreviewServer>();
@@ -113,7 +125,7 @@ function serverFactory(): McpServer {
     title: 'Inspect Genmotion authoring schema', description: 'Return a compact authoritative Creative IR authoring contract by default. Request full=true only when the inline save-tool schema does not answer a field-level question.', inputSchema: z.object({ full: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true },
   }, (input) => Promise.resolve(toolResult({
     ...(input.full ? { schema: z.toJSONSchema(projectSchema) } : { schemaSummary: {
-      project: ['schemaVersion', 'id', 'title', 'width', 'height', 'fps', 'seed', 'anchors', 'brand', 'scenes', 'audio', 'metadata'],
+      project: ['schemaVersion', 'id', 'title', 'width', 'height', 'fps', 'seed', 'anchors', 'parameters', 'parameterValues', 'variants', 'compositions', 'brand', 'scenes', 'audio', 'metadata'],
       scene: ['id', 'purpose', 'duration', 'background', 'layers', 'transitionIn', 'transitionOut'],
       textRequired: ['id', 'type=text', 'text', 'x', 'y', 'width', 'height', 'fontFamily', 'fontSize', 'color'],
       shapeRequired: ['id', 'type=shape', 'shape', 'x', 'y', 'width', 'height'],
@@ -203,9 +215,9 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_frame', {
     title: 'Render Genmotion frame', description: 'Render an exact native PNG frame at a requested timestamp and optional delivery resolution.',
-    inputSchema: z.object({ project: z.string().min(1), at: z.number().nonnegative(), output: z.string().min(1), resolution: resolutionSchema.optional() }).strict(),
+    inputSchema: z.object({ project: z.string().min(1), at: z.number().nonnegative(), output: z.string().min(1), resolution: resolutionSchema.optional(), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict(),
   }, async (input) => {
-    const loaded = await loadProject(await allowedPath(input.project, 'Project'));
+    const loaded = await loadConfiguredProject(await allowedPath(input.project, 'Project'), input.parameters, input.variant);
     const destination = await allowedPath(input.output, 'Frame output');
     const frame = Math.min(Math.ceil(loaded.project.scenes.reduce((sum, scene) => sum + scene.duration, 0) * loaded.project.fps) - 1, Math.floor(input.at * loaded.project.fps));
     const png = await renderFramePng(loaded.project, loaded.projectDir, frame, input.resolution);
@@ -229,14 +241,35 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_render', {
     title: 'Render Genmotion master', description: 'Validate and render a reproducible high-resolution video master. High quality guarantees at least a 1920-pixel long edge.',
-    inputSchema: z.object({ project: z.string().min(1), output: z.string().min(1), quality: qualitySchema.default('high'), codec: codecSchema.default('h264'), resolution: resolutionSchema.optional(), workers: z.number().int().min(1).max(16).optional(), hardwareAcceleration: z.boolean().default(false), strict: z.boolean().default(true) }).strict(),
+    inputSchema: z.object({ project: z.string().min(1), output: z.string().min(1), quality: qualitySchema.default('high'), codec: codecSchema.default('h264'), resolution: resolutionSchema.optional(), workers: z.number().int().min(1).max(16).optional(), hardwareAcceleration: z.boolean().default(false), strict: z.boolean().default(true), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict(),
   }, async (input) => {
-    const loaded = await loadProject(await allowedPath(input.project, 'Project'));
+    const loaded = await loadConfiguredProject(await allowedPath(input.project, 'Project'), input.parameters, input.variant);
     const findings = await validateProject(loaded);
     if (hasErrors(findings) || (input.strict && findings.length > 0)) throw new GenmotionError('VALIDATION_FAILED', 'Render blocked by validation findings.', findings);
     const output = await allowedPath(input.output, 'Render output');
     const result = await renderProject(loaded, { output, quality: input.quality, codec: input.codec, ...(input.resolution ? { resolution: input.resolution } : {}), ...(input.workers ? { workers: input.workers } : {}), hardwareAcceleration: input.hardwareAcceleration });
     return toolResult({ ...result, probe: await probeVideo(result.output) });
+  });
+
+  server.registerTool('genmotion_path_inspect', {
+    title: 'Inspect native vector path', description: 'Measure SVG path data and sample deterministic position, tangent, and trimmed polyline geometry.',
+    inputSchema: z.object({ path: z.string().min(1), progress: z.number().min(0).max(1).default(1), tolerance: z.number().positive().default(1) }).strict(), annotations: { readOnlyHint: true },
+  }, (input) => Promise.resolve(toolResult({ ...pathMetrics(input.path), normalized: normalizePath(input.path, input.tolerance), sample: samplePath(input.path, input.progress), prefix: flattenPath(input.path, 0, input.progress, input.tolerance) })));
+
+  server.registerTool('genmotion_compositions_inspect', {
+    title: 'Inspect composition graph', description: 'Return reusable composition dependencies and every scene or composition instance that uses a selected definition.',
+    inputSchema: z.object({ project: z.string().min(1), compositionId: z.string().optional() }).strict(), annotations: { readOnlyHint: true },
+  }, async (input) => {
+    const loaded = await loadProject(await allowedPath(input.project, 'Project'));
+    return toolResult({ graph: compositionDependencyGraph(loaded.project), ...(input.compositionId ? { uses: compositionUses(loaded.project, input.compositionId) } : {}) });
+  });
+
+  server.registerTool('genmotion_captions_convert', {
+    title: 'Convert captions', description: 'Convert provider-neutral SRT, WebVTT, or timed JSON captions without network dependencies.',
+    inputSchema: z.object({ content: z.string(), inputFormat: z.enum(['srt', 'vtt', 'json']), outputFormat: z.enum(['srt', 'vtt', 'json']) }).strict(), annotations: { readOnlyHint: true },
+  }, (input) => {
+    const cues = parseCaptions(input.content, input.inputFormat);
+    return Promise.resolve(toolResult({ cues, output: serializeCaptions(cues, input.outputFormat), format: input.outputFormat }));
   });
 
   server.registerTool('genmotion_probe', {

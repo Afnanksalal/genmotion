@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "id": "native-milestones",
+  "title": "Native Milestones",
+  "width": 640,
+  "height": 360,
+  "fps": 30,
+  "seed": 42,
+  "parameters": [
+    { "id": "accent", "label": "Accent", "type": "color", "default": "#86efac" },
+    { "id": "message", "label": "Message", "type": "string", "default": "Native. Composable. Deterministic.", "maxLength": 60 }
+  ],
+  "variants": [
+    { "id": "mint", "label": "Mint", "values": { "accent": "#86efac" } },
+    { "id": "violet", "label": "Violet", "values": { "accent": "#a78bfa" } }
+  ],
+  "compositions": [
+    {
+      "id": "pulse-badge",
+      "width": 180,
+      "height": 64,
+      "duration": 2,
+      "layers": [
+        {
+          "id": "badge-shell",
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 0,
+          "y": 0,
+          "width": 180,
+          "height": 64,
+          "fill": "#86efac",
+          "radius": 20,
+          "bindings": { "fill": "accent" },
+          "tracks": [
+            { "id": "breathe", "target": "transform.scaleX", "operation": "replace", "extrapolate": "ping-pong", "keyframes": [{ "at": 0, "value": 0.96, "ease": "sine-in-out" }, { "at": 1, "value": 1.04, "ease": "sine-in-out" }] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transition-ring",
+      "width": 640,
+      "height": 360,
+      "duration": 0.6,
+      "layers": [
+        {
+          "id": "transition-ring-shape",
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 266,
+          "y": 126,
+          "width": 108,
+          "height": 108,
+          "stroke": "#f8fafc88",
+          "strokeWidth": 3,
+          "progress": { "keyframes": [{ "at": 0, "value": 0, "ease": "sine-out" }, { "at": 0.3, "value": 1, "ease": "sine-out" }, { "at": 0.6, "value": 0, "ease": "sine-in" }] }
+        }
+      ]
+    }
+  ],
+  "brand": {
+    "background": "#07090d",
+    "foreground": "#f8fafc",
+    "accent": "#86efac",
+    "muted": "#94a3b8",
+    "fonts": [],
+    "radius": 20,
+    "tone": ["precise", "native"]
+  },
+  "scenes": [
+    {
+      "id": "path-system",
+      "purpose": "Show reusable composition and native path motion",
+      "duration": 2,
+      "background": "#07090d",
+      "transitionOut": { "type": "crossfade", "presentation": "iris", "duration": 0.6, "ease": "linear", "timing": "sine-in-out", "mode": "symmetric", "overlayCompositionId": "transition-ring" },
+      "layers": [
+        {
+          "id": "badge-instance",
+          "type": "composition",
+          "compositionId": "pulse-badge",
+          "x": 230,
+          "y": 58,
+          "width": 180,
+          "height": 64,
+          "loop": true
+        },
+        {
+          "id": "vector-route",
+          "type": "shape",
+          "shape": "path",
+          "path": "M0 70 C100 -20 300 -20 500 70",
+          "x": 70,
+          "y": 140,
+          "width": 500,
+          "height": 90,
+          "stroke": "#86efac",
+          "strokeWidth": 5,
+          "bindings": { "stroke": "accent" },
+          "progress": { "keyframes": [{ "at": 0, "value": 0, "ease": "cubic-out" }, { "at": 1.6, "value": 1, "ease": "cubic-out" }] }
+        },
+        {
+          "id": "path-follower",
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 0,
+          "y": 0,
+          "width": 18,
+          "height": 18,
+          "fill": "#f8fafc",
+          "followPath": { "path": "M70 210 C170 120 370 120 570 210", "progress": { "keyframes": [{ "at": 0, "value": 0, "ease": "cubic-out" }, { "at": 1.6, "value": 1, "ease": "cubic-out" }] }, "orient": true, "offsetX": -9, "offsetY": -9 }
+        },
+        {
+          "id": "caption-one",
+          "type": "caption",
+          "x": 80,
+          "y": 280,
+          "width": 480,
+          "height": 54,
+          "fontFamily": "Arial",
+          "fontSize": 23,
+          "color": "#f8fafc",
+          "highlightColor": "#86efac",
+          "background": "#111827dd",
+          "outlineColor": "#000000",
+          "outlineWidth": 2,
+          "cues": [{ "id": "native", "start": 0, "end": 2, "text": "Reusable geometry follows one measured path.", "words": [{ "text": "geometry", "start": 0.55, "end": 1.15 }] }]
+        }
+      ]
+    },
+    {
+      "id": "typed-output",
+      "purpose": "Show typed personalization and captions",
+      "duration": 2,
+      "background": "#0b1020",
+      "transitionIn": { "type": "crossfade", "presentation": "iris", "duration": 0.6, "ease": "linear", "timing": "sine-in-out", "mode": "symmetric", "overlayCompositionId": "transition-ring" },
+      "layers": [
+        {
+          "id": "headline",
+          "type": "text",
+          "text": "Native. Composable. Deterministic.",
+          "bindings": { "text": "message", "color": "accent" },
+          "x": 60,
+          "y": 90,
+          "width": 520,
+          "height": 120,
+          "fontFamily": "Arial",
+          "fontSize": 45,
+          "fontWeight": 700,
+          "color": "#86efac",
+          "align": "center",
+          "verticalAlign": "middle",
+          "tracks": [{ "id": "settle", "target": "transform.y", "keyframes": [{ "at": 0, "value": 20, "ease": "cubic-out" }, { "at": 0.8, "value": 0, "ease": "cubic-out" }] }]
+        },
+        {
+          "id": "caption-two",
+          "type": "caption",
+          "x": 110,
+          "y": 250,
+          "width": 420,
+          "height": 54,
+          "fontFamily": "Arial",
+          "fontSize": 22,
+          "color": "#f8fafc",
+          "background": "#111827dd",
+          "cues": [{ "id": "delivery", "start": 0, "end": 2, "text": "One IR, from Studio to final pixels." }]
+        }
+      ]
+    }
+  ],
+  "audio": [],
+  "metadata": { "capabilities": "compositions,parameters,paths,captions,transitions" }
+}

@@ -1,12 +1,14 @@
 import { createCanvas, Path2D, type SKRSContext2D } from '@napi-rs/canvas';
 import { access } from 'node:fs/promises';
-import type { GenmotionProject, ImageLayer, Layer, Scene, ShapeLayer, TextLayer, VideoLayer } from '../ir/schema.js';
+import type { CaptionLayer, GenmotionProject, ImageLayer, Layer, Scene, ShapeLayer, TextLayer, VideoLayer } from '../ir/schema.js';
+import { DEFAULT_TRANSFORM } from '../ir/schema.js';
 import { resolveProjectAsset } from '../ir/loader.js';
 import { loadCachedImage, registerProjectFonts, videoFramePath } from './assets.js';
 import { evaluateNumber, layerIsActive, locateScene } from './timeline.js';
 import { ease } from './easing.js';
 import { evaluateLayerTracks } from './animation.js';
 import { bezierPrefix, resolveAnchoredShape, shapeBounds } from './geometry.js';
+import { flattenPath, pathMetrics, samplePath } from './path.js';
 
 interface Box { x: number; y: number; width: number; height: number }
 
@@ -128,6 +130,49 @@ function drawText(ctx: SKRSContext2D, original: TextLayer, time: number): void {
   applyShadow(ctx, undefined);
 }
 
+function drawCaption(ctx: SKRSContext2D, layer: CaptionLayer, time: number): void {
+  const cue = layer.cues.find((candidate) => time >= candidate.start && time < candidate.end);
+  if (!cue) return;
+  const textLayer: TextLayer = {
+    ...layer, type: 'text', text: cue.speaker ? `${cue.speaker}: ${cue.text}` : cue.text,
+    fit: 'shrink', reveal: 'none', revealProgress: 1, countProgress: 1,
+    verticalAlign: 'middle', lineHeight: 1.12, letterSpacing: 0, fontStyle: 'normal', shadow: undefined,
+  };
+  if (layer.background) {
+    ctx.fillStyle = layer.background;
+    roundedPath(ctx, layer.x, layer.y, layer.width, layer.height, layer.radius);
+    ctx.fill();
+  }
+  const inset = { ...textLayer, x: layer.x + layer.padding, y: layer.y + layer.padding, width: Math.max(1, layer.width - layer.padding * 2), height: Math.max(1, layer.height - layer.padding * 2) };
+  if (layer.outlineColor && layer.outlineWidth > 0) {
+    const layout = resolveTextLayout(ctx, inset);
+    ctx.save(); ctx.font = fontString(inset, layout.fontSize); ctx.textBaseline = 'top'; ctx.strokeStyle = layer.outlineColor; ctx.lineWidth = layer.outlineWidth * 2; ctx.lineJoin = 'round';
+    const blockHeight = layout.lines.length * layout.lineHeight;
+    for (const [index, line] of layout.lines.entries()) {
+      const measured = ctx.measureText(line).width;
+      const x = inset.x + (inset.align === 'center' ? (inset.width - measured) / 2 : inset.align === 'right' ? inset.width - measured : 0);
+      ctx.strokeText(line, x, inset.y + (inset.height - blockHeight) / 2 + index * layout.lineHeight);
+    }
+    ctx.restore();
+  }
+  drawText(ctx, inset, time);
+  const current = layer.highlightColor ? cue.words.find((word) => time >= word.start && time < word.end) : undefined;
+  if (current && !cue.text.includes('\n')) {
+    const index = cue.text.indexOf(current.text);
+    if (index >= 0) {
+      const layout = resolveTextLayout(ctx, inset);
+      if (layout.lines.length === 1) {
+        const prefix = `${cue.speaker ? `${cue.speaker}: ` : ''}${cue.text.slice(0, index)}`;
+        const full = inset.text;
+        ctx.save(); ctx.font = fontString(inset, layout.fontSize); ctx.textBaseline = 'top'; ctx.fillStyle = layer.highlightColor!;
+        const left = inset.x + (inset.align === 'center' ? (inset.width - ctx.measureText(full).width) / 2 : inset.align === 'right' ? inset.width - ctx.measureText(full).width : 0);
+        ctx.fillText(current.text, left + ctx.measureText(prefix).width, inset.y + (inset.height - layout.lineHeight) / 2);
+        ctx.restore();
+      }
+    }
+  }
+}
+
 function drawShape(ctx: SKRSContext2D, layer: ShapeLayer, time: number): void {
   const progress = Math.max(0, Math.min(1, evaluateNumber(layer.progress, time)));
   applyShadow(ctx, layer.shadow);
@@ -141,13 +186,25 @@ function drawShape(ctx: SKRSContext2D, layer: ShapeLayer, time: number): void {
     const vector = new Path2D(layer.path);
     ctx.save();
     ctx.translate(layer.x, layer.y);
-    const [left, top, right, bottom] = vector.getBounds();
-    const sourceWidth = Math.max(1, right - left);
-    const sourceHeight = Math.max(1, bottom - top);
+    const metrics = pathMetrics(layer.path);
+    const left = metrics.bounds.x; const top = metrics.bounds.y;
+    const sourceWidth = Math.max(1, metrics.bounds.width);
+    const sourceHeight = Math.max(1, metrics.bounds.height);
     ctx.scale(layer.width / sourceWidth, layer.height / sourceHeight);
     ctx.translate(-left, -top);
-    if (layer.fill) ctx.fill(vector);
-    if (layer.stroke && layer.strokeWidth > 0) ctx.stroke(vector);
+    if (layer.fill && progress >= 1) ctx.fill(vector);
+    if (layer.stroke && layer.strokeWidth > 0) {
+      if (progress >= 1) ctx.stroke(vector);
+      else {
+        const points = flattenPath(layer.path, 0, progress, 0.75);
+        const first = points[0];
+        if (first) {
+          ctx.beginPath(); ctx.moveTo(first[0], first[1]);
+          for (const point of points.slice(1)) ctx.lineTo(point[0], point[1]);
+          ctx.stroke();
+        }
+      }
+    }
     ctx.restore();
     applyShadow(ctx, undefined);
     return;
@@ -220,7 +277,7 @@ async function drawVideoLayer(ctx: SKRSContext2D, layer: VideoLayer, projectDir:
   drawFittedImage(ctx, image, layer);
 }
 
-async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project: GenmotionProject, projectDir: string, sceneTime: number): Promise<void> {
+async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project: GenmotionProject, projectDir: string, sceneTime: number, compositionStack: string[] = []): Promise<void> {
   if (!layer.visible || !layerIsActive(layer.start, layer.duration, scene.duration, sceneTime)) return;
   const localTime = sceneTime - layer.start;
   layer = evaluateLayerTracks(layer, localTime);
@@ -236,8 +293,9 @@ async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project
   ctx.globalAlpha *= opacity;
   ctx.globalCompositeOperation = layer.blendMode;
   ctx.filter = `blur(${String(Math.max(0, evaluateNumber(transform.blur, localTime)))}px)`;
-  ctx.translate(centerX + evaluateNumber(transform.x, localTime), centerY + evaluateNumber(transform.y, localTime));
-  ctx.rotate(evaluateNumber(transform.rotation, localTime) * Math.PI / 180);
+  const pathPose = layer.followPath ? samplePath(layer.followPath.path, evaluateNumber(layer.followPath.progress, localTime)) : undefined;
+  ctx.translate(centerX + evaluateNumber(transform.x, localTime) + (pathPose?.x ?? 0) + (layer.followPath?.offsetX ?? 0), centerY + evaluateNumber(transform.y, localTime) + (pathPose?.y ?? 0) + (layer.followPath?.offsetY ?? 0));
+  ctx.rotate((evaluateNumber(transform.rotation, localTime) + (layer.followPath?.orient ? pathPose?.angle ?? 0 : 0)) * Math.PI / 180);
   ctx.scale(evaluateNumber(transform.scaleX, localTime), evaluateNumber(transform.scaleY, localTime));
   ctx.translate(-centerX, -centerY);
   if (layer.clip) {
@@ -245,15 +303,34 @@ async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project
     ctx.clip();
   }
   if (layer.type === 'text') drawText(ctx, layer, localTime);
+  else if (layer.type === 'caption') drawCaption(ctx, layer, localTime);
   else if (layer.type === 'shape') drawShape(ctx, layer, localTime);
   else if (layer.type === 'image') await drawImageLayer(ctx, layer, projectDir);
-  else await drawVideoLayer(ctx, layer, projectDir, localTime, project.fps);
+  else if (layer.type === 'video') await drawVideoLayer(ctx, layer, projectDir, localTime, project.fps);
+  else await drawCompositionLayer(ctx, layer, project, projectDir, localTime, compositionStack);
   ctx.restore();
 }
 
-interface ScenePose { alpha: number; x: number; y: number; scale: number; blur: number }
+async function drawCompositionLayer(ctx: SKRSContext2D, layer: Extract<Layer, { type: 'composition' }>, project: GenmotionProject, projectDir: string, localTime: number, compositionStack: string[]): Promise<void> {
+  const composition = project.compositions.find((candidate) => candidate.id === layer.compositionId);
+  if (!composition) return;
+  if (compositionStack.includes(composition.id)) throw new Error(`Composition cycle while rendering: ${[...compositionStack, composition.id].join(' -> ')}`);
+  const mapped = (localTime * layer.timeScale + layer.timeOffset);
+  const time = layer.loop ? ((mapped % composition.duration) + composition.duration) % composition.duration : Math.max(0, Math.min(composition.duration, mapped));
+  ctx.save();
+  ctx.translate(layer.x, layer.y);
+  ctx.scale(layer.width / composition.width, layer.height / composition.height);
+  if (composition.background) { ctx.fillStyle = composition.background; ctx.fillRect(0, 0, composition.width, composition.height); }
+  const scene = { id: composition.id, purpose: composition.id, duration: composition.duration, background: composition.background ?? 'rgba(0,0,0,0)', layers: composition.layers, transitionIn: { type: 'cut' as const, duration: 0, ease: 'linear' as const, mode: 'symmetric' as const }, transitionOut: { type: 'cut' as const, duration: 0, ease: 'linear' as const, mode: 'symmetric' as const }, referenceDecisions: [], notes: [] };
+  for (const child of [...composition.layers].sort((a, b) => a.z - b.z)) await drawLayer(ctx, child, scene, project, projectDir, time, [...compositionStack, composition.id]);
+  ctx.restore();
+}
 
-function transitionPose(type: Scene['transitionIn']['type'], progress: number, width: number, height: number, incoming: boolean): ScenePose {
+interface ScenePose { alpha: number; x: number; y: number; scale: number; blur: number; clip?: 'wipe-left' | 'wipe-right' | 'iris'; clipProgress?: number }
+
+type TransitionPresentation = NonNullable<Scene['transitionIn']['presentation']>;
+
+function transitionPose(type: TransitionPresentation, progress: number, width: number, height: number, incoming: boolean): ScenePose {
   const p = Math.max(0, Math.min(1, progress));
   // Scenes always paint an opaque background. Keeping the outgoing scene fully
   // opaque and compositing the incoming scene over it produces a true crossfade
@@ -267,6 +344,9 @@ function transitionPose(type: Scene['transitionIn']['type'], progress: number, w
     case 'push-up': return { alpha: 1, x: 0, y: incoming ? height * (1 - p) : -height * p, scale: 1, blur: 0 };
     case 'zoom': return { alpha, x: 0, y: 0, scale: incoming ? 0.88 + 0.12 * p : 1 + 0.08 * p, blur: 0 };
     case 'blur': return { alpha, x: 0, y: 0, scale: 1, blur: incoming ? 20 * (1 - p) : 20 * p };
+    case 'wipe-left': return { alpha: 1, x: 0, y: 0, scale: 1, blur: 0, ...(incoming ? { clip: 'wipe-left' as const, clipProgress: p } : {}) };
+    case 'wipe-right': return { alpha: 1, x: 0, y: 0, scale: 1, blur: 0, ...(incoming ? { clip: 'wipe-right' as const, clipProgress: p } : {}) };
+    case 'iris': return { alpha: 1, x: 0, y: 0, scale: 1, blur: 0, ...(incoming ? { clip: 'iris' as const, clipProgress: p } : {}) };
   }
 }
 
@@ -275,8 +355,9 @@ interface BoundaryTransition {
   next: Scene;
   previousTime: number;
   nextTime: number;
-  type: Scene['transitionIn']['type'];
+  type: TransitionPresentation;
   progress: number;
+  overlayCompositionId?: string;
 }
 
 function locateBoundaryTransition(project: GenmotionProject, active: ReturnType<typeof locateScene>, globalTime: number): BoundaryTransition | undefined {
@@ -287,16 +368,22 @@ function locateBoundaryTransition(project: GenmotionProject, active: ReturnType<
     if (!previous || !next) continue;
 
     const boundary = previousIndex === active.index ? active.globalStart + previous.duration : active.globalStart;
-    const outgoingDuration = previous.transitionOut.type === 'cut' ? 0 : previous.transitionOut.duration;
-    const incomingDuration = next.transitionIn.type === 'cut' ? 0 : next.transitionIn.duration;
+    const outgoingType = previous.transitionOut.presentation ?? previous.transitionOut.type;
+    const incomingType = next.transitionIn.presentation ?? next.transitionIn.type;
+    let outgoingDuration = outgoingType === 'cut' ? 0 : previous.transitionOut.duration;
+    let incomingDuration = incomingType === 'cut' ? 0 : next.transitionIn.duration;
+    const configured = outgoingDuration > 0 && outgoingType !== 'cut' ? previous.transitionOut : next.transitionIn;
+    if (configured.mode) {
+      const span = configured.duration;
+      outgoingDuration = configured.mode === 'incoming' ? 0 : configured.mode === 'symmetric' ? span / 2 : span;
+      incomingDuration = configured.mode === 'outgoing' ? 0 : configured.mode === 'symmetric' ? span / 2 : span;
+    }
     const duration = outgoingDuration + incomingDuration;
     const start = boundary - outgoingDuration;
     const end = boundary + incomingDuration;
     if (duration <= 0 || globalTime < start || globalTime >= end) continue;
 
-    const transition = outgoingDuration > 0 && previous.transitionOut.type !== 'cut'
-      ? previous.transitionOut
-      : next.transitionIn;
+    const transition = configured;
     const raw = (globalTime - start) / duration;
     const previousLastFrame = Math.max(0, previous.duration - 1 / project.fps);
     return {
@@ -304,8 +391,9 @@ function locateBoundaryTransition(project: GenmotionProject, active: ReturnType<
       next,
       previousTime: Math.max(0, Math.min(previousLastFrame, globalTime - (boundary - previous.duration))),
       nextTime: Math.max(0, Math.min(next.duration, globalTime - boundary)),
-      type: transition.type,
-      progress: ease(transition.ease, raw),
+      type: transition.presentation ?? transition.type,
+      progress: ease(transition.timing ?? transition.ease, raw),
+      ...(transition.overlayCompositionId ? { overlayCompositionId: transition.overlayCompositionId } : {}),
     };
   }
   return undefined;
@@ -325,6 +413,16 @@ async function drawScene(ctx: SKRSContext2D, scene: Scene, project: GenmotionPro
   ctx.translate(project.width / 2 + pose.x, project.height / 2 + pose.y);
   ctx.scale(pose.scale, pose.scale);
   ctx.translate(-project.width / 2, -project.height / 2);
+  if (pose.clip) {
+    const progress = pose.clipProgress ?? 1;
+    ctx.beginPath();
+    if (pose.clip === 'iris') {
+      const radius = Math.hypot(project.width, project.height) * progress / 2;
+      ctx.arc(project.width / 2, project.height / 2, radius, 0, Math.PI * 2);
+    } else if (pose.clip === 'wipe-left') ctx.rect(0, 0, project.width * progress, project.height);
+    else ctx.rect(project.width * (1 - progress), 0, project.width * progress, project.height);
+    ctx.clip();
+  }
   if (pose.alpha < 1 || pose.blur > 0) {
     const sceneCanvas = createCanvas(output.width, output.height);
     const sceneContext = sceneCanvas.getContext('2d');
@@ -358,6 +456,14 @@ export async function renderFrame(project: GenmotionProject, projectDir: string,
   if (boundary) {
     await drawScene(ctx, boundary.previous, project, projectDir, boundary.previousTime, transitionPose(boundary.type, boundary.progress, project.width, project.height, false), output);
     await drawScene(ctx, boundary.next, project, projectDir, boundary.nextTime, transitionPose(boundary.type, boundary.progress, project.width, project.height, true), output);
+    if (boundary.overlayCompositionId) {
+      const composition = project.compositions.find((candidate) => candidate.id === boundary.overlayCompositionId);
+      if (composition) await drawCompositionLayer(ctx, {
+        id: `transition-overlay-${composition.id}`, type: 'composition', compositionId: composition.id,
+        x: 0, y: 0, width: project.width, height: project.height, timeOffset: 0, timeScale: composition.duration,
+        loop: false, start: 0, z: 0, visible: true, transform: DEFAULT_TRANSFORM, blendMode: 'source-over', tags: [], motion: [], tracks: [], bindings: {},
+      }, project, projectDir, boundary.progress, []);
+    }
   } else {
     await drawScene(ctx, active.scene, project, projectDir, active.localTime, identity, output);
   }

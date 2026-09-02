@@ -6,6 +6,7 @@ import { GenmotionError } from '../errors.js';
 import { projectSchema, type GenmotionProject } from './schema.js';
 import { compileProjectMotions } from '../engine/motion.js';
 import { loadMotionLibraries } from '../catalog/custom.js';
+import { resolveParameters, type ParameterValue } from './parameters.js';
 
 export interface LoadedProject {
   project: GenmotionProject;
@@ -31,7 +32,7 @@ export async function findProjectFile(input: string): Promise<string> {
   throw new GenmotionError('PROJECT_NOT_FOUND', `No genmotion.json, genmotion.yaml, or genmotion.yml found in ${resolved}`);
 }
 
-export async function loadProject(input: string): Promise<LoadedProject> {
+export async function loadProject(input: string, parameterOverrides: Record<string, ParameterValue> = {}): Promise<LoadedProject> {
   const projectFile = await findProjectFile(input);
   let raw: unknown;
   try {
@@ -46,7 +47,7 @@ export async function loadProject(input: string): Promise<LoadedProject> {
   }
   const projectDir = path.dirname(projectFile);
   const catalog = await loadMotionLibraries(projectDir);
-  return { project: compileProjectMotions(parsed.data, catalog.motions), sourceProject: parsed.data, projectDir, projectFile };
+  return { project: compileProjectMotions(resolveParameters(parsed.data, parameterOverrides), catalog.motions), sourceProject: parsed.data, projectDir, projectFile };
 }
 
 export function resolveProjectAsset(projectDir: string, assetPath: string): string {

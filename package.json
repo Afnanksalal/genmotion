@@ -1,6 +1,6 @@
 {
   "name": "genmotion",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Agent-native motion design engine with visual tools, an open Creative IR, and a native renderer.",
   "keywords": [
     "agentic-video",
@@ -67,6 +67,7 @@
     "express": "5.2.1",
     "lucide": "1.35.0",
     "pino": "9.14.0",
+    "svg-path-properties": "2.1.0",
     "yaml": "2.9.0",
     "zod": "4.4.3"
   },

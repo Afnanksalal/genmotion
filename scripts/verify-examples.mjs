@@ -10,6 +10,7 @@ const examples = [
   { id: 'kinetic-type', duration: 12, audio: false },
   { id: 'data-pulse', duration: 14, audio: false },
   { id: 'arc-one', duration: 15, audio: true },
+  { id: 'native-milestones', duration: 4, audio: false, font: false },
 ];
 
 for (const example of examples) {
@@ -18,7 +19,7 @@ for (const example of examples) {
   const findings = await validateProject(loaded);
   if (findings.length > 0) throw new Error(`${example.id} has validation findings:\n${JSON.stringify(findings, null, 2)}`);
   await access(join(directory, 'contact-sheet.png'));
-  await access(join(directory, 'assets', 'Inter.ttf'));
+  if (example.font !== false) await access(join(directory, 'assets', 'Inter.ttf'));
   const probe = await probeVideo(join(directory, `${example.id}.mp4`));
   if (probe.width !== 1920 || probe.height !== 1080 || probe.frameRate !== 30 || Math.abs(probe.duration - example.duration) > 0.05) {
     throw new Error(`${example.id} has an invalid encoded contract: ${JSON.stringify(probe)}`);

@@ -33,7 +33,7 @@ This is the canonical, version-controlled checklist for bringing every transfera
 - [ ] Trim-before, trim-after, premount, and postmount intervals.
 - [ ] Freeze a composition at a frame or only during a selected interval.
 - [ ] Finite loops, infinite preview loops, nested loops, ping-pong loops, time remapping, playback-rate controls, and time stretching.
-- [ ] Composition cycle detection, dependency graph, and usage search.
+- [x] Composition cycle detection, dependency graph, and usage search.
 - [ ] Composition folders, multiple deliverables per project, still compositions, variants, duplication, presets, and named sequences.
 - [ ] Hide supporting sequences from the timeline and expand or collapse nested compositions.
 - [ ] Render a selected composition, scene, group, or still.
@@ -69,7 +69,7 @@ This is the canonical, version-controlled checklist for bringing every transfera
 ## 4. Vector geometry and paths
 
 - [ ] Complete SVG path parser, canonical normalization, relative-to-absolute conversion, and serialization.
-- [ ] Path bounds, length, point, tangent, and normal queries.
+- [x] Path bounds, length, point, tangent, and normal queries.
 - [ ] Path cutting, trimming, reversal, translation, scaling, centering, warping, subdivision, and subpath extraction.
 - [ ] Compatible-path normalization, interpolation, shape morphing, and multi-subpath morphing.
 - [ ] Motion-path attachment, automatic path orientation, offset paths, animated dashes, arrowheads, and start/middle/end markers.
@@ -120,13 +120,13 @@ This is the canonical, version-controlled checklist for bringing every transfera
 
 ## 8. Captions and subtitles
 
-- [ ] SRT, WebVTT, and timed-JSON import/export.
+- [x] SRT, WebVTT, and timed-JSON import/export.
 - [ ] Word/token timing and correction, caption pages, page duration, forced breaks, speakers, and speaker styles.
 - [ ] Current-word and karaoke highlighting, line/character limits, and safe-area validation.
 - [ ] Burned-in, sidecar, and embedded subtitle delivery.
 - [ ] Caption preview, search, replacement, global style presets, and per-caption overrides.
 - [ ] Caption backgrounds, outlines, shadows, entry/exit animation, RTL, and multiple language tracks.
-- [ ] Provider-neutral adapters for importing locally generated transcripts.
+- [x] Provider-neutral adapters for importing locally generated transcripts.
 
 ## 9. Effects stack
 
@@ -141,8 +141,8 @@ This is the canonical, version-controlled checklist for bringing every transfera
 
 ## 10. Transitions
 
-- [ ] Separate transition timing from visual presentation.
-- [ ] Linear, Bezier, and spring timing.
+- [x] Separate transition timing from visual presentation.
+- [x] Linear, Bezier, and spring timing.
 - [ ] Crossfade, directional slide, push, wipe, clock, iris, flip, cube, door, zoom, blur, shape, path, luma, displacement, glitch, film-burn, match-cut, matched-transform, shared-element, and camera-handoff transitions.
 - [ ] Transition overlays using compositions, effects, light leaks, and adjustment layers.
 - [ ] Transition audio and equal-power audio crossfades.

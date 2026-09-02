@@ -73,6 +73,7 @@ export const animationTargetSchema = z.enum([
   'transform.x', 'transform.y', 'transform.scaleX', 'transform.scaleY',
   'transform.rotation', 'transform.opacity', 'transform.blur',
   'shadow.blur', 'shadow.offsetX', 'shadow.offsetY',
+  'followPath.progress',
 ]);
 
 export const animationTrackSchema = z.object({
@@ -96,6 +97,14 @@ const baseLayerSchema = z.object({
   tags: z.array(z.string()).default([]),
   motion: z.array(motionDirectiveSchema).default([]),
   tracks: z.array(animationTrackSchema).default([]),
+  bindings: z.record(z.string(), identifier).default({}),
+  followPath: z.object({
+    path: z.string().min(1),
+    progress: animatedNumberSchema.default(0),
+    orient: z.boolean().default(true),
+    offsetX: finite.default(0),
+    offsetY: finite.default(0),
+  }).strict().optional(),
 });
 
 export const textLayerSchema = baseLayerSchema.extend({
@@ -183,18 +192,87 @@ export const videoLayerSchema = baseLayerSchema.extend({
   volume: finite.min(0).max(2).default(1),
 });
 
+export const compositionLayerSchema = baseLayerSchema.extend({
+  type: z.literal('composition'),
+  compositionId: identifier,
+  x: finite,
+  y: finite,
+  width: positive,
+  height: positive,
+  timeOffset: finite.default(0),
+  timeScale: positive.default(1),
+  loop: z.boolean().default(false),
+});
+
+export const captionCueSchema = z.object({
+  id: identifier,
+  start: nonNegative,
+  end: positive,
+  text: z.string().min(1),
+  speaker: z.string().min(1).optional(),
+  words: z.array(z.object({ text: z.string(), start: nonNegative, end: positive }).strict()).default([]),
+}).strict().refine((cue) => cue.end > cue.start, { message: 'Caption cue end must be after start.' });
+
+export const captionLayerSchema = baseLayerSchema.extend({
+  type: z.literal('caption'),
+  x: finite,
+  y: finite,
+  width: positive,
+  height: positive,
+  cues: z.array(captionCueSchema).min(1),
+  fontFamily: z.string().min(1),
+  fontFile: z.string().optional(),
+  fontSize: positive,
+  fontWeight: z.union([z.number().int().min(100).max(900), z.enum(['normal', 'bold'])]).default(700),
+  color,
+  highlightColor: color.optional(),
+  background: color.optional(),
+  outlineColor: color.optional(),
+  outlineWidth: nonNegative.default(0),
+  radius: nonNegative.default(16),
+  padding: nonNegative.default(18),
+  align: z.enum(['left', 'center', 'right']).default('center'),
+  maxLines: z.number().int().positive().default(2),
+  safeArea: z.boolean().default(true),
+});
+
 export const layerSchema = z.discriminatedUnion('type', [
   textLayerSchema,
   shapeLayerSchema,
   imageLayerSchema,
   videoLayerSchema,
+  compositionLayerSchema,
+  captionLayerSchema,
 ]);
 
 export const transitionSchema = z.object({
   type: z.enum(['cut', 'crossfade', 'slide-left', 'slide-right', 'push-up', 'zoom', 'blur']),
   duration: nonNegative.max(3).default(0.4),
   ease: easingSchema.default('cubic-in-out'),
+  presentation: z.enum(['cut', 'crossfade', 'slide-left', 'slide-right', 'push-up', 'zoom', 'blur', 'wipe-left', 'wipe-right', 'iris']).optional(),
+  timing: easingSchema.optional(),
+  mode: z.enum(['symmetric', 'incoming', 'outgoing']).optional(),
+  overlayCompositionId: identifier.optional(),
 });
+
+export const compositionSchema = z.object({
+  id: identifier,
+  width: positive,
+  height: positive,
+  duration: positive,
+  background: color.optional(),
+  layers: z.array(layerSchema).min(1),
+}).strict();
+
+export const parameterSchema = z.discriminatedUnion('type', [
+  z.object({ id: identifier, label: z.string().min(1), type: z.literal('number'), default: finite, min: finite.optional(), max: finite.optional(), step: positive.optional() }).strict(),
+  z.object({ id: identifier, label: z.string().min(1), type: z.literal('boolean'), default: z.boolean() }).strict(),
+  z.object({ id: identifier, label: z.string().min(1), type: z.literal('string'), default: z.string(), maxLength: z.number().int().positive().optional() }).strict(),
+  z.object({ id: identifier, label: z.string().min(1), type: z.literal('color'), default: color }).strict(),
+  z.object({ id: identifier, label: z.string().min(1), type: z.literal('enum'), default: z.string(), options: z.array(z.string()).min(1) }).strict(),
+]);
+
+export const variantSchema = z.object({ id: identifier, label: z.string().min(1), values: z.record(z.string(), z.union([finite, z.boolean(), z.string()])) }).strict();
 
 export const sceneSchema = z.object({
   id: z.string().min(1).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/),
@@ -239,6 +317,10 @@ export const projectSchema = z.object({
   fps: z.number().int().min(1).max(120),
   seed: z.number().int().default(1),
   anchors: z.array(geometryAnchorSchema).default([]),
+  parameters: z.array(parameterSchema).default([]),
+  parameterValues: z.record(z.string(), z.union([finite, z.boolean(), z.string()])).default({}),
+  variants: z.array(variantSchema).default([]),
+  compositions: z.array(compositionSchema).default([]),
   brand: z.object({
     background: color,
     foreground: color,
@@ -263,6 +345,11 @@ export type TextLayer = z.infer<typeof textLayerSchema>;
 export type ShapeLayer = z.infer<typeof shapeLayerSchema>;
 export type ImageLayer = z.infer<typeof imageLayerSchema>;
 export type VideoLayer = z.infer<typeof videoLayerSchema>;
+export type CompositionLayer = z.infer<typeof compositionLayerSchema>;
+export type CaptionLayer = z.infer<typeof captionLayerSchema>;
+export type CaptionCue = z.infer<typeof captionCueSchema>;
+export type Composition = z.infer<typeof compositionSchema>;
+export type Parameter = z.infer<typeof parameterSchema>;
 export type Scene = z.infer<typeof sceneSchema>;
 export type AudioTrack = z.infer<typeof audioTrackSchema>;
 export type GenmotionProject = z.infer<typeof projectSchema>;

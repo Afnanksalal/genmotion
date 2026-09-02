@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "nodes": [
+    {
+      "id": "brief",
+      "kind": "brief",
+      "x": 40,
+      "y": 160,
+      "label": "Creative brief",
+      "note": "",
+      "color": "#22c55e"
+    },
+    {
+      "id": "scene:path-system",
+      "kind": "scene",
+      "x": 360,
+      "y": 130,
+      "label": "path-system",
+      "sceneId": "path-system",
+      "note": "Show reusable composition and native path motion",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "scene:typed-output",
+      "kind": "scene",
+      "x": 670,
+      "y": 300,
+      "label": "typed-output",
+      "sceneId": "typed-output",
+      "note": "Show typed personalization and captions",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "output",
+      "kind": "output",
+      "x": 1040,
+      "y": 170,
+      "label": "Master export",
+      "note": "640×360",
+      "color": "#f59e0b"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge:sequence:path-system",
+      "from": "brief",
+      "to": "scene:path-system",
+      "label": "direction"
+    },
+    {
+      "id": "edge:sequence:typed-output",
+      "from": "scene:path-system",
+      "to": "scene:typed-output",
+      "label": "then"
+    },
+    {
+      "id": "edge:output:sequence",
+      "from": "scene:typed-output",
+      "to": "output",
+      "label": "render"
+    }
+  ],
+  "references": [],
+  "updatedAt": "2026-09-02T11:16:50.070Z"
+}
