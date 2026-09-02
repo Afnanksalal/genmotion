@@ -79,6 +79,10 @@ const kinetic = project('kinetic-type', 'Kinetic Type', '#09090b', '#f5f3ea', '#
   ], dissolve, cut, ['The final layout is fully settled for more than two seconds.']),
 ], { family: 'kinetic-typography', duration: '12' });
 
+const pulseAnchor = { x: 1744, y: 494 };
+const pulseStreamStartX = 430;
+const pulseStreamStartYs = [155, 220, 292, 370, 450, 585, 680, 790, 910];
+
 const dataPulse = project('data-pulse', 'Data Pulse', '#05070a', '#f5f1e8', '#d7ff3f', [
   scene('noise-field', 'Make raw volume feel physical before revealing any conclusion.', 4.4, '#05070a', [
     shape('cyan-bloom', 4.4, 0, { shape: 'ellipse', x: 1180, y: 100, width: 820, height: 820, fill: '#15d6cf24' }, { blendMode: 'screen', transform: { blur: 48 }, tracks: [track('cyan-bloom-drift', 'transform.x', [[0, 120], [4.4, -80]])] }),
@@ -93,12 +97,23 @@ const dataPulse = project('data-pulse', 'Data Pulse', '#05070a', '#f5f1e8', '#d7
   ], cut, cut, ['The field is intentionally abstract: it conveys volume without imitating a dashboard.']),
   scene('coherence', 'Collapse many competing traces into one legible direction.', 5.2, '#080b12', [
     shape('field-glow', 5.2, 0, { shape: 'ellipse', x: 980, y: 90, width: 900, height: 900, fill: '#38e8d72b' }, { blendMode: 'screen', transform: { blur: 62 }, tracks: [track('field-glow-push', 'transform.scaleX', [[0, 0.78], [2.1, 1.06], [5.2, 1.06]]), track('field-glow-push-y', 'transform.scaleY', [[0, 0.78], [2.1, 1.06], [5.2, 1.06]])] }),
-    ...Array.from({ length: 9 }, (_, index) => shape(`flow-${index + 1}`, 5.2 - index * 0.045, 2 + index, {
-      shape: 'path', path: `M 0 ${45 + index * 55} C 310 ${20 + index * 36} 520 ${130 + index * 22} 780 ${220 + index * 12} C 980 ${300 + index * 5} 1120 ${360 + index * 2} 1370 400`,
-      x: 430, y: 80, width: 1370, height: 890, stroke: index === 4 ? '#d7ff3f' : (index < 4 ? '#745cff' : '#38e8d7'), strokeWidth: index === 4 ? 10 : 4,
-    }, { start: index * 0.045, blendMode: 'screen', transform: { opacity: index === 4 ? 1 : 0.38 }, tracks: [track(`flow-${index + 1}-draw`, 'progress', [[0, 0], [1.45 + index * 0.08, 1], [5.2 - index * 0.045, 1]])], ...(index === 4 ? { shadow: { color: '#d7ff3f88', blur: 34, offsetX: 0, offsetY: 0 } } : {}) })),
-    shape('pulse-ring-outer', 5.2, 14, { shape: 'ellipse', x: 1688, y: 438, width: 112, height: 112, fill: '#00000000', stroke: '#d7ff3f', strokeWidth: 5 }, { tracks: [track('pulse-ring-scale', 'transform.scaleX', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]]), track('pulse-ring-scale-y', 'transform.scaleY', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]])], shadow: { color: '#d7ff3f99', blur: 28, offsetX: 0, offsetY: 0 } }),
-    shape('pulse-core', 5.2, 15, { shape: 'ellipse', x: 1724, y: 474, width: 40, height: 40, fill: '#f5f1e8' }, { tracks: [track('pulse-core-scale', 'transform.scaleX', [[0, 0.01], [1.55, 1, spring], [5.2, 1]]), track('pulse-core-scale-y', 'transform.scaleY', [[0, 0.01], [1.55, 1, spring], [5.2, 1]])] }),
+    ...pulseStreamStartYs.map((startY, index) => {
+      const aboveAnchor = startY < pulseAnchor.y;
+      const width = pulseAnchor.x - pulseStreamStartX;
+      const height = Math.abs(startY - pulseAnchor.y);
+      const controlA = 360 + index * 8;
+      const controlB = 910 - index * 7;
+      const path = aboveAnchor
+        ? `M 0 0 C ${controlA} 0 ${controlB} ${height} ${width} ${height}`
+        : `M 0 ${height} C ${controlA} ${height} ${controlB} 0 ${width} 0`;
+      return shape(`flow-${index + 1}`, 5.2 - index * 0.045, 2 + index, {
+        shape: 'path', path,
+        x: pulseStreamStartX, y: Math.min(startY, pulseAnchor.y), width, height,
+        stroke: index === 4 ? '#d7ff3f' : (index < 4 ? '#745cff' : '#38e8d7'), strokeWidth: index === 4 ? 10 : 4,
+      }, { start: index * 0.045, blendMode: 'screen', transform: { opacity: index === 4 ? 1 : 0.38 }, tracks: [track(`flow-${index + 1}-draw`, 'progress', [[0, 0], [1.45 + index * 0.08, 1], [5.2 - index * 0.045, 1]])], ...(index === 4 ? { shadow: { color: '#d7ff3f88', blur: 34, offsetX: 0, offsetY: 0 } } : {}) });
+    }),
+    shape('pulse-ring-outer', 5.2, 14, { shape: 'ellipse', x: pulseAnchor.x - 56, y: pulseAnchor.y - 56, width: 112, height: 112, fill: '#00000000', stroke: '#d7ff3f', strokeWidth: 5 }, { tracks: [track('pulse-ring-scale', 'transform.scaleX', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]]), track('pulse-ring-scale-y', 'transform.scaleY', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]])], shadow: { color: '#d7ff3f99', blur: 28, offsetX: 0, offsetY: 0 } }),
+    shape('pulse-core', 5.2, 15, { shape: 'ellipse', x: pulseAnchor.x - 20, y: pulseAnchor.y - 20, width: 40, height: 40, fill: '#f5f1e8' }, { tracks: [track('pulse-core-scale', 'transform.scaleX', [[0, 0.01], [1.55, 1, spring], [5.2, 1]]), track('pulse-core-scale-y', 'transform.scaleY', [[0, 0.01], [1.55, 1, spring], [5.2, 1]])] }),
     text('find', 5.2, 20, 'FIND', { x: 110, y: 120, width: 650, height: 210 }, { fontSize: 180, fontWeight: 820, letterSpacing: -9, tracks: [track('find-in', 'transform.x', [[0, -820], [0.72, 0], [5.2, 0]])] }),
     text('the', 4.75, 20, 'THE', { x: 110, y: 325, width: 650, height: 210 }, { start: 0.45, fontSize: 180, fontWeight: 820, color: '#8886a2', letterSpacing: -9, tracks: [track('the-in', 'transform.x', [[0, -130], [0.72, 0], [4.75, 0]])] }),
     text('pulse', 4.3, 20, 'PULSE', { x: 110, y: 530, width: 850, height: 230 }, { start: 0.9, fontSize: 180, fontWeight: 820, color: '#d7ff3f', letterSpacing: -9, tracks: [track('pulse-in', 'transform.x', [[0, -130], [0.72, 0], [4.3, 0]])] }),
