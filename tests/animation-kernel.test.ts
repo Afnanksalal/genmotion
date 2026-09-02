@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { evaluateTrack } from '../src/engine/animation.js';
 import { analyzeSpring, ease, easingPresets, measureSpringDuration, mirrorEasingSample, reverseEasingSample } from '../src/engine/easing.js';
-import { interpolateAnimationValue } from '../src/engine/interpolation.js';
-import { fractalNoise, noiseND, seededRandom, staggerDelay, staggerSchedule, staggerWindows } from '../src/engine/procedural.js';
-import { layerDependencyCycles, resolveLayerGraph } from '../src/engine/constraints.js';
+import { evaluateAnimationFrames, extendAnimationFrames, interpolateAnimationValue } from '../src/engine/interpolation.js';
+import { fractalNoise, noiseND, seededRandom, staggerDelay, staggerOrder, staggerSchedule, staggerWindows } from '../src/engine/procedural.js';
+import { layerDependencyCycles, layerDependencyGraph, resolveLayerGraph } from '../src/engine/constraints.js';
 import { projectSchema, type AnimationTrack } from '../src/ir/schema.js';
 
 const track = (overrides: Partial<AnimationTrack> = {}): AnimationTrack => ({
@@ -51,6 +51,23 @@ describe('typed animation kernel', () => {
     expect(staggerSchedule(8, { each: 0.1, from: 'random', seed: 9, trail: 0 })).toEqual(staggerSchedule(8, { each: 0.1, from: 'random', seed: 9, trail: 0 }));
   });
 
+  it('handles interpolation fallbacks and malformed procedural inputs deterministically', () => {
+    expect(interpolateAnimationValue('not-a-color', 'still-not-a-color', 0.25)).toBe('not-a-color');
+    expect(interpolateAnimationValue('not-a-color', 'still-not-a-color', 1)).toBe('still-not-a-color');
+    expect(interpolateAnimationValue([1, 2], [3, 4, 5, 6], 0.5)).toEqual([1, 2]);
+    expect(interpolateAnimationValue(1, 2, 0.5, 'discrete')).toBe(1);
+    expect(interpolateAnimationValue(1, 2, 1, 'discrete')).toBe(2);
+    expect(evaluateAnimationFrames([], 0.5)).toBe(0);
+    expect(extendAnimationFrames([{ at: 0, value: 4, ease: 'linear' }], -1)).toBe(4);
+    expect(fractalNoise(1, [0.5], { octaves: 0, lacunarity: 2, gain: 0.5 })).toBe(0);
+    expect(() => noiseND(1, [])).toThrow(/one to four finite/);
+    expect(() => noiseND(1, [Number.NaN])).toThrow(/one to four finite/);
+    expect(() => staggerOrder(-1, 3, 'start')).toThrow(/within count/);
+    expect(staggerOrder(0, 5, 'edges')).toBe(0);
+    expect(staggerOrder(2, 5, 'edges')).toBe(2);
+    expect(staggerOrder(3, 5, 'start')).toBe(3);
+  });
+
   it('resolves transform inheritance and four declarative constraint modes', () => {
     const project = projectSchema.parse({
       schemaVersion: 1, id: 'constraints', title: 'Constraints', width: 600, height: 400, fps: 30, seed: 2,
@@ -71,5 +88,24 @@ describe('typed animation kernel', () => {
     expect(resolved.look!.transform.rotation).toBeCloseTo(36.64, 1);
     expect(resolved.anchor!.transform.x).toBeCloseTo(250);
     expect(layerDependencyCycles(project.scenes[0]!.layers)).toEqual([]);
+  });
+
+  it('reports dependency cycles, missing references, and optional dependency edges', () => {
+    const base = { type: 'shape' as const, shape: 'rect' as const, x: 0, y: 0, width: 10, height: 10, fill: '#fff', duration: 1 };
+    const cyclic = projectSchema.parse({
+      schemaVersion: 1, id: 'cycles', title: 'Cycles', width: 100, height: 100, fps: 30, seed: 1,
+      brand: { background: '#000', foreground: '#fff', accent: '#0ff', muted: '#888', fonts: [], radius: 0, tone: [] },
+      scenes: [{ id: 'scene', purpose: 'cycles', duration: 1, background: '#000', layers: [
+        { ...base, id: 'a', parentId: 'b' }, { ...base, id: 'b', parentId: 'a' }, { ...base, id: 'free' },
+      ] }],
+    });
+    const layers = cyclic.scenes[0]!.layers;
+    expect(layerDependencyGraph(layers).free).toEqual([]);
+    expect(layerDependencyCycles(layers)).toEqual([['a', 'b', 'a']]);
+    expect(() => resolveLayerGraph(layers, 0)).toThrow(/cycle/);
+
+    const missing = structuredClone(layers.find((layer) => layer.id === 'free')!);
+    missing.constraints = [{ type: 'follow', target: 'missing', offsetX: 0, offsetY: 0 }];
+    expect(() => resolveLayerGraph([missing], 0)).toThrow(/unknown layer/);
   });
 });
