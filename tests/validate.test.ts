@@ -69,4 +69,19 @@ describe('production validation findings', () => {
     const findings = await validateProject({ ...loaded, project, sourceProject: project });
     expect(findings).toContainEqual(expect.objectContaining({ code: 'TRANSITION_BOUNDARY_MISMATCH', severity: 'error' }));
   });
+
+  it('rejects duplicate and dangling geometry anchors', async () => {
+    const loaded = await loadProject(path.resolve('tests/fixtures/basic'));
+    const project = structuredClone(loaded.project);
+    project.anchors = [{ id: 'target', x: 80, y: 45 }, { id: 'target', x: 82, y: 45 }];
+    const shape = project.scenes[0]!.layers.find((layer) => layer.type === 'shape');
+    if (!shape || shape.type !== 'shape') throw new Error('Expected a shape fixture.');
+    shape.shape = 'line';
+    shape.endAnchor = 'missing';
+    const findings = await validateProject({ ...loaded, project, sourceProject: project });
+    expect(findings).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'DUPLICATE_ANCHOR_ID', severity: 'error' }),
+      expect.objectContaining({ code: 'ANCHOR_UNKNOWN', severity: 'error' }),
+    ]));
+  });
 });

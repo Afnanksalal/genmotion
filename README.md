@@ -17,7 +17,7 @@ It does not render React, HTML, CSS, a browser page, Remotion, or HyperFrames.
 General agents can write animation code, but code generation alone gives them a poor iteration surface. Genmotion gives the model a visual authoring loop while keeping the output inspectable:
 
 - arbitrary agent-authored numeric property tracks with named, cubic-bezier, or spring timing;
-- SVG path geometry and native text, shape, image, and video layers;
+- SVG path geometry, native cubic Bezier connectors, shared endpoint and marker anchors, and native text, shape, image, and video layers;
 - optional motion recipes that act as reusable references rather than a closed animation vocabulary;
 - reference studies decomposed into composition, hierarchy, pacing, typography, surface, and motion decisions;
 - contrastive retrieval that states what to borrow, avoid, and transform;

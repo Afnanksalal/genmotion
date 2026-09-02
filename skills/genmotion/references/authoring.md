@@ -14,6 +14,10 @@ Use `genmotion_schema` before authoring unfamiliar fields, `genmotion_project_pa
 
 Use a shape line only when it connects or emphasizes something meaningful. Use background atmosphere to create depth, but keep it subordinate to the focal message. Avoid equal card grids, generic gradient blobs, fake HUD readouts, random particles, repeated spring entrances, and constant ambient motion.
 
+When multiple layers must meet at one canvas point, define that point once in project-level `anchors`. Bind line or native Bezier endpoints with `startAnchor` / `endAnchor`, and bind focal ellipses with `centerAnchor`. Do not duplicate destination coordinates across connectors, rings, and dots.
+
+Prefer native `shape: "bezier"` with absolute-canvas `control1` and `control2` for smooth routed curves. It preserves the authored curve and supports seek-safe `progress` drawing. Reserve SVG `path` for silhouettes and compound artwork, not semantic connector geometry. Strict validation rejects dangling anchor references, duplicate anchor IDs, and anchor properties on incompatible shapes; fix the model instead of visually compensating with nearby coordinates.
+
 For captured product media, establish the whole surface before a deep crop. Land camera movement on a real feature or result and hold it. Do not leave half a navigation bar or panel edge in frame.
 
 ## Camera moves and scene handoffs

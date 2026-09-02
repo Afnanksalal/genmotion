@@ -2,7 +2,7 @@
 
 ## Root
 
-`genmotion.json` and its YAML equivalents contain `schemaVersion`, identity, delivery dimensions, frame rate, deterministic seed, brand tokens, scenes, audio tracks, and string metadata.
+`genmotion.json` and its YAML equivalents contain `schemaVersion`, identity, delivery dimensions, frame rate, deterministic seed, shared geometry anchors, brand tokens, scenes, audio tracks, and string metadata.
 
 All time values are seconds. Keyframe times are local to their layer. Direct animation tracks and optional motion directives also use layer-local time.
 
@@ -52,7 +52,27 @@ Text layers define a box, local or system font, size, weight, style, color, alig
 
 ### Shape
 
-Shape layers support rectangles, rounded rectangles, ellipses, lines, and polygons. Fill, stroke, radius, shadow, and animated drawing progress are supported.
+Shape layers support rectangles, rounded rectangles, ellipses, lines, native cubic Beziers, polygons, and SVG paths. Fill, stroke, radius, shadow, and animated drawing progress are supported. Native Beziers use absolute-canvas `control1` and `control2` points, so the renderer draws the authored curve directly instead of fitting an SVG path into a box.
+
+### Shared geometry anchors
+
+Project-level `anchors` are named canvas points such as `{ "id": "result", "x": 1744, "y": 494 }`. A line or Bezier may bind `startAnchor` and `endAnchor`; an ellipse may bind `centerAnchor`. Every reference is resolved on each rendered frame, after direct animation tracks are evaluated. This makes connector endpoints, rings, dots, and other focal markers share one geometric source of truth.
+
+Unknown or duplicate anchor IDs fail strict validation. References on incompatible shape families fail schema validation. Anchors and absolute Bezier controls are reframed with the project when Studio changes canvas format. Existing schema-v1 projects remain compatible because `anchors` defaults to an empty array.
+
+```json
+{
+  "anchors": [{ "id": "result", "x": 1744, "y": 494 }],
+  "shape": "bezier",
+  "x": 430,
+  "y": 450,
+  "width": 0,
+  "height": 0,
+  "endAnchor": "result",
+  "control1": [820, 450],
+  "control2": [1320, 494]
+}
+```
 
 ### Image
 

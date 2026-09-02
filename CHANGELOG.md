@@ -2,6 +2,12 @@
 
 Genmotion follows semantic versioning. GitHub releases contain the verified package archive and its `SHA256SUMS` manifest.
 
+## 2.1.0 - 2026-09-02
+
+### Geometry
+
+- Added first-class shared canvas anchors, native cubic Bezier connectors with seek-safe progressive drawing, exact endpoint and marker-center resolution, strict dangling-reference validation, Studio authoring controls, canvas-reframe support, and an anchored Data Pulse example.
+
 ## 2.0.0 - 2026-09-02
 
 ### Studio
@@ -35,4 +41,3 @@ Genmotion follows semantic versioning. GitHub releases contain the verified pack
 ### Security
 
 - Added canonical asset-path confinement resistant to symlink and junction escapes, media signature checks, upload limits, mutation tokens, same-origin and Fetch Metadata checks, nonce-authorized scripts, framing protection, and a restrictive browser permissions policy.
-

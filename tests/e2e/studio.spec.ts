@@ -59,6 +59,30 @@ test.afterEach(async () => {
   await rm(directory, { recursive: true, force: true });
 });
 
+test('authors and persists shared geometry anchors from the project inspector', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="project"]').click();
+  await page.locator('#addGeometryAnchor').click();
+  await expect(page.locator('[data-field="anchors.0.id"]')).toHaveValue('anchor-1');
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('[data-select-field="shape"]').click();
+  await page.locator('[data-choice="bezier"]').click();
+  await expect(page.locator('[data-json-field="control1"]')).toBeVisible();
+  await page.locator('[data-field="endAnchor"]').fill('anchor-1');
+  await page.locator('[data-field="endAnchor"]').press('Tab');
+  await page.locator('[data-select="project"]').click();
+  await page.locator('[data-field="anchors.0.id"]').fill('result-point');
+  await page.locator('[data-field="anchors.0.id"]').press('Tab');
+  await page.locator('[data-field="anchors.0.x"]').fill('280');
+  await page.locator('[data-field="anchors.0.x"]').press('Tab');
+  await page.locator('[data-field="anchors.0.y"]').fill('120');
+  await page.locator('[data-field="anchors.0.y"]').press('Tab');
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { anchors?: Array<{ id: string; x: number; y: number }>; scenes: Array<{ layers: Array<{ id: string; endAnchor?: string }> }> };
+    return { anchor: project.anchors?.[0], binding: project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.endAnchor };
+  }).toEqual({ anchor: { id: 'result-point', x: 280, y: 120 }, binding: 'result-point' });
+});
+
 test('scales workflow navigation, asset discovery, easing inspection, and audio mixing controls', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   await page.locator('#autoLayout').click();

@@ -6,12 +6,14 @@ import { loadCachedImage, registerProjectFonts, videoFramePath } from './assets.
 import { evaluateNumber, layerIsActive, locateScene } from './timeline.js';
 import { ease } from './easing.js';
 import { evaluateLayerTracks } from './animation.js';
+import { bezierPrefix, resolveAnchoredShape, shapeBounds } from './geometry.js';
 
 interface Box { x: number; y: number; width: number; height: number }
 
 export interface RenderDimensions { width: number; height: number }
 
 function layerBox(layer: Layer): Box {
+  if (layer.type === 'shape') return shapeBounds(layer);
   return { x: layer.x, y: layer.y, width: layer.width, height: layer.height };
 }
 
@@ -157,6 +159,14 @@ function drawShape(ctx: SKRSContext2D, layer: ShapeLayer, time: number): void {
     ctx.beginPath();
     ctx.moveTo(layer.x, layer.y);
     ctx.lineTo(layer.x + layer.width * progress, layer.y + layer.height * progress);
+  } else if (layer.shape === 'bezier' && layer.control1 && layer.control2) {
+    const [start, control1, control2, end] = bezierPrefix(
+      [layer.x, layer.y], layer.control1, layer.control2,
+      [layer.x + layer.width, layer.y + layer.height], progress,
+    );
+    ctx.beginPath();
+    ctx.moveTo(start[0], start[1]);
+    ctx.bezierCurveTo(control1[0], control1[1], control2[0], control2[1], end[0], end[1]);
   } else if (layer.shape === 'polygon' && layer.points && layer.points.length > 1) {
     const count = Math.max(2, Math.ceil(layer.points.length * progress));
     const first = layer.points[0];
@@ -168,7 +178,7 @@ function drawShape(ctx: SKRSContext2D, layer: ShapeLayer, time: number): void {
   } else {
     roundedPath(ctx, layer.x, layer.y, layer.width * progress, layer.height, layer.shape === 'round-rect' ? layer.radius : 0);
   }
-  if (layer.fill && layer.shape !== 'line') ctx.fill();
+  if (layer.fill && layer.shape !== 'line' && layer.shape !== 'bezier') ctx.fill();
   if (layer.stroke && layer.strokeWidth > 0) ctx.stroke();
   applyShadow(ctx, undefined);
 }
@@ -214,6 +224,7 @@ async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project
   if (!layer.visible || !layerIsActive(layer.start, layer.duration, scene.duration, sceneTime)) return;
   const localTime = sceneTime - layer.start;
   layer = evaluateLayerTracks(layer, localTime);
+  if (layer.type === 'shape') layer = resolveAnchoredShape(layer, project);
   const box = layerBox(layer);
   const transform = layer.transform;
   const centerX = box.x + box.width * transform.anchorX;

@@ -6,6 +6,58 @@
   "height": 1080,
   "fps": 30,
   "seed": 17,
+  "anchors": [
+    {
+      "id": "pulse-target",
+      "x": 1744,
+      "y": 494
+    },
+    {
+      "id": "flow-1-start",
+      "x": 430,
+      "y": 155
+    },
+    {
+      "id": "flow-2-start",
+      "x": 430,
+      "y": 220
+    },
+    {
+      "id": "flow-3-start",
+      "x": 430,
+      "y": 292
+    },
+    {
+      "id": "flow-4-start",
+      "x": 430,
+      "y": 370
+    },
+    {
+      "id": "flow-5-start",
+      "x": 430,
+      "y": 450
+    },
+    {
+      "id": "flow-6-start",
+      "x": 430,
+      "y": 585
+    },
+    {
+      "id": "flow-7-start",
+      "x": 430,
+      "y": 680
+    },
+    {
+      "id": "flow-8-start",
+      "x": 430,
+      "y": 790
+    },
+    {
+      "id": "flow-9-start",
+      "x": 430,
+      "y": 910
+    }
+  ],
   "brand": {
     "background": "#05070a",
     "foreground": "#f5f1e8",
@@ -1869,15 +1921,24 @@
             }
           ],
           "type": "shape",
-          "shape": "path",
-          "x": 430,
-          "y": 155,
-          "width": 1314,
-          "height": 339,
+          "shape": "bezier",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
           "stroke": "#745cff",
           "strokeWidth": 4,
           "radius": 0,
-          "path": "M 0 0 C 360 0 910 339 1314 339",
+          "startAnchor": "flow-1-start",
+          "endAnchor": "pulse-target",
+          "control1": [
+            790,
+            155
+          ],
+          "control2": [
+            1340,
+            494
+          ],
           "progress": 1
         },
         {
@@ -1945,15 +2006,24 @@
             }
           ],
           "type": "shape",
-          "shape": "path",
-          "x": 430,
-          "y": 220,
-          "width": 1314,
-          "height": 274,
+          "shape": "bezier",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
           "stroke": "#745cff",
           "strokeWidth": 4,
           "radius": 0,
-          "path": "M 0 0 C 368 0 903 274 1314 274",
+          "startAnchor": "flow-2-start",
+          "endAnchor": "pulse-target",
+          "control1": [
+            798,
+            220
+          ],
+          "control2": [
+            1333,
+            494
+          ],
           "progress": 1
         },
         {
@@ -2021,15 +2091,24 @@
             }
           ],
           "type": "shape",
-          "shape": "path",
-          "x": 430,
-          "y": 292,
-          "width": 1314,
-          "height": 202,
+          "shape": "bezier",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
           "stroke": "#745cff",
           "strokeWidth": 4,
           "radius": 0,
-          "path": "M 0 0 C 376 0 896 202 1314 202",
+          "startAnchor": "flow-3-start",
+          "endAnchor": "pulse-target",
+          "control1": [
+            806,
+            292
+          ],
+          "control2": [
+            1326,
+            494
+          ],
           "progress": 1
         },
         {
@@ -2097,15 +2176,24 @@
             }
           ],
           "type": "shape",
-          "shape": "path",
-          "x": 430,
-          "y": 370,
-          "width": 1314,
-          "height": 124,
+          "shape": "bezier",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
           "stroke": "#745cff",
           "strokeWidth": 4,
           "radius": 0,
-          "path": "M 0 0 C 384 0 889 124 1314 124",
+          "startAnchor": "flow-4-start",
+          "endAnchor": "pulse-target",
+          "control1": [
+            814,
+            370
+          ],
+          "control2": [
+            1319,
+            494
+          ],
           "progress": 1
         },
         {
@@ -2173,15 +2261,24 @@
             }
           ],
           "type": "shape",
-          "shape": "path",
-          "x": 430,
-          "y": 450,
-          "width": 1314,
-          "height": 44,
+          "shape": "bezier",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
           "stroke": "#d7ff3f",
           "strokeWidth": 10,
           "radius": 0,
-          "path": "M 0 0 C 392 0 882 44 1314 44",
+          "startAnchor": "flow-5-start",
+          "endAnchor": "pulse-target",
+          "control1": [
+            822,
+            450
+          ],
+          "control2": [
+            1312,
+            494
+          ],
           "progress": 1,
           "shadow": {
             "color": "#d7ff3f88",
@@ -2255,15 +2352,24 @@
             }
           ],
           "type": "shape",
-          "shape": "path",
-          "x": 430,
-          "y": 494,
-          "width": 1314,
-          "height": 91,
+          "shape": "bezier",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
           "stroke": "#38e8d7",
           "strokeWidth": 4,
           "radius": 0,
-          "path": "M 0 91 C 400 91 875 0 1314 0",
+          "startAnchor": "flow-6-start",
+          "endAnchor": "pulse-target",
+          "control1": [
+            830,
+            585
+          ],
+          "control2": [
+            1305,
+            494
+          ],
           "progress": 1
         },
         {
@@ -2331,15 +2437,24 @@
             }
           ],
           "type": "shape",
-          "shape": "path",
-          "x": 430,
-          "y": 494,
-          "width": 1314,
-          "height": 186,
+          "shape": "bezier",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
           "stroke": "#38e8d7",
           "strokeWidth": 4,
           "radius": 0,
-          "path": "M 0 186 C 408 186 868 0 1314 0",
+          "startAnchor": "flow-7-start",
+          "endAnchor": "pulse-target",
+          "control1": [
+            838,
+            680
+          ],
+          "control2": [
+            1298,
+            494
+          ],
           "progress": 1
         },
         {
@@ -2407,15 +2522,24 @@
             }
           ],
           "type": "shape",
-          "shape": "path",
-          "x": 430,
-          "y": 494,
-          "width": 1314,
-          "height": 296,
+          "shape": "bezier",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
           "stroke": "#38e8d7",
           "strokeWidth": 4,
           "radius": 0,
-          "path": "M 0 296 C 416 296 861 0 1314 0",
+          "startAnchor": "flow-8-start",
+          "endAnchor": "pulse-target",
+          "control1": [
+            846,
+            790
+          ],
+          "control2": [
+            1291,
+            494
+          ],
           "progress": 1
         },
         {
@@ -2483,15 +2607,24 @@
             }
           ],
           "type": "shape",
-          "shape": "path",
-          "x": 430,
-          "y": 494,
-          "width": 1314,
-          "height": 416,
+          "shape": "bezier",
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
           "stroke": "#38e8d7",
           "strokeWidth": 4,
           "radius": 0,
-          "path": "M 0 416 C 424 416 854 0 1314 0",
+          "startAnchor": "flow-9-start",
+          "endAnchor": "pulse-target",
+          "control1": [
+            854,
+            910
+          ],
+          "control2": [
+            1284,
+            494
+          ],
           "progress": 1
         },
         {
@@ -2602,14 +2735,15 @@
           ],
           "type": "shape",
           "shape": "ellipse",
-          "x": 1688,
-          "y": 438,
+          "x": 0,
+          "y": 0,
           "width": 112,
           "height": 112,
           "fill": "#00000000",
           "stroke": "#d7ff3f",
           "strokeWidth": 5,
           "radius": 0,
+          "centerAnchor": "pulse-target",
           "progress": 1,
           "shadow": {
             "color": "#d7ff3f99",
@@ -2726,13 +2860,14 @@
           ],
           "type": "shape",
           "shape": "ellipse",
-          "x": 1724,
-          "y": 474,
+          "x": 0,
+          "y": 0,
           "width": 40,
           "height": 40,
           "fill": "#f5f1e8",
           "strokeWidth": 0,
           "radius": 0,
+          "centerAnchor": "pulse-target",
           "progress": 1
         },
         {

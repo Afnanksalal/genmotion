@@ -113,7 +113,7 @@ function serverFactory(): McpServer {
     title: 'Inspect Genmotion authoring schema', description: 'Return a compact authoritative Creative IR authoring contract by default. Request full=true only when the inline save-tool schema does not answer a field-level question.', inputSchema: z.object({ full: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true },
   }, (input) => Promise.resolve(toolResult({
     ...(input.full ? { schema: z.toJSONSchema(projectSchema) } : { schemaSummary: {
-      project: ['schemaVersion', 'id', 'title', 'width', 'height', 'fps', 'seed', 'brand', 'scenes', 'audio', 'metadata'],
+      project: ['schemaVersion', 'id', 'title', 'width', 'height', 'fps', 'seed', 'anchors', 'brand', 'scenes', 'audio', 'metadata'],
       scene: ['id', 'purpose', 'duration', 'background', 'layers', 'transitionIn', 'transitionOut'],
       textRequired: ['id', 'type=text', 'text', 'x', 'y', 'width', 'height', 'fontFamily', 'fontSize', 'color'],
       shapeRequired: ['id', 'type=shape', 'shape', 'x', 'y', 'width', 'height'],
