@@ -178,6 +178,8 @@ A project is `genmotion.json`, `genmotion.yaml`, or `genmotion.yml`. It declares
 
 See [docs/IR.md](docs/IR.md) for the complete authoring model, [docs/STUDIO.md](docs/STUDIO.md) for the human and agent collaboration contract, and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for renderer and throughput design.
 
+The exhaustive, version-controlled capability program is tracked in [docs/NATIVE-CAPABILITY-BACKLOG.md](docs/NATIVE-CAPABILITY-BACKLOG.md). It records every transferable capability from the Remotion audit together with Genmotion's native-rendering and single-IR guardrails; partial or Studio-only implementations remain unchecked.
+
 ## Skills
 
 The repository ships an Agent Skill at [`skills/genmotion`](skills/genmotion) and a Claude Code discovery entry at [`.claude/skills/genmotion`](.claude/skills/genmotion). The same workflow can be installed for Codex or Claude Code. The separate [Product Demo Video Skill](https://github.com/Afnanksalal/product-demo-video-skill) uses Genmotion for every constructed motion scene while retaining Playwright for real product capture and FFmpeg for raw-footage cleanup.
