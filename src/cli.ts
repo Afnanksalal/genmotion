@@ -20,6 +20,9 @@ import { getStudioRequests, resolveStudioRequest, startStudio } from './studio/s
 import { GENMOTION_VERSION } from './version.js';
 import { parseCaptions, serializeCaptions } from './captions.js';
 import type { ParameterValue } from './ir/parameters.js';
+import { easingSchema } from './ir/schema.js';
+import { analyzeSpring, easingPresets } from './engine/easing.js';
+import { fractalNoise, noiseND, seededRandom, staggerSchedule, staggerWindows } from './engine/procedural.js';
 
 const program = new Command();
 program.name('genmotion').description('Agent-native motion design engine and visual editor.').version(GENMOTION_VERSION).option('--json', 'Emit machine-readable JSON.');
@@ -232,6 +235,46 @@ program.command('benchmark')
       const result = await renderProject(loaded, { output: path.join(directory, 'benchmark.mp4'), quality: 'draft', workers: Math.min(4, os.availableParallelism()) });
       output(result);
     } finally { await rm(directory, { recursive: true, force: true }); }
+  });
+
+program.command('easing-inspect')
+  .description('Measure and sample a physical spring easing without rendering.')
+  .option('--preset <name>', 'gentle, snappy, settled, or expressive', 'settled')
+  .option('--spring <json>', 'Explicit spring JSON overrides the preset')
+  .option('--samples <count>', 'Sample count', '60')
+  .action((options: { preset: keyof typeof easingPresets; spring?: string; samples: string }) => {
+    const source: unknown = options.spring ? JSON.parse(options.spring) : easingPresets[options.preset];
+    if (!source) throw new GenmotionError('EASING_PRESET_UNKNOWN', `Unknown easing preset: ${options.preset}`);
+    const spring = easingSchema.parse(source);
+    if (typeof spring === 'string' || spring.type !== 'spring') throw new GenmotionError('SPRING_REQUIRED', 'easing-inspect requires a spring easing.');
+    output({ preset: options.spring ? undefined : options.preset, ...analyzeSpring(spring, Number(options.samples)) });
+  });
+
+program.command('stagger')
+  .description('Generate a deterministic stagger schedule for reusable animation groups.')
+  .requiredOption('--count <count>')
+  .option('--each <seconds>', 'Delay between ordered items', '0.08')
+  .option('--from <origin>', 'start, end, center, edges, or random', 'start')
+  .option('--seed <seed>', 'Seed for random order', '0')
+  .option('--trail <seconds>', 'Trail duration after each delay', '0')
+  .option('--ease <name>', 'Named timing curve', 'linear')
+  .action((options: { count: string; each: string; from: 'start' | 'end' | 'center' | 'edges' | 'random'; seed: string; trail: string; ease: string }) => {
+    const timing = easingSchema.parse(options.ease);
+    const settings = { each: Number(options.each), from: options.from, seed: Number(options.seed), trail: Number(options.trail), ease: timing };
+    output({ schedule: staggerSchedule(Number(options.count), settings), windows: staggerWindows(Number(options.count), settings) });
+  });
+
+program.command('noise')
+  .description('Sample deterministic seeded one- to four-dimensional smooth noise.')
+  .requiredOption('--coordinates <csv>', 'One to four comma-separated coordinates')
+  .option('--seed <seed>', 'Deterministic seed', '0')
+  .option('--octaves <count>', 'Fractal octaves', '1')
+  .option('--lacunarity <value>', 'Frequency multiplier', '2')
+  .option('--gain <value>', 'Amplitude multiplier', '0.5')
+  .action((options: { coordinates: string; seed: string; octaves: string; lacunarity: string; gain: string }) => {
+    const coordinates = options.coordinates.split(',').map(Number);
+    const seed = Number(options.seed);
+    output({ seed, coordinates, random: seededRandom(seed), noise: noiseND(seed, coordinates), fractal: fractalNoise(seed, coordinates, { octaves: Number(options.octaves), lacunarity: Number(options.lacunarity), gain: Number(options.gain) }) });
   });
 
 program.command('catalog-audit').description('Validate catalog cross-references and licenses.').action(() => {

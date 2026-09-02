@@ -16,7 +16,8 @@ It does not render React, HTML, CSS, a browser page, Remotion, or HyperFrames.
 
 General agents can write animation code, but code generation alone gives them a poor iteration surface. Genmotion gives the model a visual authoring loop while keeping the output inspectable:
 
-- arbitrary agent-authored numeric property tracks with named, cubic-bezier, or spring timing;
+- typed numeric, perceptual color, point, rectangle, discrete, and shortest-angle tracks with named, cubic-bezier, or measured physical spring timing;
+- independent before/after extrapolation, hold segments, deterministic seeded noise, stagger schedules, transform hierarchy, and live geometric constraints;
 - reusable nested compositions with local time offset, scaling, looping, deterministic cycle rejection, and one shared Creative IR;
 - typed parameters, named variants, layer bindings, CLI/MCP overrides, and deterministic batch variant rendering;
 - measured SVG path geometry with native trim drawing, point/tangent sampling, path-follow motion, cubic Bezier connectors, and shared anchors;
@@ -48,12 +49,13 @@ General agents can write animation code, but code generation alone gives them a 
 
 ## Public examples
 
-The [`examples/`](examples/) gallery contains four complete, editable projects with frozen assets, strict validation, rendered masters, and inspected contact sheets:
+The [`examples/`](examples/) gallery contains five complete, editable projects with frozen assets, strict validation, rendered masters, and inspected contact sheets:
 
 - **Kinetic Type** demonstrates clipped typography, direct property tracks, custom easing, and scene rhythm.
 - **Data Pulse** demonstrates animated counters, converging signal fields, SVG path drawing, blend modes, and an editorial data-story resolve.
 - **Arc One** demonstrates original vector product geometry, shadows, blend modes, macro movement, stable lockups, and a mixed stereo soundtrack.
 - **Native Milestones** is an asset-free integration fixture for reusable compositions, typed variants, measured path motion, captions, and transition presentations.
+- **Animation Kernel** demonstrates typed color and point animation, measured springs, seeded drift, stagger timing, transform inheritance, and four live constraints in one asset-free composition.
 
 Every project is reproducible with `npm run examples:build` and verified with `npm run examples:verify`; no remote render asset or external template is required.
 
@@ -138,6 +140,9 @@ genmotion render-variants launch-film --output launch-film/renders/variants --qu
 genmotion render launch-film --output launch-film/renders/acme-4k.mp4 --quality high --resolution 3840x2160
 genmotion probe launch-film/renders/acme.mp4
 genmotion contact-sheet launch-film/renders/acme.mp4 --output launch-film/renders/contact-sheet.jpg
+genmotion easing-inspect --preset snappy --samples 48 --json
+genmotion stagger --count 8 --each 0.08 --from center --trail 0.25 --json
+genmotion noise --seed 42 --coordinates 0.25,0.5,0.75 --octaves 4 --json
 ```
 
 Studio lists and creates projects in `~/Genmotion Projects` by default. Use `--workspace <directory>` to select another local project workspace.
@@ -165,6 +170,9 @@ This workflow uses the existing ChatGPT or Claude sign-in managed by the local a
 | `render-variants` | Render every named typed variant into a deterministic output set |
 | `captions-import` | Parse SRT, WebVTT, or timed JSON into Creative IR cues |
 | `captions-export` | Export a caption layer as SRT, WebVTT, or timed JSON |
+| `easing-inspect` | Sample named, cubic-bezier, or spring timing and report spring settling/overshoot |
+| `stagger` | Generate deterministic index, center, edge, or seeded-random delay and trail schedules |
+| `noise` | Sample deterministic one- through four-dimensional fractal noise |
 | `probe` | Inspect codecs, dimensions, duration, frame rate, audio, and size |
 | `contact-sheet` | Generate representative visual review frames |
 | `catalog` | Search motions, blueprints, and taste references by creative intent |
@@ -181,7 +189,7 @@ A project is `genmotion.json`, `genmotion.yaml`, or `genmotion.yml`. It declares
 - delivery dimensions, frame rate, seed, brand tokens, typed parameters, and named variants;
 - ordered scenes with explicit durations and transitions;
 - reusable compositions plus text, caption, vector shape, image, video, and composition-instance layers;
-- arbitrary property tracks, custom cubic-bezier or spring easing, SVG paths, direct keyframes, and optional named motion directives;
+- typed property tracks, independent extrapolation, holds, custom cubic-bezier or measured spring easing, deterministic noise, hierarchy/constraints, SVG paths, direct keyframes, and optional named motion directives;
 - locally frozen assets and licensed fonts;
 - positioned audio tracks and mixing behavior;
 - reference decisions that preserve the creative rationale.

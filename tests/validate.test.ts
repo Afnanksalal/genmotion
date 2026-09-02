@@ -84,4 +84,23 @@ describe('production validation findings', () => {
       expect.objectContaining({ code: 'ANCHOR_UNKNOWN', severity: 'error' }),
     ]));
   });
+
+  it('validates typed tracks and dependency graphs inside reusable compositions', async () => {
+    const loaded = await loadProject(path.resolve('tests/fixtures/basic'));
+    const project = structuredClone(loaded.project);
+    const source = project.scenes[0]!.layers.find((layer) => layer.type === 'shape');
+    if (!source) throw new Error('Expected a shape fixture.');
+    const first = { ...structuredClone(source), id: 'component-a', parentId: 'component-b', tracks: [{
+      id: 'bad-fill', target: 'fill' as const, operation: 'replace' as const, extrapolate: 'clamp' as const, enabled: true,
+      keyframes: [{ at: 0, value: 1, ease: 'linear' as const }, { at: 1, value: 2, ease: 'linear' as const }],
+    }] };
+    const second = { ...structuredClone(source), id: 'component-b', parentId: 'component-a' };
+    project.compositions = [{ id: 'component', width: 320, height: 180, duration: 1, layers: [first, second] }];
+
+    const findings = await validateProject({ ...loaded, project, sourceProject: project });
+    expect(findings).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'LAYER_DEPENDENCY_CYCLE', severity: 'error', location: 'compositions.0.layers' }),
+      expect.objectContaining({ code: 'TRACK_VALUE_TYPE', severity: 'error', location: 'compositions.0.layers.0.tracks.0' }),
+    ]));
+  });
 });

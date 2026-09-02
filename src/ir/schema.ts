@@ -26,7 +26,10 @@ const namedEasingSchema = z.enum([
 export const easingSchema = z.union([
   namedEasingSchema,
   z.object({ type: z.literal('cubic-bezier'), x1: finite.min(0).max(1), y1: finite, x2: finite.min(0).max(1), y2: finite }).strict(),
-  z.object({ type: z.literal('spring'), mass: positive.default(1), stiffness: positive.default(170), damping: positive.default(26), velocity: finite.default(0) }).strict(),
+  z.object({
+    type: z.literal('spring'), mass: positive.default(1), stiffness: positive.default(170), damping: positive.default(26), velocity: finite.default(0),
+    duration: positive.optional(), clamp: z.boolean().optional(),
+  }).strict(),
 ]);
 
 export const keyframeSchema = z.object({
@@ -70,20 +73,73 @@ export const animationTargetSchema = z.enum([
   'x', 'y', 'width', 'height', 'z', 'fontSize', 'letterSpacing', 'lineHeight',
   'strokeWidth', 'radius', 'progress', 'revealProgress', 'countProgress',
   'trimStart', 'playbackRate', 'volume',
+  'color', 'fill', 'stroke', 'background', 'highlightColor', 'outlineColor',
+  'control1', 'control2',
   'transform.x', 'transform.y', 'transform.scaleX', 'transform.scaleY',
   'transform.rotation', 'transform.opacity', 'transform.blur',
   'shadow.blur', 'shadow.offsetX', 'shadow.offsetY',
+  'shadow.color',
   'followPath.progress',
 ]);
+
+export const animationValueSchema = z.union([
+  finite,
+  color,
+  z.tuple([finite, finite]),
+  z.tuple([finite, finite, finite, finite]),
+]);
+
+export const animationKeyframeSchema = z.object({
+  at: nonNegative,
+  value: animationValueSchema,
+  ease: easingSchema.default('linear'),
+  hold: z.boolean().optional(),
+}).strict();
+
+export const extrapolationSchema = z.enum(['clamp', 'extend', 'wrap', 'identity', 'loop', 'ping-pong']);
+
+export const proceduralNoiseSchema = z.object({
+  seed: z.number().int().default(0),
+  amplitude: positive,
+  frequency: positive.default(1),
+  octaves: z.number().int().min(1).max(8).default(1),
+  lacunarity: positive.default(2),
+  gain: finite.min(0).max(1).default(0.5),
+}).strict();
 
 export const animationTrackSchema = z.object({
   id: z.string().min(1).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/),
   target: animationTargetSchema,
-  keyframes: z.array(keyframeSchema).min(2),
+  keyframes: z.array(animationKeyframeSchema).min(2),
   operation: z.enum(['replace', 'add', 'multiply']).default('replace'),
-  extrapolate: z.enum(['clamp', 'loop', 'ping-pong']).default('clamp'),
+  extrapolate: extrapolationSchema.default('clamp'),
+  extrapolateLeft: extrapolationSchema.optional(),
+  extrapolateRight: extrapolationSchema.optional(),
+  interpolation: z.enum(['linear', 'shortest-angle', 'discrete']).optional(),
+  noise: proceduralNoiseSchema.optional(),
   enabled: z.boolean().default(true),
 }).strict();
+
+export const layerConstraintSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('follow'), target: identifier, offsetX: finite.default(0), offsetY: finite.default(0) }).strict(),
+  z.object({ type: z.literal('look-at'), target: identifier, angleOffset: finite.default(0) }).strict(),
+  z.object({ type: z.literal('maintain-distance'), target: identifier, distance: nonNegative, angle: finite.default(0) }).strict(),
+  z.object({
+    type: z.literal('anchor-to'), target: identifier,
+    ownAnchor: z.enum(['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right']).default('center'),
+    targetAnchor: z.enum(['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right']).default('center'),
+    offsetX: finite.default(0), offsetY: finite.default(0),
+  }).strict(),
+]);
+
+export const staggerSchema = z.object({
+  index: z.number().int().nonnegative(),
+  count: z.number().int().positive(),
+  each: nonNegative.default(0.08),
+  from: z.enum(['start', 'end', 'center', 'edges', 'random']).default('start'),
+  seed: z.number().int().default(0),
+  trail: nonNegative.default(0),
+}).strict().refine((value) => value.index < value.count, { message: 'Stagger index must be smaller than count.' });
 
 const baseLayerSchema = z.object({
   id: z.string().min(1).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/),
@@ -97,6 +153,9 @@ const baseLayerSchema = z.object({
   tags: z.array(z.string()).default([]),
   motion: z.array(motionDirectiveSchema).default([]),
   tracks: z.array(animationTrackSchema).default([]),
+  parentId: identifier.optional(),
+  constraints: z.array(layerConstraintSchema).default([]),
+  stagger: staggerSchema.optional(),
   bindings: z.record(z.string(), identifier).default({}),
   followPath: z.object({
     path: z.string().min(1),
@@ -336,6 +395,12 @@ export const projectSchema = z.object({
 });
 
 export type EasingName = z.infer<typeof easingSchema>;
+export type AnimationValue = z.infer<typeof animationValueSchema>;
+export type AnimationKeyframe = z.infer<typeof animationKeyframeSchema>;
+export type Extrapolation = z.infer<typeof extrapolationSchema>;
+export type ProceduralNoise = z.infer<typeof proceduralNoiseSchema>;
+export type LayerConstraint = z.infer<typeof layerConstraintSchema>;
+export type Stagger = z.infer<typeof staggerSchema>;
 export type GeometryAnchor = z.infer<typeof geometryAnchorSchema>;
 export type AnimatedNumber = z.infer<typeof animatedNumberSchema>;
 export type AnimationTrack = z.infer<typeof animationTrackSchema>;

@@ -35,7 +35,7 @@ describe('Genmotion MCP server', () => {
       expect(names).toEqual(expect.arrayContaining([
         'genmotion_doctor', 'genmotion_init', 'genmotion_catalog', 'genmotion_project_read', 'genmotion_project_save',
         'genmotion_schema', 'genmotion_project_patch', 'genmotion_timeline_inspect', 'genmotion_validate', 'genmotion_frame',
-        'genmotion_render', 'genmotion_probe', 'genmotion_contact_sheet', 'genmotion_studio_start',
+        'genmotion_render', 'genmotion_probe', 'genmotion_contact_sheet', 'genmotion_studio_start', 'genmotion_animation_inspect',
       ]));
       expect(new Set(names).size).toBe(names.length);
       const saveTool = listed.tools.find((tool) => tool.name === 'genmotion_project_save');
@@ -85,6 +85,17 @@ describe('Genmotion MCP server', () => {
       const timelineContent = timeline.structuredContent as { scene?: { id?: string }; layers?: unknown[] };
       expect(timelineContent.scene?.id).toBe('intro');
       expect(Array.isArray(timelineContent.layers)).toBe(true);
+
+      const spring = await client.callTool({ name: 'genmotion_animation_inspect', arguments: { action: 'spring', preset: 'snappy', samples: 12 } });
+      const springContent = spring.structuredContent as { preset: string; samples: unknown[] };
+      expect(springContent.preset).toBe('snappy');
+      expect(springContent.samples).toHaveLength(12);
+      const stagger = await client.callTool({ name: 'genmotion_animation_inspect', arguments: { action: 'stagger', count: 4, each: 0.1, trail: 0.25, from: 'center', seed: 2, ease: 'linear' } });
+      const staggerContent = stagger.structuredContent as { schedule: number[]; windows: unknown[] };
+      expect(staggerContent.schedule).toEqual([0.15000000000000002, 0.05, 0.05, 0.15000000000000002]);
+      expect(staggerContent.windows).toHaveLength(4);
+      const typedTrack = await client.callTool({ name: 'genmotion_animation_inspect', arguments: { action: 'track', at: 0.5, seed: 1, track: { id: 'color', target: 'fill', keyframes: [{ at: 0, value: '#ff0000' }, { at: 1, value: '#0000ff' }] } } });
+      expect((typedTrack.structuredContent as { value: string }).value).toMatch(/^rgb/);
 
       const validation = await client.callTool({ name: 'genmotion_validate', arguments: { project, strict: false } });
       expect(validation.structuredContent).toMatchObject({ ok: true });

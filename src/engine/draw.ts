@@ -7,17 +7,11 @@ import { loadCachedImage, registerProjectFonts, videoFramePath } from './assets.
 import { evaluateNumber, layerIsActive, locateScene } from './timeline.js';
 import { ease } from './easing.js';
 import { evaluateLayerTracks } from './animation.js';
-import { bezierPrefix, resolveAnchoredShape, shapeBounds } from './geometry.js';
+import { bezierPrefix, layerBox, resolveAnchoredShape } from './geometry.js';
 import { flattenPath, pathMetrics, samplePath } from './path.js';
-
-interface Box { x: number; y: number; width: number; height: number }
+import { effectiveLayerStart, resolveLayerGraph } from './constraints.js';
 
 export interface RenderDimensions { width: number; height: number }
-
-function layerBox(layer: Layer): Box {
-  if (layer.type === 'shape') return shapeBounds(layer);
-  return { x: layer.x, y: layer.y, width: layer.width, height: layer.height };
-}
 
 function roundedPath(ctx: SKRSContext2D, x: number, y: number, width: number, height: number, radius: number): void {
   const r = Math.min(radius, width / 2, height / 2);
@@ -277,10 +271,11 @@ async function drawVideoLayer(ctx: SKRSContext2D, layer: VideoLayer, projectDir:
   drawFittedImage(ctx, image, layer);
 }
 
-async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project: GenmotionProject, projectDir: string, sceneTime: number, compositionStack: string[] = []): Promise<void> {
-  if (!layer.visible || !layerIsActive(layer.start, layer.duration, scene.duration, sceneTime)) return;
-  const localTime = sceneTime - layer.start;
-  layer = evaluateLayerTracks(layer, localTime);
+async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project: GenmotionProject, projectDir: string, sceneTime: number, compositionStack: string[] = [], evaluated = false): Promise<void> {
+  const effectiveStart = effectiveLayerStart(layer);
+  if (!layer.visible || !layerIsActive(effectiveStart, layer.duration, scene.duration, sceneTime)) return;
+  const localTime = sceneTime - effectiveStart;
+  if (!evaluated) layer = evaluateLayerTracks(layer, localTime, project.seed);
   if (layer.type === 'shape') layer = resolveAnchoredShape(layer, project);
   const box = layerBox(layer);
   const transform = layer.transform;
@@ -322,7 +317,8 @@ async function drawCompositionLayer(ctx: SKRSContext2D, layer: Extract<Layer, { 
   ctx.scale(layer.width / composition.width, layer.height / composition.height);
   if (composition.background) { ctx.fillStyle = composition.background; ctx.fillRect(0, 0, composition.width, composition.height); }
   const scene = { id: composition.id, purpose: composition.id, duration: composition.duration, background: composition.background ?? 'rgba(0,0,0,0)', layers: composition.layers, transitionIn: { type: 'cut' as const, duration: 0, ease: 'linear' as const, mode: 'symmetric' as const }, transitionOut: { type: 'cut' as const, duration: 0, ease: 'linear' as const, mode: 'symmetric' as const }, referenceDecisions: [], notes: [] };
-  for (const child of [...composition.layers].sort((a, b) => a.z - b.z)) await drawLayer(ctx, child, scene, project, projectDir, time, [...compositionStack, composition.id]);
+  const children = resolveLayerGraph(composition.layers, time, project.seed);
+  for (const child of [...children].sort((a, b) => a.z - b.z)) await drawLayer(ctx, child, scene, project, projectDir, time, [...compositionStack, composition.id], true);
   ctx.restore();
 }
 
@@ -402,7 +398,8 @@ function locateBoundaryTransition(project: GenmotionProject, active: ReturnType<
 async function drawSceneContents(ctx: SKRSContext2D, scene: Scene, project: GenmotionProject, projectDir: string, time: number): Promise<void> {
   ctx.fillStyle = scene.background;
   ctx.fillRect(0, 0, project.width, project.height);
-  for (const layer of [...scene.layers].sort((a, b) => a.z - b.z)) await drawLayer(ctx, layer, scene, project, projectDir, time);
+  const layers = resolveLayerGraph(scene.layers, time, project.seed);
+  for (const layer of [...layers].sort((a, b) => a.z - b.z)) await drawLayer(ctx, layer, scene, project, projectDir, time, [], true);
 }
 
 async function drawScene(ctx: SKRSContext2D, scene: Scene, project: GenmotionProject, projectDir: string, time: number, pose: ScenePose, output: RenderDimensions): Promise<void> {
@@ -462,6 +459,7 @@ export async function renderFrame(project: GenmotionProject, projectDir: string,
         id: `transition-overlay-${composition.id}`, type: 'composition', compositionId: composition.id,
         x: 0, y: 0, width: project.width, height: project.height, timeOffset: 0, timeScale: composition.duration,
         loop: false, start: 0, z: 0, visible: true, transform: DEFAULT_TRANSFORM, blendMode: 'source-over', tags: [], motion: [], tracks: [], bindings: {},
+        constraints: [],
       }, project, projectDir, boundary.progress, []);
     }
   } else {

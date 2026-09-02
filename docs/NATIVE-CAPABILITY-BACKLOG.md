@@ -53,18 +53,20 @@ This is the canonical, version-controlled checklist for bringing every transfera
 
 ## 3. Animation and timing
 
-- [ ] Multi-point numeric, color, gradient, angle, vector, point, rectangle, and compatible-path interpolation.
-- [ ] Independent left/right extrapolation with clamp, extend, wrap, identity, loop, and ping-pong behavior.
-- [ ] Shortest-path rotation interpolation, discrete steps, and hold keyframes.
-- [ ] Named easing, per-segment easing, custom cubic Bezier easing, easing copy/paste, reversal, mirroring, and presets.
-- [ ] Springs with duration measurement, normalization, overshoot clamping, velocity, physical presets, and settling visualization.
-- [ ] Deterministic seeded randomness and deterministic 2D, 3D, and 4D noise.
+- [x] Multi-point numeric, perceptual color, angle, vector/point, and rectangle interpolation.
+- [ ] Gradient and compatible-path interpolation.
+- [x] Independent left/right extrapolation with clamp, extend, wrap, identity, loop, and ping-pong behavior.
+- [x] Shortest-path rotation interpolation, discrete steps, and hold keyframes.
+- [x] Named and per-segment easing, custom cubic Bezier easing, reversal, mirroring, and presets.
+- [ ] Easing copy/paste commands.
+- [x] Springs with duration measurement, normalization, overshoot clamping, velocity, physical presets, and settling visualization.
+- [x] Deterministic seeded randomness and deterministic 2D, 3D, and 4D noise.
 - [ ] Stagger by index, distance, center, and seeded random order plus delay and trail utilities.
 - [ ] Frame-rate-independent helpers and subframe evaluation.
 - [ ] Shutter-based temporal sampling, motion blur, motion trails, directional light trails, per-layer/effect control, shutter angle, and quality-dependent sample counts.
 - [ ] Velocity and acceleration visualization.
 - [ ] Track grouping, mute, solo, lock, and expression-free property linking.
-- [ ] Parent-child transform inheritance and follow-path, look-at, maintain-distance, and anchor-to-anchor constraints.
+- [x] Parent-child transform inheritance and follow-path, look-at, maintain-distance, and anchor-to-anchor constraints.
 
 ## 4. Vector geometry and paths
 

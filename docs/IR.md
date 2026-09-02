@@ -31,13 +31,16 @@ Every layer has:
 - an explicit transform;
 - zero or more arbitrary property tracks;
 - zero or more optional named motion directives.
-- optional typed parameter bindings and a measured SVG motion path.
+- optional typed parameter bindings and a measured SVG motion path;
+- optional parent transform inheritance, declarative constraints, and deterministic stagger timing.
 
 The transform supports animated `x`, `y`, `scaleX`, `scaleY`, `rotation`, `opacity`, and `blur`, plus normalized anchors. An animated number is `{ "keyframes": [...] }`; a keyframe contains `at`, `value`, and `ease`. Ease may be a named curve, a data-defined cubic-bezier object, or a physical spring object.
 
 ## Direct animation tracks
 
-Tracks are the first-class agent animation language. They can target geometry, typography metrics, shape drawing, video playback, shadow values, or transforms. Each track owns an ID, two or more keyframes, `replace`, `add`, or `multiply` composition, and `clamp`, `loop`, or `ping-pong` playback. They do not require a catalog recipe.
+Tracks are the first-class agent animation language. They can target geometry, typography metrics, colors, Bezier controls, shape drawing, video playback, shadow values, or transforms. Values are numeric, CSS colors interpolated in OKLab, two-value points, or four-value rectangles. Each track owns an ID, two or more keyframes, `replace`, `add`, or `multiply` composition, and independent `extrapolateLeft` / `extrapolateRight` behavior. Supported boundary modes are `clamp`, `extend`, `wrap`, `identity`, `loop`, and `ping-pong`; `extrapolate` remains the shared default. `interpolation` selects `linear`, `shortest-angle`, or `discrete`, and a keyframe can set `hold` to retain its value until the next key. Color tracks only support replacement so invalid arithmetic is rejected before rendering.
+
+An optional `noise` modifier adds deterministic fractal motion after keyframe evaluation. Its seed is combined with the project seed and its frequency, octave, lacunarity, gain, and amplitude remain frame-seekable. The same seed and timestamp always produce the same value.
 
 ```json
 {
@@ -52,6 +55,14 @@ Tracks are the first-class agent animation language. They can target geometry, t
   ]
 }
 ```
+
+Spring easing is evaluated from mass, stiffness, damping, and initial velocity. `duration` can explicitly set its normalization window; otherwise the engine measures the settling duration. `clamp` removes overshoot without changing the physical response. The SDK exports presets and sampling/analysis helpers, while `easing-inspect` and `genmotion_animation_inspect` expose identical data to CLI and MCP callers.
+
+## Hierarchy, constraints, and stagger
+
+`parentId` inherits a local layer's evaluated parent transform. `constraints` are evaluated in dependency order after tracks and motion paths: `follow` copies a target position with offsets, `look-at` rotates toward it, `maintain-distance` holds a polar separation, and `anchor-to` binds one of nine box anchors to a target anchor. References must remain inside the containing scene or composition; unknown targets and dependency cycles fail validation.
+
+`stagger` shifts a layer's effective local start using `index`, `count`, `each`, `from`, and `seed`. Origin modes are `start`, `end`, `center`, `edges`, and deterministic `random`. `trail` is exposed as an authoring window for downstream trail effects and inspection. CLI, MCP, SDK, renderer, validator, and Studio read the same fields from Creative IR.
 
 Shape layers also accept `shape: "path"` with local SVG path data. The native path kernel measures length and bounds, returns exact point/tangent samples, flattens at a controlled tolerance, and renders animated prefixes from `progress`. Any layer may use `followPath` with animated progress, tangent orientation, and offsets.
 

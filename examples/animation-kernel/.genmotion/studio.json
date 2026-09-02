@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "nodes": [
+    {
+      "id": "brief",
+      "kind": "brief",
+      "x": 40,
+      "y": 160,
+      "label": "Creative brief",
+      "note": "",
+      "color": "#22c55e"
+    },
+    {
+      "id": "scene:kernel",
+      "kind": "scene",
+      "x": 390,
+      "y": 140,
+      "label": "kernel",
+      "sceneId": "kernel",
+      "note": "Demonstrate deterministic typed animation, procedural motion, staggering, and constraints",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "output",
+      "kind": "output",
+      "x": 760,
+      "y": 160,
+      "label": "Master export",
+      "note": "640×360",
+      "color": "#f59e0b"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge:sequence:kernel",
+      "from": "brief",
+      "to": "scene:kernel",
+      "label": "direction"
+    },
+    {
+      "id": "edge:output:sequence",
+      "from": "scene:kernel",
+      "to": "output",
+      "label": "render"
+    }
+  ],
+  "references": [],
+  "updatedAt": "2026-09-02T15:35:32.561Z"
+}
