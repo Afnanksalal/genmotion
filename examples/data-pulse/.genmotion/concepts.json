@@ -3,16 +3,43 @@
   "concepts": [
     {
       "id": "data-pulse-direction-a",
-      "hierarchy": "One dominant statement per scene",
-      "clarity": "Every scene has one readable proof",
-      "originality": "Native vectors and direct tracks, no borrowed template",
-      "brandFit": [
-        "precise",
-        "editorial",
-        "controlled"
+      "referenceFamily": "Scientific signal art and oscilloscope photography",
+      "borrow": [
+        "continuous luminous traces",
+        "phase convergence",
+        "light as evidence"
       ],
-      "rhythm": "Establish, travel, settle, hold",
-      "feasibility": "Runs without remote assets"
+      "avoid": [
+        "literal dashboard chrome",
+        "HUD decoration",
+        "generic bar charts"
+      ],
+      "transform": [
+        "turn raw events into a cinematic field that physically converges on one pulse"
+      ],
+      "hierarchy": "One large typographic command is anchored by a full-frame signal sculpture",
+      "rhythm": "Accumulate, converge, resolve, hold",
+      "feasibility": "Native paths, blend modes, shadows, typography, and direct tracks only"
+    },
+    {
+      "id": "data-pulse-direction-b",
+      "referenceFamily": "Swiss editorial posters and kinetic title design",
+      "borrow": [
+        "decisive scale contrast",
+        "asymmetric grid",
+        "hard color interruption"
+      ],
+      "avoid": [
+        "corporate presentation cards",
+        "template typography",
+        "decorative microcopy"
+      ],
+      "transform": [
+        "use an acid diagonal and monumental type as the final analytical conclusion"
+      ],
+      "hierarchy": "The final statement occupies the frame as an editorial object",
+      "rhythm": "Hard typographic arrival followed by a generous stable hold",
+      "feasibility": "Native vector geometry and text tracks only"
     }
   ]
 }
