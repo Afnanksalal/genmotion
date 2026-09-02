@@ -52,7 +52,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:studio-e2e
   coverage:
-    runs-on: ubuntu-latest
+    # Pin the coverage gate: mutable ubuntu-latest images have intermittently
+    # hung during apt-based FFmpeg provisioning, preventing otherwise-green
+    # releases from reaching a terminal state.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
