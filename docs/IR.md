@@ -2,7 +2,7 @@
 
 ## Root
 
-`genmotion.json` and its YAML equivalents contain `schemaVersion`, identity, delivery dimensions, frame rate, deterministic seed, shared geometry anchors, brand tokens, scenes, audio tracks, and string metadata.
+`genmotion.json` and its YAML equivalents contain `schemaVersion`, identity, delivery dimensions, frame rate, deterministic seed, shared geometry anchors, typed parameters, variants, reusable compositions, brand tokens, scenes, audio tracks, and string metadata.
 
 All time values are seconds. Keyframe times are local to their layer. Direct animation tracks and optional motion directives also use layer-local time.
 
@@ -10,7 +10,15 @@ All time values are seconds. Keyframe times are local to their layer. Direct ani
 
 A scene owns a background, duration, ordered layers, inbound and outbound transitions, creative reference decisions, and production notes. Layer order is first determined by `z` and then declaration order.
 
-Supported transitions are `cut`, `crossfade`, `slide-left`, `slide-right`, `push-up`, `zoom`, and `blur`. Transitions are evaluated from absolute scene time and remain seekable. A boundary is one continuous transition: the previous scene's `transitionOut.duration` supplies the pre-boundary span and the next scene's `transitionIn.duration` supplies the post-boundary span. When both spans are active, their type and easing must match. Define only one side when a one-sided transition is sufficient. `cut` is instantaneous; its duration does not extend a boundary transition.
+Transition timing and presentation are independent. `presentation` supports `cut`, `crossfade`, `slide-left`, `slide-right`, `push-up`, `zoom`, `blur`, `wipe-left`, `wipe-right`, and `iris`; `timing` accepts every named, cubic-bezier, or spring easing. `mode` places the authored duration before the boundary (`outgoing`), after it (`incoming`), or equally around it (`symmetric`). Legacy `type` and `ease` remain valid fallbacks, so existing schema-v1 projects render identically.
+
+## Typed parameters and variants
+
+`parameters` declares number, boolean, string, color, or enum inputs with validated defaults and constraints. `parameterValues` stores the project's active values. A layer maps a writable property path to a parameter ID through `bindings`; the resolver rejects missing targets and type changes before rendering. Named `variants` supply reusable value sets. CLI `validate`, `frame`, and `render` accept `--variant` and `--params`; `render-variants` renders the complete matrix. The MCP frame and render tools expose the same override surface.
+
+## Reusable compositions
+
+`compositions` are project-local reusable layer graphs with their own dimensions, duration, optional background, and local timeline. A `composition` layer places one graph into a scene or another composition with explicit `timeOffset`, `timeScale`, and `loop`. Rendering is recursive and deterministic; validation rejects unknown references and cycles, and nested time never mutates the source graph.
 
 ## Layers
 
@@ -23,6 +31,7 @@ Every layer has:
 - an explicit transform;
 - zero or more arbitrary property tracks;
 - zero or more optional named motion directives.
+- optional typed parameter bindings and a measured SVG motion path.
 
 The transform supports animated `x`, `y`, `scaleX`, `scaleY`, `rotation`, `opacity`, and `blur`, plus normalized anchors. An animated number is `{ "keyframes": [...] }`; a keyframe contains `at`, `value`, and `ease`. Ease may be a named curve, a data-defined cubic-bezier object, or a physical spring object.
 
@@ -44,7 +53,7 @@ Tracks are the first-class agent animation language. They can target geometry, t
 }
 ```
 
-Shape layers also accept `shape: "path"` with local SVG path data. The native renderer scales the path bounds into the declared layer box.
+Shape layers also accept `shape: "path"` with local SVG path data. The native path kernel measures length and bounds, returns exact point/tangent samples, flattens at a controlled tolerance, and renders animated prefixes from `progress`. Any layer may use `followPath` with animated progress, tangent orientation, and offsets.
 
 ### Text
 
@@ -81,6 +90,10 @@ Image layers support contain, cover, and fill fitting, source cropping, rounded 
 ### Video
 
 Video layers support contain, cover, and fill fitting, rounded clipping, trim start, playback rate, source-audio volume, compositing, filters, and transforms. Sources are frozen before frame rendering.
+
+### Captions
+
+Caption layers own timed cues, optional word timings and speakers, typography, highlight color, background, outline, padding, radius, alignment, line limits, and safe-area intent. Rendering is native and exact-frame seekable. The active word can be highlighted without a provider dependency. `captions-import` and `captions-export` convert SRT, WebVTT, and timed JSON; the same conversion is exposed by MCP.
 
 ## Motion directives
 

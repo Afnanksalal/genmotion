@@ -6,6 +6,8 @@ import { tasteReferences } from '../catalog/references.js';
 import { evaluateLayerTracks } from '../engine/animation.js';
 import { evaluateNumber } from '../engine/timeline.js';
 import { resolveAnchoredShape, shapeBounds } from '../engine/geometry.js';
+import { pathMetrics } from '../engine/path.js';
+import { compositionCycles } from './compositions.js';
 
 export type Severity = 'error' | 'warning';
 
@@ -17,7 +19,7 @@ export interface Finding {
 }
 
 function collectAsset(layer: Layer): string | undefined {
-  return layer.type === 'image' || layer.type === 'video' ? layer.src : layer.type === 'text' ? layer.fontFile : undefined;
+  return layer.type === 'image' || layer.type === 'video' ? layer.src : layer.type === 'text' || layer.type === 'caption' ? layer.fontFile : undefined;
 }
 
 function animatedValues(value: Layer['transform']['opacity']): number[] {
@@ -88,6 +90,13 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
   const ids = new Set<string>();
   const anchorIds = new Set<string>();
   const referenceIds = new Set(tasteReferences.map((reference) => reference.id));
+  const parameterIds = new Set(project.parameters.map((parameter) => parameter.id));
+  const compositionIds = new Set(project.compositions.map((composition) => composition.id));
+
+  if (parameterIds.size !== project.parameters.length) findings.push({ code: 'DUPLICATE_PARAMETER_ID', severity: 'error', message: 'Project parameter ids must be unique.', location: 'parameters' });
+  if (compositionIds.size !== project.compositions.length) findings.push({ code: 'DUPLICATE_COMPOSITION_ID', severity: 'error', message: 'Composition ids must be unique.', location: 'compositions' });
+  for (const cycle of compositionCycles(project)) findings.push({ code: 'COMPOSITION_CYCLE', severity: 'error', message: `Composition cycle: ${cycle.join(' -> ')}`, location: 'compositions' });
+  for (const [index, variant] of project.variants.entries()) for (const id of Object.keys(variant.values)) if (!parameterIds.has(id)) findings.push({ code: 'VARIANT_PARAMETER_UNKNOWN', severity: 'error', message: `${variant.id} references unknown parameter ${id}.`, location: `variants.${index}` });
 
   for (const [anchorIndex, anchor] of project.anchors.entries()) {
     const location = `anchors.${anchorIndex}`;
@@ -109,17 +118,37 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
     }
   }
 
+  for (const [compositionIndex, composition] of project.compositions.entries()) {
+    if (ids.has(composition.id)) findings.push({ code: 'DUPLICATE_ID', severity: 'error', message: `Duplicate id: ${composition.id}`, location: `compositions.${compositionIndex}` });
+    ids.add(composition.id);
+    for (const [layerIndex, layer] of composition.layers.entries()) {
+      const location = `compositions.${compositionIndex}.layers.${layerIndex}`;
+      if (ids.has(layer.id)) findings.push({ code: 'DUPLICATE_ID', severity: 'error', message: `Duplicate id: ${layer.id}`, location });
+      ids.add(layer.id);
+      if (layer.start >= composition.duration) findings.push({ code: 'LAYER_OUTSIDE_COMPOSITION', severity: 'error', message: `${layer.id} starts after its composition ends.`, location });
+      if (layer.duration && layer.start + layer.duration > composition.duration + 0.001) findings.push({ code: 'LAYER_OVERRUN', severity: 'warning', message: `${layer.id} extends beyond its composition.`, location });
+      if (layer.type === 'composition' && !compositionIds.has(layer.compositionId)) findings.push({ code: 'COMPOSITION_UNKNOWN', severity: 'error', message: `${layer.id} references unknown composition ${layer.compositionId}.`, location });
+      for (const parameterId of Object.values(layer.bindings)) if (!parameterIds.has(parameterId)) findings.push({ code: 'BINDING_PARAMETER_UNKNOWN', severity: 'error', message: `${layer.id} binds unknown parameter ${parameterId}.`, location: `${location}.bindings` });
+      if (layer.followPath) try { pathMetrics(layer.followPath.path); } catch { findings.push({ code: 'MOTION_PATH_INVALID', severity: 'error', message: `${layer.id} has invalid SVG motion-path data.`, location: `${location}.followPath` }); }
+      if (layer.type === 'shape' && layer.shape === 'path' && layer.path) try { pathMetrics(layer.path); } catch { findings.push({ code: 'PATH_INVALID', severity: 'error', message: `${layer.id} has invalid SVG path data.`, location: `${location}.path` }); }
+      if (layer.type === 'caption') for (let cueIndex = 1; cueIndex < layer.cues.length; cueIndex += 1) if (layer.cues[cueIndex]!.start < layer.cues[cueIndex - 1]!.end) findings.push({ code: 'CAPTION_CUE_OVERLAP', severity: 'warning', message: `${layer.cues[cueIndex - 1]!.id} and ${layer.cues[cueIndex]!.id} overlap.`, location: `${location}.cues.${cueIndex}` });
+      const assetPath = collectAsset(layer);
+      if (assetPath) try { await access(resolveProjectAsset(projectDir, assetPath)); } catch { findings.push({ code: 'ASSET_MISSING', severity: 'error', message: `Asset does not exist: ${assetPath}`, location }); }
+    }
+  }
+
   for (const [sceneIndex, scene] of project.scenes.entries()) {
     if (ids.has(scene.id)) findings.push({ code: 'DUPLICATE_ID', severity: 'error', message: `Duplicate id: ${scene.id}`, location: `scenes.${sceneIndex}` });
     ids.add(scene.id);
     if (scene.transitionIn.duration > scene.duration / 2 || scene.transitionOut.duration > scene.duration / 2) findings.push({ code: 'TRANSITION_TOO_LONG', severity: 'error', message: `${scene.id} transition consumes more than half the scene.`, location: `scenes.${sceneIndex}` });
+    for (const [side, transition] of [['transitionIn', scene.transitionIn], ['transitionOut', scene.transitionOut]] as const) if (transition.overlayCompositionId && !compositionIds.has(transition.overlayCompositionId)) findings.push({ code: 'TRANSITION_OVERLAY_UNKNOWN', severity: 'error', message: `${scene.id} references unknown transition overlay ${transition.overlayCompositionId}.`, location: `scenes.${sceneIndex}.${side}` });
     const previousScene = project.scenes[sceneIndex - 1];
     if (previousScene) {
       const outgoing = previousScene.transitionOut;
       const incoming = scene.transitionIn;
-      const hasOutgoing = outgoing.type !== 'cut' && outgoing.duration > 0;
-      const hasIncoming = incoming.type !== 'cut' && incoming.duration > 0;
-      if (hasOutgoing && hasIncoming && (outgoing.type !== incoming.type || JSON.stringify(outgoing.ease) !== JSON.stringify(incoming.ease))) {
+      const hasOutgoing = (outgoing.presentation ?? outgoing.type) !== 'cut' && outgoing.duration > 0;
+      const hasIncoming = (incoming.presentation ?? incoming.type) !== 'cut' && incoming.duration > 0;
+      if (hasOutgoing && hasIncoming && ((outgoing.presentation ?? outgoing.type) !== (incoming.presentation ?? incoming.type) || JSON.stringify(outgoing.timing ?? outgoing.ease) !== JSON.stringify(incoming.timing ?? incoming.ease))) {
         findings.push({
           code: 'TRANSITION_BOUNDARY_MISMATCH',
           severity: 'error',
@@ -139,6 +168,9 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
       if (ids.has(layer.id)) findings.push({ code: 'DUPLICATE_ID', severity: 'error', message: `Duplicate id: ${layer.id}`, location });
       ids.add(layer.id);
       zCounts.set(layer.z, (zCounts.get(layer.z) ?? 0) + 1);
+      for (const parameterId of Object.values(layer.bindings)) if (!parameterIds.has(parameterId)) findings.push({ code: 'BINDING_PARAMETER_UNKNOWN', severity: 'error', message: `${layer.id} binds unknown parameter ${parameterId}.`, location: `${location}.bindings` });
+      if (layer.type === 'composition' && !compositionIds.has(layer.compositionId)) findings.push({ code: 'COMPOSITION_UNKNOWN', severity: 'error', message: `${layer.id} references unknown composition ${layer.compositionId}.`, location });
+      if (layer.followPath) try { pathMetrics(layer.followPath.path); } catch { findings.push({ code: 'MOTION_PATH_INVALID', severity: 'error', message: `${layer.id} has invalid SVG motion-path data.`, location: `${location}.followPath` }); }
 
       if (layer.start >= scene.duration) findings.push({ code: 'LAYER_OUTSIDE_SCENE', severity: 'error', message: `${layer.id} starts after its scene ends.`, location });
       if (layer.duration && layer.start + layer.duration > scene.duration + 0.001) findings.push({ code: 'LAYER_OVERRUN', severity: 'warning', message: `${layer.id} extends beyond its scene and will be clipped.`, location });
@@ -166,13 +198,23 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
         }
       }
 
-      if (layer.type === 'text') {
+      if (layer.type === 'text' || layer.type === 'caption') {
         if (layer.fontSize < project.height * 0.015) findings.push({ code: 'TEXT_TOO_SMALL', severity: 'warning', message: `${layer.id} may be unreadable at delivery size.`, location });
         if (layer.width + layer.x > project.width || layer.height + layer.y > project.height) findings.push({ code: 'TEXT_OUTSIDE_FRAME', severity: 'error', message: `${layer.id} extends beyond the frame.`, location });
         const ratio = contrast(layer.color, scene.background);
         if (ratio !== undefined && ratio < 3) findings.push({ code: 'TEXT_CONTRAST', severity: 'warning', message: `${layer.id} has only ${ratio.toFixed(2)}:1 contrast against the scene background. Verify its actual backing surface.`, location });
         if (layer.x < project.width * 0.02 || layer.y < project.height * 0.02 || layer.x + layer.width > project.width * 0.98 || layer.y + layer.height > project.height * 0.98) findings.push({ code: 'TEXT_SAFE_AREA', severity: 'warning', message: `${layer.id} approaches the delivery safe edge.`, location });
+        if (layer.type === 'caption') {
+          for (let cueIndex = 0; cueIndex < layer.cues.length; cueIndex += 1) {
+            const cue = layer.cues[cueIndex]!;
+            if (cue.end > (layer.duration ?? scene.duration - layer.start) + 0.001) findings.push({ code: 'CAPTION_CUE_OVERRUN', severity: 'warning', message: `${cue.id} extends beyond the caption layer.`, location: `${location}.cues.${cueIndex}` });
+            const previous = layer.cues[cueIndex - 1];
+            if (previous && cue.start < previous.end) findings.push({ code: 'CAPTION_CUE_OVERLAP', severity: 'warning', message: `${previous.id} and ${cue.id} overlap.`, location: `${location}.cues.${cueIndex}` });
+          }
+          if (layer.safeArea && (layer.x < project.width * 0.05 || layer.x + layer.width > project.width * 0.95 || layer.y + layer.height > project.height * 0.95)) findings.push({ code: 'CAPTION_SAFE_AREA', severity: 'warning', message: `${layer.id} leaves the 5% caption safe area.`, location });
+        }
       } else if (layer.type === 'shape') {
+        if (layer.shape === 'path' && layer.path) try { pathMetrics(layer.path); } catch { findings.push({ code: 'PATH_INVALID', severity: 'error', message: `${layer.id} has invalid SVG path data.`, location: `${location}.path` }); }
         for (const [property, anchorId] of [['startAnchor', layer.startAnchor], ['endAnchor', layer.endAnchor], ['centerAnchor', layer.centerAnchor]] as const) {
           if (anchorId && !anchorIds.has(anchorId)) findings.push({ code: 'ANCHOR_UNKNOWN', severity: 'error', message: `${layer.id} references unknown geometry anchor ${anchorId}.`, location: `${location}.${property}` });
         }

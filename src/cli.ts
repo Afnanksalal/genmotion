@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
@@ -18,6 +18,8 @@ import { auditCatalog } from './catalog/audit.js';
 import { isEntrypoint } from './entrypoint.js';
 import { getStudioRequests, resolveStudioRequest, startStudio } from './studio/server.js';
 import { GENMOTION_VERSION } from './version.js';
+import { parseCaptions, serializeCaptions } from './captions.js';
+import type { ParameterValue } from './ir/parameters.js';
 
 const program = new Command();
 program.name('genmotion').description('Agent-native motion design engine and visual editor.').version(GENMOTION_VERSION).option('--json', 'Emit machine-readable JSON.');
@@ -32,6 +34,14 @@ function parseResolution(value: string): { width: number; height: number } {
   const match = /^(\d{2,5})x(\d{2,5})$/i.exec(value.trim());
   if (!match) throw new GenmotionError('INVALID_RENDER_RESOLUTION', 'Resolution must use WIDTHxHEIGHT, for example 1920x1080.');
   return { width: Number(match[1]), height: Number(match[2]) };
+}
+
+async function loadConfiguredProject(input: string, options: { params?: string; variant?: string }) {
+  const initial = await loadProject(input);
+  const variant = options.variant ? initial.sourceProject.variants.find((candidate) => candidate.id === options.variant) : undefined;
+  if (options.variant && !variant) throw new GenmotionError('VARIANT_UNKNOWN', `Unknown project variant: ${options.variant}`);
+  const explicit = options.params ? JSON.parse(options.params) as Record<string, ParameterValue> : {};
+  return loadProject(input, { ...(variant?.values ?? {}), ...explicit });
 }
 
 program.command('init')
@@ -50,8 +60,10 @@ program.command('init')
 program.command('validate').alias('check')
   .argument('<project>')
   .option('--strict', 'Treat warnings as failures')
-  .action(async (input: string, options: { strict?: boolean }) => {
-    const loaded = await loadProject(input);
+  .option('--params <json>', 'Typed parameter overrides as a JSON object')
+  .option('--variant <id>', 'Named project variant')
+  .action(async (input: string, options: { strict?: boolean; params?: string; variant?: string }) => {
+    const loaded = await loadConfiguredProject(input, options);
     const findings = await validateProject(loaded);
     output({ ok: !hasErrors(findings) && (!options.strict || findings.length === 0), summary: summarizeProject(loaded.project), findings });
     if (hasErrors(findings) || (options.strict && findings.length > 0)) process.exitCode = 1;
@@ -61,8 +73,10 @@ program.command('frame')
   .argument('<project>')
   .requiredOption('--at <seconds>')
   .requiredOption('--output <file>')
-  .action(async (input: string, options: { at: string; output: string }) => {
-    const loaded = await loadProject(input);
+  .option('--params <json>', 'Typed parameter overrides as a JSON object')
+  .option('--variant <id>', 'Named project variant')
+  .action(async (input: string, options: { at: string; output: string; params?: string; variant?: string }) => {
+    const loaded = await loadConfiguredProject(input, options);
     const frame = Math.floor(Number(options.at) * loaded.project.fps);
     const png = await renderFramePng(loaded.project, loaded.projectDir, frame);
     const destination = path.resolve(options.output);
@@ -79,8 +93,10 @@ program.command('render')
   .option('--workers <count>', 'Frame workers')
   .option('--resolution <WIDTHxHEIGHT>', 'Exact even-sized output resolution; must preserve the project aspect ratio')
   .option('--hardware', 'Require a platform hardware encoder')
-  .action(async (input: string, options: { output: string; quality: RenderQuality; codec: VideoCodec; workers?: string; resolution?: string; hardware?: boolean }) => {
-    const loaded = await loadProject(input);
+  .option('--params <json>', 'Typed parameter overrides as a JSON object')
+  .option('--variant <id>', 'Named project variant')
+  .action(async (input: string, options: { output: string; quality: RenderQuality; codec: VideoCodec; workers?: string; resolution?: string; hardware?: boolean; params?: string; variant?: string }) => {
+    const loaded = await loadConfiguredProject(input, options);
     const findings = await validateProject(loaded);
     if (hasErrors(findings)) throw new GenmotionError('VALIDATION_FAILED', 'Render blocked by validation errors.', findings);
     const controller = new AbortController();
@@ -99,6 +115,27 @@ program.command('render')
     });
     if (!program.opts<{ json?: boolean }>().json) process.stderr.write('\n');
     output(result);
+  });
+
+program.command('render-variants')
+  .description('Render every named project variant deterministically from one Creative IR document.')
+  .argument('<project>')
+  .requiredOption('--output <directory>')
+  .option('--quality <quality>', 'draft, standard, or high', 'high')
+  .option('--codec <codec>', 'h264, h265, vp9, or prores', 'h264')
+  .option('--workers <count>', 'Frame workers')
+  .action(async (input: string, options: { output: string; quality: RenderQuality; codec: VideoCodec; workers?: string }) => {
+    const source = await loadProject(input);
+    if (source.sourceProject.variants.length === 0) throw new GenmotionError('VARIANTS_EMPTY', 'The project defines no named variants.');
+    const directory = path.resolve(options.output); await mkdir(directory, { recursive: true });
+    const results = [];
+    for (const variant of source.sourceProject.variants) {
+      const loaded = await loadProject(input, variant.values);
+      const findings = await validateProject(loaded);
+      if (hasErrors(findings)) throw new GenmotionError('VALIDATION_FAILED', `Variant ${variant.id} failed validation.`, findings);
+      results.push({ variant: variant.id, ...await renderProject(loaded, { output: path.join(directory, `${source.sourceProject.id}-${variant.id}.mp4`), quality: options.quality, codec: options.codec, ...(options.workers ? { workers: Number(options.workers) } : {}) }) });
+    }
+    output({ output: directory, variants: results });
   });
 
 program.command('preview')
@@ -202,6 +239,32 @@ program.command('catalog-audit').description('Validate catalog cross-references 
   output(result);
   if (!result.ok) process.exitCode = 1;
 });
+
+program.command('captions-import')
+  .description('Parse SRT, WebVTT, or timed JSON into Creative IR caption cues.')
+  .argument('<file>')
+  .option('--format <format>', 'srt, vtt, or json')
+  .action(async (file: string, options: { format?: 'srt' | 'vtt' | 'json' }) => {
+    const extension = path.extname(file).slice(1).toLowerCase();
+    const format = options.format ?? (extension === 'vtt' ? 'vtt' : extension === 'json' ? 'json' : 'srt');
+    output({ cues: parseCaptions(await readFile(file, 'utf8'), format) });
+  });
+
+program.command('captions-export')
+  .description('Export a caption layer as SRT, WebVTT, or timed JSON.')
+  .argument('<project>')
+  .requiredOption('--layer <id>')
+  .requiredOption('--format <format>', 'srt, vtt, or json')
+  .requiredOption('--output <file>')
+  .action(async (input: string, options: { layer: string; format: 'srt' | 'vtt' | 'json'; output: string }) => {
+    const loaded = await loadProject(input);
+    const layer = [...loaded.sourceProject.scenes.flatMap((scene) => scene.layers), ...loaded.sourceProject.compositions.flatMap((composition) => composition.layers)].find((candidate) => candidate.id === options.layer);
+    if (!layer || layer.type !== 'caption') throw new GenmotionError('CAPTION_LAYER_UNKNOWN', `No caption layer found with id ${options.layer}.`);
+    const destination = path.resolve(options.output);
+    await mkdir(path.dirname(destination), { recursive: true });
+    await writeFile(destination, serializeCaptions(layer.cues, options.format));
+    output({ output: destination, cues: layer.cues.length, format: options.format });
+  });
 
 async function main(): Promise<void> {
   try { await program.parseAsync(process.argv); }

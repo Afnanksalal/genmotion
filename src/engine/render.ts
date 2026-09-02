@@ -129,7 +129,11 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   const quality = options.quality ?? 'high';
   const codec = options.codec ?? 'h264';
   const hardwareAcceleration = options.hardwareAcceleration ?? false;
-  const workers = Math.max(1, Math.min(options.workers ?? Math.max(1, os.availableParallelism() - 1), 16));
+  // Native Skia workers each own full-resolution canvases and may allocate
+  // transition offscreens. A host with many logical CPUs can otherwise launch
+  // enough concurrent native surfaces to make FFmpeg lose its input pipe under
+  // memory pressure. Explicit overrides remain available for measured hosts.
+  const workers = Math.max(1, Math.min(options.workers ?? Math.min(4, Math.max(1, os.availableParallelism() - 1)), 16));
   const dimensions = resolveRenderResolution(project, quality, options.resolution);
   const totalFrames = Math.ceil(projectDuration(project) * project.fps);
   const output = path.resolve(options.output);

@@ -2,6 +2,22 @@
 
 Genmotion follows semantic versioning. GitHub releases contain the verified package archive and its `SHA256SUMS` manifest.
 
+## 2.2.0 - 2026-09-02
+
+### Creative IR and renderer
+
+- Added reusable nested compositions with independent dimensions, local time offset/scaling/looping, recursive native rendering, missing-reference validation, and cycle rejection.
+- Added typed number, boolean, string, color, and enum parameters; safe layer property bindings; named variants; CLI/MCP overrides; and deterministic batch variant rendering.
+- Added a native SVG path geometry kernel for bounds, length, point/tangent sampling, tolerance-controlled flattening, progressive trim drawing, and seek-safe path-follow motion.
+- Added first-class caption layers with timed cues, speakers, word timing/highlighting, native backgrounds/outlines, safe-area diagnostics, and SRT/WebVTT/timed-JSON conversion through CLI, SDK, and MCP.
+- Separated transition presentation from timing and boundary placement, with symmetric/incoming/outgoing ownership, reusable composition overlays, and native iris and directional wipe presentations.
+
+### Studio, examples, and verification
+
+- Added Studio inspection and editing for caption styles/cues, composition instances, transition presentation/timing/mode, parameter bindings, motion paths, and their animation tracks.
+- Added the asset-free Native Milestones example and deterministic integration coverage spanning all five systems in one native render.
+- Capped automatic native worker fan-out to a stable four-worker default after 1080p QA exposed FFmpeg pipe loss under excessive native-canvas concurrency; explicit measured overrides remain supported.
+
 ## 2.1.0 - 2026-09-02
 
 ### Geometry
