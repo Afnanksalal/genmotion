@@ -256,6 +256,50 @@ test('authors the complete IR from Studio without relying on agent chat', async 
   expect(errors).toEqual([]);
 });
 
+test('round-trips typed tracks, procedural noise, hierarchy, and stagger controls', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.getByRole('button', { name: 'Source', exact: true }).click();
+  const source = page.locator('#projectSource');
+  const project = JSON.parse(await source.inputValue()) as { scenes: Array<{ layers: Array<Record<string, unknown>> }> };
+  const accent = project.scenes[0]!.layers.find((layer) => layer.id === 'accent')!;
+  const title = project.scenes[0]!.layers.find((layer) => layer.id === 'title')!;
+  accent.tracks = [{
+    id: 'fill-shift', target: 'fill', operation: 'replace', interpolation: 'linear', extrapolate: 'clamp',
+    extrapolateLeft: 'identity', extrapolateRight: 'ping-pong', enabled: true,
+    keyframes: [{ at: 0, value: '#111820', ease: 'linear', hold: false }, { at: 1, value: '#59e3a6', ease: 'sine-in-out', hold: false }],
+  }, {
+    id: 'seeded-drift', target: 'transform.x', operation: 'add', interpolation: 'linear', extrapolate: 'clamp', enabled: true,
+    noise: { seed: 4, amplitude: 3, frequency: 0.5, octaves: 2, lacunarity: 2, gain: 0.5 },
+    keyframes: [{ at: 0, value: 0, ease: 'linear', hold: false }, { at: 1, value: 4, ease: 'linear', hold: false }],
+  }];
+  accent.stagger = { index: 0, count: 2, each: 0.08, from: 'center', seed: 4, trail: 0.2 };
+  title.parentId = 'accent';
+  await source.fill(JSON.stringify(project, null, 2));
+  await page.locator('#applyProjectSource').click();
+
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await expect(page.locator('[data-field="tracks.0.keyframes.0.value"]')).toHaveValue('#111820');
+  await expect(page.locator('[data-select-field="tracks.0.extrapolateLeft"]')).toHaveText('identity');
+  await expect(page.locator('[data-select-field="tracks.0.extrapolateRight"]')).toHaveText('ping-pong');
+  await expect(page.locator('[data-field="tracks.1.noise.amplitude"]')).toHaveValue('3');
+  await expect(page.locator('[data-field="stagger.each"]')).toHaveValue('0.08');
+  await page.locator('[data-field="tracks.1.noise.amplitude"]').fill('4.5');
+  await page.locator('[data-field="tracks.1.noise.amplitude"]').press('Tab');
+  await page.locator('[data-select="layer"][data-id="title"]').click();
+  await expect(page.locator('[data-field="parentId"]')).toHaveValue('accent');
+  await page.locator('[data-field="parentId"]').fill('');
+  await page.locator('[data-field="parentId"]').press('Tab');
+
+  await expect.poll(async () => {
+    const saved = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; parentId?: string; tracks?: Array<{ noise?: { amplitude: number } }> }> }> };
+    return {
+      amplitude: saved.scenes[0]!.layers.find((layer) => layer.id === 'accent')?.tracks?.[1]?.noise?.amplitude,
+      hasParent: Object.hasOwn(saved.scenes[0]!.layers.find((layer) => layer.id === 'title')!, 'parentId'),
+    };
+  }).toEqual({ amplitude: 4.5, hasParent: false });
+});
+
 test('moves expanded workflow layers persistently and opens them in the canvas editor', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   const layersButton = page.getByRole('button', { name: 'Show layers' });

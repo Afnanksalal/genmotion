@@ -2,6 +2,21 @@
 
 Genmotion follows semantic versioning. GitHub releases contain the verified package archive and its `SHA256SUMS` manifest.
 
+## 2.3.0 - 2026-09-02
+
+### Animation kernel
+
+- Added typed numeric, perceptual OKLab color, point, rectangle, discrete, and shortest-angle interpolation with hold keyframes and independent left/right clamp, extend, wrap, identity, loop, and ping-pong extrapolation.
+- Added physical spring duration measurement, normalization, optional overshoot clamping, velocity-aware presets, settling analysis, and deterministic easing reversal/mirroring.
+- Added project-seeded one- through four-dimensional fractal noise and deterministic start, end, center, edge, and random stagger schedules with trail windows.
+- Added dependency-ordered parent transform inheritance and follow, look-at, maintain-distance, and anchor-to constraints for scene and reusable-composition layers.
+
+### Authoring and verification
+
+- Exposed animation inspection through CLI, MCP, and the public SDK, and added complete Studio controls for typed values, holds, extrapolation, noise, hierarchy, constraints, and stagger timing.
+- Added the editable Animation Kernel example with a strictly validated 1080p native master and inspected contact sheet.
+- Added composition-level typed-track validation and real browser coverage for the new Studio editing paths.
+
 ## 2.2.0 - 2026-09-02
 
 ### Creative IR and renderer

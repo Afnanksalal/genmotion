@@ -1,6 +1,13 @@
-import type { GenmotionProject, ShapeLayer } from '../ir/schema.js';
+import type { GenmotionProject, Layer, ShapeLayer } from '../ir/schema.js';
 
 export type Point = readonly [number, number];
+
+export interface LayerBox { x: number; y: number; width: number; height: number }
+
+export function layerBox(layer: Layer): LayerBox {
+  if (layer.type === 'shape') return shapeBounds(layer);
+  return { x: layer.x, y: layer.y, width: layer.width, height: layer.height };
+}
 
 function anchorPoint(project: GenmotionProject, id: string | undefined): Point | undefined {
   if (!id) return undefined;

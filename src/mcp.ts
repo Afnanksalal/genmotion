@@ -16,10 +16,10 @@ import { startPreview, type PreviewServer } from './engine/preview.js';
 import { renderProject } from './engine/render.js';
 import { GenmotionError } from './errors.js';
 import { loadProject } from './ir/loader.js';
-import { projectSchema } from './ir/schema.js';
+import { animationTrackSchema, easingSchema, projectSchema } from './ir/schema.js';
 import { applyPatch, patchOperationSchema } from './ir/patch.js';
 import { hasErrors, summarizeProject, validateProject } from './ir/validate.js';
-import { evaluateLayerTracks } from './engine/animation.js';
+import { evaluateTrack } from './engine/animation.js';
 import { layerIsActive, locateScene } from './engine/timeline.js';
 import { getStudioRequests, resolveStudioRequest, startStudio, type StudioServer } from './studio/server.js';
 import { GENMOTION_VERSION } from './version.js';
@@ -27,6 +27,9 @@ import { parseCaptions, serializeCaptions } from './captions.js';
 import { flattenPath, normalizePath, pathMetrics, samplePath } from './engine/path.js';
 import type { ParameterValue } from './ir/parameters.js';
 import { compositionDependencyGraph, compositionUses } from './ir/compositions.js';
+import { analyzeSpring, easingPresets } from './engine/easing.js';
+import { fractalNoise, noiseND, seededRandom, staggerSchedule, staggerWindows } from './engine/procedural.js';
+import { effectiveLayerStart, layerDependencyGraph, resolveLayerGraph } from './engine/constraints.js';
 
 type ToolValue = Record<string, unknown>;
 const qualitySchema = z.enum(['draft', 'standard', 'high']);
@@ -232,9 +235,9 @@ function serverFactory(): McpServer {
   }, async (input) => {
     const loaded = await loadProject(await allowedPath(input.project, 'Project'));
     const active = locateScene(loaded.project, input.at);
-    const layers = active.scene.layers.filter((layer) => layer.visible && layerIsActive(layer.start, layer.duration, active.scene.duration, active.localTime)).map((layer) => ({
-      ...evaluateLayerTracks(layer, active.localTime - layer.start),
-      localTime: active.localTime - layer.start,
+    const layers = resolveLayerGraph(active.scene.layers, active.localTime, loaded.project.seed).filter((layer) => layer.visible && layerIsActive(effectiveLayerStart(layer), layer.duration, active.scene.duration, active.localTime)).map((layer) => ({
+      ...layer,
+      localTime: active.localTime - effectiveLayerStart(layer),
     }));
     return toolResult({ at: input.at, scene: { id: active.scene.id, purpose: active.scene.purpose, localTime: active.localTime, globalStart: active.globalStart }, layers });
   });
@@ -256,12 +259,36 @@ function serverFactory(): McpServer {
     inputSchema: z.object({ path: z.string().min(1), progress: z.number().min(0).max(1).default(1), tolerance: z.number().positive().default(1) }).strict(), annotations: { readOnlyHint: true },
   }, (input) => Promise.resolve(toolResult({ ...pathMetrics(input.path), normalized: normalizePath(input.path, input.tolerance), sample: samplePath(input.path, input.progress), prefix: flattenPath(input.path, 0, input.progress, input.tolerance) })));
 
+  server.registerTool('genmotion_animation_inspect', {
+    title: 'Inspect deterministic animation primitives',
+    description: 'Evaluate a typed property track, measure a physical spring, generate a stagger schedule, or sample seeded 1D-4D noise without rendering.',
+    inputSchema: z.discriminatedUnion('action', [
+      z.object({ action: z.literal('track'), track: animationTrackSchema, at: z.number(), seed: z.number().int().default(0) }).strict(),
+      z.object({ action: z.literal('spring'), spring: easingSchema.optional(), preset: z.enum(['gentle', 'snappy', 'settled', 'expressive']).default('settled'), samples: z.number().int().min(2).max(1000).default(120) }).strict(),
+      z.object({ action: z.literal('stagger'), count: z.number().int().min(1).max(10_000), each: z.number().nonnegative().default(0.08), trail: z.number().nonnegative().default(0), from: z.enum(['start', 'end', 'center', 'edges', 'random']).default('start'), seed: z.number().int().default(0), ease: easingSchema.default('linear') }).strict(),
+      z.object({ action: z.literal('noise'), seed: z.number().int().default(0), coordinates: z.array(z.number().finite()).min(1).max(4), octaves: z.number().int().min(1).max(8).default(1), lacunarity: z.number().positive().default(2), gain: z.number().min(0).max(1).default(0.5) }).strict(),
+    ]),
+    annotations: { readOnlyHint: true },
+  }, (input) => {
+    if (input.action === 'track') return Promise.resolve(toolResult({ value: evaluateTrack(input.track, input.at, input.seed), at: input.at }));
+    if (input.action === 'spring') {
+      const easing = input.spring ?? easingPresets[input.preset];
+      if (typeof easing === 'string' || easing.type !== 'spring') throw new GenmotionError('SPRING_REQUIRED', 'Spring inspection requires a physical spring easing.');
+      return Promise.resolve(toolResult({ preset: input.spring ? undefined : input.preset, ...analyzeSpring(easing, input.samples) }));
+    }
+    if (input.action === 'stagger') {
+      const options = { each: input.each, from: input.from, seed: input.seed, trail: input.trail, ease: input.ease };
+      return Promise.resolve(toolResult({ schedule: staggerSchedule(input.count, options), windows: staggerWindows(input.count, options) }));
+    }
+    return Promise.resolve(toolResult({ random: seededRandom(input.seed), noise: noiseND(input.seed, input.coordinates), fractal: fractalNoise(input.seed, input.coordinates, input) }));
+  });
+
   server.registerTool('genmotion_compositions_inspect', {
     title: 'Inspect composition graph', description: 'Return reusable composition dependencies and every scene or composition instance that uses a selected definition.',
     inputSchema: z.object({ project: z.string().min(1), compositionId: z.string().optional() }).strict(), annotations: { readOnlyHint: true },
   }, async (input) => {
     const loaded = await loadProject(await allowedPath(input.project, 'Project'));
-    return toolResult({ graph: compositionDependencyGraph(loaded.project), ...(input.compositionId ? { uses: compositionUses(loaded.project, input.compositionId) } : {}) });
+    return toolResult({ graph: compositionDependencyGraph(loaded.project), layerGraphs: Object.fromEntries([...loaded.project.scenes, ...loaded.project.compositions].map((container) => [container.id, layerDependencyGraph(container.layers)])), ...(input.compositionId ? { uses: compositionUses(loaded.project, input.compositionId) } : {}) });
   });
 
   server.registerTool('genmotion_captions_convert', {

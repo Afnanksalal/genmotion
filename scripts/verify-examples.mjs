@@ -11,6 +11,7 @@ const examples = [
   { id: 'data-pulse', duration: 14, audio: false },
   { id: 'arc-one', duration: 15, audio: true },
   { id: 'native-milestones', duration: 4, audio: false, font: false },
+  { id: 'animation-kernel', duration: 6, audio: false, font: false },
 ];
 
 for (const example of examples) {

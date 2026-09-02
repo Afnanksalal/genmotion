@@ -1,5 +1,5 @@
 import { access } from 'node:fs/promises';
-import type { GenmotionProject, Layer } from './schema.js';
+import type { AnimationTrack, GenmotionProject, Layer } from './schema.js';
 import { projectDuration } from './schema.js';
 import { resolveProjectAsset, type LoadedProject } from './loader.js';
 import { tasteReferences } from '../catalog/references.js';
@@ -8,6 +8,7 @@ import { evaluateNumber } from '../engine/timeline.js';
 import { resolveAnchoredShape, shapeBounds } from '../engine/geometry.js';
 import { pathMetrics } from '../engine/path.js';
 import { compositionCycles } from './compositions.js';
+import { layerDependencyCycles, resolveLayerGraph } from '../engine/constraints.js';
 
 export type Severity = 'error' | 'warning';
 
@@ -50,13 +51,30 @@ function contrast(left: string, right: string): number | undefined {
   return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
 }
 
-function validateAnimated(value: Layer['transform']['opacity'], location: string, findings: Finding[]): void {
+function validateAnimated(value: Layer['transform']['opacity'] | { keyframes: Array<{ at: number }> }, location: string, findings: Finding[]): void {
   if (typeof value === 'number') return;
   for (let index = 1; index < value.keyframes.length; index += 1) {
     const previous = value.keyframes[index - 1];
     const current = value.keyframes[index];
     if (previous && current && current.at <= previous.at) findings.push({ code: 'KEYFRAMES_UNORDERED', severity: 'error', message: 'Keyframe times must be strictly increasing.', location });
   }
+}
+
+function validateAnimationTrack(track: AnimationTrack, visibleDuration: number, location: string, findings: Finding[]): void {
+  validateAnimated({ keyframes: track.keyframes }, location, findings);
+  if ((track.keyframes.at(-1)?.at ?? 0) > visibleDuration + 0.001 && track.extrapolate === 'clamp') findings.push({ code: 'TRACK_OVERRUN', severity: 'warning', message: `${track.id} extends past its layer's visible duration.`, location });
+  const values = track.keyframes.map((keyframe) => keyframe.value);
+  const colorTargets = ['color', 'fill', 'stroke', 'background', 'highlightColor', 'outlineColor', 'shadow.color'];
+  const pointTargets = ['control1', 'control2'];
+  const expected = colorTargets.includes(track.target) ? 'color' : pointTargets.includes(track.target) ? 'point' : 'number';
+  const invalid = values.some((value) => expected === 'color' ? typeof value !== 'string' : expected === 'point' ? !Array.isArray(value) || value.length !== 2 : typeof value !== 'number');
+  if (invalid) findings.push({ code: 'TRACK_VALUE_TYPE', severity: 'error', message: `${track.id} requires ${expected} keyframe values for ${track.target}.`, location });
+  if (track.operation !== 'replace' && values.some((value) => typeof value === 'string')) findings.push({ code: 'TRACK_OPERATION_TYPE', severity: 'error', message: `${track.id} cannot ${track.operation} color values.`, location });
+  if (track.interpolation === 'shortest-angle' && values.some((value) => typeof value !== 'number')) findings.push({ code: 'TRACK_INTERPOLATION_TYPE', severity: 'error', message: `${track.id} shortest-angle interpolation requires numeric values.`, location });
+  if (track.noise && values.some((value) => typeof value !== 'number' && !Array.isArray(value))) findings.push({ code: 'TRACK_NOISE_TYPE', severity: 'error', message: `${track.id} procedural noise requires numeric or vector values.`, location });
+  const numericValues = values.filter((value): value is number => typeof value === 'number');
+  if (track.operation === 'replace' && track.target === 'transform.opacity' && numericValues.some((value) => value < 0 || value > 1)) findings.push({ code: 'OPACITY_RANGE', severity: 'error', message: `${track.id} drives opacity outside 0..1.`, location });
+  if (track.operation === 'replace' && ['transform.scaleX', 'transform.scaleY', 'width', 'height', 'fontSize', 'lineHeight', 'playbackRate'].includes(track.target) && numericValues.some((value) => value <= 0)) findings.push({ code: 'TRACK_NON_POSITIVE', severity: 'error', message: `${track.id} drives ${track.target} to a non-positive value.`, location });
 }
 
 function layerBox(layer: Layer): { x: number; y: number; width: number; height: number } {
@@ -121,14 +139,24 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
   for (const [compositionIndex, composition] of project.compositions.entries()) {
     if (ids.has(composition.id)) findings.push({ code: 'DUPLICATE_ID', severity: 'error', message: `Duplicate id: ${composition.id}`, location: `compositions.${compositionIndex}` });
     ids.add(composition.id);
+    const localIds = new Set(composition.layers.map((layer) => layer.id));
+    for (const cycle of layerDependencyCycles(composition.layers)) findings.push({ code: 'LAYER_DEPENDENCY_CYCLE', severity: 'error', message: `Layer dependency cycle: ${cycle.join(' -> ')}`, location: `compositions.${compositionIndex}.layers` });
     for (const [layerIndex, layer] of composition.layers.entries()) {
       const location = `compositions.${compositionIndex}.layers.${layerIndex}`;
       if (ids.has(layer.id)) findings.push({ code: 'DUPLICATE_ID', severity: 'error', message: `Duplicate id: ${layer.id}`, location });
       ids.add(layer.id);
+      for (const target of [layer.parentId, ...layer.constraints.map((constraint) => constraint.target)]) if (target && !localIds.has(target)) findings.push({ code: 'LAYER_DEPENDENCY_UNKNOWN', severity: 'error', message: `${layer.id} references unknown local layer ${target}.`, location });
       if (layer.start >= composition.duration) findings.push({ code: 'LAYER_OUTSIDE_COMPOSITION', severity: 'error', message: `${layer.id} starts after its composition ends.`, location });
       if (layer.duration && layer.start + layer.duration > composition.duration + 0.001) findings.push({ code: 'LAYER_OVERRUN', severity: 'warning', message: `${layer.id} extends beyond its composition.`, location });
       if (layer.type === 'composition' && !compositionIds.has(layer.compositionId)) findings.push({ code: 'COMPOSITION_UNKNOWN', severity: 'error', message: `${layer.id} references unknown composition ${layer.compositionId}.`, location });
       for (const parameterId of Object.values(layer.bindings)) if (!parameterIds.has(parameterId)) findings.push({ code: 'BINDING_PARAMETER_UNKNOWN', severity: 'error', message: `${layer.id} binds unknown parameter ${parameterId}.`, location: `${location}.bindings` });
+      const trackIds = new Set<string>();
+      for (const [trackIndex, track] of layer.tracks.entries()) {
+        const trackLocation = `${location}.tracks.${trackIndex}`;
+        if (trackIds.has(track.id)) findings.push({ code: 'DUPLICATE_TRACK_ID', severity: 'error', message: `Duplicate animation track id on ${layer.id}: ${track.id}`, location: trackLocation });
+        trackIds.add(track.id);
+        validateAnimationTrack(track, layer.duration ?? composition.duration - layer.start, trackLocation, findings);
+      }
       if (layer.followPath) try { pathMetrics(layer.followPath.path); } catch { findings.push({ code: 'MOTION_PATH_INVALID', severity: 'error', message: `${layer.id} has invalid SVG motion-path data.`, location: `${location}.followPath` }); }
       if (layer.type === 'shape' && layer.shape === 'path' && layer.path) try { pathMetrics(layer.path); } catch { findings.push({ code: 'PATH_INVALID', severity: 'error', message: `${layer.id} has invalid SVG path data.`, location: `${location}.path` }); }
       if (layer.type === 'caption') for (let cueIndex = 1; cueIndex < layer.cues.length; cueIndex += 1) if (layer.cues[cueIndex]!.start < layer.cues[cueIndex - 1]!.end) findings.push({ code: 'CAPTION_CUE_OVERLAP', severity: 'warning', message: `${layer.cues[cueIndex - 1]!.id} and ${layer.cues[cueIndex]!.id} overlap.`, location: `${location}.cues.${cueIndex}` });
@@ -140,6 +168,8 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
   for (const [sceneIndex, scene] of project.scenes.entries()) {
     if (ids.has(scene.id)) findings.push({ code: 'DUPLICATE_ID', severity: 'error', message: `Duplicate id: ${scene.id}`, location: `scenes.${sceneIndex}` });
     ids.add(scene.id);
+    const localIds = new Set(scene.layers.map((layer) => layer.id));
+    for (const cycle of layerDependencyCycles(scene.layers)) findings.push({ code: 'LAYER_DEPENDENCY_CYCLE', severity: 'error', message: `Layer dependency cycle: ${cycle.join(' -> ')}`, location: `scenes.${sceneIndex}.layers` });
     if (scene.transitionIn.duration > scene.duration / 2 || scene.transitionOut.duration > scene.duration / 2) findings.push({ code: 'TRANSITION_TOO_LONG', severity: 'error', message: `${scene.id} transition consumes more than half the scene.`, location: `scenes.${sceneIndex}` });
     for (const [side, transition] of [['transitionIn', scene.transitionIn], ['transitionOut', scene.transitionOut]] as const) if (transition.overlayCompositionId && !compositionIds.has(transition.overlayCompositionId)) findings.push({ code: 'TRANSITION_OVERLAY_UNKNOWN', severity: 'error', message: `${scene.id} references unknown transition overlay ${transition.overlayCompositionId}.`, location: `scenes.${sceneIndex}.${side}` });
     const previousScene = project.scenes[sceneIndex - 1];
@@ -167,6 +197,7 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
       const location = `scenes.${sceneIndex}.layers.${layerIndex}`;
       if (ids.has(layer.id)) findings.push({ code: 'DUPLICATE_ID', severity: 'error', message: `Duplicate id: ${layer.id}`, location });
       ids.add(layer.id);
+      for (const target of [layer.parentId, ...layer.constraints.map((constraint) => constraint.target)]) if (target && !localIds.has(target)) findings.push({ code: 'LAYER_DEPENDENCY_UNKNOWN', severity: 'error', message: `${layer.id} references unknown local layer ${target}.`, location });
       zCounts.set(layer.z, (zCounts.get(layer.z) ?? 0) + 1);
       for (const parameterId of Object.values(layer.bindings)) if (!parameterIds.has(parameterId)) findings.push({ code: 'BINDING_PARAMETER_UNKNOWN', severity: 'error', message: `${layer.id} binds unknown parameter ${parameterId}.`, location: `${location}.bindings` });
       if (layer.type === 'composition' && !compositionIds.has(layer.compositionId)) findings.push({ code: 'COMPOSITION_UNKNOWN', severity: 'error', message: `${layer.id} references unknown composition ${layer.compositionId}.`, location });
@@ -177,17 +208,14 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
       if (animatedValues(layer.transform.opacity).some((value) => value < 0 || value > 1)) findings.push({ code: 'OPACITY_RANGE', severity: 'error', message: `${layer.id} opacity must remain between 0 and 1.`, location });
       for (const property of ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity', 'blur'] as const) validateAnimated(layer.transform[property], `${location}.transform.${property}`, findings);
       if (animatedValues(layer.transform.scaleX).some((value) => value <= 0) || animatedValues(layer.transform.scaleY).some((value) => value <= 0)) findings.push({ code: 'SCALE_NON_POSITIVE', severity: 'error', message: `${layer.id} scale must stay greater than zero.`, location });
-      if (layerIsAlwaysOutsideFrame(layer, scene.duration, project)) findings.push({ code: 'LAYER_ALWAYS_OUTSIDE_FRAME', severity: 'error', message: `${layer.id} remains outside the delivery frame at every authored transform keyframe. Layer x/y are absolute layout coordinates; transform x/y are additional offsets.`, location });
+      if (!layer.parentId && layer.constraints.length === 0 && layerIsAlwaysOutsideFrame(layer, scene.duration, project)) findings.push({ code: 'LAYER_ALWAYS_OUTSIDE_FRAME', severity: 'error', message: `${layer.id} remains outside the delivery frame at every authored transform keyframe. Layer x/y are absolute layout coordinates; transform x/y are additional offsets.`, location });
       const trackIds = new Set<string>();
       for (const [trackIndex, track] of layer.tracks.entries()) {
         const trackLocation = `${location}.tracks.${trackIndex}`;
         if (trackIds.has(track.id)) findings.push({ code: 'DUPLICATE_TRACK_ID', severity: 'error', message: `Duplicate animation track id on ${layer.id}: ${track.id}`, location: trackLocation });
         trackIds.add(track.id);
-        validateAnimated({ keyframes: track.keyframes }, trackLocation, findings);
         const visibleDuration = layer.duration ?? scene.duration - layer.start;
-        if ((track.keyframes.at(-1)?.at ?? 0) > visibleDuration + 0.001 && track.extrapolate === 'clamp') findings.push({ code: 'TRACK_OVERRUN', severity: 'warning', message: `${track.id} extends past ${layer.id}'s visible duration.`, location: trackLocation });
-        if (track.operation === 'replace' && track.target === 'transform.opacity' && track.keyframes.some((keyframe) => keyframe.value < 0 || keyframe.value > 1)) findings.push({ code: 'OPACITY_RANGE', severity: 'error', message: `${track.id} drives opacity outside 0..1.`, location: trackLocation });
-        if (track.operation === 'replace' && ['transform.scaleX', 'transform.scaleY', 'width', 'height', 'fontSize', 'lineHeight', 'playbackRate'].includes(track.target) && track.keyframes.some((keyframe) => keyframe.value <= 0)) findings.push({ code: 'TRACK_NON_POSITIVE', severity: 'error', message: `${track.id} drives ${track.target} to a non-positive value.`, location: trackLocation });
+        validateAnimationTrack(track, visibleDuration, trackLocation, findings);
       }
 
       const assetPath = collectAsset(layer);
@@ -200,10 +228,19 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
 
       if (layer.type === 'text' || layer.type === 'caption') {
         if (layer.fontSize < project.height * 0.015) findings.push({ code: 'TEXT_TOO_SMALL', severity: 'warning', message: `${layer.id} may be unreadable at delivery size.`, location });
-        if (layer.width + layer.x > project.width || layer.height + layer.y > project.height) findings.push({ code: 'TEXT_OUTSIDE_FRAME', severity: 'error', message: `${layer.id} extends beyond the frame.`, location });
-        const ratio = contrast(layer.color, scene.background);
+        let positioned: Layer = layer;
+        const hasDependency = Boolean(layer.parentId || layer.constraints.length);
+        const inspectionTime = (layer.duration ?? scene.duration - layer.start) / 2;
+        if (hasDependency) try { positioned = resolveLayerGraph(scene.layers, inspectionTime, project.seed).find((candidate) => candidate.id === layer.id) ?? layer; } catch { /* Dependency diagnostics are emitted above. */ }
+        const box = layerBox(positioned);
+        const positionedX = box.x + (hasDependency ? evaluateNumber(positioned.transform.x, inspectionTime) : 0);
+        const positionedY = box.y + (hasDependency ? evaluateNumber(positioned.transform.y, inspectionTime) : 0);
+        if (box.width + positionedX > project.width || box.height + positionedY > project.height || positionedX < 0 || positionedY < 0) findings.push({ code: 'TEXT_OUTSIDE_FRAME', severity: 'error', message: `${layer.id} extends beyond the frame.`, location });
+        const backingTarget = layer.constraints.find((constraint) => constraint.type === 'anchor-to')?.target;
+        const backing = backingTarget ? scene.layers.find((candidate) => candidate.id === backingTarget) : undefined;
+        const ratio = contrast(layer.color, backing?.type === 'shape' && backing.fill ? backing.fill : scene.background);
         if (ratio !== undefined && ratio < 3) findings.push({ code: 'TEXT_CONTRAST', severity: 'warning', message: `${layer.id} has only ${ratio.toFixed(2)}:1 contrast against the scene background. Verify its actual backing surface.`, location });
-        if (layer.x < project.width * 0.02 || layer.y < project.height * 0.02 || layer.x + layer.width > project.width * 0.98 || layer.y + layer.height > project.height * 0.98) findings.push({ code: 'TEXT_SAFE_AREA', severity: 'warning', message: `${layer.id} approaches the delivery safe edge.`, location });
+        if (positionedX < project.width * 0.02 || positionedY < project.height * 0.02 || positionedX + box.width > project.width * 0.98 || positionedY + box.height > project.height * 0.98) findings.push({ code: 'TEXT_SAFE_AREA', severity: 'warning', message: `${layer.id} approaches the delivery safe edge.`, location });
         if (layer.type === 'caption') {
           for (let cueIndex = 0; cueIndex < layer.cues.length; cueIndex += 1) {
             const cue = layer.cues[cueIndex]!;

@@ -1,0 +1,906 @@
+{
+  "schemaVersion": 1,
+  "id": "animation-kernel",
+  "title": "Animation Kernel",
+  "width": 640,
+  "height": 360,
+  "fps": 30,
+  "seed": 73,
+  "anchors": [],
+  "parameters": [],
+  "parameterValues": {},
+  "variants": [],
+  "compositions": [],
+  "brand": {
+    "background": "#07080d",
+    "foreground": "#f8fafc",
+    "accent": "#65fbd2",
+    "muted": "#8b93a7",
+    "fonts": [],
+    "radius": 18,
+    "tone": [
+      "precise",
+      "kinetic",
+      "native"
+    ]
+  },
+  "scenes": [
+    {
+      "id": "kernel",
+      "purpose": "Demonstrate deterministic typed animation, procedural motion, staggering, and constraints",
+      "duration": 6,
+      "background": "#07080d",
+      "layers": [
+        {
+          "id": "ambient",
+          "start": 0,
+          "duration": 6,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 0.72,
+            "blur": 22,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 62,
+          "y": 80,
+          "width": 270,
+          "height": 270,
+          "fill": "#14283c88",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "title",
+          "start": 0,
+          "duration": 6,
+          "z": 10,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "title-arrive",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 18,
+                  "ease": "linear"
+                },
+                {
+                  "at": 0.8,
+                  "value": 0,
+                  "ease": {
+                    "type": "spring",
+                    "mass": 1,
+                    "stiffness": 180,
+                    "damping": 28,
+                    "velocity": 0,
+                    "clamp": true
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "MOTION, WITHOUT DRIFT.",
+          "x": 32,
+          "y": 24,
+          "width": 576,
+          "height": 42,
+          "fontFamily": "Arial",
+          "fontSize": 28,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f8fafc",
+          "align": "left",
+          "verticalAlign": "top",
+          "lineHeight": 1.15,
+          "letterSpacing": 0.5,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        },
+        {
+          "id": "subtitle",
+          "start": 0,
+          "duration": 6,
+          "z": 11,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "typed values · physical timing · seeded motion · live constraints",
+          "x": 34,
+          "y": 68,
+          "width": 572,
+          "height": 26,
+          "fontFamily": "Arial",
+          "fontSize": 13,
+          "fontWeight": 400,
+          "fontStyle": "normal",
+          "color": "#9aa4ba",
+          "align": "left",
+          "verticalAlign": "top",
+          "lineHeight": 1.15,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        },
+        {
+          "id": "core",
+          "start": 0,
+          "duration": 6,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "core-color",
+              "target": "fill",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": "#65fbd2",
+                  "ease": "linear"
+                },
+                {
+                  "at": 3,
+                  "value": "#65a8ff",
+                  "ease": "sine-in-out"
+                },
+                {
+                  "at": 6,
+                  "value": "#d587ff",
+                  "ease": "sine-in-out"
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "core-drift",
+              "target": "transform.x",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "at": 6,
+                  "value": 46,
+                  "ease": "sine-in-out"
+                }
+              ],
+              "operation": "add",
+              "extrapolate": "clamp",
+              "noise": {
+                "seed": 9,
+                "amplitude": 7,
+                "frequency": 0.42,
+                "octaves": 3,
+                "lacunarity": 2,
+                "gain": 0.5
+              },
+              "enabled": true
+            },
+            {
+              "id": "core-turn",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 350,
+                  "ease": "linear"
+                },
+                {
+                  "at": 6,
+                  "value": 10,
+                  "ease": "sine-in-out"
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "interpolation": "shortest-angle",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 130,
+          "y": 132,
+          "width": 92,
+          "height": 92,
+          "fill": "#65fbd2",
+          "stroke": "#d9fff5",
+          "strokeWidth": 2,
+          "radius": 0,
+          "progress": 1,
+          "shadow": {
+            "color": "#65fbd266",
+            "blur": 24,
+            "offsetX": 0,
+            "offsetY": 0
+          }
+        },
+        {
+          "id": "satellite",
+          "start": 0,
+          "duration": 6,
+          "z": 6,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "parentId": "core",
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 252,
+          "y": 162,
+          "width": 24,
+          "height": 24,
+          "fill": "#f8fafc",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1,
+          "shadow": {
+            "color": "#ffffff77",
+            "blur": 12,
+            "offsetX": 0,
+            "offsetY": 0
+          }
+        },
+        {
+          "id": "pointer",
+          "start": 0,
+          "duration": 6,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [
+            {
+              "type": "maintain-distance",
+              "target": "core",
+              "distance": 118,
+              "angle": 155
+            },
+            {
+              "type": "look-at",
+              "target": "core",
+              "angleOffset": 0
+            }
+          ],
+          "bindings": {},
+          "type": "shape",
+          "shape": "line",
+          "x": 0,
+          "y": 0,
+          "width": 78,
+          "height": 0,
+          "stroke": "#65fbd2",
+          "strokeWidth": 2,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "status-bg",
+          "start": 0,
+          "duration": 6,
+          "z": 8,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [
+            {
+              "type": "anchor-to",
+              "target": "core",
+              "ownAnchor": "top-left",
+              "targetAnchor": "bottom-right",
+              "offsetX": 12,
+              "offsetY": 12
+            }
+          ],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 0,
+          "y": 0,
+          "width": 120,
+          "height": 24,
+          "fill": "#65fbd2",
+          "strokeWidth": 0,
+          "radius": 12,
+          "progress": 1
+        },
+        {
+          "id": "status",
+          "start": 0,
+          "duration": 6,
+          "z": 9,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [
+            {
+              "type": "anchor-to",
+              "target": "status-bg",
+              "ownAnchor": "center",
+              "targetAnchor": "center",
+              "offsetX": 0,
+              "offsetY": 0
+            }
+          ],
+          "bindings": {},
+          "type": "text",
+          "text": "DETERMINISTIC",
+          "x": 0,
+          "y": 0,
+          "width": 120,
+          "height": 24,
+          "fontFamily": "Arial",
+          "fontSize": 11,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#07110e",
+          "align": "center",
+          "verticalAlign": "middle",
+          "lineHeight": 1.15,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1
+        },
+        {
+          "id": "route",
+          "start": 0,
+          "duration": 6,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "route-control",
+              "target": "control1",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": [
+                    170,
+                    244
+                  ],
+                  "ease": "linear"
+                },
+                {
+                  "at": 6,
+                  "value": [
+                    220,
+                    218
+                  ],
+                  "ease": "sine-in-out"
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "route-color",
+              "target": "stroke",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": "#65fbd2",
+                  "ease": "linear"
+                },
+                {
+                  "at": 6,
+                  "value": "#d587ff",
+                  "ease": "sine-in-out"
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "bezier",
+          "x": 52,
+          "y": 302,
+          "width": 536,
+          "height": 0,
+          "stroke": "#65fbd2",
+          "strokeWidth": 3,
+          "radius": 0,
+          "control1": [
+            170,
+            244
+          ],
+          "control2": [
+            412,
+            344
+          ],
+          "progress": {
+            "keyframes": [
+              {
+                "at": 0,
+                "value": 0,
+                "ease": "linear"
+              },
+              {
+                "at": 1.4,
+                "value": 1,
+                "ease": "cubic-out"
+              }
+            ]
+          }
+        },
+        {
+          "id": "bar-1",
+          "start": 0,
+          "duration": 5,
+          "z": 5,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "bar-in-1",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "at": 0.7,
+                  "value": 1,
+                  "ease": "cubic-out"
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "stagger": {
+            "index": 0,
+            "count": 5,
+            "each": 0.16,
+            "from": "center",
+            "seed": 4,
+            "trail": 0.3
+          },
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 420,
+          "y": 126,
+          "width": 144,
+          "height": 12,
+          "fill": "#263149",
+          "strokeWidth": 0,
+          "radius": 6,
+          "progress": 1
+        },
+        {
+          "id": "bar-2",
+          "start": 0,
+          "duration": 5,
+          "z": 6,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "bar-in-2",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "at": 0.7,
+                  "value": 1,
+                  "ease": "cubic-out"
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "stagger": {
+            "index": 1,
+            "count": 5,
+            "each": 0.16,
+            "from": "center",
+            "seed": 4,
+            "trail": 0.3
+          },
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 420,
+          "y": 151,
+          "width": 112,
+          "height": 12,
+          "fill": "#33415f",
+          "strokeWidth": 0,
+          "radius": 6,
+          "progress": 1
+        },
+        {
+          "id": "bar-3",
+          "start": 0,
+          "duration": 5,
+          "z": 7,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "bar-in-3",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "at": 0.7,
+                  "value": 1,
+                  "ease": "cubic-out"
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "stagger": {
+            "index": 2,
+            "count": 5,
+            "each": 0.16,
+            "from": "center",
+            "seed": 4,
+            "trail": 0.3
+          },
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 420,
+          "y": 176,
+          "width": 168,
+          "height": 12,
+          "fill": "#65fbd2",
+          "strokeWidth": 0,
+          "radius": 6,
+          "progress": 1
+        },
+        {
+          "id": "bar-4",
+          "start": 0,
+          "duration": 5,
+          "z": 8,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "bar-in-4",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "at": 0.7,
+                  "value": 1,
+                  "ease": "cubic-out"
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "stagger": {
+            "index": 3,
+            "count": 5,
+            "each": 0.16,
+            "from": "center",
+            "seed": 4,
+            "trail": 0.3
+          },
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 420,
+          "y": 201,
+          "width": 126,
+          "height": 12,
+          "fill": "#33415f",
+          "strokeWidth": 0,
+          "radius": 6,
+          "progress": 1
+        },
+        {
+          "id": "bar-5",
+          "start": 0,
+          "duration": 5,
+          "z": 9,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "bar-in-5",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": "linear"
+                },
+                {
+                  "at": 0.7,
+                  "value": 1,
+                  "ease": "cubic-out"
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "stagger": {
+            "index": 4,
+            "count": 5,
+            "each": 0.16,
+            "from": "center",
+            "seed": 4,
+            "trail": 0.3
+          },
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 420,
+          "y": 226,
+          "width": 152,
+          "height": 12,
+          "fill": "#263149",
+          "strokeWidth": 0,
+          "radius": 6,
+          "progress": 1
+        }
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [],
+      "notes": []
+    }
+  ],
+  "audio": [],
+  "metadata": {
+    "example": "Deterministic animation kernel",
+    "features": "typed interpolation, springs, noise, stagger, hierarchy, constraints"
+  }
+}
