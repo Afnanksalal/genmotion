@@ -5,6 +5,7 @@ import { resolveProjectAsset, type LoadedProject } from './loader.js';
 import { tasteReferences } from '../catalog/references.js';
 import { evaluateLayerTracks } from '../engine/animation.js';
 import { evaluateNumber } from '../engine/timeline.js';
+import { resolveAnchoredShape, shapeBounds } from '../engine/geometry.js';
 
 export type Severity = 'error' | 'warning';
 
@@ -57,22 +58,27 @@ function validateAnimated(value: Layer['transform']['opacity'], location: string
 }
 
 function layerBox(layer: Layer): { x: number; y: number; width: number; height: number } {
+  if (layer.type === 'shape') return shapeBounds(layer);
   return { x: layer.x, y: layer.y, width: layer.width, height: layer.height };
 }
 
-function layerIsAlwaysOutsideFrame(layer: Layer, sceneDuration: number, width: number, height: number): boolean {
+function layerIsAlwaysOutsideFrame(layer: Layer, sceneDuration: number, project: GenmotionProject): boolean {
   const visibleDuration = layer.duration ?? sceneDuration - layer.start;
   const times = new Set([0, Math.max(0, visibleDuration - 0.001)]);
   for (const property of [layer.transform.x, layer.transform.y]) {
     if (typeof property !== 'number') for (const keyframe of property.keyframes) times.add(Math.min(visibleDuration, keyframe.at));
   }
   for (const track of layer.tracks) for (const keyframe of track.keyframes) times.add(Math.min(visibleDuration, keyframe.at));
-  const box = layerBox(layer);
+  let resolved = layer;
+  if (layer.type === 'shape') {
+    try { resolved = resolveAnchoredShape(layer, project); } catch { /* ANCHOR_UNKNOWN is reported separately. */ }
+  }
+  const box = layerBox(resolved);
   return [...times].every((time) => {
     const evaluated = evaluateLayerTracks(layer, time);
     const x = box.x + evaluateNumber(evaluated.transform.x, time);
     const y = box.y + evaluateNumber(evaluated.transform.y, time);
-    return x >= width || y >= height || x + box.width <= 0 || y + box.height <= 0;
+    return x >= project.width || y >= project.height || x + box.width <= 0 || y + box.height <= 0;
   });
 }
 
@@ -80,7 +86,17 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
   const findings: Finding[] = [];
   const { project, projectDir } = loaded;
   const ids = new Set<string>();
+  const anchorIds = new Set<string>();
   const referenceIds = new Set(tasteReferences.map((reference) => reference.id));
+
+  for (const [anchorIndex, anchor] of project.anchors.entries()) {
+    const location = `anchors.${anchorIndex}`;
+    if (anchorIds.has(anchor.id)) findings.push({ code: 'DUPLICATE_ANCHOR_ID', severity: 'error', message: `Duplicate geometry anchor: ${anchor.id}`, location });
+    anchorIds.add(anchor.id);
+    if (anchor.x < 0 || anchor.y < 0 || anchor.x > project.width || anchor.y > project.height) {
+      findings.push({ code: 'ANCHOR_OUTSIDE_FRAME', severity: 'warning', message: `${anchor.id} lies outside the delivery frame.`, location });
+    }
+  }
 
   if (projectDuration(project) > 3_600) {
     findings.push({ code: 'DURATION_EXCESSIVE', severity: 'warning', message: 'Project duration exceeds one hour.' });
@@ -129,7 +145,7 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
       if (animatedValues(layer.transform.opacity).some((value) => value < 0 || value > 1)) findings.push({ code: 'OPACITY_RANGE', severity: 'error', message: `${layer.id} opacity must remain between 0 and 1.`, location });
       for (const property of ['x', 'y', 'scaleX', 'scaleY', 'rotation', 'opacity', 'blur'] as const) validateAnimated(layer.transform[property], `${location}.transform.${property}`, findings);
       if (animatedValues(layer.transform.scaleX).some((value) => value <= 0) || animatedValues(layer.transform.scaleY).some((value) => value <= 0)) findings.push({ code: 'SCALE_NON_POSITIVE', severity: 'error', message: `${layer.id} scale must stay greater than zero.`, location });
-      if (layerIsAlwaysOutsideFrame(layer, scene.duration, project.width, project.height)) findings.push({ code: 'LAYER_ALWAYS_OUTSIDE_FRAME', severity: 'error', message: `${layer.id} remains outside the delivery frame at every authored transform keyframe. Layer x/y are absolute layout coordinates; transform x/y are additional offsets.`, location });
+      if (layerIsAlwaysOutsideFrame(layer, scene.duration, project)) findings.push({ code: 'LAYER_ALWAYS_OUTSIDE_FRAME', severity: 'error', message: `${layer.id} remains outside the delivery frame at every authored transform keyframe. Layer x/y are absolute layout coordinates; transform x/y are additional offsets.`, location });
       const trackIds = new Set<string>();
       for (const [trackIndex, track] of layer.tracks.entries()) {
         const trackLocation = `${location}.tracks.${trackIndex}`;
@@ -156,6 +172,10 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
         const ratio = contrast(layer.color, scene.background);
         if (ratio !== undefined && ratio < 3) findings.push({ code: 'TEXT_CONTRAST', severity: 'warning', message: `${layer.id} has only ${ratio.toFixed(2)}:1 contrast against the scene background. Verify its actual backing surface.`, location });
         if (layer.x < project.width * 0.02 || layer.y < project.height * 0.02 || layer.x + layer.width > project.width * 0.98 || layer.y + layer.height > project.height * 0.98) findings.push({ code: 'TEXT_SAFE_AREA', severity: 'warning', message: `${layer.id} approaches the delivery safe edge.`, location });
+      } else if (layer.type === 'shape') {
+        for (const [property, anchorId] of [['startAnchor', layer.startAnchor], ['endAnchor', layer.endAnchor], ['centerAnchor', layer.centerAnchor]] as const) {
+          if (anchorId && !anchorIds.has(anchorId)) findings.push({ code: 'ANCHOR_UNKNOWN', severity: 'error', message: `${layer.id} references unknown geometry anchor ${anchorId}.`, location: `${location}.${property}` });
+        }
       }
     }
     for (const [z, count] of zCounts) {

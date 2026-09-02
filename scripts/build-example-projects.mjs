@@ -51,11 +51,11 @@ function scene(id, purpose, duration, background, layers, transitionIn = cut, tr
   };
 }
 
-function project(id, title, background, foreground, accent, scenes, metadata = {}, audio = []) {
+function project(id, title, background, foreground, accent, scenes, metadata = {}, audio = [], anchors = []) {
   return projectSchema.parse({
     schemaVersion: 1, id, title, width: 1920, height: 1080, fps: 30, seed: 17,
     brand: { background, foreground, accent, muted: '#8f93a2', fonts: [{ family: 'Inter', file: 'assets/Inter.ttf' }], radius: 28, tone: ['precise', 'editorial', 'controlled'] },
-    scenes, audio,
+    anchors, scenes, audio,
     metadata: { publicExample: 'true', selectedConcept: `${id}-direction-a`, ...metadata },
   });
 }
@@ -82,6 +82,10 @@ const kinetic = project('kinetic-type', 'Kinetic Type', '#09090b', '#f5f3ea', '#
 const pulseAnchor = { x: 1744, y: 494 };
 const pulseStreamStartX = 430;
 const pulseStreamStartYs = [155, 220, 292, 370, 450, 585, 680, 790, 910];
+const pulseAnchors = [
+  { id: 'pulse-target', ...pulseAnchor },
+  ...pulseStreamStartYs.map((y, index) => ({ id: `flow-${index + 1}-start`, x: pulseStreamStartX, y })),
+];
 
 const dataPulse = project('data-pulse', 'Data Pulse', '#05070a', '#f5f1e8', '#d7ff3f', [
   scene('noise-field', 'Make raw volume feel physical before revealing any conclusion.', 4.4, '#05070a', [
@@ -98,22 +102,17 @@ const dataPulse = project('data-pulse', 'Data Pulse', '#05070a', '#f5f1e8', '#d7
   scene('coherence', 'Collapse many competing traces into one legible direction.', 5.2, '#080b12', [
     shape('field-glow', 5.2, 0, { shape: 'ellipse', x: 980, y: 90, width: 900, height: 900, fill: '#38e8d72b' }, { blendMode: 'screen', transform: { blur: 62 }, tracks: [track('field-glow-push', 'transform.scaleX', [[0, 0.78], [2.1, 1.06], [5.2, 1.06]]), track('field-glow-push-y', 'transform.scaleY', [[0, 0.78], [2.1, 1.06], [5.2, 1.06]])] }),
     ...pulseStreamStartYs.map((startY, index) => {
-      const aboveAnchor = startY < pulseAnchor.y;
-      const width = pulseAnchor.x - pulseStreamStartX;
-      const height = Math.abs(startY - pulseAnchor.y);
       const controlA = 360 + index * 8;
       const controlB = 910 - index * 7;
-      const path = aboveAnchor
-        ? `M 0 0 C ${controlA} 0 ${controlB} ${height} ${width} ${height}`
-        : `M 0 ${height} C ${controlA} ${height} ${controlB} 0 ${width} 0`;
       return shape(`flow-${index + 1}`, 5.2 - index * 0.045, 2 + index, {
-        shape: 'path', path,
-        x: pulseStreamStartX, y: Math.min(startY, pulseAnchor.y), width, height,
+        shape: 'bezier', x: 0, y: 0, width: 0, height: 0,
+        startAnchor: `flow-${index + 1}-start`, endAnchor: 'pulse-target',
+        control1: [pulseStreamStartX + controlA, startY], control2: [pulseStreamStartX + controlB, pulseAnchor.y],
         stroke: index === 4 ? '#d7ff3f' : (index < 4 ? '#745cff' : '#38e8d7'), strokeWidth: index === 4 ? 10 : 4,
       }, { start: index * 0.045, blendMode: 'screen', transform: { opacity: index === 4 ? 1 : 0.38 }, tracks: [track(`flow-${index + 1}-draw`, 'progress', [[0, 0], [1.45 + index * 0.08, 1], [5.2 - index * 0.045, 1]])], ...(index === 4 ? { shadow: { color: '#d7ff3f88', blur: 34, offsetX: 0, offsetY: 0 } } : {}) });
     }),
-    shape('pulse-ring-outer', 5.2, 14, { shape: 'ellipse', x: pulseAnchor.x - 56, y: pulseAnchor.y - 56, width: 112, height: 112, fill: '#00000000', stroke: '#d7ff3f', strokeWidth: 5 }, { tracks: [track('pulse-ring-scale', 'transform.scaleX', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]]), track('pulse-ring-scale-y', 'transform.scaleY', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]])], shadow: { color: '#d7ff3f99', blur: 28, offsetX: 0, offsetY: 0 } }),
-    shape('pulse-core', 5.2, 15, { shape: 'ellipse', x: pulseAnchor.x - 20, y: pulseAnchor.y - 20, width: 40, height: 40, fill: '#f5f1e8' }, { tracks: [track('pulse-core-scale', 'transform.scaleX', [[0, 0.01], [1.55, 1, spring], [5.2, 1]]), track('pulse-core-scale-y', 'transform.scaleY', [[0, 0.01], [1.55, 1, spring], [5.2, 1]])] }),
+    shape('pulse-ring-outer', 5.2, 14, { shape: 'ellipse', x: 0, y: 0, width: 112, height: 112, centerAnchor: 'pulse-target', fill: '#00000000', stroke: '#d7ff3f', strokeWidth: 5 }, { tracks: [track('pulse-ring-scale', 'transform.scaleX', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]]), track('pulse-ring-scale-y', 'transform.scaleY', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]])], shadow: { color: '#d7ff3f99', blur: 28, offsetX: 0, offsetY: 0 } }),
+    shape('pulse-core', 5.2, 15, { shape: 'ellipse', x: 0, y: 0, width: 40, height: 40, centerAnchor: 'pulse-target', fill: '#f5f1e8' }, { tracks: [track('pulse-core-scale', 'transform.scaleX', [[0, 0.01], [1.55, 1, spring], [5.2, 1]]), track('pulse-core-scale-y', 'transform.scaleY', [[0, 0.01], [1.55, 1, spring], [5.2, 1]])] }),
     text('find', 5.2, 20, 'FIND', { x: 110, y: 120, width: 650, height: 210 }, { fontSize: 180, fontWeight: 820, letterSpacing: -9, tracks: [track('find-in', 'transform.x', [[0, -820], [0.72, 0], [5.2, 0]])] }),
     text('the', 4.75, 20, 'THE', { x: 110, y: 325, width: 650, height: 210 }, { start: 0.45, fontSize: 180, fontWeight: 820, color: '#8886a2', letterSpacing: -9, tracks: [track('the-in', 'transform.x', [[0, -130], [0.72, 0], [4.75, 0]])] }),
     text('pulse', 4.3, 20, 'PULSE', { x: 110, y: 530, width: 850, height: 230 }, { start: 0.9, fontSize: 180, fontWeight: 820, color: '#d7ff3f', letterSpacing: -9, tracks: [track('pulse-in', 'transform.x', [[0, -130], [0.72, 0], [4.3, 0]])] }),
@@ -126,7 +125,7 @@ const dataPulse = project('data-pulse', 'Data Pulse', '#05070a', '#f5f1e8', '#d7
     text('direction-word', 3.45, 4, 'DIRECTION.', { x: 105, y: 630, width: 1690, height: 325 }, { start: 0.95, fontSize: 248, fontWeight: 850, color: '#0a0b0d', letterSpacing: -14, tracks: [track('direction-word-open', 'letterSpacing', [[0, -38], [0.85, -14], [3.45, -14]]), track('direction-word-in', 'transform.opacity', [[0, 0], [0.45, 1], [3.45, 1]])] }),
     shape('closing-dot', 3.05, 5, { shape: 'ellipse', x: 1752, y: 860, width: 74, height: 74, fill: '#745cff' }, { start: 1.35, tracks: [track('closing-dot-in', 'transform.scaleX', [[0, 0.01], [0.48, 1, spring], [3.05, 1]]), track('closing-dot-in-y', 'transform.scaleY', [[0, 0.01], [0.48, 1, spring], [3.05, 1]])] }),
   ], cut, cut, ['The conclusion finishes moving before 2 seconds and holds cleanly through the end.']),
-], { family: 'data-sculpture', duration: '14' });
+], { family: 'data-sculpture', duration: '14' }, [], pulseAnchors);
 
 const arcOne = project('arc-one', 'Arc One', '#07090d', '#f4f6f8', '#5fa8ff', [
   scene('promise', 'Open with a restrained product promise.', 3.5, '#07090d', [

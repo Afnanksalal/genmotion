@@ -6,6 +6,7 @@
   "height": 1080,
   "fps": 30,
   "seed": 17,
+  "anchors": [],
   "brand": {
     "background": "#09090b",
     "foreground": "#f5f3ea",

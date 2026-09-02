@@ -4,6 +4,14 @@ const finite = z.number().finite();
 const nonNegative = finite.nonnegative();
 const positive = finite.positive();
 const color = z.string().regex(/^(#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(|oklch\()/, 'Expected a CSS color');
+const identifier = z.string().min(1).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/);
+const pointSchema = z.tuple([finite, finite]);
+
+export const geometryAnchorSchema = z.object({
+  id: identifier,
+  x: finite,
+  y: finite,
+}).strict();
 
 const namedEasingSchema = z.enum([
   'linear',
@@ -124,7 +132,7 @@ export const textLayerSchema = baseLayerSchema.extend({
 
 export const shapeLayerSchema = baseLayerSchema.extend({
   type: z.literal('shape'),
-  shape: z.enum(['rect', 'round-rect', 'ellipse', 'line', 'polygon', 'path']),
+  shape: z.enum(['rect', 'round-rect', 'ellipse', 'line', 'bezier', 'polygon', 'path']),
   x: finite,
   y: finite,
   width: nonNegative,
@@ -133,12 +141,21 @@ export const shapeLayerSchema = baseLayerSchema.extend({
   stroke: color.optional(),
   strokeWidth: nonNegative.default(0),
   radius: nonNegative.default(0),
-  points: z.array(z.tuple([finite, finite])).optional(),
+  points: z.array(pointSchema).optional(),
   path: z.string().min(1).optional(),
+  startAnchor: identifier.optional(),
+  endAnchor: identifier.optional(),
+  centerAnchor: identifier.optional(),
+  control1: pointSchema.optional(),
+  control2: pointSchema.optional(),
   progress: animatedNumberSchema.default(1),
   shadow: z.object({ color, blur: nonNegative, offsetX: finite.default(0), offsetY: finite.default(0) }).optional(),
-}).refine((shape) => shape.width > 0 || shape.height > 0, { message: 'A shape needs a non-zero width or height.' })
-  .refine((shape) => shape.shape !== 'path' || Boolean(shape.path), { message: 'A path shape requires SVG path data.' });
+}).refine((shape) => shape.width > 0 || shape.height > 0 || Boolean(shape.endAnchor), { message: 'A shape needs a non-zero width or height, or an anchored endpoint.' })
+  .refine((shape) => shape.shape !== 'path' || Boolean(shape.path), { message: 'A path shape requires SVG path data.' })
+  .refine((shape) => shape.shape !== 'bezier' || Boolean(shape.control1 && shape.control2), { message: 'A bezier shape requires control1 and control2.' })
+  .refine((shape) => !shape.centerAnchor || shape.shape === 'ellipse', { message: 'centerAnchor is only valid on ellipse shapes.' })
+  .refine((shape) => !(shape.startAnchor || shape.endAnchor) || shape.shape === 'line' || shape.shape === 'bezier', { message: 'startAnchor and endAnchor are only valid on line or bezier shapes.' })
+  .refine((shape) => !(shape.control1 || shape.control2) || shape.shape === 'bezier', { message: 'Bezier control points are only valid on bezier shapes.' });
 
 export const imageLayerSchema = baseLayerSchema.extend({
   type: z.literal('image'),
@@ -221,6 +238,7 @@ export const projectSchema = z.object({
   height: z.number().int().min(64).max(8192),
   fps: z.number().int().min(1).max(120),
   seed: z.number().int().default(1),
+  anchors: z.array(geometryAnchorSchema).default([]),
   brand: z.object({
     background: color,
     foreground: color,
@@ -236,6 +254,7 @@ export const projectSchema = z.object({
 });
 
 export type EasingName = z.infer<typeof easingSchema>;
+export type GeometryAnchor = z.infer<typeof geometryAnchorSchema>;
 export type AnimatedNumber = z.infer<typeof animatedNumberSchema>;
 export type AnimationTrack = z.infer<typeof animationTrackSchema>;
 export type Transform = z.infer<typeof transformSchema>;
