@@ -47,7 +47,7 @@ General agents can write animation code, but code generation alone gives them a 
 The [`examples/`](examples/) gallery contains three complete, editable projects with frozen assets, strict validation, high-quality 1920×1080 masters, and inspected contact sheets:
 
 - **Kinetic Type** demonstrates clipped typography, direct property tracks, custom easing, and scene rhythm.
-- **Data Pulse** demonstrates animated counters, chart geometry, SVG path drawing, and staged evidence.
+- **Data Pulse** demonstrates animated counters, converging signal fields, SVG path drawing, blend modes, and an editorial data-story resolve.
 - **Arc One** demonstrates original vector product geometry, shadows, blend modes, macro movement, stable lockups, and a mixed stereo soundtrack.
 
 Every project is reproducible with `npm run examples:build` and verified with `npm run examples:verify`; no remote render asset or external template is required.

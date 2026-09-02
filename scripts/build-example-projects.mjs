@@ -79,24 +79,39 @@ const kinetic = project('kinetic-type', 'Kinetic Type', '#09090b', '#f5f3ea', '#
   ], dissolve, cut, ['The final layout is fully settled for more than two seconds.']),
 ], { family: 'kinetic-typography', duration: '12' });
 
-const dataPulse = project('data-pulse', 'Data Pulse', '#0c1020', '#f6f7fb', '#72f1b8', [
-  scene('signal', 'Introduce one measurable signal with no dashboard clutter.', 4.5, '#0c1020', [
-    shape('grid-a', 4.5, 0, { shape: 'line', x: 126, y: 768, width: 1668, height: 0, stroke: '#27304c', strokeWidth: 2 }, { tracks: [track('grid-a-draw', 'progress', [[0, 0], [0.8, 1], [4.5, 1]])] }),
-    text('eyebrow', 4.5, 2, 'LIVE THROUGHPUT', { x: 132, y: 145, width: 900, height: 76 }, { fontSize: 34, fontWeight: 600, color: '#72f1b8', letterSpacing: 5 }),
-    text('metric', 4.5, 3, '2.4', { x: 120, y: 240, width: 1120, height: 480 }, { fontSize: 360, letterSpacing: -18, tracks: [track('metric-count', 'countProgress', [[0, 0], [1.45, 1], [4.5, 1]]), track('metric-rise', 'transform.y', [[0, 90], [0.9, 0], [4.5, 0]])], countFrom: 0, numberFormat: { decimals: 1, prefix: '', suffix: 'M', grouping: true } }),
-    text('per-minute', 3.4, 3, 'events / minute', { x: 1240, y: 500, width: 500, height: 110 }, { start: 1.1, fontSize: 48, fontWeight: 450, color: '#a9b0c4', letterSpacing: 0, tracks: [track('unit-in', 'transform.opacity', [[0, 0], [0.45, 1], [3.4, 1]])] }),
-  ], cut, dissolve),
-  scene('shape', 'Build a traceable chart from the signal.', 5, '#10162a', [
-    ...Array.from({ length: 9 }, (_, index) => shape(`bar-${index + 1}`, 5 - index * 0.08, 1 + index, { shape: 'round-rect', x: 170 + index * 174, y: 850 - [170, 260, 220, 390, 470, 430, 620, 700, 760][index], width: 86, height: [170, 260, 220, 390, 470, 430, 620, 700, 760][index], fill: index > 6 ? '#72f1b8' : '#425071', radius: 43 }, { start: index * 0.08, tracks: [track(`bar-${index + 1}-grow`, 'transform.scaleY', [[0, 0.01], [0.65, 1], [5 - index * 0.08, 1]])], transform: { anchorY: 1 } })),
-    shape('trend-line', 5, 3, { shape: 'path', path: 'M 0 92 C 120 82 180 75 260 70 S 420 44 520 62 S 700 22 860 30 S 1040 8 1200 0', x: 210, y: 170, width: 1460, height: 560, stroke: '#f6f7fb', strokeWidth: 8 }, { tracks: [track('trend-draw', 'progress', [[0.6, 0], [2.2, 1], [5, 1]])], shadow: { color: '#72f1b855', blur: 20, offsetX: 0, offsetY: 0 } }),
-    text('chart-title', 5, 4, 'Momentum, not noise.', { x: 130, y: 70, width: 1100, height: 110 }, { fontSize: 66, letterSpacing: -2 }),
-  ], dissolve, dissolve),
-  scene('decision', 'Convert the visualized trend into one decision.', 4.5, '#72f1b8', [
-    text('decision-copy', 4.5, 2, 'THE SIGNAL\nIS COMPOUNDING.', { x: 150, y: 170, width: 1600, height: 590 }, { fontSize: 220, color: '#0c1020', lineHeight: 0.9, letterSpacing: -10, tracks: [track('decision-open', 'letterSpacing', [[0, -32], [0.9, -10], [4.5, -10]]), track('decision-in', 'transform.opacity', [[0, 0], [0.55, 1], [4.5, 1]])] }),
-    shape('decision-rule', 4.5, 1, { shape: 'line', x: 155, y: 835, width: 1480, height: 0, stroke: '#0c1020', strokeWidth: 5 }, { tracks: [track('decision-rule-draw', 'progress', [[0.5, 0], [1.35, 1], [4.5, 1]])] }),
-    text('decision-foot', 3.2, 3, 'ONE METRIC. ONE STORY. ONE DECISION.', { x: 160, y: 890, width: 1400, height: 60 }, { start: 1.3, fontSize: 30, fontWeight: 650, color: '#0c1020', letterSpacing: 4 }),
-  ], dissolve, cut),
-], { family: 'data-story', duration: '14' });
+const dataPulse = project('data-pulse', 'Data Pulse', '#05070a', '#f5f1e8', '#d7ff3f', [
+  scene('noise-field', 'Make raw volume feel physical before revealing any conclusion.', 4.4, '#05070a', [
+    shape('cyan-bloom', 4.4, 0, { shape: 'ellipse', x: 1180, y: 100, width: 820, height: 820, fill: '#15d6cf24' }, { blendMode: 'screen', transform: { blur: 48 }, tracks: [track('cyan-bloom-drift', 'transform.x', [[0, 120], [4.4, -80]])] }),
+    shape('violet-bloom', 4.4, 0, { shape: 'ellipse', x: -180, y: 580, width: 760, height: 620, fill: '#7957ff22' }, { blendMode: 'screen', transform: { blur: 52 }, tracks: [track('violet-bloom-drift', 'transform.y', [[0, 100], [4.4, -30]])] }),
+    ...Array.from({ length: 11 }, (_, index) => shape(`noise-trace-${index + 1}`, 4.4 - index * 0.035, 1 + index, {
+      shape: 'path', path: `M 0 ${20 + index * 10} C 130 ${index % 2 ? 5 : 80} 240 ${index % 3 ? 110 : 20} 380 ${54 + index * 6} S 650 ${index % 2 ? 12 : 108} 820 ${58 + index * 4} S 1110 ${index % 3 ? 110 : 18} 1380 ${45 + index * 6}`,
+      x: 380, y: 185 + index * 46, width: 1380, height: 170, stroke: index === 5 ? '#d7ff3f' : (index % 2 ? '#42e8e0' : '#735dff'), strokeWidth: index === 5 ? 8 : 3,
+    }, { start: index * 0.035, blendMode: 'screen', transform: { opacity: index === 5 ? 0.95 : 0.24 }, tracks: [track(`noise-trace-${index + 1}-draw`, 'progress', [[0, 0], [1.2 + index * 0.05, 1], [4.4 - index * 0.035, 1]]), track(`noise-trace-${index + 1}-drift`, 'transform.x', [[0, -35 - index * 3], [4.4 - index * 0.035, 30 + index * 2]])], ...(index === 5 ? { shadow: { color: '#d7ff3f66', blur: 26, offsetX: 0, offsetY: 0 } } : {}) })),
+    shape('index-rule', 4.4, 20, { shape: 'line', x: 132, y: 128, width: 94, height: 0, stroke: '#d7ff3f', strokeWidth: 7 }, { tracks: [track('index-rule-draw', 'progress', [[0, 0], [0.55, 1], [4.4, 1]])] }),
+    text('raw-label', 4.4, 21, 'RAW EVENTS / SECOND', { x: 255, y: 85, width: 760, height: 90 }, { fontSize: 32, fontWeight: 650, color: '#b8b5ae', letterSpacing: 6, tracks: [track('raw-label-in', 'transform.opacity', [[0, 0], [0.55, 1], [4.4, 1]])] }),
+    text('raw-count', 4.4, 22, '2438901', { x: 112, y: 690, width: 1660, height: 290 }, { fontSize: 238, fontWeight: 780, letterSpacing: -14, countFrom: 0, numberFormat: { decimals: 0, prefix: '', suffix: '', grouping: true }, tracks: [track('raw-count-up', 'countProgress', [[0, 0], [2.4, 1], [4.4, 1]]), track('raw-count-rise', 'transform.y', [[0, 90], [0.9, 0], [4.4, 0]])] }),
+  ], cut, cut, ['The field is intentionally abstract: it conveys volume without imitating a dashboard.']),
+  scene('coherence', 'Collapse many competing traces into one legible direction.', 5.2, '#080b12', [
+    shape('field-glow', 5.2, 0, { shape: 'ellipse', x: 980, y: 90, width: 900, height: 900, fill: '#38e8d72b' }, { blendMode: 'screen', transform: { blur: 62 }, tracks: [track('field-glow-push', 'transform.scaleX', [[0, 0.78], [2.1, 1.06], [5.2, 1.06]]), track('field-glow-push-y', 'transform.scaleY', [[0, 0.78], [2.1, 1.06], [5.2, 1.06]])] }),
+    ...Array.from({ length: 9 }, (_, index) => shape(`flow-${index + 1}`, 5.2 - index * 0.045, 2 + index, {
+      shape: 'path', path: `M 0 ${45 + index * 55} C 310 ${20 + index * 36} 520 ${130 + index * 22} 780 ${220 + index * 12} C 980 ${300 + index * 5} 1120 ${360 + index * 2} 1370 400`,
+      x: 430, y: 80, width: 1370, height: 890, stroke: index === 4 ? '#d7ff3f' : (index < 4 ? '#745cff' : '#38e8d7'), strokeWidth: index === 4 ? 10 : 4,
+    }, { start: index * 0.045, blendMode: 'screen', transform: { opacity: index === 4 ? 1 : 0.38 }, tracks: [track(`flow-${index + 1}-draw`, 'progress', [[0, 0], [1.45 + index * 0.08, 1], [5.2 - index * 0.045, 1]])], ...(index === 4 ? { shadow: { color: '#d7ff3f88', blur: 34, offsetX: 0, offsetY: 0 } } : {}) })),
+    shape('pulse-ring-outer', 5.2, 14, { shape: 'ellipse', x: 1688, y: 438, width: 112, height: 112, fill: '#00000000', stroke: '#d7ff3f', strokeWidth: 5 }, { tracks: [track('pulse-ring-scale', 'transform.scaleX', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]]), track('pulse-ring-scale-y', 'transform.scaleY', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]])], shadow: { color: '#d7ff3f99', blur: 28, offsetX: 0, offsetY: 0 } }),
+    shape('pulse-core', 5.2, 15, { shape: 'ellipse', x: 1724, y: 474, width: 40, height: 40, fill: '#f5f1e8' }, { tracks: [track('pulse-core-scale', 'transform.scaleX', [[0, 0.01], [1.55, 1, spring], [5.2, 1]]), track('pulse-core-scale-y', 'transform.scaleY', [[0, 0.01], [1.55, 1, spring], [5.2, 1]])] }),
+    text('find', 5.2, 20, 'FIND', { x: 110, y: 120, width: 650, height: 210 }, { fontSize: 180, fontWeight: 820, letterSpacing: -9, tracks: [track('find-in', 'transform.x', [[0, -820], [0.72, 0], [5.2, 0]])] }),
+    text('the', 4.75, 20, 'THE', { x: 110, y: 325, width: 650, height: 210 }, { start: 0.45, fontSize: 180, fontWeight: 820, color: '#8886a2', letterSpacing: -9, tracks: [track('the-in', 'transform.x', [[0, -130], [0.72, 0], [4.75, 0]])] }),
+    text('pulse', 4.3, 20, 'PULSE', { x: 110, y: 530, width: 850, height: 230 }, { start: 0.9, fontSize: 180, fontWeight: 820, color: '#d7ff3f', letterSpacing: -9, tracks: [track('pulse-in', 'transform.x', [[0, -130], [0.72, 0], [4.3, 0]])] }),
+    text('coherence-note', 3.35, 20, 'MILLIONS OF EVENTS. ONE DIRECTION.', { x: 122, y: 850, width: 980, height: 70 }, { start: 1.85, fontSize: 29, fontWeight: 620, color: '#aaa8b6', letterSpacing: 4, tracks: [track('coherence-note-in', 'transform.opacity', [[0, 0], [0.45, 1], [3.35, 1]])] }),
+  ], cut, cut, ['All traces converge on one luminous focal point; no chart chrome or card UI is used.']),
+  scene('direction', 'Resolve the data story as a bold editorial conclusion.', 4.4, '#f1eee5', [
+    shape('acid-slice', 4.4, 0, { shape: 'path', path: 'M 0 120 L 1920 0 L 1920 230 L 0 350 Z', x: 0, y: 585, width: 1920, height: 350, fill: '#d7ff3f' }, { tracks: [track('acid-slice-in', 'transform.x', [[0, -1920], [0.8, 0], [4.4, 0]])] }),
+    text('noise-word', 4.4, 2, 'NOISE', { x: 105, y: 55, width: 1260, height: 330 }, { fontSize: 286, fontWeight: 850, color: '#0a0b0d', letterSpacing: -17, tracks: [track('noise-word-in', 'transform.y', [[0, 170], [0.75, 0], [4.4, 0]])] }),
+    text('becomes-word', 3.75, 3, 'BECOMES', { x: 118, y: 390, width: 800, height: 130 }, { start: 0.65, fontSize: 82, fontWeight: 620, color: '#656258', letterSpacing: 8, tracks: [track('becomes-word-in', 'transform.opacity', [[0, 0], [0.45, 1], [3.75, 1]])] }),
+    text('direction-word', 3.45, 4, 'DIRECTION.', { x: 105, y: 630, width: 1690, height: 325 }, { start: 0.95, fontSize: 248, fontWeight: 850, color: '#0a0b0d', letterSpacing: -14, tracks: [track('direction-word-open', 'letterSpacing', [[0, -38], [0.85, -14], [3.45, -14]]), track('direction-word-in', 'transform.opacity', [[0, 0], [0.45, 1], [3.45, 1]])] }),
+    shape('closing-dot', 3.05, 5, { shape: 'ellipse', x: 1752, y: 860, width: 74, height: 74, fill: '#745cff' }, { start: 1.35, tracks: [track('closing-dot-in', 'transform.scaleX', [[0, 0.01], [0.48, 1, spring], [3.05, 1]]), track('closing-dot-in-y', 'transform.scaleY', [[0, 0.01], [0.48, 1, spring], [3.05, 1]])] }),
+  ], cut, cut, ['The conclusion finishes moving before 2 seconds and holds cleanly through the end.']),
+], { family: 'data-sculpture', duration: '14' });
 
 const arcOne = project('arc-one', 'Arc One', '#07090d', '#f4f6f8', '#5fa8ff', [
   scene('promise', 'Open with a restrained product promise.', 3.5, '#07090d', [
@@ -166,7 +181,34 @@ for (const [directory, value] of projects) {
   copyFileSync(sharedLicense, join(target, 'assets', 'OFL.txt'));
   writeFileSync(join(target, 'genmotion.json'), `${JSON.stringify(value, null, 2)}\n`);
   writeFileSync(join(target, 'brief.json'), `${JSON.stringify({ title: value.title, audience: 'Motion designers evaluating Genmotion', promise: value.scenes[0].purpose, proof: 'The checked-in Creative IR renders with the native Genmotion pipeline.', desiredAction: 'Inspect, remix, and render the source project.', mode: value.metadata.family, duration: Number(value.metadata.duration), sources: ['Creative IR and renderer output in this directory'] }, null, 2)}\n`);
-  writeFileSync(join(target, '.genmotion', 'concepts.json'), `${JSON.stringify({ selected: value.metadata.selectedConcept, concepts: [{ id: value.metadata.selectedConcept, hierarchy: 'One dominant statement per scene', clarity: 'Every scene has one readable proof', originality: 'Native vectors and direct tracks, no borrowed template', brandFit: value.brand.tone, rhythm: 'Establish, travel, settle, hold', feasibility: 'Runs without remote assets' }] }, null, 2)}\n`);
+  const concepts = directory === 'data-pulse'
+    ? {
+      selected: value.metadata.selectedConcept,
+      concepts: [
+        {
+          id: value.metadata.selectedConcept,
+          referenceFamily: 'Scientific signal art and oscilloscope photography',
+          borrow: ['continuous luminous traces', 'phase convergence', 'light as evidence'],
+          avoid: ['literal dashboard chrome', 'HUD decoration', 'generic bar charts'],
+          transform: ['turn raw events into a cinematic field that physically converges on one pulse'],
+          hierarchy: 'One large typographic command is anchored by a full-frame signal sculpture',
+          rhythm: 'Accumulate, converge, resolve, hold',
+          feasibility: 'Native paths, blend modes, shadows, typography, and direct tracks only',
+        },
+        {
+          id: 'data-pulse-direction-b',
+          referenceFamily: 'Swiss editorial posters and kinetic title design',
+          borrow: ['decisive scale contrast', 'asymmetric grid', 'hard color interruption'],
+          avoid: ['corporate presentation cards', 'template typography', 'decorative microcopy'],
+          transform: ['use an acid diagonal and monumental type as the final analytical conclusion'],
+          hierarchy: 'The final statement occupies the frame as an editorial object',
+          rhythm: 'Hard typographic arrival followed by a generous stable hold',
+          feasibility: 'Native vector geometry and text tracks only',
+        },
+      ],
+    }
+    : { selected: value.metadata.selectedConcept, concepts: [{ id: value.metadata.selectedConcept, hierarchy: 'One dominant statement per scene', clarity: 'Every scene has one readable proof', originality: 'Native vectors and direct tracks, no borrowed template', brandFit: value.brand.tone, rhythm: 'Establish, travel, settle, hold', feasibility: 'Runs without remote assets' }] };
+  writeFileSync(join(target, '.genmotion', 'concepts.json'), `${JSON.stringify(concepts, null, 2)}\n`);
 }
 
 writeWav(join(root, 'examples', 'arc-one', 'assets', 'original-bed.wav'));

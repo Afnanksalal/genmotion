@@ -5,7 +5,7 @@ These are complete, editable Creative IR projects, not screenshots of a separate
 | Project | What it proves | Source | Master |
 | --- | --- | --- | --- |
 | Kinetic Type | clipped typography, custom cubic easing, spring timing, letter-spacing animation, and connected scene transitions | [`kinetic-type/genmotion.json`](kinetic-type/genmotion.json) | [`kinetic-type.mp4`](kinetic-type/kinetic-type.mp4) |
-| Data Pulse | animated counters, independently timed bars, native SVG path drawing, chart composition, and editorial transitions | [`data-pulse/genmotion.json`](data-pulse/genmotion.json) | [`data-pulse.mp4`](data-pulse/data-pulse.mp4) |
+| Data Pulse | animated counters, converging signal fields, native SVG path drawing, luminous blend modes, and an editorial conclusion | [`data-pulse/genmotion.json`](data-pulse/genmotion.json) | [`data-pulse.mp4`](data-pulse/data-pulse.mp4) |
 | Arc One | original vector product geometry, shadows, blend modes, macro transforms, stable lockup timing, and a mixed stereo AAC soundtrack | [`arc-one/genmotion.json`](arc-one/genmotion.json) | [`arc-one.mp4`](arc-one/arc-one.mp4) |
 
 ## Render evidence
