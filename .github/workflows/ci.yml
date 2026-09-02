@@ -24,7 +24,7 @@ jobs:
           cache: npm
       - name: Install FFmpeg on Linux
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y ffmpeg; }
       - name: Install FFmpeg on Windows
         if: runner.os == 'Windows'
         run: choco install ffmpeg --no-progress -y
@@ -47,7 +47,7 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install FFmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y ffmpeg; }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:studio-e2e
@@ -60,6 +60,6 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install FFmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y ffmpeg; }
       - run: npm ci
       - run: npm run test:coverage
