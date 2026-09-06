@@ -856,6 +856,24 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       response.json({ ok: true, revision: projectRevision(accepted.sourceProject), project: accepted.sourceProject, renderSpec: projectPreflight(accepted.sourceProject), studio: studioState, findings: receipt.findings, checkpointError, receipt: { ...receipt, documentRevision: projectRevision(accepted.sourceProject) } });
     } catch (error) { next(error); }
   });
+  // Polling negotiates live context rather than treating an expected CAS miss as a transport failure.
+  // Explicit editing commands and bridge navigation retain their conflict errors.
+  app.post('/api/editing-context/sync', async (request, response, next) => {
+    try {
+      const command = editingCommandSchema.parse(request.body);
+      if (command.action !== 'context-update') throw new GenmotionError('INVALID_CONTEXT_SYNC', 'Context sync accepts only a context-update command.');
+      let applied = true;
+      let result;
+      try { result = await executeEditingCommand(editingSession, command); }
+      catch (error) {
+        if (!(error instanceof GenmotionError) || error.code !== 'CONTEXT_CONFLICT') throw error;
+        applied = false;
+        result = await editingSession.context();
+      }
+      const observed = await readProjectSourceSnapshot(loaded.projectFile);
+      response.json({ applied, result, revision: observed.documentRevision });
+    } catch (error) { next(error); }
+  });
   app.post('/api/editing-session', async (request, response, next) => {
     try {
       const command = editingCommandSchema.parse(request.body);

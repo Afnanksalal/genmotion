@@ -15,6 +15,18 @@ describe('live Studio editing bridge', () => {
     try {
       const token = (await (await fetch(studio.url + '/api/session')).json() as { token: string }).token;
       const headers = { 'content-type': 'application/json', 'x-genmotion-token': token };
+      const initialContext = await (await fetch(studio.url + '/api/editing-session', { method: 'POST', headers, body: JSON.stringify({ action: 'context' }) })).json() as { result: { sequence: number; revision: string } };
+      const syncBody = { action: 'context-update', patch: { frame: 2 }, expectedSequence: initialContext.result.sequence, expectedRevision: initialContext.result.revision, origin: 'browser-test' };
+      const acceptedSync = await fetch(studio.url + '/api/editing-context/sync', { method: 'POST', headers, body: JSON.stringify(syncBody) });
+      expect(acceptedSync.status).toBe(200);
+      expect(await acceptedSync.json()).toMatchObject({ applied: true, result: { frame: 2 } });
+      const staleSync = await fetch(studio.url + '/api/editing-context/sync', { method: 'POST', headers, body: JSON.stringify({ ...syncBody, patch: { frame: 4 } }) });
+      expect(staleSync.status).toBe(200);
+      expect(await staleSync.json()).toMatchObject({ applied: false, result: { frame: 2 } });
+      const explicitStale = await fetch(studio.url + '/api/editing-session', { method: 'POST', headers, body: JSON.stringify(syncBody) });
+      expect(explicitStale.status).toBe(400);
+      expect(await explicitStale.json()).toMatchObject({ code: 'CONTEXT_CONFLICT' });
+
       expect(await executeStudioCommand(directory, { action: 'capabilities' })).toMatchObject({ permissions: { read: true, edit: false } });
       const read = await executeStudioCommand(directory, { action: 'read' }) as { result: EditingSnapshot };
       const edit = { action: 'apply', expectedRevision: read.result.revision, edits: [{ op: 'text', target: { kind: 'scene', id: 'intro', layerId: 'title' }, text: 'Shared history' }] } as const;

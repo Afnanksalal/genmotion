@@ -9,6 +9,8 @@ Studio uses shared app-styled controls in `src/studio/controls.ts`. Native form 
 - Marker colors use the Studio color picker, including editable hex/RGB values and hue/alpha sliders. Escape dismisses the picker first.
 - Processed audio uses custom play/pause, seek and volume controls with time and failure feedback. Closing its dialog pauses playback.
 
+The toolbar uses two rows at compact desktop and phone widths so tabs and actions remain accessible. Live-context polling reports stale synchronization without generating a transport error or overwriting newer context.
+
 Controls added by inspector and dialog rerenders are enhanced automatically. Existing project edit handlers and revision checks remain authoritative. The shared controls require no external UI service or runtime download.
 
 Browser coverage exercises real project persistence, keyboard navigation, menu placement, state synchronization, color changes, file import and decoded audio playback. See [milestone validation](MILESTONE-QA-2026-09-07.md).
