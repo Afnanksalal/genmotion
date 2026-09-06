@@ -105,7 +105,8 @@ function ffmpegEncoderArgs(project: GenmotionProject, dimensions: RenderResoluti
   } else if (codec === 'h265') {
     base.push('-c:v', 'libx265', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p10le');
   } else if (codec === 'vp9') {
-    base.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-row-mt', '1');
+    // Do not let newer FFmpeg builds select experimental planar RGB+alpha.
+    base.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-row-mt', '1', '-pix_fmt', 'yuva420p');
   } else {
     base.push('-c:v', 'prores_ks', '-profile:v', quality === 'high' ? '3' : '2', '-pix_fmt', 'yuv422p10le');
   }

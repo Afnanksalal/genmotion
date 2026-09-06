@@ -30,7 +30,11 @@ jobs:
         run: choco install ffmpeg --no-progress -y
       - name: Install FFmpeg on macOS
         if: runner.os == 'macOS'
-        run: brew list ffmpeg >/dev/null 2>&1 || brew install ffmpeg
+        run: |
+          brew list ffmpeg-full >/dev/null 2>&1 || brew install ffmpeg-full
+          echo "$(brew --prefix ffmpeg-full)/bin" >> "$GITHUB_PATH"
+      - name: Verify FFmpeg capabilities
+        run: node scripts/verify-ffmpeg.mjs
       - run: npm ci
       - run: npm run check
       - run: npm run benchmark
@@ -48,14 +52,15 @@ jobs:
           cache: npm
       - name: Install FFmpeg
         run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y ffmpeg; }
+      - name: Verify FFmpeg capabilities
+        run: node scripts/verify-ffmpeg.mjs
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:studio-e2e
   coverage:
-    # Pin the coverage gate: mutable ubuntu-latest images have intermittently
-    # hung during apt-based FFmpeg provisioning, preventing otherwise-green
-    # releases from reaching a terminal state.
-    runs-on: ubuntu-22.04
+    # Pin a runner with FFmpeg 6.1+: Ubuntu 22.04 supplies 4.4, which lacks
+    # the limiter latency compensation required by the native audio graph.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -64,5 +69,7 @@ jobs:
           cache: npm
       - name: Install FFmpeg
         run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y ffmpeg; }
+      - name: Verify FFmpeg capabilities
+        run: node scripts/verify-ffmpeg.mjs
       - run: npm ci
       - run: npm run test:coverage

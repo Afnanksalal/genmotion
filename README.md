@@ -65,7 +65,7 @@ Every project is reproducible with `npm run examples:build` and verified with `n
 ## Requirements
 
 - Node.js 22 or newer
-- FFmpeg and ffprobe on `PATH`
+- FFmpeg 6.1+ and ffprobe on `PATH`, with `zscale` (libzimg) and limiter latency compensation. On macOS use Homebrew `ffmpeg-full` and add its `bin` directory to `PATH`.
 
 ## Install
 
