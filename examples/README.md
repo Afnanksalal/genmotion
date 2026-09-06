@@ -27,6 +27,14 @@ These are complete, editable Creative IR projects, not screenshots of a separate
 
 ![Arc One contact sheet](arc-one/contact-sheet.png)
 
+### Native Milestones
+
+![Native Milestones contact sheet](native-milestones/contact-sheet.png)
+
+### Animation Kernel
+
+![Animation Kernel contact sheet](animation-kernel/contact-sheet.png)
+
 ### Chromatic Orbit
 
 ![Chromatic Orbit contact sheet](chromatic-orbit/contact-sheet.png)
