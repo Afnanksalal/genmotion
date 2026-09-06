@@ -10,7 +10,6 @@ These are historical planning observations, not claims about current completion.
 
 | Area | Genmotion baseline and gap | Requirement owner |
 | --- | --- | --- |
-| Area | Genmotion baseline and specific gap | Existing owner → added work |
 | Intent and workflow routing | `creative/types.ts` provides a brief/concept schema and `init` a neutral artboard; no equivalent persisted production-stage system | §21/23 → GM-001–003 |
 | Storyboard review | Workflow graph and reference board exist; planned shots are not a first-class storyboard with build/approval traceability | §15/21 → GM-004–005 |
 | Brand direction | Brand tokens and reference decisions exist; no versioned source-to-brand binding and drift report | §2/14 → GM-006 |

@@ -1,6 +1,6 @@
 {
   "date": "2026-09-06",
-  "baselineCommit": "6e8ded9",
+  "baselineCommit": "6540f3f",
   "before": {
     "completed": 42,
     "open": 275
@@ -180,6 +180,10 @@
     "tests/e2e/milestone.spec.ts": "d9440c225ea0f280e8fd8d028212ca2b643f3b3c3b809d6c0c42234389cdda5a",
     "tests/caption-editing.test.ts": "a9b4f1532654e8f92c8bf445942ff6b28202f174a965d173be765d01c1cf3318",
     "tests/media-geometry.test.ts": "060a1adfeca1d0dbe3c3d083a693da815fcf5e966ae4111046a79afb44fab594",
-    "docs/NATIVE-CAPABILITY-BACKLOG.md": "83ed474a92778f6b0a08498bce0cebf82b06ae95fff856acfeba09c76c313c82"
+    "docs/NATIVE-CAPABILITY-BACKLOG.md": "01b53eb094eeafa7ef7ab48918c092e27342cb2d0ba0c4a84d907eb8f1abf790"
+  },
+  "documentationHistoryRewrite": {
+    "date": "2026-09-06",
+    "scope": "Standalone Genmotion requirements and roadmap; GM requirement identifiers; commit references remapped. Runtime source and test artifacts unchanged."
   }
 }

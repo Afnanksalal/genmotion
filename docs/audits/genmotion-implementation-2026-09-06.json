@@ -2,7 +2,7 @@
   "version": 2,
   "recordedAt": "2026-09-06T16:50:29.089Z",
   "branch": "codex/full-native-capability-program",
-  "baseCommit": "3f5b1da8297ebc00582c8876364e7a4b8c84eb05",
+  "baseCommit": "f51487e49c0cddd536d4c82bc0659b9d21cf5905",
   "platform": "win32",
   "node": "v22.14.0",
   "fullChecklistComplete": false,

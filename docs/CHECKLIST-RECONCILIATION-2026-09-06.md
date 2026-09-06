@@ -1,6 +1,6 @@
 # Checklist reconciliation — 2026-09-06
 
-This follow-up closes the acceptance gaps in the implemented milestone capabilities. The prior milestone commit is `6e8ded9`. Its 42 checked requirements were a historical count, not a count of every implemented feature. This report maps individual requirements to their implementation and tests; effect types and test cases do not count as checklist completions.
+This follow-up closes the acceptance gaps in the implemented milestone capabilities. The prior milestone commit is `6540f3f`. Its 42 checked requirements were a historical count, not a count of every implemented feature. This report maps individual requirements to their implementation and tests; effect types and test cases do not count as checklist completions.
 
 ## Changes made to finish acceptance
 
