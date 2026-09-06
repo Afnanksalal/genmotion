@@ -6,4 +6,4 @@ Each mask has a unique `id`, SVG `path`, `enabled`, `mode`, `inverted`, `fillRul
 
 Animated paths use `{ "keyframes": [{ "at": 0, "value": "M…Z", "ease": "linear" }, …] }`. Times must increase and paths must have compatible contour topology. Native cubic interpolation preserves curves. Masking occurs before the layer effects stack and final opacity/blend operation.
 
-Studio exposes mask creation, order, bypass, combination, inversion, fill rule, path, feather, opacity, expansion and path animation. Shared project edits persist masks through the same revision and validation boundary as other layer properties. Regression and visual QA are deferred until the implementation pass finishes.
+Studio exposes mask creation, order, bypass, combination, inversion, fill rule, path, feather, opacity, expansion and path animation. Shared project edits persist masks through the same revision and validation boundary as other layer properties. Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).

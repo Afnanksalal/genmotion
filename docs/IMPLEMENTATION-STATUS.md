@@ -47,7 +47,7 @@ Verification was performed on this Windows host. It does not establish Linux/mac
 
 The [canonical checklist](NATIVE-CAPABILITY-BACKLOG.md) remains authoritative. Major open systems include full nested timing/group semantics, derived parameters and advanced data variants, complete visual-effect coverage and audio bus routing, broader color management, professional compositing/3D, media acquisition and provenance, complete reproducibility and production-workflow acceptance, editing sessions and persistent gesture history, time-aware visual assertions, distributed rendering and the AE tracking/roto/cleanup/deformation/interchange requirements.
 
-The checklist currently contains **42 checked items and 275 unchecked items**, including its architectural guardrails. Passing the tests above does not resolve those unchecked requirements.
+The checklist currently contains **66 checked items and 251 unchecked items**, including its architectural guardrails. The [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md) records the 24 newly closed requirements and final verification; the remaining requirements stay open.
 
 Specific limits of the changes above remain explicit:
 

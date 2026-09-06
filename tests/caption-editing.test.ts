@@ -31,6 +31,12 @@ describe('caption editing and text alignment', () => {
     expect(result.cues[0]!.text).toBe('$& aab'); expect(result.cues[0]!.words).toEqual([]); expect(result.warnings).toHaveLength(1);
     expect(() => editCaptions([fixture()], { action: 'shift', seconds: -1 })).toThrow();
   });
+  it('preserves speakers and styles across forced breaks and duration-limited pages', () => {
+    const cue = fixture(); cue.speaker = 'Ada'; cue.style = { color: '#ff0000' }; cue.words[1]!.breakBefore = true;
+    const pages = paginateCaptions([cue], { maxDuration: 1, maxCharacters: 20 });
+    expect(pages.cues.map(page => page.text)).toEqual(['Go', 'go,', 'then', 'go.']);
+    for (const page of pages.cues) { expect(page.speaker).toBe('Ada'); expect(page.style).toEqual({ color: '#ff0000' }); expect(page.end - page.start).toBeLessThanOrEqual(1); }
+  });
   it('imports WebVTT speakers, entities and inline timed segments', () => {
     const cues = parseCaptions('WEBVTT\n\nNOTE ignore --> this\n\n00:00.000 --> 00:02.000\n<v Ada>Go &amp; <00:01.000>go.</v>\n', 'vtt');
     expect(cues).toHaveLength(1); expect(cues[0]!.speaker).toBe('Ada'); expect(cues[0]!.text).toBe('Go & go.');

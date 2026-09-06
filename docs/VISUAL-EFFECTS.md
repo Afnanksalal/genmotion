@@ -12,4 +12,4 @@ An `adjustment` layer has `x`, `y`, `width`, `height` and an effects stack. It p
 
 Studio exposes addition, removal, bypass, reordering, stack copy/paste, numeric controls, color controls, center and amount animation. Full stack edits are also available through the shared project patch and semantic layer property APIs. Project files contain declarative data only.
 
-This implementation is awaiting the deferred regression and visual QA pass. The broader effects checklist remains open: the remaining effect families, color-management facilities and custom kernel SDK are separate work.
+Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md). The broader effects checklist remains open: the remaining effect families and broader color-management facilities are separate work.

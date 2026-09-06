@@ -18,4 +18,4 @@ Playback uses layer-local time and the source FPS, independently of output FPS. 
 
 Optional `sourceFrame` overrides automatic playback with a frame index or native numeric keyframes, clamped to the source frame range. It supports explicit holds, arbitrary frame ordering and seek-safe retiming. Generic numeric tracks can target `sourceFrame`. Removing the override resumes automatic source playback.
 
-Studio's image inspector exposes source animation, sequence path editing, sprite grid controls, looping, reverse, rate and explicit frame animation. CLI/MCP use the shared project schema and semantic property edits. The implementation and new source-clock, sprite geometry and rendered-frame regression cases await the deferred QA pass.
+Studio's image inspector exposes source animation, sequence path editing, sprite grid controls, looping, reverse, rate and explicit frame animation. CLI/MCP use the shared project schema and semantic property edits. Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).

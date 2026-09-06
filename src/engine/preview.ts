@@ -74,18 +74,22 @@ export async function startPreview(loaded: LoadedProject, options: PreviewOption
   let audioDirectory: Promise<string> | undefined;
   const selectProject = async (request: express.Request): Promise<{ project: LoadedProject; key: string }> => {
     const raw = request.query.parameters;
-    if (raw === undefined) return { project: loaded, key: 'default' };
-    if (typeof raw !== 'string' || raw.length > 8192) throw new SyntaxError('Parameters must be a JSON object of at most 8192 characters');
-    const parameters = z.record(z.string(), parameterValueSchema).parse(JSON.parse(raw));
-    const key = createHash('sha256').update(JSON.stringify(parameters)).digest('hex');
+    const variantId = request.query.variant;
+    if (raw === undefined && variantId === undefined) return { project: loaded, key: 'default' };
+    if (variantId !== undefined && (typeof variantId !== 'string' || variantId.length > 128)) throw new SyntaxError('Variant must be a named configuration ID');
+    const variant = variantId === undefined ? undefined : loaded.sourceProject.variants.find((item) => item.id === variantId);
+    if (variantId !== undefined && !variant) throw new SyntaxError('Unknown parameter variant');
+    if (raw !== undefined && (typeof raw !== 'string' || raw.length > 8192)) throw new SyntaxError('Parameters must be a JSON object of at most 8192 characters');
+    const parameters = z.record(z.string(), parameterValueSchema).parse(raw === undefined ? {} : JSON.parse(raw));
+    const key = createHash('sha256').update(JSON.stringify({ variant: variantId, parameters })).digest('hex');
     const existing = variants.get(key);
     if (existing) { variants.delete(key); variants.set(key, existing); return { project: existing, key }; }
     let work = compiling.get(key);
     if (!work) {
       if (compiling.size >= 4) throw new Error('Too many parameter configurations are being prepared');
       work = (async () => {
-        const result = await loadProjectDocument(loaded.sourceProject, loaded.projectFile, { ...loaded.project.parameterValues, ...parameters });
-        await prepareVideoAssets(result.project, result.projectDir);
+        const result = await loadProjectDocument(loaded.sourceProject, loaded.projectFile, { ...loaded.project.parameterValues, ...variant?.values, ...parameters });
+        await prepareVideoAssets(result.project, result.projectDir, { signal: shutdown.signal });
         variants.set(key, result); while (variants.size > 8) variants.delete(variants.keys().next().value!);
         return result;
       })();
@@ -169,7 +173,12 @@ export async function startPreview(loaded: LoadedProject, options: PreviewOption
   const actualPort = (server.address() as AddressInfo).port;
   return { url: `http://${host}:${String(actualPort)}`, server, close: async () => {
     shutdown.abort();
-    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => error ? reject(error) : resolve());
+      // Stop browser keep-alive and streaming connections after refusing new requests.
+      server.closeAllConnections();
+    });
+    await Promise.allSettled(pendingFrames.values());
     await Promise.allSettled(audioJobs.values());
     if (audioDirectory) { const root = await audioDirectory; await rm(resolveProjectAsset(path.dirname(root), path.basename(root)), { recursive: true, force: true }); }
   } };

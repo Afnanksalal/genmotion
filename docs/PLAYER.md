@@ -39,4 +39,19 @@ Space/K toggles playback, arrows step frames, and M toggles mute when the player
 
 Audio uses the processed native mix and the audio clock during playback. The preview server lazily prepares AAC, supports HTTP range requests, caps each cached mix at 64 MiB, retains at most eight mixes and allows two concurrent audio preparations. Closing the preview server cancels audio work and removes its temporary files.
 
-The implementation is awaiting the deferred browser, native and lifecycle QA pass. Framework-specific packages, media-session integration, review links and annotation tools remain separate checklist work.
+Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md). Framework-specific packages, media-session integration, review links and annotation tools remain separate checklist work.
+
+Named configurations are selected with `await player.setVariant('blue')`; pass `undefined` to return to the project's active values. Explicit player parameters take precedence over the selected variant. HTTP metadata, frames and audio share the same validated `variant` query. The Web Component accepts a `variant` attribute. Custom transports opt in with `PlayerSource.withVariant`; unsupported transports refuse variant selection.
+
+`GenmotionThumbnail` displays one native frame without starting playback:
+
+```js
+const thumbnail = new GenmotionThumbnail(container, httpPlayerSource('/', 'blue'), {
+  frame: 15, parameters: { headline: 'Review' }, fit: 'contain'
+});
+await thumbnail.ready;
+await thumbnail.update(30, { headline: 'Revised' });
+thumbnail.dispose();
+```
+
+Updates cancel superseded requests and retain the last accepted image until its replacement decodes. Disposal cancels pending work and revokes object URLs. Both Player and thumbnail are public SDK exports; browser clients load the standalone player module to avoid importing Node renderer dependencies.

@@ -1,6 +1,6 @@
 # Native capability milestone — 2026-09-06
 
-This milestone validates the implementation currently in the repository. It does not complete the full capability backlog or certify all production requirements. The canonical checklist remains at **42 checked / 317 total**.
+This milestone validates the implementation currently in the repository. It does not complete the full capability backlog or certify all production requirements. At milestone commit `6e8ded9`, the canonical checklist had **42 checked / 317 total**. The subsequent [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md) records the updated count and verification.
 
 ## Scope
 

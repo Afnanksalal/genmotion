@@ -10,4 +10,4 @@ Reveal effects are `linear-reveal`, `clock-reveal`, `iris-reveal`, `blinds`, `no
 
 `scale`, `tile`, `translate`, `skew` and `turbulence` operate on isolated-canvas pixels. Scale and tile use a normalized center, tile wraps sampling across edges, translate uses amount in pixels and direction in degrees, and skew uses horizontal amount/vertical angle in degrees. Turbulence displaces both coordinates using independently seeded four-octave interpolated lattice fields; speed advances the field continuously at exact seek time. It is value-noise turbulence, not a physical fluid model.
 
-Implementation is awaiting the deferred regression and visual QA pass. Native tests have been added for homography endpoints, singular planes, cube endpoints, reveal coverage and tile seams but have not yet been run.
+Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md). Native tests have been added for homography endpoints, singular planes, cube endpoints, reveal coverage and tile seams and passed during milestone QA.

@@ -68,7 +68,7 @@ export async function inspectProduction(loaded: LoadedProject, signal?: AbortSig
     if (record) for (const evidence of record.evidence) { try { if (await hashFile(loaded.projectDir, evidence.path, signal) !== evidence.sha256) evidenceValid = false; } catch { throwIfAborted(signal); evidenceValid = false; } }
     stages.push({ stage, inputHash, state: reasons.length ? 'blocked' : record ? record.inputHash === inputHash && evidenceValid ? 'complete' : 'stale' : 'pending', reasons: !evidenceValid ? [...reasons, 'Stage evidence changed or is missing'] : reasons });
   }
-  const available = new Set(['text', 'paths', 'compositions', 'video', 'audio', 'render', 'captions', 'source-trim', 'transitions', 'animation', 'player']);
+  const available = new Set(['text', 'paths', 'compositions', 'video', 'audio', 'render', 'captions', 'source-trim', 'transitions', 'animation', 'player', 'beat-analysis']);
   return { version: 1 as const, workflow: workflow?.kind ?? null, definition: workflow ? productionWorkflows[workflow.kind] : null, capabilities: workflow ? productionWorkflows[workflow.kind].capabilities.map((name) => ({ name, available: available.has(name) })) : [], fingerprints, assets, shots, stages };
 }
 

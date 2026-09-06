@@ -12,4 +12,4 @@ The command returns a payload for `{ "id": "grade", "type": "lut", "amount": 1, 
 
 Supported color spaces are `srgb` and `linear-srgb`; conversions are explicit around lookup evaluation. Native delivery currently clips to SDR RGBA8. This does not infer log-camera transforms or provide an HDR pipeline. Source/compiled mismatches require an explicit reimport; an imported source cannot be silently replaced in its content-addressed location.
 
-Implementation and regression cases are present; the final native/browser QA pass is deferred.
+Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).

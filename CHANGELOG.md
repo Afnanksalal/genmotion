@@ -4,6 +4,8 @@ Genmotion follows semantic versioning. GitHub releases contain the verified pack
 
 ## Unreleased — Native capability milestone (2026-09-06)
 
+- Completed 24 additional checklist requirements with acceptance evidence (66/317 checked). Added native Player variant switching and thumbnails, viewport keyboard controls, serialized Studio saves and production actions, and preview shutdown cleanup. See [checklist reconciliation](docs/CHECKLIST-RECONCILIATION-2026-09-06.md) for tests and remaining scope.
+
 - Added native effects, masks, adjustment layers, LUTs and declarative custom kernels; expanded vector, animation, text and composition controls.
 - Added shared revisioned editing, typed variants, immutable bundles, production planning/review, Player embedding and Studio authoring controls.
 - Added audio processing, analysis and nested source timing; sequences/sprites, media geometry, caption editing, stream inspection and SDR conforming.

@@ -18,4 +18,4 @@ Studio's **Create verified project bundle** action writes below `.genmotion/bund
 
 The manifest records content identity and the Genmotion version. Full OS/backend/font-shaping/FFmpeg reproducibility envelopes and provider upload caches remain separate checklist requirements. Bundles do not prevent external filesystem mutation; load-time verification detects mutations before a subsequent load. Media preparation may create derived caches after verification.
 
-Implementation verification for the latest API/Studio/restore additions is queued for the final test pass.
+Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).

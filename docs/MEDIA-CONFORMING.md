@@ -14,4 +14,4 @@ Limits are one-hour source windows, 8192-pixel dimensions, a 32 GiB source, a 16
 
 CLI `media-conform <source> --output <new-file> --options <json>` and MCP `genmotion_media_conform` support dry-run plans. Studio exposes a typed conversion dialog from source metadata, including missing color assumptions, output dimensions/rate, tone mapping and derivative placement in a scene. Conforming is explicit; loading an HDR asset does not silently change its color space.
 
-Implementation and added plan, output-contract, no-overwrite and cancellation regressions await the deferred QA pass. This prepares SDR sources; it does not make the RGBA8 project compositor an HDR compositor.
+Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md). This prepares SDR sources; it does not make the RGBA8 project compositor an HDR compositor.

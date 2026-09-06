@@ -8,4 +8,4 @@ Named ranges have an ID, label, global start and exclusive end. Their end must e
 
 SDK `parseTimelineTime` accepts seconds, frame literals such as `37.5f`, MM:SS, HH:MM:SS and non-drop HH:MM:SS:FF. `formatTimecode` formats nonnegative integer frames at integer FPS. Studio's Go to control uses that parser. Semicolon drop-frame timecode is refused explicitly.
 
-Editorial metadata does not change pixels. Native and Studio regression cases are queued for the deferred QA pass.
+Editorial metadata does not change pixels. Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).

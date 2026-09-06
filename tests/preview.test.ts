@@ -1,9 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import path from 'node:path';
+import { createConnection } from 'node:net';
+import { once } from 'node:events';
 import { loadProject } from '../src/ir/loader.js';
 import { startPreview } from '../src/engine/preview.js';
 
 describe('preview server', () => {
+  it('closes incomplete client requests without waiting for the HTTP timeout', async () => {
+    const preview = await startPreview(await loadProject(path.resolve('tests/fixtures/basic')), { port: 0 });
+    const url = new URL(preview.url);
+    const socket = createConnection({ host: url.hostname, port: Number(url.port) });
+    try {
+      await once(socket, 'connect');
+      socket.write('GET /api/project HTTP/1.1\r\nHost: localhost\r\n');
+      let connectionError: NodeJS.ErrnoException | undefined;
+      socket.on('error', (error: NodeJS.ErrnoException) => { connectionError = error; });
+      const closed = new Promise<void>(resolve => socket.once('close', () => resolve()));
+      await preview.close();
+      await closed;
+      expect(socket.destroyed).toBe(true);
+      expect([undefined, 'ECONNRESET']).toContain(connectionError?.code);
+    } finally { socket.destroy(); if (preview.server.listening) await preview.close(); }
+  }, 5000);
+
   it('serves project metadata and native rendered frames', async () => {
     const loaded = await loadProject(path.resolve('tests/fixtures/basic'));
     const preview = await startPreview(loaded, { port: 0 });

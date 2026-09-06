@@ -6,6 +6,9 @@ import { loadProject } from '../../src/ir/loader.js';
 import { startStudio, type StudioServer } from '../../src/studio/server.js';
 import { startPreview, type PreviewServer } from '../../src/engine/preview.js';
 import type { GenmotionPlayer } from '../../src/player.js';
+import type * as PlayerModule from '../../src/player.js';
+import { projectSchema } from '../../src/ir/schema.js';
+import { runProcess } from '../../src/engine/process.js';
 
 let directory: string;
 let studio: StudioServer | undefined;
@@ -106,5 +109,148 @@ test('edits caption words and timing, then persists a timeline marker', async ({
   await page.locator('[data-marker-field="0:label"]').fill('Review this');
   await page.locator('[data-marker-field="0:label"]').press('Tab');
   await expect.poll(async () => (await loadProject(directory)).project.markers?.[0]?.label).toBe('Review this');
+  await page.locator('#addTimelineRange').click();
+  await page.locator('[data-range-field="0:start"]').fill('0.2'); await page.locator('[data-range-field="0:start"]').press('Tab');
+  await page.locator('[data-range-field="0:end"]').fill('0.6'); await page.locator('[data-range-field="0:end"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).project.ranges?.[0]?.end).toBe(.6);
+  await page.locator('[data-loop-range]').click(); await page.keyboard.press('Escape');
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click(); await page.locator('#playButton').click();
+  const sampled = await page.evaluate(async () => {
+    const samples: number[] = [];
+    for (let index = 0; index < 20; index += 1) { await new Promise(resolve => setTimeout(resolve, 40)); samples.push(Number(document.querySelector<HTMLInputElement>('#scrubber')!.value)); }
+    return samples;
+  });
+  await page.locator('#playButton').click();
+  expect(sampled.every(frame => frame >= 6 && frame < 18)).toBe(true); expect(new Set(sampled).size).toBeGreaterThan(3);
   expect(errors).toEqual([]);
+});
+
+test('imports a frozen LUT and reorders, bypasses and copies its native stack', async ({ page }) => {
+  studio = await startStudio(await loadProject(directory), { port: 0 });
+  await page.goto(studio.url); await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('#addVisualEffect').click(); await page.locator('[data-visual-fx-choice="lut"]').click();
+  await page.locator('#lutFile').setInputFiles({ name: 'inverse.cube', mimeType: 'text/plain', buffer: Buffer.from('LUT_1D_SIZE 2\n1 1 1\n0 0 0\n') });
+  await page.locator('#importLut').click();
+  await expect.poll(async () => (await loadProject(directory)).project.scenes[0]!.layers[0]!.effects?.[0]?.lut?.data).toEqual([1, 1, 1, 0, 0, 0]);
+  await page.locator('#addVisualEffect').click(); await page.locator('[data-visual-fx-choice="exposure"]').click();
+  await page.locator('[data-visual-fx-move="1:-1"]').click();
+  await page.locator('[data-bool-field="effects.0.enabled"]').uncheck();
+  await page.locator('#copyVisualEffects').click();
+  await page.locator('[data-select="layer"][data-id="title"]').click(); await page.locator('#pasteVisualEffects').click();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers[1]!.effects?.map(effect => [effect.type, effect.enabled])).toEqual([['exposure', false], ['lut', true]]);
+  await page.reload(); await page.locator('[data-select="layer"][data-id="title"]').click();
+  await expect(page.locator('[data-bool-field="effects.0.enabled"]')).not.toBeChecked();
+});
+
+test('authors and reviews a storyboard through persisted production stages', async ({ page }) => {
+  studio = await startStudio(await loadProject(directory), { port: 0 });
+  await page.goto(studio.url); await page.locator('#openProduction').click();
+  await page.locator('#productionKind').selectOption('motion-unit'); await page.locator('#configureProduction').click();
+  await page.locator('#newProductionShot').click();
+  await page.locator('#shotId').fill('opening'); await page.locator('#shotTitle').fill('Opening');
+  await page.locator('#shotDirection').fill('Hold the title clearly'); await page.locator('#shotNarration').fill('Native motion');
+  await page.locator('#shotDuration').fill('1'); await page.locator('#shotScene').selectOption('intro');
+  await page.locator('#shotBuild').selectOption('built'); await page.locator('#saveProductionShot').click();
+  await expect(page.locator('[data-shot-preview="opening"]')).toBeEnabled();
+  await page.locator('#productionAuthor').fill('QA reviewer'); await page.locator('[data-shot-comment="opening"]').fill('Check the hold');
+  await page.locator('[data-shot-add-comment="opening"]').click();
+  await page.locator('[data-shot-resolve]').click();
+  await page.locator('#productionAuthor').fill('QA reviewer'); await page.locator('[data-shot-review="opening:approved"]').click();
+  await expect.poll(async () => (await loadProject(directory)).project.productionWorkflow?.shots[0]?.review?.state).toBe('approved');
+  await page.locator('[data-stage-complete="sources"]').click();
+  await page.locator('[data-stage-complete="planning"]').click();
+  await page.locator('[data-stage-complete="authoring"]').click();
+  await expect.poll(async () => (await loadProject(directory)).project.productionWorkflow?.stages.map(stage => stage.stage)).toEqual(['sources', 'planning', 'authoring']);
+  await page.locator('[data-shot-preview="opening"]').click();
+  await expect(page.locator('#view-preview')).toHaveClass(/active/);
+  await page.reload(); await page.locator('[data-select="project"]').click(); await page.locator('#openProduction').click();
+  await expect(page.getByText('1 s · built · review approved')).toBeVisible();
+});
+
+test('keeps canvas controls live after autosave and supports keyboard zoom and pan', async ({ page }) => {
+  studio = await startStudio(await loadProject(directory), { port: 0 });
+  await page.goto(studio.url); await page.getByRole('tab', { name: 'Editor', exact: true }).click();
+  await page.locator('#viewportSettings').click(); await page.locator('#canvasGrid').check();
+  await expect(page.locator('#saveState')).toContainText('Saved');
+  // Wait for the actual disk write, then edit again without reopening the modal.
+  const state = async () => { const { readFile } = await import('node:fs/promises'); return JSON.parse(await readFile(path.join(directory, '.genmotion/studio.json'), 'utf8')) as { viewport: { grid: boolean; zoom: number; panX: number; safeZone: string } }; };
+  await expect.poll(async () => (await state()).viewport.grid).toBe(true);
+  await page.locator('#canvasSafeZone').selectOption('action');
+  await expect.poll(async () => (await state()).viewport.safeZone).toBe('action');
+  await page.locator('#canvasOnion').check();
+  await page.keyboard.press('Escape'); await page.locator('#monitor').focus();
+  await expect(page.getByAltText('Next onion-skin frame')).toBeVisible();
+  await page.keyboard.press('Control+='); await page.keyboard.press('Alt+ArrowRight');
+  await expect.poll(async () => (await state()).viewport).toMatchObject({ zoom: 1.2, panX: 50, grid: true, safeZone: 'action' });
+  await page.keyboard.press('Control+0');
+  await expect.poll(async () => (await state()).viewport.zoom).toBe(1);
+});
+
+test('Player and thumbnails switch named variants and reject stale slow frames', async ({ page }) => {
+  const loaded = await loadProject(directory);
+  loaded.sourceProject.parameters = [{ id: 'tint', label: 'Tint', type: 'color', default: '#ff0000' }];
+  loaded.sourceProject.variants = [{ id: 'blue', label: 'Blue', values: { tint: '#0000ff' } }];
+  loaded.sourceProject.scenes[0]!.layers[0]!.bindings = { fill: 'tint' };
+  await writeFile(loaded.projectFile, JSON.stringify(loaded.sourceProject));
+  preview = await startPreview(await loadProject(directory), { port: 0 });
+  await page.goto(new URL('/embed', preview.url).href);
+  const result = await page.evaluate(async () => {
+    const modulePath = '/player.js'; const { GenmotionPlayer, GenmotionThumbnail, httpPlayerSource } = await import(modulePath) as typeof PlayerModule;
+    const parent = document.createElement('div'); document.body.append(parent);
+    const source = httpPlayerSource('/'); const player = new GenmotionPlayer(parent, source, { controls: false, fit: 'contain', telemetry: () => { throw new Error('Telemetry is isolated'); } });
+    await player.ready; await player.seekFrame(15);
+    const bytes = async (url: string) => Array.from(new Uint8Array(await (await fetch(url)).arrayBuffer())).join(',');
+    const red = await bytes(player.image.src); await player.setVariant('blue'); const blue = await bytes(player.image.src);
+    const thumbnail = new GenmotionThumbnail(parent, httpPlayerSource('/', 'blue'), { frame: 15 }); await thumbnail.ready;
+    const thumbnailMatches = await bytes(thumbnail.element.src) === blue;
+    let release: (() => void) | undefined; const delivered: number[] = [];
+    const delayed = new GenmotionPlayer(parent, { metadata: (parameters, signal) => source.metadata(parameters, signal), frame: async (frame, parameters, signal) => { if (frame === 5) await new Promise<void>(resolve => { release = resolve; }); return source.frame(frame, parameters, signal); } });
+    await delayed.ready; delayed.addEventListener('frame', event => delivered.push((event as CustomEvent<{ frame: number }>).detail.frame));
+    const slow = delayed.seekFrame(5); await delayed.seekFrame(10); release!(); await slow;
+    const frame = delayed.frame; const hidden = player.element.querySelector('button')!.parentElement!.hidden;
+    thumbnail.dispose(); delayed.dispose(); player.dispose(); parent.remove();
+    return { different: red !== blue, thumbnailMatches, frame, delivered, hidden };
+  });
+  expect(result).toEqual({ different: true, thumbnailMatches: true, frame: 10, delivered: [10], hidden: true });
+});
+
+test('Player respects reduced motion, exposes lifecycle events and synchronizes custom control values', async ({ page }) => {
+  preview = await startPreview(await loadProject(directory), { port: 0 });
+  await page.emulateMedia({ reducedMotion: 'reduce' }); await page.goto(new URL('/embed', preview.url).href);
+  const result = await page.evaluate(async () => {
+    const modulePath = '/player.js'; const { GenmotionPlayer, httpPlayerSource } = await import(modulePath) as typeof PlayerModule;
+    const host = document.createElement('div'); document.body.append(host);
+    const source = httpPlayerSource('/'), events: string[] = [], telemetry: string[] = [];
+    const player = new GenmotionPlayer(host, { metadata: (values, signal) => source.metadata(values, signal), frame: (frame, values, signal) => frame === 13 ? Promise.reject(new Error('Intentional source failure')) : source.frame(frame, values, signal) }, { autoplay: true, fit: 'cover', telemetry: name => telemetry.push(name) });
+    for (const name of ['ready', 'frame', 'timeupdate', 'buffering', 'resume', 'play', 'pause', 'ended', 'error', 'parameterschange']) player.addEventListener(name, () => events.push(name));
+    await player.ready; const autoplaySuppressed = !player.playing;
+    player.playbackRate = 1.75; player.volume = .25; player.muted = true;
+    const speed = player.element.querySelector<HTMLSelectElement>('select')!.value;
+    await player.seekFrame(13).catch(() => undefined); await player.seekFrame(28); await player.play();
+    await new Promise<void>(resolve => player.addEventListener('ended', () => resolve(), { once: true }));
+    const frame = player.frame, fit = player.image.style.objectFit;
+    player.dispose(); host.remove(); return { events, telemetry, autoplaySuppressed, speed, frame, fit };
+  });
+  expect(result).toMatchObject({ autoplaySuppressed: true, speed: '1.75', frame: 29, fit: 'cover' });
+  for (const event of ['ready', 'frame', 'timeupdate', 'buffering', 'resume', 'play', 'pause', 'ended', 'error', 'parameterschange']) expect(result.events).toContain(event);
+  expect(result.telemetry).toContain('ended');
+});
+
+test('Player seeks and plays against the processed native audio clock', async ({ page }) => {
+  await runProcess('ffmpeg', ['-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=1', path.join(directory, 'tone.wav')]);
+  const loaded = await loadProject(directory);
+  await writeFile(loaded.projectFile, JSON.stringify(projectSchema.parse({ ...loaded.sourceProject, audio: [{ id: 'tone', src: 'tone.wav', kind: 'voice' }] })));
+  preview = await startPreview(await loadProject(directory), { port: 0 });
+  await page.goto(new URL('/embed', preview.url).href);
+  await page.waitForFunction(() => Boolean((document.querySelector('genmotion-player') as HTMLElement & { player?: GenmotionPlayer })?.player?.metadata));
+  const result = await page.evaluate(async () => {
+    const player = (document.querySelector('genmotion-player') as HTMLElement & { player: GenmotionPlayer }).player;
+    await player.ready; player.muted = true; player.loop = false; await player.seek(.25); await player.play();
+    await new Promise<void>(resolve => { const listener = () => { if (player.currentTime >= .5) { player.removeEventListener('timeupdate', listener); resolve(); } }; player.addEventListener('timeupdate', listener); });
+    player.pause(); return { source: player.audio.src, time: player.currentTime, audioTime: player.audio.currentTime, paused: player.audio.paused };
+  });
+  expect(result.source).toContain('/api/audio.m4a'); expect(result.paused).toBe(true);
+  expect(Math.abs(result.time - result.audioTime)).toBeLessThan(.15);
+  await page.getByRole('button', { name: 'Fullscreen', exact: true }).click();
+  await expect.poll(async () => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true);
 });

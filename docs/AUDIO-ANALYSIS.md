@@ -16,4 +16,4 @@ genmotion --json audio-analyze assets/music.wav --options '{"start":30,"duration
 
 MCP exposes `genmotion_audio_analyze`. Dense waveform and spectrum arrays are opt-in; summary mode returns detection results and data dimensions. Studio provides analysis from audio-track inspectors and the Markers and ranges dialog. Review stereo waveforms and spectrum, then explicitly import beat, transient or silence-boundary markers using a destination time, playback rate and optional reverse mapping. Imported marker notes retain source fingerprints and original source times. Window mapping does not automatically repeat markers for looped tracks.
 
-The implementation and added FFT, tempo, stereo, silence and cancellation regression cases await the deferred test/QA pass.
+Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).

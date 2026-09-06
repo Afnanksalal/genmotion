@@ -2,7 +2,7 @@
 
 Nested video source audio follows composition instance clocks during preparation, including offsets, trims, loops, ping-pong, reverse time, remapping and freeze intervals. Audio uses a continuous 48 kHz clock independently of local video FPS. Frozen and clamped frame holds are silent. Nested retiming is varispeed with linear sample interpolation; it is not a pitch-preserving time-stretch algorithm. Direct static source tracks retain the existing pitch-preserving tempo path. Animated video volume, trim and playback-rate tracks use the mapped preparation path. Linked source-audio properties evaluate through the same dependency graph as visual properties, resolving only the requested video and its dependencies. Parent visibility is respected.
 
-Mapped streams use a sixteen-page decoded PCM cache (1 MiB), bounded 4 GiB source/output streams, cancellation and deadline checks. They feed the same prepared-track mix, stem, loudness and export path. These additions and their regression cases await the deferred final test pass.
+Mapped streams use a sixteen-page decoded PCM cache (1 MiB), bounded 4 GiB source/output streams, cancellation and deadline checks. They feed the same prepared-track mix, stem, loudness and export path. Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 
 Video export, standalone audio export, and Studio's processed-mix preview share one native FFmpeg graph. Project audio tracks retain source trimming, timeline placement, looping, linear volume, stereo pan, fades, mute/solo and voice ducking. Additional fields are optional for compatibility with existing documents.
 

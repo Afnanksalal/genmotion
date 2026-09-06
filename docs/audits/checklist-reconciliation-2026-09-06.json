@@ -1,0 +1,185 @@
+{
+  "date": "2026-09-06",
+  "baselineCommit": "6e8ded9",
+  "before": {
+    "completed": 42,
+    "open": 275
+  },
+  "after": {
+    "completed": 66,
+    "open": 251
+  },
+  "total": 317,
+  "newlyCompleted": [
+    {
+      "requirement": "Component parameters, defaults, constraints, validation, and per-instance overrides.",
+      "documentation": "PARAMETERS.md",
+      "evidence": "tests/composition-parameters.test.ts; tests/composition-time.test.ts; Studio instance override persistence"
+    },
+    {
+      "requirement": "Typed string, number, boolean, color, enum, file, asset, font, dimension, duration, object, array, and optional parameters.",
+      "documentation": "PARAMETERS.md",
+      "evidence": "tests/parameters.test.ts; generated Studio parameter controls; legacy fixture loading"
+    },
+    {
+      "requirement": "Parameter defaults, constraints, descriptions, groups, presets, and generated Studio controls.",
+      "documentation": "PARAMETERS.md",
+      "evidence": "tests/parameters.test.ts; tests/variants.test.ts; Studio named configurations and nested defaults"
+    },
+    {
+      "requirement": "CLI, MCP, SDK, Player, and render-API parameter overrides.",
+      "documentation": "PARAMETERS.md",
+      "evidence": "tests/mcp.test.ts; parameter/variant tests; Player variant/thumbnail browser tests"
+    },
+    {
+      "requirement": "Batch parameter matrices plus CSV- and JSON-driven variants.",
+      "documentation": "PARAMETERS.md",
+      "evidence": "tests/variants.test.ts; MCP variant conversion; Studio configuration import/export"
+    },
+    {
+      "requirement": "Whole-layer and per-corner radius, borders, outlines, and inner borders.",
+      "documentation": "MEDIA-GEOMETRY.md",
+      "evidence": "tests/media-geometry.test.ts; native rounded-corner and animated inner-border pixels; shared outline effect"
+    },
+    {
+      "requirement": "Word/token timing and correction, caption pages, page duration, forced breaks, speakers, and speaker styles.",
+      "documentation": "CAPTION-EDITING.md",
+      "evidence": "tests/caption-editing.test.ts; caption rendering QA; Studio caption page/word/style editors"
+    },
+    {
+      "requirement": "Ordered, reorderable, toggleable, copyable, animatable multipass effects on layers, groups, compositions, and adjustment layers.",
+      "documentation": "VISUAL-EFFECTS.md",
+      "evidence": "tests/visual-effects.test.ts; tests/checklist-contracts.test.ts; Studio stack reorder/bypass/copy/paste/LUT persistence"
+    },
+    {
+      "requirement": "Original native custom-effect SDK using safe declarative kernels or vetted native/WGPU plugins, never arbitrary project code.",
+      "documentation": "NATIVE-KERNELS.md",
+      "evidence": "tests/native-kernel.test.ts; MCP input-schema export; Studio custom graph save/reload; native effect contact sheet"
+    },
+    {
+      "requirement": "Gesture and keyboard zoom, fit view, 100% view, pan, fullscreen, and onion skinning.",
+      "documentation": "CANVAS-VIEW.md",
+      "evidence": "Studio viewport persistence, keyboard zoom/pan and successive-autosave tests; native neighboring-frame overlays"
+    },
+    {
+      "requirement": "Timeline, scene, comment, and beat markers; named ranges; in/out points; and range looping.",
+      "documentation": "MARKERS.md",
+      "evidence": "tests/markers.test.ts; CLI/MCP revisioned markers; Studio marker persistence and bounded range playback"
+    },
+    {
+      "requirement": "Play, pause, frame seek, time seek, rate, volume, mute, loop, fullscreen, and custom controls.",
+      "documentation": "PLAYER.md",
+      "evidence": "real browser Player lifecycle, playback, loop, rate synchronization and custom controls"
+    },
+    {
+      "requirement": "Current-frame, time, end, error, buffering, waiting, and resume events.",
+      "documentation": "PLAYER.md",
+      "evidence": "Player lifecycle/event browser acceptance and slow-frame cancellation"
+    },
+    {
+      "requirement": "Live parameter and composition-variant updates.",
+      "documentation": "PLAYER.md",
+      "evidence": "named variant native-frame/thumbnail equality; parameter updates and stale seek rejection in browser"
+    },
+    {
+      "requirement": "Poster images, responsive sizing, letterbox, fit/fill, transparent preview, and reduced-motion preview.",
+      "documentation": "PLAYER.md",
+      "evidence": "Player native image presentation and reduced-motion/autoplay browser acceptance; transparent frame rendering"
+    },
+    {
+      "requirement": "Local-first telemetry hooks with no default data transmission.",
+      "documentation": "PLAYER.md",
+      "evidence": "Player optional local telemetry callback and callback-failure isolation in browser"
+    },
+    {
+      "requirement": "Content-addressed frozen project bundles and dependency manifests.",
+      "documentation": "BUNDLES.md",
+      "evidence": "tests/bundle.test.ts; SDK/CLI/MCP restore/verify contracts; native relocated-frame equality and corruption refusal"
+    },
+    {
+      "requirement": "**GM-002**",
+      "documentation": "PRODUCTION-WORKFLOWS.md",
+      "evidence": "seven maintained workflows with explicit inputs/outputs/capabilities; SDK/CLI/MCP configure and Studio workflow selection"
+    },
+    {
+      "requirement": "**GM-003**",
+      "documentation": "PRODUCTION-WORKFLOWS.md",
+      "evidence": "tests/production.test.ts stage invalidation and evidence binding; persisted Studio stage completion"
+    },
+    {
+      "requirement": "**GM-004**",
+      "documentation": "PRODUCTION-WORKFLOWS.md",
+      "evidence": "stable shot schema and native build-link validation; Studio storyboard authoring and reload"
+    },
+    {
+      "requirement": "**GM-005**",
+      "documentation": "PRODUCTION-WORKFLOWS.md",
+      "evidence": "revision-bound review invalidation, comment resolution and native-preview navigation; Studio acceptance"
+    },
+    {
+      "requirement": "**GM-039**",
+      "documentation": "LUTS.md",
+      "evidence": "tests/lut.test.ts parser/domain/interpolation/hash rejection; native stack and Studio imported LUT round trip; CLI/MCP imports"
+    },
+    {
+      "requirement": "**GM-043**",
+      "documentation": "VISUAL-EFFECTS.md",
+      "evidence": "declared animation metadata; random-seek blur/pixelation/bloom/noise/reveal pixels and unsupported-animation rejection"
+    },
+    {
+      "requirement": "**GM-067**",
+      "documentation": "PLAYER.md",
+      "evidence": "public GenmotionPlayer/GenmotionThumbnail and Web Component; native named-variant pixels and browser lifecycle tests"
+    }
+  ],
+  "verification": {
+    "native": {
+      "files": 64,
+      "tests": 215,
+      "passed": true,
+      "coverage": {
+        "statements": 89.6,
+        "lines": 89.6,
+        "functions": 96.69,
+        "branches": 79.2
+      }
+    },
+    "browser": {
+      "tests": 47,
+      "passed": true
+    },
+    "lint": true,
+    "typecheck": true,
+    "packageCompilation": true,
+    "packageInstallationSmoke": true,
+    "freshRender": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 24,
+      "frames": 48,
+      "codec": "h264",
+      "fullDecode": true,
+      "contactSheetVisuallyInspected": true
+    },
+    "platform": "Windows",
+    "fullChecklistComplete": false
+  },
+  "sha256": {
+    "output/checklist-native-final.log": "7e20a4aa4310fa2d79dcbc70aa004c4ecfeded51baf267b34e7ceb0fde0b8012",
+    "output/checklist-browser-final.log": "5dc87e6798daa92d359b44632075dec34b2cca09e3eabb4b05b6cc0e3c36614e",
+    "output/checklist-lint-final.log": "00f96cc04e10d4ac92ab8333109c117d4bbae7585e16db17bb60995fe86288bb",
+    "output/checklist-package.log": "a5ccfb59c0ce857028abb672ac624ef37873c94bf08414f4676a96bade3ea4ed",
+    "output/checklist-render.log": "647fd22a0a732347243ad50548992059a5dfa51abd9dc4c2d836bc46a12044b7",
+    "output/playwright/milestone-render/contact-sheet.png": "bfd68c043ef508df6671c23cf5e3a8768d3ff00c5fa20fb3dd0108e9abbbec9a",
+    "src/player.ts": "d0aca220d6739ba924e8c5c7a0f4254e60e3e629a67e0b7f531c80104431cacd",
+    "src/engine/preview.ts": "a6c074d7185b23eb69a47fcd08b39285bf584cbafd40d7e697e4e798976a9a0d",
+    "src/studio/ui.ts": "b0e2b87ee44799266e6adc82b7d6d2b43f5b8d7e27e9262f730e42f316766453",
+    "src/ir/production-service.ts": "ed069f82a079c16ee8aad795f84b6e202ad09c9f595b4391b32a96dbe09cd574",
+    "tests/checklist-contracts.test.ts": "96b519299134b3687f865951cc7eebba5c03e7459a33f8bb443973d7d6d6aa1a",
+    "tests/preview.test.ts": "162457f4c3b615abe1e766e3344aa43309a32da2888278324cfac47484368f1c",
+    "tests/e2e/milestone.spec.ts": "d9440c225ea0f280e8fd8d028212ca2b643f3b3c3b809d6c0c42234389cdda5a",
+    "tests/caption-editing.test.ts": "a9b4f1532654e8f92c8bf445942ff6b28202f174a965d173be765d01c1cf3318",
+    "tests/media-geometry.test.ts": "060a1adfeca1d0dbe3c3d083a693da815fcf5e966ae4111046a79afb44fab594",
+    "docs/NATIVE-CAPABILITY-BACKLOG.md": "83ed474a92778f6b0a08498bce0cebf82b06ae95fff856acfeba09c76c313c82"
+  }
+}

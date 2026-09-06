@@ -27,7 +27,7 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 ## 1. Composition and scene architecture
 
 - [ ] Nested compositions, reusable composition definitions, composition instances, and reusable layer components.
-- [ ] Component parameters, defaults, constraints, validation, and per-instance overrides.
+- [x] Component parameters, defaults, constraints, validation, and per-instance overrides. Evidence: [PARAMETERS.md](PARAMETERS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Component-local coordinate systems, timelines, frame rates, dimensions, anchors, masks, and automatic scaling when embedded.
 - [ ] Nested groups with transform, clipping, opacity, blend modes, effects, local timing, local anchors, and local masks.
 - [ ] Sequence-style time offsets, nested offsets, negative offsets, and sequential scene containers.
@@ -43,10 +43,10 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 
 ## 2. Parameters, data, and variants
 
-- [ ] Typed string, number, boolean, color, enum, file, asset, font, dimension, duration, object, array, and optional parameters.
-- [ ] Parameter defaults, constraints, descriptions, groups, presets, and generated Studio controls.
-- [ ] CLI, MCP, SDK, Player, and render-API parameter overrides.
-- [ ] Batch parameter matrices plus CSV- and JSON-driven variants.
+- [x] Typed string, number, boolean, color, enum, file, asset, font, dimension, duration, object, array, and optional parameters. Evidence: [PARAMETERS.md](PARAMETERS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
+- [x] Parameter defaults, constraints, descriptions, groups, presets, and generated Studio controls. Evidence: [PARAMETERS.md](PARAMETERS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
+- [x] CLI, MCP, SDK, Player, and render-API parameter overrides. Evidence: [PARAMETERS.md](PARAMETERS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
+- [x] Batch parameter matrices plus CSV- and JSON-driven variants. Evidence: [PARAMETERS.md](PARAMETERS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Locale, brand, canvas-format, and platform-safe-area variants.
 - [ ] Deterministic derived parameters and preflight calculation of duration, dimensions, FPS, and output names.
 - [ ] Frozen local data sources, dependency hashes, and pre-render data validation.
@@ -104,7 +104,7 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 - [ ] Media conforming, rotation-metadata handling, variable-frame-rate normalization, alpha video, and ProRes decoding.
 - [ ] HDR and color-profile detection, source color-space conversion, and tone mapping.
 - [ ] Source cropping, ratio-based crop values, direct crop mode, fit/fill/contain/stretch, pan-and-scan, and Ken Burns controls.
-- [ ] Whole-layer and per-corner radius, borders, outlines, and inner borders.
+- [x] Whole-layer and per-corner radius, borders, outlines, and inner borders. Evidence: [MEDIA-GEOMETRY.md](MEDIA-GEOMETRY.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Constant and ramped playback rate, reverse playback, freeze frame, frame hold, and poster-frame selection.
 - [ ] Source audio, audio detachment, pitch-preserving speed, optional pitch shift, and media metadata inspection for dimensions, FPS, codec, duration, and color space.
 
@@ -125,7 +125,7 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 ## 8. Captions and subtitles
 
 - [x] SRT, WebVTT, and timed-JSON import/export.
-- [ ] Word/token timing and correction, caption pages, page duration, forced breaks, speakers, and speaker styles.
+- [x] Word/token timing and correction, caption pages, page duration, forced breaks, speakers, and speaker styles. Evidence: [CAPTION-EDITING.md](CAPTION-EDITING.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Current-word and karaoke highlighting, line/character limits, and safe-area validation.
 - [ ] Burned-in, sidecar, and embedded subtitle delivery.
 - [ ] Caption preview, search, replacement, global style presets, and per-caption overrides.
@@ -134,14 +134,14 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 
 ## 9. Effects stack
 
-- [ ] Ordered, reorderable, toggleable, copyable, animatable multipass effects on layers, groups, compositions, and adjustment layers.
+- [x] Ordered, reorderable, toggleable, copyable, animatable multipass effects on layers, groups, compositions, and adjustment layers. Evidence: [VISUAL-EFFECTS.md](VISUAL-EFFECTS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Color: brightness, contrast, combined correction, chroma key, duotone, exposure, grayscale, hue, invert, levels, saturation, shadows/highlights, tint, white balance, vibrance, gradients, gradient tint/map, thermal vision, curves, channel mixer, selective color, LUTs, color wheels, lift/gamma/gain, and posterization.
 - [ ] Blur/shadow: Gaussian, directional, box, zoom, radial, linear/radial progressive, region and background blur; drop/inner shadow, glow, bloom, outline, light trails, and depth-aware blur when depth exists.
 - [ ] Reveal/matte: evolve, blinds, linear/radial/clock/iris/shape/path/gradient/noise reveals; alpha/luma/inverted mattes; feathered multi-mask add/subtract/intersect/exclude; animated paths, expansion, blur, and track mattes.
 - [ ] Transform/distort: mirror, scale, tile, UV/pixel translate, barrel distortion, chromatic aberration, fisheye, corner pin, perspective, wave, skew, twirl, bulge/pinch, displacement, turbulence, lens correction, and rolling shutter.
 - [ ] Stylize: burlap, emboss, dot grid, halftone, grain, noise displacement, paper, rough edges, patterns, pixel dissolve, pixelation, progressive pixelation, scanlines, speckle, shine, shrink-wrap, vignette, film damage, dither, threshold, edge detection, posterize-time, CRT, VHS, glitch, mosaic, and kaleidoscope.
 - [ ] Generate: contour/liquid-contour fields, checkerboard, flannel, halftone gradients, gridlines, white noise, TV signal, lines, rings, waves, zigzags, light leaks, starbursts, fractals, procedural/mesh gradients, Voronoi, Perlin/simplex fields, particles, dust, rain, snow, sparks, bokeh, and lens flares.
-- [ ] Original native custom-effect SDK using safe declarative kernels or vetted native/WGPU plugins, never arbitrary project code.
+- [x] Original native custom-effect SDK using safe declarative kernels or vetted native/WGPU plugins, never arbitrary project code. Evidence: [NATIVE-KERNELS.md](NATIVE-KERNELS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 
 ## 10. Transitions
 
@@ -162,7 +162,7 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 - [ ] Eight-handle crop mode with dimmed uncropped source and temporary negative crop while repositioning.
 - [ ] Object, anchor, baseline, center, edge, guide, ruler, pixel-grid, and configurable-grid snapping.
 - [ ] Social, title, action, and platform-specific safe-zone overlays.
-- [ ] Gesture and keyboard zoom, fit view, 100% view, pan, fullscreen, and onion skinning.
+- [x] Gesture and keyboard zoom, fit view, 100% view, pan, fullscreen, and onion skinning. Evidence: [CANVAS-VIEW.md](CANVAS-VIEW.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Visible motion paths, canvas-created keyframes, effect control points, corner-pin handles, mask paths, gradient/light handles, camera frustums, and 3D gizmos.
 
 ## 12. Studio timeline editing
@@ -175,7 +175,7 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 - [ ] Split/blade, ripple delete/insert, rolling, slip, slide, and rate-stretch edits.
 - [ ] Linked/unlinked audio-video, compound clips, and nested sequences.
 - [ ] Lock, hide, mute, solo, and shy controls.
-- [ ] Timeline, scene, comment, and beat markers; named ranges; in/out points; and range looping.
+- [x] Timeline, scene, comment, and beat markers; named ranges; in/out points; and range looping. Evidence: [MARKERS.md](MARKERS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Cut/copy/paste/duplicate for layers, keyframes, effects, and easing, including paste-at-playhead and relative timing.
 - [ ] Frame and interval keyboard nudging, timecode entry, go-to-frame/time, and selection-duration display.
 - [ ] Track-height modes and virtualized smooth navigation for thousands of layers.
@@ -201,13 +201,13 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 ## 15. Preview, review, and embeddable Player
 
 - [ ] Embeddable Player and thumbnail renderer with vanilla JavaScript, Web Component, and framework wrappers.
-- [ ] Play, pause, frame seek, time seek, rate, volume, mute, loop, fullscreen, and custom controls.
-- [ ] Current-frame, time, end, error, buffering, waiting, and resume events.
-- [ ] Live parameter and composition-variant updates.
+- [x] Play, pause, frame seek, time seek, rate, volume, mute, loop, fullscreen, and custom controls. Evidence: [PLAYER.md](PLAYER.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
+- [x] Current-frame, time, end, error, buffering, waiting, and resume events. Evidence: [PLAYER.md](PLAYER.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
+- [x] Live parameter and composition-variant updates. Evidence: [PLAYER.md](PLAYER.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Media keys, keyboard controls, autoplay handling, preloading, premounting, buffering, and flicker prevention.
-- [ ] Poster images, responsive sizing, letterbox, fit/fill, transparent preview, and reduced-motion preview.
+- [x] Poster images, responsive sizing, letterbox, fit/fill, transparent preview, and reduced-motion preview. Evidence: [PLAYER.md](PLAYER.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Timestamped annotations, review comments, read-only/password-protected review links, side-by-side comparison, frame diff, and A/B renders.
-- [ ] Local-first telemetry hooks with no default data transmission.
+- [x] Local-first telemetry hooks with no default data transmission. Evidence: [PLAYER.md](PLAYER.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 
 ## 16. Rendering and output
 
@@ -228,7 +228,7 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 - [ ] Coordinator for local, LAN, VPS, container, and cloud workers.
 - [ ] Worker capability negotiation and CPU/GPU/architecture-aware scheduling.
 - [ ] Frame-range, scene, and encoding-chunk sharding plus separate audio workers and parallel asset preparation.
-- [ ] Content-addressed frozen project bundles and dependency manifests.
+- [x] Content-addressed frozen project bundles and dependency manifests. Evidence: [BUNDLES.md](BUNDLES.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Filesystem, S3-compatible, Cloudflare R2, MinIO, Google Cloud Storage, and Azure Blob adapters.
 - [ ] Signed uploads, checksums, idempotent artifacts/retries, retry budgets, heartbeats, health checks, leases, stale-job recovery, and backpressure.
 - [ ] Priorities, user/project quotas, cancellation propagation, SSE progress, webhooks, resumable jobs, and failed-shard rerendering.
@@ -306,10 +306,10 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 Refines §§2, 14, 15, 21, 23. Evidence: audit H01–H04. These are authoring workflows; they do not introduce a second render timeline.
 
 - [x] **GM-001** Persist a versioned production brief with destination, aspect, language, audience, message, duration, source requirements, and user-stated versus inferred decisions; resume it without repeating resolved intake. Evidence: [production brief contract](PRODUCTION-BRIEF.md), bounded schema/provenance, revision and native-output invariance tests, CLI/MCP round trips, resumed agent context and Studio persistence coverage.
-- [ ] **GM-002** Route product films, explainers, existing-footage edits, captions, music-driven films, short motion units, and presentations through maintained workflows with explicit inputs, outputs, and capability requirements.
-- [ ] **GM-003** Track resumable production stages and dependencies from source collection through planning, authoring, verification, and delivery; invalidate only affected stages when the brief or assets change.
-- [ ] **GM-004** Provide a storyboard with stable shot IDs, sketches/references, visual direction, narration, source evidence, planned duration, and separate build and review states; link built shots to real IR scene/layer IDs.
-- [ ] **GM-005** Support shot-level comments, resolved feedback, and navigation from storyboard to native preview; bind review decisions to a revision so a later change cannot inherit stale approval.
+- [x] **GM-002** Route product films, explainers, existing-footage edits, captions, music-driven films, short motion units, and presentations through maintained workflows with explicit inputs, outputs, and capability requirements. Evidence: [PRODUCTION-WORKFLOWS.md](PRODUCTION-WORKFLOWS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
+- [x] **GM-003** Track resumable production stages and dependencies from source collection through planning, authoring, verification, and delivery; invalidate only affected stages when the brief or assets change. Evidence: [PRODUCTION-WORKFLOWS.md](PRODUCTION-WORKFLOWS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
+- [x] **GM-004** Provide a storyboard with stable shot IDs, sketches/references, visual direction, narration, source evidence, planned duration, and separate build and review states; link built shots to real IR scene/layer IDs. Evidence: [PRODUCTION-WORKFLOWS.md](PRODUCTION-WORKFLOWS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
+- [x] **GM-005** Support shot-level comments, resolved feedback, and navigation from storyboard to native preview; bind review decisions to a revision so a later change cannot inherit stale approval. Evidence: [PRODUCTION-WORKFLOWS.md](PRODUCTION-WORKFLOWS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] **GM-006** Import a versioned brand/design specification with exact palette/font bindings, provenance, immutable identity requirements, medium-specific recommendations, and a drift report across scenes and variants.
 - [ ] **GM-007** Store inspectable project and personal creative preferences with source/confirmation history, explicit overrides and removal; inferred one-off choices must not silently become personal defaults.
 - [ ] **GM-008** Freeze approved workflows as versioned reusable bundles of brief structure, brand bindings, storyboard skeleton, parameters, assets and acceptance checks; reopen them with migration and missing-dependency diagnostics.
@@ -363,11 +363,11 @@ Refines §§3, 7, 8, 12, 16. Evidence: audit H11–H15. Preview and export must 
 Refines §§6, 9, 10, 15, 18. Evidence: audit H16–H20. Existing effect families remain the owner; these entries specify missing contracts and authoring workflows.
 
 - [ ] **GM-038** Introduce a versioned native grading payload with primary correction, tonal wheels, master/RGB curves, hue-versus-hue/saturation/luma curves, keyed secondaries, enabled state and explicit working color space.
-- [ ] **GM-039** Import and validate local LUTs with dimensions/domain/interpolation/intensity, hashes and color-space expectations; preview the same grade and parameter order used for export.
+- [x] **GM-039** Import and validate local LUTs with dimensions/domain/interpolation/intensity, hashes and color-space expectations; preview the same grade and parameter order used for export. Evidence: [LUTS.md](LUTS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] **GM-040** Analyze representative source frames for luminance/chroma/saturation, clipping risk and color metadata; emit evidence plus a conservative suggested patch with dry-run/apply/clear and unsupported-log/HDR diagnostics.
 - [ ] **GM-041** Add parameterized native print/art treatments: two-ink print, ordered dithering, mono-screen patterns, ASCII glyph rendering, engraving, crosshatching and edge-preserving painterly filtering; retain readability controls and seek determinism.
 - [ ] **GM-042** Add source-driven tape tracking/chroma bleed, film artifacts, scanline/CRT, channel-separation and digital-tear/block treatments with explicit spatial/temporal parameters and seeds.
-- [ ] **GM-043** Make treatment animation support explicit per parameter; implement declared blur/pixelation/bloom/grain/reveal controls without hidden wall-clock state, and reject animation on unsupported controls.
+- [x] **GM-043** Make treatment animation support explicit per parameter; implement declared blur/pixelation/bloom/grain/reveal controls without hidden wall-clock state, and reject animation on unsupported controls. Evidence: [VISUAL-EFFECTS.md](VISUAL-EFFECTS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] **GM-044** Compare original and candidate grades, LUTs or composition variants at identical source/timeline times in labeled sheets or interactive views; retain exact settings and report failed/truncated candidates.
 - [ ] **GM-045** Compose original plate, foreground matte and regional treatment as editable native layers/masks with feather and alpha semantics; keep source time mapping identical across the stack and support later tracked-matte inputs.
 - [ ] **GM-046** Publish per-effect support and cost metadata for backend, precision, alpha, HDR, sampling and memory; surface incompatible stacks before rendering and offer explicit reduced-quality previews without changing the accepted master.
@@ -406,7 +406,7 @@ Refines §§3, 5, 8, 13, 15, 16, 21, 24. Evidence: audit H26–H29. Static schem
 
 Refines §§1, 12, 15, 22. Evidence: audit H30–H32. Interactive playback metadata must resolve to declared native scene/timing data.
 
-- [ ] **GM-067** Ship a framework-neutral embeddable Player/thumbnail API for native preview transport with play/pause/seek/rate/volume/loop controls, responsive sizing and stable events; do not create a second browser scene renderer.
+- [x] **GM-067** Ship a framework-neutral embeddable Player/thumbnail API for native preview transport with play/pause/seek/rate/volume/loop controls, responsive sizing and stable events; do not create a second browser scene renderer. Evidence: [PLAYER.md](PLAYER.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] **GM-068** Define readiness, buffering, cancellation, stale-frame rejection, parameter changes and audio synchronization across embedded and Studio playback; test seek storms and slow preview delivery.
 - [ ] **GM-069** Provide portable review bundles/links with source revision, frozen assets or verified media, timestamps and comments; apply explicit access control for shared services and keep local review usable offline.
 - [ ] **GM-070** Add a presentation manifest for ordered scenes, fragment hold points, branches, hotspots and speaker notes, validated against stable IR identities with missing-target/cycle diagnostics.

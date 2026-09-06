@@ -10,4 +10,4 @@ Video layers now accept `loop`, default false. Looped sources repeat the complet
 
 When an image source reports animation duration or multiple frames, Studio offers conversion to a muted looped video layer. It preserves geometry, masks and effects and uses native video frame preparation. GIF and other animated formats depend on successful native decoding; explicit image sequences and sprite sheets remain separately supported source contracts. No browser animation clock is used in rendered output.
 
-These additions await the deferred metadata, audio-loop, decoder and visual QA pass.
+Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
