@@ -1,22 +1,43 @@
+import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from '../engine/media-conform.js';
+import { inspectMedia } from '../engine/media-probe.js';
+import { parseCaptions, serializeCaptions } from '../captions.js';
+import { editCaptions, captionEditSchema } from '../ir/caption-editing.js';
+import { captionCueSchema } from '../ir/schema.js';
+import { projectAssetReferences } from '../ir/asset-references.js';
+import { analyzeAudioFile, audioAnalysisOptionsSchema } from '../engine/audio-analysis.js';
+import { parseTimelineTime } from '../engine/time.js';
+import { resolveParameters } from '../ir/parameters.js';
+import { prepareLutSources } from '../ir/lut-import.js';
+import { importCubeLut } from '../ir/lut-import.js';
+import { createProjectBundle } from '../ir/bundle.js';
+import { inspectProduction, commitProductionAction, productionActionSchema } from '../ir/production-service.js';
+import { readProjectSnapshot } from '../ir/store.js';
+import { measureProjectText, textMeasureAddressSchema } from '../engine/text-measure.js';
+import { analyzeTrack, trackAnalysisOptionsSchema } from '../engine/kinematics.js';
 import express from 'express';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import YAML from 'yaml';
 import { z } from 'zod';
 import { loadProject, resolveProjectAsset, type LoadedProject } from '../ir/loader.js';
-import { projectDuration, projectSchema, type GenmotionProject } from '../ir/schema.js';
+import { animationTrackSchema, projectDuration, projectSchema, type GenmotionProject } from '../ir/schema.js';
 import { compileProjectMotions } from '../engine/motion.js';
 import { renderFramePng } from '../engine/draw.js';
 import { evaluateLayerTracks } from '../engine/animation.js';
+import { normalizePath, pathMetrics } from '../engine/path.js';
+import { renderAudio, measureProjectAudio } from '../engine/audio.js';
 import { layerIsActive, locateScene } from '../engine/timeline.js';
 import { makeContactSheet, probeVideo } from '../engine/probe.js';
-import { renderProject, resolveRenderResolution } from '../engine/render.js';
-import { validateProject } from '../ir/validate.js';
+import { renderProject, resolveRenderLimits, resolveRenderResolution, validateOutputContainer, type RenderProgress } from '../engine/render.js';
+import { commitProject, projectRevision } from '../ir/store.js';
+import { replaceFile } from '../ir/atomic.js';
+import { commitSemanticEdits, semanticEditSchema } from '../ir/edit.js';
+import { expandParameterMatrix, exportParameterVariants, importParameterVariants, parameterMatrixSchema } from '../ir/variants.js';
+import { validateProject, hasErrors } from '../ir/validate.js';
 import { compileCustomLibrary, loadMotionLibraries, saveMotionLibrary } from '../catalog/custom.js';
 import { tasteReferences } from '../catalog/references.js';
 import { sceneBlueprints } from '../catalog/blueprints.js';
@@ -37,7 +58,7 @@ const countWords: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, 
 
 export function requestedOutcomeGaps(prompt: string, project: GenmotionProject): string[] {
   const gaps: string[] = [];
-  const layers = project.scenes.flatMap((scene) => scene.layers);
+  const layers = [...project.scenes, ...project.compositions].flatMap((scene) => scene.layers);
   const tracks = layers.flatMap((layer) => layer.tracks);
   const durationMatch = prompt.match(/\b(\d+(?:\.\d+)?)\s*[- ]?second\s+(?:\d+:\d+\s+)?(?:launch\s+)?(?:film|video|animation|composition|spot|promo)\b/i);
   if (durationMatch) {
@@ -54,8 +75,9 @@ export function requestedOutcomeGaps(prompt: string, project: GenmotionProject):
   if (/\bdirect animation tracks?\b/i.test(prompt) && tracks.length < project.scenes.length) gaps.push(`requested direct animation tracks across the scene system, actual track count ${tracks.length}`);
   if (/\bcustom easing\b/i.test(prompt) && !tracks.some((track) => track.keyframes.some((keyframe) => typeof keyframe.ease === 'object' || keyframe.ease !== 'linear'))) gaps.push('requested custom easing, but no non-linear or custom-eased keyframe exists');
   if (/\bvector paths?\b/i.test(prompt) && !layers.some((layer) => layer.type === 'shape' && layer.shape === 'path')) gaps.push('requested vector paths, but no path shape exists');
-  if (/\b(?:clipping|masked reveal|mask wipes?)\b/i.test(prompt) && !layers.some((layer) => layer.clip !== undefined)) gaps.push('requested clipping or masking, but no layer clip exists');
-  if (/\bshadows?\b/i.test(prompt) && !layers.some((layer) => 'shadow' in layer && layer.shadow !== undefined)) gaps.push('requested shadows, but no layer shadow exists');
+  if (/\b(?:clipping|masked reveal|mask wipes?)\b/i.test(prompt) && !layers.some((layer) => layer.clip !== undefined || layer.masks?.some((mask) => mask.enabled))) gaps.push('requested clipping or masking, but no active clip or mask exists');
+  const effects = [...project.scenes, ...project.compositions].flatMap((container) => [...(container.effects ?? []), ...container.layers.flatMap((layer) => layer.effects ?? [])]);
+  if (/\bshadows?\b/i.test(prompt) && !layers.some((layer) => 'shadow' in layer && layer.shadow !== undefined) && !effects.some((effect) => effect.enabled && ['drop-shadow', 'inner-shadow'].includes(effect.type))) gaps.push('requested shadows, but no active native shadow exists');
   if (/\bblend modes?\b/i.test(prompt) && !layers.some((layer) => layer.blendMode !== 'source-over')) gaps.push('requested blend modes, but every layer uses source-over');
   if (/\b(?:camera movements?|camera pushes?|parallax|layered transforms?)\b/i.test(prompt) && !tracks.some((track) => track.target.startsWith('transform.'))) gaps.push('requested camera or layered transform motion, but no transform track exists');
   return gaps;
@@ -69,6 +91,14 @@ const studioStateSchema = z.object({
     tags: z.array(z.string()).default([]), createdAt: z.string().datetime(),
   })),
   updatedAt: z.string().datetime(),
+  viewport: z.object({
+    zoom: z.number().finite().min(.1).max(32).default(1), panX: z.number().finite().min(-100000).max(100000).default(0), panY: z.number().finite().min(-100000).max(100000).default(0),
+    grid: z.boolean().default(false), gridSize: z.number().finite().min(1).max(2048).default(32),
+    safeZone: z.enum(['none', 'title', 'action', 'vertical-ui', 'custom']).default('none'),
+    margins: z.tuple([z.number().min(0).max(.49), z.number().min(0).max(.49), z.number().min(0).max(.49), z.number().min(0).max(.49)]).default([.1, .1, .1, .1]),
+    onion: z.boolean().default(false), onionFrames: z.number().int().min(1).max(120).default(1), onionOpacity: z.number().min(.01).max(.8).default(.2),
+    guides: z.array(z.object({ id: z.string().min(1), axis: z.enum(['x', 'y']), position: z.number().finite() }).strict()).max(128).default([]),
+  }).strict().optional(),
 });
 export type StudioState = z.infer<typeof studioStateSchema>;
 
@@ -82,6 +112,10 @@ const renderRequestSchema = z.object({
   quality: z.enum(['draft', 'standard', 'high']).default('high'),
   codec: z.enum(['h264', 'h265', 'vp9', 'prores']).default('h264'),
   overwrite: z.boolean().default(false),
+  workers: z.number().int().min(1).max(16).optional(),
+  maxBufferedFrames: z.number().int().positive().optional(),
+  maxBufferedBytes: z.number().int().positive().optional(),
+  timeoutMs: z.number().int().min(1).max(2_147_483_647).optional(),
   resolution: z.object({ width: z.number().int().positive(), height: z.number().int().positive() }).optional(),
 });
 const revealExportSchema = z.object({
@@ -119,7 +153,7 @@ export function isTransientAgentFailure(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return /(?:\b429\b|rate.?limit|too many requests|\b50[234]\b|service unavailable|gateway timeout|connection (?:reset|closed|refused)|socket hang up|timed? ?out|temporar(?:y|ily)|provider overloaded)/i.test(message);
 }
-interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed' | 'cancelled'; progress: number; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
+interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed' | 'cancelled'; progress: number; diagnostics?: RenderProgress; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
 interface ExportRecord { filename: string; output: string; size: number; modifiedAt: string }
 interface AssetRecord { path: string; size: number; modifiedAt: string; kind: 'image' | 'video' | 'audio' | 'font' | 'asset'; uses: number }
 interface StudioWorkspace { root: string; servers: Map<string, StudioServer> }
@@ -191,9 +225,7 @@ function assetKind(file: string): AssetRecord['kind'] {
 async function listProjectAssets(projectDir: string, project: GenmotionProject, studio: StudioState): Promise<AssetRecord[]> {
   const usage = new Map<string, number>();
   const use = (file: string | undefined): void => { if (file) usage.set(file, (usage.get(file) ?? 0) + 1); };
-  for (const scene of project.scenes) for (const layer of scene.layers) { if ('src' in layer) use(layer.src); if (layer.type === 'text') use(layer.fontFile); }
-  for (const track of project.audio) use(track.src);
-  for (const font of project.brand.fonts) use(font.file);
+  projectAssetReferences(project).forEach(use);
   for (const reference of studio.references) use(reference.path);
 
   const files = new Set(usage.keys());
@@ -227,7 +259,8 @@ async function atomicWrite(file: string, content: string | Buffer): Promise<void
   await mkdir(path.dirname(file), { recursive: true });
   const temporary = `${file}.${randomUUID()}.tmp`;
   await writeFile(temporary, content);
-  await rename(temporary, file);
+  try { await replaceFile(temporary, file); }
+  finally { await rm(temporary, { force: true }); }
 }
 
 export function fileManagerRevealCommand(platform: NodeJS.Platform, file: string): { command: string; args: string[]; windowsHide: boolean } {
@@ -246,7 +279,7 @@ async function revealInFileManager(file: string): Promise<void> {
 }
 
 function initialStudioState(project: GenmotionProject): StudioState {
-  const nodes: StudioState['nodes'] = [{ id: 'brief', kind: 'brief', x: 40, y: 160, label: 'Creative brief', note: project.metadata.audience ?? '', color: '#22c55e' }];
+  const nodes: StudioState['nodes'] = [{ id: 'brief', kind: 'brief', x: 40, y: 160, label: 'Creative brief', note: project.productionBrief?.message?.value ?? project.productionBrief?.audience?.value ?? project.metadata.audience ?? '', color: '#22c55e' }];
   const edges: StudioState['edges'] = [];
   project.scenes.forEach((scene, index) => {
     const id = `scene:${scene.id}`;
@@ -349,11 +382,6 @@ async function readJson<T>(file: string, fallback: T): Promise<T> {
   try { return JSON.parse(await readFile(file, 'utf8')) as T; } catch { return fallback; }
 }
 
-async function writeProjectFile(file: string, project: GenmotionProject): Promise<void> {
-  const body = path.extname(file).toLowerCase() === '.json' ? `${JSON.stringify(project, null, 2)}\n` : YAML.stringify(project);
-  await atomicWrite(file, body);
-}
-
 function safeAssetName(filename: string): string {
   return path.basename(filename).normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100) || 'asset';
 }
@@ -435,7 +463,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
 
   let motionCatalog = await loadMotionLibraries(loaded.projectDir);
   let sourceProject = loaded.sourceProject;
-  let compiledProject = compileProjectMotions(sourceProject, motionCatalog.motions);
+  let compiledProject = loaded.project;
   const storedStudioState = studioStateSchema.parse(await readJson(stateFile, initialStudioState(sourceProject)));
   let studioState = reconcileStudioState(sourceProject, storedStudioState);
   if (JSON.stringify(studioState) !== JSON.stringify(storedStudioState)) {
@@ -526,21 +554,189 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       });
     } catch (error) { next(error); }
   });
+  app.post('/api/luts', express.text({ type: 'text/plain', limit: '32mb' }), async (request, response, next) => {
+    try {
+      const options = z.object({ inputColorSpace: z.enum(['srgb', 'linear-srgb']), outputColorSpace: z.enum(['srgb', 'linear-srgb']), interpolation: z.enum(['trilinear', 'tetrahedral']).default('tetrahedral') }).strict().parse(request.query);
+      if (typeof request.body !== 'string') throw new Error('Send CUBE text with Content-Type: text/plain');
+      response.json({ lut: await importCubeLut(loaded.projectDir, request.body, options) });
+    } catch (error) { next(error); }
+  });
+  app.get('/api/production', async (request, response, next) => {
+    const controller = new AbortController(), abort = (): void => controller.abort();
+    const timer = setTimeout(abort, 120000); timer.unref(); request.once('aborted', abort); response.once('close', abort);
+    try { const snapshot = await readProjectSnapshot(loaded.projectFile); response.json({ revision: snapshot.documentRevision, state: await inspectProduction(snapshot, controller.signal), workflow: snapshot.sourceProject.productionWorkflow ?? null }); }
+    catch (error) { if (!response.destroyed) next(error); }
+    finally { clearTimeout(timer); request.removeListener('aborted', abort); response.removeListener('close', abort); }
+  });
+  app.post('/api/production', async (request, response, next) => {
+    const controller = new AbortController(), abort = (): void => controller.abort(); request.once('aborted', abort); response.once('close', abort);
+    try {
+      const input = z.object({ expectedRevision: z.string().min(1), action: productionActionSchema }).strict().parse(request.body);
+      const before = await readProjectSnapshot(loaded.projectFile);
+      if (before.documentRevision !== input.expectedRevision) throw new GenmotionError('REVISION_CONFLICT', 'Production action requires the current project revision');
+      const receipt = await commitProductionAction(loaded.projectFile, before.revision, input.action, controller.signal);
+      sourceProject = receipt.loaded.sourceProject; compiledProject = receipt.loaded.project; frameCache.clear(); await reconcileAndPersistStudio(sourceProject);
+      response.json({ revision: receipt.documentRevision, project: sourceProject, studio: studioState, findings: receipt.findings, state: await inspectProduction(receipt.loaded, controller.signal) });
+    } catch (error) { if (!response.destroyed) next(error); }
+    finally { request.removeListener('aborted', abort); response.removeListener('close', abort); }
+  });
+  app.post('/api/bundle', async (request, response, next) => {
+    const controller = new AbortController(), abort = (): void => controller.abort();
+    request.once('aborted', abort); response.once('close', abort);
+    try {
+      const result = await createProjectBundle(await loadProject(loaded.projectFile), resolveProjectAsset(loaded.projectDir, '.genmotion/bundles'), { signal: controller.signal });
+      response.json(result);
+    } catch (error) { if (!response.destroyed) next(error); }
+    finally { request.removeListener('aborted', abort); response.removeListener('close', abort); }
+  });
+  app.post('/api/text-measure', async (request, response, next) => {
+    try { response.json(measureProjectText(await loadProject(loaded.projectFile), textMeasureAddressSchema.parse(request.body))); }
+    catch (error) { next(error); }
+  });
+  app.post('/api/time-parse', (request, response, next) => {
+    try { const input = z.object({ time: z.string().max(128) }).strict().parse(request.body); response.json({ seconds: parseTimelineTime(input.time, sourceProject.fps) }); }
+    catch (error) { next(error); }
+  });
+  app.post('/api/track-analysis', (request, response, next) => {
+    try {
+      const input = z.object({ track: animationTrackSchema, options: trackAnalysisOptionsSchema.optional() }).strict().parse(request.body);
+      response.json(analyzeTrack(input.track, input.options));
+    } catch (error) { next(error); }
+  });
+  let conformingMedia = false;
+  app.post('/api/media-conform', async (request, response, next) => {
+    if (conformingMedia) { response.status(429).json({ error: 'A media conversion is already running.' }); return; }
+    conformingMedia = true;
+    const controller = new AbortController(), abort = (): void => controller.abort();
+    request.once('aborted', abort); response.once('close', abort);
+    try {
+      const input = z.object({ source: z.string().min(1), output: z.string().min(1), options: mediaConformOptionsSchema, dryRun: z.boolean().default(false) }).strict().parse(request.body);
+      const source = resolveProjectAsset(loaded.projectDir, input.source), destination = resolveProjectAsset(loaded.projectDir, input.output);
+      if (input.dryRun) response.json({ plan: mediaConformPlan(await inspectMedia(source, { signal: controller.signal }), input.options) });
+      else response.json({ ...await conformMedia(source, destination, input.options, { signal: controller.signal }), relativeOutput: path.relative(loaded.projectDir, destination).replaceAll('\\', '/'), assets: await listProjectAssets(loaded.projectDir, sourceProject, studioState) });
+    } catch (error) { if (!response.destroyed) next(error); }
+    finally { conformingMedia = false; request.removeListener('aborted', abort); response.removeListener('close', abort); }
+  });
+  app.post('/api/media-info', async (request, response, next) => {
+    const controller = new AbortController(), abort = (): void => controller.abort();
+    request.once('aborted', abort); response.once('close', abort);
+    try { const input = z.object({ source: z.string().min(1) }).strict().parse(request.body); response.json(await inspectMedia(resolveProjectAsset(loaded.projectDir, input.source), { signal: controller.signal })); }
+    catch (error) { if (!response.destroyed) next(error); }
+    finally { request.removeListener('aborted', abort); response.removeListener('close', abort); }
+  });
+  app.post('/api/captions-convert', (request, response, next) => {
+    try {
+      const input = z.object({ content: z.string().max(32 * 1024 * 1024), inputFormat: z.enum(['srt', 'vtt', 'json']), outputFormat: z.enum(['srt', 'vtt', 'json']).default('json') }).strict().parse(request.body);
+      const cues = parseCaptions(input.content, input.inputFormat); response.json({ cues, output: serializeCaptions(cues, input.outputFormat) });
+    } catch (error) { next(error); }
+  });
+  app.post('/api/captions-edit', (request, response, next) => {
+    try { const input = z.object({ cues: z.array(captionCueSchema).max(10000), action: captionEditSchema }).strict().parse(request.body); response.json(editCaptions(input.cues, input.action)); }
+    catch (error) { next(error); }
+  });
+  let audioAnalysisJobs = 0;
+  app.post('/api/audio-analysis', async (request, response, next) => {
+    if (audioAnalysisJobs >= 2) { response.status(429).json({ error: 'Two audio analyses are already running.' }); return; }
+    const controller = new AbortController(), abort = (): void => controller.abort();
+    request.once('aborted', abort); response.once('close', abort); audioAnalysisJobs += 1;
+    try {
+      const input = z.object({ source: z.string().min(1), options: audioAnalysisOptionsSchema.optional() }).strict().parse(request.body);
+      response.set('Cache-Control', 'no-store');
+      response.json(await analyzeAudioFile(resolveProjectAsset(loaded.projectDir, input.source), input.options, { signal: controller.signal, timeoutMs: 300000 }));
+    } catch (error) { if (!response.destroyed) next(error); }
+    finally { audioAnalysisJobs -= 1; request.removeListener('aborted', abort); response.removeListener('close', abort); }
+  });
+  app.post('/api/audio-measure', async (request, response, next) => {
+    const controller = new AbortController();
+    const abort = (): void => controller.abort();
+    request.once('aborted', abort); response.once('close', abort);
+    try {
+      const snapshot = await loadProject(loaded.projectFile);
+      const findings = await validateProject(snapshot);
+      if (hasErrors(findings)) throw new GenmotionError('VALIDATION_FAILED', 'Project failed audio analysis validation.', findings);
+      const measurement = await measureProjectAudio(snapshot.project, snapshot.projectDir, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(120_000)]) });
+      response.json({ revision: projectRevision(snapshot.sourceProject), ...measurement });
+    } catch (error) { if (!response.destroyed) next(error); }
+    finally { request.removeListener('aborted', abort); response.removeListener('close', abort); }
+  });
+  app.get('/api/audio-stem/:kind', async (request, response, next) => {
+    let directory: string | undefined;
+    const controller = new AbortController();
+    const abort = (): void => controller.abort();
+    request.once('aborted', abort); response.once('close', abort);
+    try {
+      const kind = z.enum(['music', 'voice', 'sfx', 'source']).parse(request.params.kind);
+      const snapshot = await loadProject(loaded.projectFile);
+      const findings = await validateProject(snapshot);
+      if (hasErrors(findings)) throw new GenmotionError('VALIDATION_FAILED', 'Project failed stem export validation.', findings);
+      directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-audio-stem-'));
+      const file = path.join(directory, kind + '.wav');
+      await renderAudio(snapshot.project, snapshot.projectDir, file, { stem: kind, signal: AbortSignal.any([controller.signal, AbortSignal.timeout(120_000)]) });
+      response.set('Cache-Control', 'no-store');
+      await new Promise<void>((resolve, reject) => response.download(file, kind + '.wav', (error) => error ? reject(error) : resolve()));
+    } catch (error) { if (!response.destroyed) next(error); }
+    finally {
+      request.removeListener('aborted', abort); response.removeListener('close', abort);
+      if (directory) await rm(directory, { recursive: true, force: true });
+    }
+  });
+  app.get('/api/audio-preview.wav', async (request, response, next) => {
+    let directory: string | undefined;
+    const controller = new AbortController();
+    const abort = (): void => controller.abort();
+    request.once('aborted', abort); response.once('close', abort);
+    try {
+      const snapshot = await loadProject(loaded.projectFile);
+      directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-audio-preview-'));
+      const file = path.join(directory, 'mix.wav');
+      await renderAudio(snapshot.project, snapshot.projectDir, file, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(120_000)]) });
+      response.set('Cache-Control', 'no-store');
+      await new Promise<void>((resolve, reject) => response.sendFile(file, (error) => error ? reject(error) : resolve()));
+    } catch (error) { if (!response.destroyed) next(error); }
+    finally {
+      request.removeListener('aborted', abort); response.removeListener('close', abort);
+      if (directory) await rm(directory, { recursive: true, force: true });
+    }
+  });
+  app.post('/api/path', (request, response, next) => {
+    try {
+      const body = z.object({ path: z.string().max(10_000_000) }).strict().parse(request.body);
+      response.json({ normalized: normalizePath(body.path), ...pathMetrics(body.path) });
+    } catch (error) { next(error); }
+  });
+  app.post('/api/variants', async (request, response, next) => {
+    try {
+      const body = z.object({ matrix: parameterMatrixSchema.optional(), content: z.string().optional(), inputFormat: z.enum(['json', 'csv']).default('json'), outputFormat: z.enum(['json', 'csv']).default('json') }).strict().parse(request.body);
+      if (body.matrix && body.content !== undefined) throw new Error('Choose matrix or imported content.');
+      const current = await loadProject(loaded.projectFile);
+      const variants = body.matrix ? expandParameterMatrix(current.sourceProject, body.matrix) : importParameterVariants(current.sourceProject, body.content ?? JSON.stringify(current.sourceProject.variants), body.inputFormat);
+      response.json({ variants, content: exportParameterVariants(variants, body.outputFormat) });
+    } catch (error) { next(error); }
+  });
+  app.post('/api/edit', async (request, response, next) => {
+    try {
+      if (agentBusy) { response.status(423).json({ error: 'The agent is applying a project change.' }); return; }
+      const body = z.object({ revision: z.string().regex(/^[a-f0-9]{16}$/), edits: semanticEditSchema.array().min(1).max(500), dryRun: z.boolean().default(false) }).strict().parse(request.body);
+      const { loaded: accepted, ...receipt } = await commitSemanticEdits(loaded.projectFile, body.edits, { expectedRevision: body.revision, revisionKind: 'document', dryRun: body.dryRun, origin: 'studio' });
+      if (!body.dryRun) {
+        sourceProject = accepted.sourceProject; compiledProject = accepted.project; frameCache.clear();
+        await reconcileAndPersistStudio(sourceProject);
+      }
+      response.json({ ok: true, revision: receipt.documentRevision, project: accepted.sourceProject, studio: studioState, findings: receipt.findings, receipt });
+    } catch (error) { next(error); }
+  });
   app.put('/api/project', async (request, response, next) => {
     try {
       if (agentBusy) { response.status(423).json({ error: 'The agent is applying a project change. Editing unlocks when the turn finishes.' }); return; }
       const body = z.object({ revision: z.string(), project: projectSchema }).parse(request.body);
       const currentRevision = revision(sourceProject);
       if (body.revision !== currentRevision) { response.status(409).json({ error: 'Project changed since this Studio loaded it.', revision: currentRevision, project: sourceProject }); return; }
-      const nextRevision = revision(body.project);
-      const nextCompiled = compileProjectMotions(body.project, motionCatalog.motions);
-      await writeHistory(currentRevision, sourceProject);
-      await writeProjectFile(loaded.projectFile, body.project);
-      sourceProject = body.project;
-      compiledProject = nextCompiled;
+      const receipt = await commitProject(loaded.projectFile, { expectedRevision: body.revision, revisionKind: 'document', update: () => body.project, origin: 'studio' });
+      sourceProject = receipt.loaded.sourceProject;
+      compiledProject = receipt.loaded.project;
       frameCache.clear();
       await reconcileAndPersistStudio(sourceProject);
-      response.json({ ok: true, revision: nextRevision, project: sourceProject, studio: studioState, findings: await validateProject({ ...loaded, project: compiledProject, sourceProject }) });
+      response.json({ ok: true, revision: receipt.documentRevision, project: sourceProject, studio: studioState, findings: receipt.findings, receipt: { id: receipt.id, state: receipt.state, changed: receipt.changed, beforeRevision: receipt.beforeDocumentRevision, revision: receipt.documentRevision } });
     } catch (error) { next(error); }
   });
   app.put('/api/studio', async (request, response, next) => {
@@ -573,16 +769,10 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (!edgeExists) nextStudio.edges.push({ id: `refedge:${randomUUID()}`, from: `reference:${reference.id}`, to: `scene:${scene.id}`, label: 'informs' });
       const decision = `Studio reference ${reference.title}: ${reference.notes || reference.tags.join(', ')}`;
       if (!scene.notes.includes(decision)) scene.notes.push(decision);
-      const nextCompiled = compileProjectMotions(nextProject, motionCatalog.motions);
-      const findings = await validateProject({ ...loaded, project: nextCompiled, sourceProject: nextProject });
-      const nextRevision = revision(nextProject);
-      await Promise.all([
-        writeHistory(currentRevision, sourceProject),
-        writeProjectFile(loaded.projectFile, nextProject),
-        atomicWrite(stateFile, `${JSON.stringify(nextStudio, null, 2)}\n`),
-      ]);
-      sourceProject = nextProject; compiledProject = nextCompiled; studioState = nextStudio; frameCache.clear();
-      response.json({ ok: true, revision: nextRevision, project: sourceProject, studio: studioState, findings });
+      const receipt = await commitProject(loaded.projectFile, { expectedRevision: currentRevision, revisionKind: 'document', update: () => nextProject, origin: 'studio-reference' });
+      sourceProject = receipt.loaded.sourceProject; compiledProject = receipt.loaded.project; studioState = nextStudio; frameCache.clear();
+      await atomicWrite(stateFile, `${JSON.stringify(nextStudio, null, 2)}\n`);
+      response.json({ ok: true, revision: receipt.documentRevision, project: sourceProject, studio: studioState, findings: receipt.findings });
     } catch (error) { next(error); }
   });
   app.get('/api/history', async (_request, response) => {
@@ -595,11 +785,9 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const requested = request.params.revision ?? '';
       if (!/^[a-f0-9]{16}$/.test(requested)) { response.status(400).json({ error: 'Invalid revision.' }); return; }
       const restored = projectSchema.parse(JSON.parse(await readFile(path.join(historyDir, `${requested}.json`), 'utf8')));
-      const restoredCompiled = compileProjectMotions(restored, motionCatalog.motions);
       const currentRevision = revision(sourceProject);
-      await writeHistory(currentRevision, sourceProject);
-      await writeProjectFile(loaded.projectFile, restored);
-      sourceProject = restored; compiledProject = restoredCompiled; frameCache.clear();
+      const receipt = await commitProject(loaded.projectFile, { expectedRevision: currentRevision, revisionKind: 'document', update: () => restored, origin: 'studio-history' });
+      sourceProject = receipt.loaded.sourceProject; compiledProject = receipt.loaded.project; frameCache.clear();
       await reconcileAndPersistStudio(sourceProject);
       response.json({ ok: true, revision: revision(restored), project: restored, studio: studioState });
     } catch (error) { next(error); }
@@ -641,7 +829,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (agentBusy) { response.status(423).json({ error: 'Wait for the active agent turn to finish before importing a motion library.' }); return; }
       const parsed = compileCustomLibrary(request.body);
       const prospective = [...motionCatalog.motions.filter((recipe) => recipe.libraryId !== parsed.library.id), ...parsed.recipes];
-      const nextCompiled = compileProjectMotions(sourceProject, prospective);
+      const nextCompiled = compileProjectMotions(resolveParameters(sourceProject), prospective);
+      await prepareLutSources(nextCompiled, loaded.projectDir);
       const summary = await saveMotionLibrary(loaded.projectDir, request.body);
       const nextCatalog = await loadMotionLibraries(loaded.projectDir);
       motionCatalog = nextCatalog;
@@ -658,9 +847,9 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   });
   app.get('/frame/:frame.png', async (request, response, next) => {
     try {
-      const frame = Number.parseInt(request.params.frame ?? '', 10);
+      const frame = Number(request.params.frame);
       const frames = Math.ceil(projectDuration(compiledProject) * compiledProject.fps);
-      if (!Number.isInteger(frame) || frame < 0 || frame >= frames) { response.status(400).json({ error: 'Frame is outside the composition.' }); return; }
+      if (!Number.isFinite(frame) || frame < 0 || frame >= frames) { response.status(400).json({ error: 'Frame is outside the composition.' }); return; }
       const key = `${revision(sourceProject)}:${String(frame)}`;
       let png = frameCache.get(key);
       if (!png) {
@@ -739,6 +928,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
                   result = await agentRuntime.run({
                     host, prompt, selection: record.selection, projectDir: loaded.projectDir,
                     projectFile: loaded.projectFile, projectTitle: sourceProject.title,
+                    productionBrief: sourceProject.productionBrief,
+                    productionState: sourceProject.productionWorkflow ? await inspectProduction({ ...loaded, sourceProject, project: compiledProject }, controller.signal) : undefined,
                     signal: controller.signal,
                   }, reportProgress);
                   break;
@@ -813,7 +1004,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
               if (failedEdit) await atomicWrite(path.join(studioDir, 'failed-agent-edits', `${record.id}${path.extname(loaded.projectFile) || '.json'}`), failedEdit);
               await atomicWrite(loaded.projectFile, beforeProjectFile);
               motionCatalog = await loadMotionLibraries(loaded.projectDir);
-              compiledProject = compileProjectMotions(sourceProject, motionCatalog.motions);
+              compiledProject = (await loadProject(loaded.projectFile)).project;
               frameCache.clear();
             }
             const failedAt = new Date().toISOString();
@@ -852,6 +1043,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const body = renderRequestSchema.parse(request.body);
       const id = randomUUID();
       const output = path.join(rendersDir, body.filename);
+      validateOutputContainer(output, body.codec);
       const relativeOutput = path.relative(loaded.projectDir, output).replaceAll('\\', '/');
       if ([...jobs.values()].some((candidate) => candidate.output === relativeOutput && (candidate.status === 'queued' || candidate.status === 'rendering'))) {
         response.status(409).json({ error: 'An export for this filename is already running.' });
@@ -861,6 +1053,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
         try { if ((await stat(output)).isFile()) { response.status(409).json({ error: 'An export with this filename already exists.', code: 'OUTPUT_EXISTS' }); return; } } catch { /* The filename is available. */ }
       }
       const dimensions = resolveRenderResolution(compiledProject, body.quality, body.resolution);
+      resolveRenderLimits(dimensions, body);
+      const submittedProject = structuredClone({ ...loaded, project: compiledProject, sourceProject });
       const job: RenderJob = { id, status: 'queued', progress: 0, output: relativeOutput, ...dimensions, quality: body.quality };
       const controller = new AbortController();
       jobs.set(id, job);
@@ -874,13 +1068,17 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
         try {
           if (controller.signal.aborted) return;
           job.status = 'rendering';
-          await renderProject({ ...loaded, project: compiledProject, sourceProject }, {
+          await renderProject(submittedProject, {
             output, quality: body.quality, codec: body.codec, ...(body.resolution ? { resolution: body.resolution } : {}),
+            ...(body.workers !== undefined ? { workers: body.workers } : {}),
+            ...(body.maxBufferedFrames !== undefined ? { maxBufferedFrames: body.maxBufferedFrames } : {}),
+            ...(body.maxBufferedBytes !== undefined ? { maxBufferedBytes: body.maxBufferedBytes } : {}),
+            ...(body.timeoutMs !== undefined ? { timeoutMs: body.timeoutMs } : {}),
             signal: controller.signal,
-            onProgress: (progress) => { job.progress = progress.totalFrames === 0 ? 0 : progress.encodedFrames / progress.totalFrames; },
+            onProgress: (progress) => { job.diagnostics = progress; job.progress = progress.totalFrames === 0 ? 0 : progress.encodedFrames / progress.totalFrames; },
           });
-          if (controller.signal.aborted) return;
           job.status = 'complete'; job.progress = 1;
+          if (job.diagnostics) job.diagnostics.stage = 'complete';
         } catch (error) {
           if (controller.signal.aborted) { job.status = 'cancelled'; job.error = 'Export cancelled.'; }
           else { job.status = 'failed'; job.error = error instanceof Error ? error.message : String(error); }
@@ -994,10 +1192,15 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       next(error);
     }
   });
-  app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
+  app.use(async (error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
     void _next;
+    const conflict = error instanceof GenmotionError && error.code === 'REVISION_CONFLICT';
+    if (conflict) {
+      const latest = await loadProject(loaded.projectFile).catch(() => undefined);
+      if (latest) { sourceProject = latest.sourceProject; compiledProject = latest.project; frameCache.clear(); }
+    }
     const message = error instanceof z.ZodError ? error.issues.slice(0, 3).map((issue) => `${issue.path.join('.') || 'request'}: ${issue.message}`).join(' ') : error instanceof Error ? error.message : String(error);
-    response.status(error instanceof z.ZodError || error instanceof GenmotionError ? 400 : 500).json({ error: message, details: error instanceof z.ZodError ? error.issues : error instanceof GenmotionError ? error.details : undefined });
+    response.status(conflict ? 409 : error instanceof GenmotionError && error.code === 'PROJECT_LOCKED' ? 423 : error instanceof z.ZodError || error instanceof GenmotionError ? 400 : 500).json({ error: message, code: error instanceof GenmotionError ? error.code : undefined, ...(conflict ? { revision: revision(sourceProject), project: sourceProject, studio: studioState } : {}), details: error instanceof z.ZodError ? error.issues : error instanceof GenmotionError ? error.details : undefined });
   });
 
   const server = await new Promise<Server>((resolve, reject) => {

@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { runProcess } from './process.js';
+import { runProcess, type ProcessOptions } from './process.js';
 
 export interface VideoProbe {
   duration: number;
@@ -12,8 +12,8 @@ export interface VideoProbe {
   size: number;
 }
 
-export async function probeVideo(file: string): Promise<VideoProbe> {
-  const result = await runProcess('ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', path.resolve(file)]);
+export async function probeVideo(file: string, options: ProcessOptions = {}): Promise<VideoProbe> {
+  const result = await runProcess('ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', path.resolve(file)], undefined, options);
   const parsed = JSON.parse(result.stdout) as {
     streams: Array<{ codec_type: string; codec_name: string; width?: number; height?: number; avg_frame_rate?: string }>;
     format: { duration?: string; size?: string };

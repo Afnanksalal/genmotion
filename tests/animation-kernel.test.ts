@@ -18,7 +18,7 @@ describe('typed animation kernel', () => {
     expect(interpolateAnimationValue([0, 10], [10, 30], 0.5)).toEqual([5, 20]);
     expect(interpolateAnimationValue([0, 10, 20, 30], [10, 20, 40, 50], 0.5)).toEqual([5, 15, 30, 40]);
     expect(interpolateAnimationValue(350, 10, 0.5, 'shortest-angle')).toBe(360);
-    expect(String(interpolateAnimationValue('#ff0000', '#0000ff', 0.5))).toMatch(/^rgb/);
+    expect(interpolateAnimationValue('#ff0000', '#0000ff', 0.5)).toMatch(/^rgb/);
   });
 
   it('supports holds and independent extrapolation on either side', () => {

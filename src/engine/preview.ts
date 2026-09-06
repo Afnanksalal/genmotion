@@ -1,30 +1,42 @@
 import express from 'express';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { LoadedProject } from '../ir/loader.js';
+import { loadProjectDocument, type LoadedProject } from '../ir/loader.js';
+import { parameterValueSchema } from '../ir/schema.js';
+import { z } from 'zod';
+import { createHash } from 'node:crypto';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import { renderAudio } from './audio.js';
+import { resolveProjectAsset } from '../ir/loader.js';
 import { projectDuration } from '../ir/schema.js';
 import { prepareVideoAssets } from './assets.js';
 import { renderFramePng } from './draw.js';
 import { validateProject } from '../ir/validate.js';
 import { GENMOTION_SYMBOL_SVG, readGenmotionBrandAsset } from '../brand.js';
 
-export interface PreviewOptions { host?: string; port?: number }
+export interface PreviewOptions { host?: string; port?: number; allowedOrigins?: string[] }
 export interface PreviewServer { url: string; close: () => Promise<void>; server: Server }
 
 class FrameCache {
-  private readonly values = new Map<number, Buffer>();
+  private readonly values = new Map<string, Buffer>();
+  private bytes = 0;
   constructor(private readonly limit: number) {}
-  get(key: number): Buffer | undefined {
+  get(key: string): Buffer | undefined {
     const value = this.values.get(key);
     if (value) { this.values.delete(key); this.values.set(key, value); }
     return value;
   }
-  set(key: number, value: Buffer): void {
+  set(key: string, value: Buffer): void {
+    if (value.length > 64 * 1024 ** 2) return;
+    this.bytes -= this.values.get(key)?.length ?? 0;
     this.values.set(key, value);
-    while (this.values.size > this.limit) {
+    this.bytes += value.length;
+    while (this.values.size > this.limit || this.bytes > 64 * 1024 ** 2) {
       const oldest = this.values.keys().next().value;
       if (oldest === undefined) break;
-      this.values.delete(oldest);
+      this.bytes -= this.values.get(oldest)!.length; this.values.delete(oldest);
     }
   }
 }
@@ -48,31 +60,106 @@ export async function startPreview(loaded: LoadedProject, options: PreviewOption
   const port = options.port ?? 4178;
   await prepareVideoAssets(loaded.project, loaded.projectDir);
   const app = express();
+  app.use((request, response, next) => {
+    if (request.headers.origin && options.allowedOrigins?.includes(request.headers.origin)) response.set('Access-Control-Allow-Origin', request.headers.origin).set('Vary', 'Origin');
+    next();
+  });
   const cache = new FrameCache(90);
-  const duration = projectDuration(loaded.project);
-  const frames = Math.ceil(duration * loaded.project.fps);
+  const variants = new Map<string, LoadedProject>();
+  const compiling = new Map<string, Promise<LoadedProject>>();
+  const pendingFrames = new Map<string, Promise<Buffer>>();
+  const audioJobs = new Map<string, Promise<{ file: string; users: number }>>();
+  const audioFiles = new Map<string, { file: string; users: number }>();
+  const shutdown = new AbortController();
+  let audioDirectory: Promise<string> | undefined;
+  const selectProject = async (request: express.Request): Promise<{ project: LoadedProject; key: string }> => {
+    const raw = request.query.parameters;
+    if (raw === undefined) return { project: loaded, key: 'default' };
+    if (typeof raw !== 'string' || raw.length > 8192) throw new SyntaxError('Parameters must be a JSON object of at most 8192 characters');
+    const parameters = z.record(z.string(), parameterValueSchema).parse(JSON.parse(raw));
+    const key = createHash('sha256').update(JSON.stringify(parameters)).digest('hex');
+    const existing = variants.get(key);
+    if (existing) { variants.delete(key); variants.set(key, existing); return { project: existing, key }; }
+    let work = compiling.get(key);
+    if (!work) {
+      if (compiling.size >= 4) throw new Error('Too many parameter configurations are being prepared');
+      work = (async () => {
+        const result = await loadProjectDocument(loaded.sourceProject, loaded.projectFile, { ...loaded.project.parameterValues, ...parameters });
+        await prepareVideoAssets(result.project, result.projectDir);
+        variants.set(key, result); while (variants.size > 8) variants.delete(variants.keys().next().value!);
+        return result;
+      })();
+      compiling.set(key, work);
+      void work.finally(() => compiling.delete(key)).catch(() => undefined);
+    }
+    return { project: await work, key };
+  };
 
   app.get('/', (_request, response) => { response.type('html').send(previewHtml()); });
+  app.get('/player.js', async (_request, response, next) => { try { response.type('application/javascript').send(await readFile(new URL('../player.js', import.meta.url), 'utf8').catch(async (error: NodeJS.ErrnoException) => { if (error.code !== 'ENOENT') throw error; return await readFile(new URL('../../dist/player.js', import.meta.url), 'utf8'); })); } catch (error) { next(error); } });
+  app.get('/embed', (_request, response) => { response.type('html').send('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Genmotion Player</title><style>body{margin:0;background:#111;color:#eee;font:14px system-ui}genmotion-player{display:block}</style><genmotion-player src="./" loop></genmotion-player><script type="module">import {registerGenmotionPlayer} from "./player.js";registerGenmotionPlayer();</script></html>'); });
   app.get('/favicon.svg', (_request, response) => { response.type('image/svg+xml').set('Cache-Control', 'public, max-age=86400').send(GENMOTION_SYMBOL_SVG); });
   app.get('/favicon.ico', (_request, response) => { response.type('image/png').set('Cache-Control', 'public, max-age=86400').send(readGenmotionBrandAsset('favicon-32.png')); });
-  app.get('/api/project', (_request, response) => {
-    response.json({ title: loaded.project.title, width: loaded.project.width, height: loaded.project.height, fps: loaded.project.fps, duration, frames, scenes: loaded.project.scenes.map(({ id, duration: sceneDuration, purpose }) => ({ id, duration: sceneDuration, purpose })) });
+  app.get('/api/project', async (request, response, next) => {
+    try {
+      const { project: selected } = await selectProject(request), project = selected.project, duration = projectDuration(project), frames = Math.ceil(duration * project.fps);
+      const hasAudio = project.audio.some((track) => !track.muted) || [...project.scenes, ...project.compositions].some((container) => container.layers.some((layer) => layer.type === 'video' && layer.volume > 0));
+      response.json({ title: project.title, width: project.width, height: project.height, fps: project.fps, duration, frames, hasAudio, scenes: project.scenes.map(({ id, duration: sceneDuration, purpose }) => ({ id, duration: sceneDuration, purpose })) });
+    } catch (error) { next(error); }
   });
   app.get('/api/findings', async (_request, response, next) => {
     try { response.json(await validateProject(loaded)); } catch (error) { next(error); }
   });
+  app.get('/api/audio.m4a', async (request, response, next) => {
+    try {
+      const { project: selected, key } = await selectProject(request);
+      let entry = audioFiles.get(key);
+      if (!entry) {
+        let job = audioJobs.get(key);
+        if (!job) {
+          if (audioJobs.size >= 2) { response.status(429).json({ error: 'Audio preparation queue is full' }); return; }
+          job = (async () => {
+            while (audioFiles.size + audioJobs.size >= 8) {
+              const oldest = [...audioFiles].find(([, file]) => file.users === 0);
+              if (!oldest) throw new Error('Audio preview cache is busy');
+              audioFiles.delete(oldest[0]); await rm(oldest[1].file, { force: true });
+            }
+            audioDirectory ??= mkdtemp(path.join(os.tmpdir(), 'genmotion-player-'));
+            const root = await audioDirectory, file = resolveProjectAsset(root, key + '.m4a');
+            const result = await renderAudio(selected.project, selected.projectDir, file, { signal: shutdown.signal, timeoutMs: 240000 });
+            if (result.bytes > 64 * 1024 ** 2) { await rm(file, { force: true }); throw new Error('Audio preview exceeds its 64 MiB cache budget'); }
+            const value = { file, users: 0 }; audioFiles.set(key, value); return value;
+          })();
+          audioJobs.set(key, job); void job.finally(() => audioJobs.delete(key)).catch(() => undefined);
+        }
+        entry = await job;
+      }
+      audioFiles.delete(key); audioFiles.set(key, entry);
+      entry.users += 1; const held = entry;
+      response.set('Cache-Control', 'no-store').sendFile(entry.file, (error) => { held.users -= 1; if (error && !response.headersSent) next(error); });
+    } catch (error) { next(error); }
+  });
   app.get('/frame/:frame.png', async (request, response, next) => {
     try {
-      const frame = Number.parseInt(request.params.frame ?? '', 10);
-      if (!Number.isInteger(frame) || frame < 0 || frame >= frames) { response.status(400).json({ error: 'Frame is outside the composition.' }); return; }
-      let png = cache.get(frame);
-      if (!png) { png = await renderFramePng(loaded.project, loaded.projectDir, frame); cache.set(frame, png); }
-      response.set({ 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=31536000, immutable' }).send(png);
+      const frame = Number(request.params.frame);
+      const { project: selected, key } = await selectProject(request), frames = Math.ceil(projectDuration(selected.project) * selected.project.fps), cacheKey = `${key}:${frame}`;
+      if (!Number.isFinite(frame) || frame < 0 || frame >= frames) { response.status(400).json({ error: 'Frame is outside the composition.' }); return; }
+      let png = cache.get(cacheKey);
+      if (!png) {
+        let pending = pendingFrames.get(cacheKey);
+        if (!pending) {
+          if (pendingFrames.size >= 4) { response.status(429).json({ error: 'Native frame queue is full' }); return; }
+          pending = renderFramePng(selected.project, selected.projectDir, frame); pendingFrames.set(cacheKey, pending);
+          void pending.finally(() => pendingFrames.delete(cacheKey)).catch(() => undefined);
+        }
+        png = await pending; cache.set(cacheKey, png);
+      }
+      response.set({ 'Content-Type': 'image/png', 'Cache-Control': 'no-store' }).send(png);
     } catch (error) { next(error); }
   });
   app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
     void _next;
-    response.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+    response.status(error instanceof z.ZodError || error instanceof SyntaxError ? 400 : 500).json({ error: error instanceof Error ? error.message : String(error) });
   });
 
   const server = await new Promise<Server>((resolve, reject) => {
@@ -80,5 +167,10 @@ export async function startPreview(loaded: LoadedProject, options: PreviewOption
     instance.on('error', reject);
   });
   const actualPort = (server.address() as AddressInfo).port;
-  return { url: `http://${host}:${String(actualPort)}`, server, close: async () => { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); } };
+  return { url: `http://${host}:${String(actualPort)}`, server, close: async () => {
+    shutdown.abort();
+    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    await Promise.allSettled(audioJobs.values());
+    if (audioDirectory) { const root = await audioDirectory; await rm(resolveProjectAsset(path.dirname(root), path.basename(root)), { recursive: true, force: true }); }
+  } };
 }

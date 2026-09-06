@@ -59,6 +59,45 @@ test.afterEach(async () => {
   await rm(directory, { recursive: true, force: true });
 });
 
+test('edits generated typed parameter controls and persists nested defaults', async ({ page }) => {
+  await studio?.close();
+  const loaded = await loadProject(directory);
+  loaded.sourceProject.parameters = [
+    { id: 'headline', label: 'Headline', type: 'string', default: 'Default', description: 'Reusable headline', group: 'Copy' },
+    { id: 'enabled', label: 'Enabled', type: 'boolean', default: false },
+    { id: 'theme', label: 'Theme', type: 'enum', default: 'dark', options: ['dark', 'light'] },
+    { id: 'details', label: 'Details', type: 'object', default: {}, properties: { count: { id: 'count', label: 'Count', type: 'number', default: 1, min: 0, max: 10 } } },
+  ];
+  await writeFile(loaded.projectFile, JSON.stringify(loaded.sourceProject));
+  studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime });
+  await page.goto(studio.url);
+  await page.locator('[data-select="project"]').click();
+  await expect(page.getByText('Reusable headline', { exact: true })).toBeVisible();
+  await page.locator('[data-field="parameterValues.headline"]').fill('Configured headline');
+  await page.locator('[data-field="parameterValues.headline"]').press('Tab');
+  await page.locator('[data-bool-field="parameterValues.enabled"]').check();
+  await page.locator('[data-field="parameterValues.theme"]').selectOption('light');
+  await page.locator('[data-field="parameterValues.details.count"]').fill('4');
+  await page.locator('[data-field="parameterValues.details.count"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.parameterValues).toEqual({ headline: 'Configured headline', enabled: true, theme: 'light', details: { count: 4 } });
+  await page.reload();
+  await page.locator('[data-select="project"]').click();
+  await expect(page.locator('[data-field="parameterValues.details.count"]')).toHaveValue('4');
+  await page.locator('#openConfigurations').click();
+  await page.locator('#configurationFormat').selectOption('matrix');
+  await page.locator('#configurationSource').fill(JSON.stringify({ headline: ['First', 'Second'], enabled: [true, false] }));
+  await page.locator('#configurationValidate').click();
+  await expect(page.locator('#configurationStatus')).toHaveText('4 valid configurations');
+  await page.locator('#configurationSave').click();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.variants.length).toBe(4);
+  await page.locator('#openConfigurations').click();
+  await page.locator('#configurationCsv').click();
+  await expect(page.locator('#configurationSource')).toHaveValue(/"\$id","\$label","headline","enabled"/);
+  await page.locator('[data-config-use="variant-0004"]').click();
+  await expect.poll(async () => (await loadProject(directory)).project.parameterValues.headline).toBe('Second');
+  await expect.poll(async () => (await loadProject(directory)).project.parameterValues.enabled).toBe(false);
+});
+
 test('authors and persists shared geometry anchors from the project inspector', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   await page.locator('[data-select="project"]').click();
@@ -81,6 +120,293 @@ test('authors and persists shared geometry anchors from the project inspector', 
     const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { anchors?: Array<{ id: string; x: number; y: number }>; scenes: Array<{ layers: Array<{ id: string; endAnchor?: string }> }> };
     return { anchor: project.anchors?.[0], binding: project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.endAnchor };
   }).toEqual({ anchor: { id: 'result-point', x: 280, y: 120 }, binding: 'result-point' });
+});
+
+test('authors composition instance overrides, frame holds and finite loop timing', async ({ page }) => {
+  await studio?.close();
+  const loaded = await loadProject(directory);
+  const source = loaded.sourceProject;
+  source.compositions = [{ id: 'badge', width: 100, height: 100, duration: 2, fps: 30, parameters: [{ id: 'label', label: 'Label', type: 'string', default: 'Badge' }], layers: [source.scenes[0]!.layers[0]!] }];
+  const { compositionLayerSchema } = await import('../../src/ir/schema.js');
+  source.scenes[0]!.layers = [compositionLayerSchema.parse({ id: 'instance', type: 'composition', compositionId: 'badge', x: 0, y: 0, width: 100, height: 100 })];
+  await writeFile(loaded.projectFile, JSON.stringify(source));
+  studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime });
+  await page.goto(studio.url);
+  await page.locator('[data-select="layer"][data-id="instance"]').click();
+  await page.locator('[data-json-field="parameterValues"]').fill('{"label":"Configured"}');
+  await page.locator('[data-json-field="parameterValues"]').press('Tab');
+  await page.locator('[data-json-field="freeze"]').fill('{"frame":15,"from":0.2,"to":0.8}');
+  await page.locator('[data-json-field="freeze"]').press('Tab');
+  await page.locator('[data-bool-field="loop"]').check();
+  await page.locator('[data-field="loopCount"]').fill('3');
+  await page.locator('[data-field="loopCount"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers[0]).toMatchObject({ parameterValues: { label: 'Configured' }, freeze: { frame: 15, from: 0.2, to: 0.8 }, loop: true, loopCount: 3 });
+  await page.locator('[data-json-field="freeze"]').fill('null');
+  await page.locator('[data-json-field="freeze"]').press('Tab');
+  await page.locator('[data-field="loopCount"]').fill('');
+  await page.locator('[data-field="loopCount"]').press('Tab');
+  await expect.poll(async () => {
+    const layer = (await loadProject(directory)).sourceProject.scenes[0]!.layers[0]!;
+    return Object.hasOwn(layer, 'freeze') || Object.hasOwn(layer, 'loopCount');
+  }).toBe(false);
+});
+
+test('normalizes SVG curves and disjoint subpaths without flattening geometry', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('[data-select-field="shape"]').click();
+  await page.locator('[data-choice="path"]').click();
+  const data = 'm10 10c0 10 10 10 10 0z m30 0h10v10z';
+  await page.locator('[data-field="path"]').fill(data);
+  await page.locator('[data-field="path"]').press('Tab');
+  await page.locator('[data-normalize-path="path"]').click();
+  await expect(page.locator('[data-field="path"]')).toHaveValue('M10 10 C10 20 20 20 20 10 Z M40 10 L50 10 L50 20 Z');
+  await expect.poll(async () => {
+    const layer = (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((item) => item.id === 'accent');
+    return layer?.type === 'shape' ? layer.path : undefined;
+  }).toBe('M10 10 C10 20 20 20 20 10 Z M40 10 L50 10 L50 20 Z');
+  await page.locator('#addPathOperation').click();
+  await page.locator('[data-path-op-choice="round"]').click();
+  await page.locator('[data-field="pathOperations.0.radius"]').fill('5');
+  await page.locator('[data-field="pathOperations.0.radius"]').press('Tab');
+  await page.locator('#addPathOperation').click();
+  await page.locator('[data-path-op-choice="stroke"]').click();
+  await expect.poll(async () => {
+    const layer = (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((item) => item.id === 'accent');
+    return layer?.type === 'shape' ? layer.pathOperations : undefined;
+  }).toEqual([{ op: 'round', radius: 5 }, { op: 'stroke', width: 10, join: 'round', cap: 'round', miterLimit: 4 }]);
+  await page.locator('[data-path-op-remove="1"]').click();
+  await expect(page.locator('[data-path-op-remove]')).toHaveCount(1);
+});
+
+test('authors curve reversal, subdivision and corner warps through the shared operation stack', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('[data-select-field="shape"]').click();
+  await page.locator('[data-choice="path"]').click();
+  for (const op of ['reverse', 'subdivide', 'warp', 'cut']) {
+    await page.locator('#addPathOperation').click();
+    await page.locator('[data-path-op-choice="' + op + '"]').click();
+  }
+  await page.locator('[data-field="pathOperations.1.divisions"]').fill('4');
+  await page.locator('[data-field="pathOperations.1.divisions"]').press('Tab');
+  await page.locator('[data-json-field="pathOperations.2.corners"]').fill('[[10,0],[90,0],[100,100],[0,100]]');
+  await page.locator('[data-json-field="pathOperations.2.corners"]').press('Tab');
+  await expect.poll(async () => {
+    const layer = (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((item) => item.id === 'accent');
+    return layer?.type === 'shape' ? layer.pathOperations : undefined;
+  }).toEqual([{ op: 'reverse' }, { op: 'subdivide', divisions: 4 }, { op: 'warp', corners: [[10,0],[90,0],[100,100],[0,100]], divisions: 16 }, { op: 'cut', at: 0.5 }]);
+  await page.reload();
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await expect(page.locator('[data-field="pathOperations.1.divisions"]')).toHaveValue('4');
+});
+
+test('authors and reloads native path morph keyframes', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('[data-select-field="shape"]').click();
+  await page.locator('[data-choice="path"]').click();
+  await page.locator('#addTrack').click();
+  await page.locator('[data-select-field="tracks.0.target"]').click();
+  await page.locator('[data-choice="path"]').click();
+  const target = 'M50 0L100 100L0 100Z';
+  await page.locator('[data-field="tracks.0.keyframes.1.value"]').fill(target);
+  await page.locator('[data-field="tracks.0.keyframes.1.value"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((item) => item.id === 'accent')?.tracks[0]).toMatchObject({ target: 'path', interpolation: 'path', keyframes: [{ at: 0 }, { value: target }] });
+  await page.reload();
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await expect(page.locator('[data-field="tracks.0.keyframes.1.value"]')).toHaveValue(target);
+});
+
+test('copies and pastes easing through the scene inspector', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="scene"]').first().click();
+  await page.locator('[data-select-field="transitionIn.timing"]').click();
+  await page.locator('[data-choice="sine-out"]').click();
+  await page.locator('[data-ease-copy="transitionIn.timing"]').click();
+  await page.locator('[data-ease-paste="transitionOut.timing"]').click();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.transitionOut.timing).toBe('sine-out');
+  await expect(page.locator('[data-select-field="transitionOut.timing"]')).toContainText('sine-out');
+});
+
+test('authors shared voice-ducking dynamics in the project inspector', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="project"]').click();
+  await page.locator('[data-object-toggle="audioDucking"]').click();
+  await page.locator('[data-field="audioDucking.attackMs"]').fill('5');
+  await page.locator('[data-field="audioDucking.attackMs"]').press('Tab');
+  await page.locator('[data-field="audioDucking.releaseMs"]').fill('20');
+  await page.locator('[data-field="audioDucking.releaseMs"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.audioDucking).toMatchObject({ attackMs: 5, releaseMs: 20 });
+  await page.locator('[data-object-toggle="audioDucking"]').click();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.audioDucking).toBeUndefined();
+});
+
+test('persists loudness targets and measures the saved processed mix', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="project"]').click();
+  await page.locator('[data-object-toggle="audioNormalization"]').click();
+  await page.locator('[data-field="audioNormalization.integratedLufs"]').fill('-18');
+  await page.locator('[data-field="audioNormalization.integratedLufs"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.audioNormalization).toMatchObject({ integratedLufs: -18, truePeakDbtp: -1, rangeLu: 11 });
+  await page.locator('#measureAudio').click();
+  await expect(page.locator('#loudnessResult')).toContainText('True peak: Silence');
+  await expect(page.locator('#loudnessResult')).toContainText('Revision:');
+  await page.keyboard.press('Escape');
+  await page.locator('[data-object-toggle="audioNormalization"]').click();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.audioNormalization).toBeUndefined();
+});
+
+test('downloads all four full-duration audio stems from Studio', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="project"]').click();
+  for (const kind of ['music', 'voice', 'sfx', 'source']) {
+    const pending = page.waitForEvent('download');
+    await page.locator('[data-stem-download="' + kind + '"]').click();
+    const download = await pending;
+    expect(download.suggestedFilename()).toBe(kind + '.wav');
+    expect(await download.failure()).toBeNull();
+    const destination = path.join(directory, kind + '-stem.wav');
+    await download.saveAs(destination);
+    expect((await stat(destination)).size).toBeGreaterThan(380_000);
+  }
+});
+
+test('authors native gradient paint and animated stops with persistence', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('[data-object-toggle="gradientFill"]').click();
+  await page.locator('[data-select-field="gradientFill.type"]').click();
+  await page.locator('[data-choice="radial"]').click();
+  await page.locator('[data-field="gradientFill.radius"]').fill('0.8');
+  await page.locator('[data-field="gradientFill.radius"]').press('Tab');
+  await page.locator('#addTrack').click();
+  await page.locator('[data-select-field="tracks.0.target"]').click();
+  await page.locator('[data-choice="gradientFill"]').click();
+  const gradient = { type: 'radial', angle: 0, center: [.5,.5], radius: .8, stops: [{ offset: 0, color: '#ff0000' }, { offset: 1, color: '#0000ff' }] };
+  await page.locator('[data-json-field="tracks.0.keyframes.1.value"]').fill(JSON.stringify(gradient));
+  await page.locator('[data-json-field="tracks.0.keyframes.1.value"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((item) => item.id === 'accent')?.tracks[0]?.keyframes[1]?.value).toEqual(gradient);
+  await page.reload();
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await expect(page.locator('[data-field="gradientFill.radius"]')).toHaveValue('0.8');
+});
+
+test('authors distance-based stagger timing in the layer inspector', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('[data-object-toggle="stagger"]').click();
+  await page.locator('[data-select-field="stagger.from"]').click();
+  await page.locator('[data-choice="distance"]').click();
+  await page.locator('[data-json-field="stagger.origin"]').fill('[160,90]');
+  await page.locator('[data-json-field="stagger.origin"]').press('Tab');
+  await page.locator('[data-field="stagger.distanceUnit"]').fill('50');
+  await page.locator('[data-field="stagger.distanceUnit"]').press('Tab');
+  await page.locator('[data-field="stagger.delay"]').fill('0.2');
+  await page.locator('[data-field="stagger.delay"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((item) => item.id === 'accent')?.stagger).toMatchObject({ from: 'distance', origin: [160,90], distanceUnit: 50, delay: .2 });
+  await page.reload();
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await expect(page.locator('[data-field="stagger.distanceUnit"]')).toHaveValue('50');
+});
+
+test('plots native track velocity and acceleration in the inspector', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('#addTrack').click();
+  await page.locator('[data-track-analysis="0"]').click();
+  await expect(page.getByRole('img', { name: 'Velocity (units/s)', exact: true })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Acceleration (units/s²)', exact: true })).toBeVisible();
+  await expect(page.locator('#trackAnalysis svg path[stroke="#60a5fa"]').first()).toHaveAttribute('d', /^M/);
+  await expect(page.locator('#trackAnalysis')).toContainText('Gaps mark keyframe or cycle boundaries');
+  await page.screenshot({ path: 'output/playwright/track-kinematics.png', fullPage: true });
+});
+
+test('seeks fractional frames without rounding the requested timestamp', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
+  await page.getByRole('button', { name: 'Seek exact time' }).click();
+  await page.locator('#seekSeconds').fill('0.35');
+  const frame = page.waitForResponse((response) => response.url().includes('/frame/10.5.png'));
+  await page.locator('#seekApply').click();
+  expect((await frame).status()).toBe(200);
+  await expect(page.locator('#previewImage')).toHaveAttribute('src', /\/frame\/10\.5\.png/);
+});
+
+test('fits complete text and measures automatic native box dimensions', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="layer"][data-id="title"]').click();
+  await page.locator('[data-field="text"]').fill('A complete headline with every word preserved');
+  await page.locator('[data-field="text"]').press('Tab');
+  await page.locator('[data-field="maxLines"]').fill('2');
+  await page.locator('[data-field="maxLines"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((layer) => layer.id === 'title')).toMatchObject({ maxLines: 2 });
+  await page.locator('#measureText').click();
+  await expect(page.locator('#textMeasurement')).toContainText('Complete text fits');
+  expect(await page.locator('#textMeasurement li').allTextContents()).toEqual(expect.arrayContaining([expect.stringContaining('preserved')]));
+  await page.keyboard.press('Escape');
+  await page.locator('[data-select-field="autoSize"]').click();
+  await page.locator('[data-choice="height"]').click();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((layer) => layer.id === 'title')).toMatchObject({ autoSize: 'height' });
+  await page.reload();
+  await page.locator('[data-select="layer"][data-id="title"]').click();
+  await expect(page.locator('[data-select-field="autoSize"]')).toContainText('height');
+});
+
+test('authors track groups, locks and declarative property links', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('#addTrackGroup').click();
+  await page.locator('#addTrack').click();
+  await page.locator('[data-select-field="tracks.0.group"]').click();
+  await page.locator('[data-choice="group-1"]').click();
+  await page.locator('[data-bool-field="trackGroups.0.solo"]').check();
+  await page.locator('[data-bool-field="tracks.0.locked"]').check();
+  await expect(page.locator('[data-field="tracks.0.keyframes.1.value"]')).toBeDisabled();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((layer) => layer.id === 'accent')?.tracks[0]?.locked).toBe(true);
+  await page.locator('[data-bool-field="tracks.0.locked"]').uncheck();
+  await expect(page.locator('[data-field="tracks.0.keyframes.1.value"]')).toBeEnabled();
+  await page.locator('#addPropertyLink').click();
+  await page.locator('[data-field="propertyLinks.0.offset"]').fill('12');
+  await page.locator('[data-field="propertyLinks.0.offset"]').press('Tab');
+  await page.locator('[data-bool-field="propertyLinks.0.enabled"]').check();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((layer) => layer.id === 'accent')?.propertyLinks?.[0]).toMatchObject({ enabled: true, offset: 12, sourceLayerId: 'title' });
+  await page.reload();
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await expect(page.locator('[data-bool-field="trackGroups.0.solo"]')).toBeChecked();
+  await expect(page.locator('[data-field="propertyLinks.0.offset"]')).toHaveValue('12');
+});
+
+test('persists production intake and records user decisions separately from inference', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="project"]').click();
+  await page.locator('[data-object-toggle="productionBrief"]').click();
+  await page.locator('[data-object-toggle="productionBrief.audience"]').click();
+  await page.locator('[data-field="productionBrief.audience.value"]').fill('Motion designers and creative agents');
+  await page.locator('[data-field="productionBrief.audience.value"]').press('Tab');
+  await page.locator('[data-object-toggle="productionBrief.aspect"]').click();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.productionBrief).toMatchObject({ version: 1, audience: { value: 'Motion designers and creative agents', origin: 'user' }, aspect: { value: [320, 180], origin: 'inferred' } });
+  await page.reload();
+  await page.locator('[data-select="project"]').click();
+  await expect(page.locator('[data-field="productionBrief.audience.value"]')).toHaveValue('Motion designers and creative agents');
+  await expect(page.locator('[data-select-field="productionBrief.aspect.origin"]')).toContainText('inferred');
+});
+
+test('authors native star and waveform geometry through typed controls', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('[data-select-field="shape"]').click();
+  await page.locator('[data-choice="star"]').click();
+  await page.locator('[data-field="sides"]').fill('7');
+  await page.locator('[data-field="sides"]').press('Tab');
+  await page.locator('[data-field="innerRadius"]').fill('0.3');
+  await page.locator('[data-field="innerRadius"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((layer) => layer.id === 'accent')).toMatchObject({ shape: 'star', sides: 7, innerRadius: 0.3 });
+  await page.locator('[data-select-field="shape"]').click();
+  await page.locator('[data-choice="waveform"]').click();
+  await page.locator('[data-json-field="samples"]').fill('[0,1,-1,0]');
+  await page.locator('[data-json-field="samples"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers.find((layer) => layer.id === 'accent')).toMatchObject({ shape: 'waveform', samples: [0, 1, -1, 0], strokeWidth: 2 });
 });
 
 test('scales workflow navigation, asset discovery, easing inspection, and audio mixing controls', async ({ page }) => {
@@ -111,6 +437,24 @@ test('scales workflow navigation, asset discovery, easing inspection, and audio 
   await expect(page.locator('[data-bool-field="solo"]')).toBeVisible();
   await expect(page.locator('.audio-waveform')).toBeVisible();
   await expect.poll(() => page.locator('.audio-waveform').evaluate((canvas: HTMLCanvasElement) => canvas.width)).toBeGreaterThan(1);
+  await page.locator('[data-field="gainDb"]').fill('-6');
+  await page.locator('[data-field="gainDb"]').press('Tab');
+  await page.locator('#addAudioEffect').click();
+  await page.locator('[data-audio-fx-choice="lowpass"]').click();
+  await page.locator('[data-field="effects.0.frequency"]').fill('1000');
+  await page.locator('[data-field="effects.0.frequency"]').press('Tab');
+  await page.locator('#addAudioEffect').click();
+  await page.locator('[data-audio-fx-choice="limiter"]').click();
+  await page.locator('[data-audio-fx-move="1:-1"]').click();
+  await page.locator('[data-bool-field="effects.0.bypass"]').check();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.audio[0]).toMatchObject({ gainDb: -6, effects: [{ type: 'limiter', bypass: true }, { type: 'lowpass', frequency: 1000 }] });
+  await page.locator('[data-audio-fx-remove="1"]').click();
+  await expect(page.locator('[data-audio-fx-remove]')).toHaveCount(1);
+  await page.locator('#previewAudioMix').click();
+  const audio = page.locator('#processedAudioPreview');
+  await audio.evaluate((element: HTMLAudioElement) => { element.load(); });
+  await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.duration)).toBeCloseTo(1, 1);
+  await page.keyboard.press('Escape');
   await page.locator('#deleteSelection').click();
   await page.getByRole('tab', { name: 'Assets' }).click();
   await page.locator('#assetSearch').fill('mix');
@@ -638,11 +982,32 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
   expect(errors).toEqual([]);
 });
 
+test('persists text inspector changes through stable semantic transactions', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
+  await page.locator('[data-layerclip="title"]').click();
+  const responsePromise = page.waitForResponse((response) => response.url().endsWith('/api/edit') && response.request().method() === 'POST');
+  const text = page.locator('[data-field="text"]');
+  await text.fill('Native text edit');
+  await text.press('Tab');
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+  expect(await response.json()).toMatchObject({ receipt: { state: 'saved', changed: true, affectedTargets: [{ kind: 'scene', id: 'intro', layerId: 'title' }] } });
+  await expect.poll(async () => {
+    const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; text?: string }> }> };
+    return project.scenes[0]?.layers.find((layer) => layer.id === 'title')?.text;
+  }).toBe('Native text edit');
+  await expect(page.locator('#previewImage')).toHaveJSProperty('naturalWidth', 320);
+});
+
 test('queues one export and announces completion once', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   await page.getByRole('button', { name: 'Export' }).click();
   await expect(page.getByText('1920×1080', { exact: true })).toBeVisible();
   await page.locator('[data-field="render.filename"]').fill('e2e-browser-export.mp4');
+  await page.getByText('Render limits', { exact: true }).click();
+  await page.locator('[data-field="render.workers"]').fill('2');
+  await page.locator('[data-field="render.maxBufferedFrames"]').fill('1');
   await page.locator('#startRender').evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
   await expect.poll(async () => {
     const jobs = await fetch(`${studio?.url ?? ''}/api/jobs`).then((response) => response.json()) as Array<{ status: string; width?: number; height?: number }>;
@@ -652,6 +1017,8 @@ test('queues one export and announces completion once', async ({ page }) => {
   await expect(page.getByText(/Export ready:/)).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/Export ready:/)).toHaveCount(1);
   await expect(page.locator('#renderProgress')).toContainText('Export complete');
+  const completedJobs = await fetch(`${studio?.url ?? ''}/api/jobs`).then((response) => response.json()) as Array<{ diagnostics?: { maxBufferedFrames: number; stage: string } }>;
+  expect(completedJobs[0]?.diagnostics).toMatchObject({ maxBufferedFrames: 1, stage: 'complete' });
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#renderProgress').getByRole('button', { name: 'Download' }).click();
   const download = await downloadPromise;

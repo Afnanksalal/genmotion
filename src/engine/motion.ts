@@ -136,5 +136,9 @@ function compileLayer(layer: Layer, recipes: MotionRecipe[]): Layer {
 }
 
 export function compileProjectMotions(project: GenmotionProject, recipes: MotionRecipe[] = motionRecipes): GenmotionProject {
-  return { ...project, scenes: project.scenes.map((scene) => ({ ...scene, layers: scene.layers.map((layer) => compileLayer(layer, recipes)) })) };
+  return {
+    ...project,
+    scenes: project.scenes.map((scene) => ({ ...scene, layers: scene.layers.map((layer) => compileLayer(layer, recipes)) })),
+    compositions: project.compositions.map((composition) => ({ ...composition, layers: composition.layers.map((layer) => compileLayer(layer, recipes)) })),
+  };
 }

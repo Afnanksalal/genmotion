@@ -1,4 +1,5 @@
 import type { EasingName, ProceduralNoise, Stagger } from '../ir/schema.js';
+import { staggerSchema } from '../ir/schema.js';
 import { ease } from './easing.js';
 
 function hash(seed: number, coordinates: number[]): number {
@@ -46,28 +47,54 @@ export function fractalNoise(seed: number, coordinates: number[], options: Pick<
   return normalization > 0 ? total / normalization : 0;
 }
 
+const randomOrders = new Map<string, number[]>();
 export function staggerOrder(index: number, count: number, from: Stagger['from'], seed = 0): number {
-  if (index < 0 || index >= count || count < 1) throw new Error('Stagger index must be within count.');
+  if (!Number.isSafeInteger(index) || !Number.isSafeInteger(count) || index < 0 || index >= count || count < 1 || count > 100_000) throw new Error('Stagger index must be within count (an integer from 1 to 100000).');
+  if (from === 'distance') throw new Error('Distance order requires positions; use staggerDelay or staggerSchedule.');
   if (from === 'end') return count - 1 - index;
   if (from === 'center') return Math.abs(index - (count - 1) / 2);
   if (from === 'edges') return Math.min(index, count - 1 - index);
   if (from === 'random') {
-    const ordered = Array.from({ length: count }, (_, candidate) => candidate).sort((a, b) => seededRandom(seed, a) - seededRandom(seed, b) || a - b);
-    return ordered.indexOf(index);
+    const key = `${seed}:${count}`;
+    let order = randomOrders.get(key);
+    if (!order) {
+      const ordered = Array.from({ length: count }, (_, candidate) => candidate).sort((a, b) => seededRandom(seed, a) - seededRandom(seed, b) || a - b);
+      order = Array.from({ length: count }, () => 0);
+      ordered.forEach((candidate, position) => { order![candidate] = position; });
+      if (randomOrders.size >= 8) randomOrders.delete(randomOrders.keys().next().value!);
+      randomOrders.set(key, order);
+    }
+    return order[index]!;
   }
   return index;
 }
 
 export function staggerDelay(stagger: Stagger): number {
-  return staggerOrder(stagger.index, stagger.count, stagger.from, stagger.seed) * stagger.each;
+  const position = stagger.position ?? [0, 0], origin = stagger.origin ?? [0, 0];
+  const order = stagger.from === 'distance' ? Math.hypot(position[0] - origin[0], position[1] - origin[1]) / (stagger.distanceUnit ?? 100) : staggerOrder(stagger.index, stagger.count, stagger.from, stagger.seed);
+  const delay = order * stagger.each + (stagger.delay ?? 0);
+  if (!Number.isFinite(delay) || delay < 0) throw new Error('Stagger delay must be finite and nonnegative');
+  return delay;
 }
 
-export function staggerSchedule(count: number, options: Omit<Stagger, 'index' | 'count'> & { ease?: EasingName }): number[] {
-  const raw = Array.from({ length: count }, (_, index) => staggerOrder(index, count, options.from, options.seed));
-  const maximum = Math.max(1, ...raw);
-  return raw.map((order) => ease(options.ease ?? 'linear', order / maximum) * maximum * options.each);
+export function staggerSchedule(count: number, options: Omit<Stagger, 'index' | 'count'> & { ease?: EasingName; positions?: Array<[number, number]> }): number[] {
+  if (!Number.isSafeInteger(count) || count < 1 || count > 100_000) throw new Error('Schedule count must be an integer from 1 to 100000');
+  const { positions, ease: timing, ...settings } = options;
+  staggerSchema.parse({ ...settings, count, index: 0 });
+  if (options.from === 'distance' && positions?.length !== count) throw new Error('Distance schedules require one position per item');
+  const raw = Array.from({ length: count }, (_, index) => options.from === 'distance' ? staggerDelay({ ...settings, index, count, each: 1, delay: 0, position: positions![index]! }) : staggerOrder(index, count, options.from, options.seed));
+  const maximum = raw.reduce((max, value) => Math.max(max, value), 1);
+  return raw.map((order) => {
+    const delay = Math.max(0, ease(timing ?? 'linear', order / maximum)) * maximum * options.each + (options.delay ?? 0);
+    if (!Number.isFinite(delay)) throw new Error('Stagger delay must be finite');
+    return delay;
+  });
 }
 
-export function staggerWindows(count: number, options: Omit<Stagger, 'index' | 'count'> & { ease?: EasingName }): Array<{ index: number; delay: number; trailStart: number; trailEnd: number }> {
-  return staggerSchedule(count, options).map((delay, index) => ({ index, delay, trailStart: delay, trailEnd: delay + options.trail }));
+export function staggerWindows(count: number, options: Omit<Stagger, 'index' | 'count'> & { ease?: EasingName; positions?: Array<[number, number]> }): Array<{ index: number; delay: number; trailStart: number; trailEnd: number }> {
+  return staggerSchedule(count, options).map((delay, index) => {
+    const trailEnd = delay + options.trail;
+    if (!Number.isFinite(trailEnd)) throw new Error('Stagger trail end must be finite');
+    return { index, delay, trailStart: delay, trailEnd };
+  });
 }

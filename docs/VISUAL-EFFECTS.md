@@ -1,0 +1,15 @@
+# Native visual effects
+
+Layers, scenes, composition definitions and composition instances accept an ordered `effects` array. Each entry has a unique `id`, a `type`, and `enabled` (default true). The renderer isolates the layer, runs enabled passes in array order, then applies layer opacity and blend mode against the destination. Compositions composite their children before applying group opacity. Preview, stills and movie exports use the same implementation.
+
+`amount`, `radius`, `angle`, `frequency` and `speed` accept numbers or native numeric keyframes evaluated at layer-local time. `center` is a normalized output-canvas coordinate. Distances are output pixels, angles are degrees, and colors use the project color syntax. `visualEffectDefaults` exports the amount defaults, limits and units. Values are bounded before execution. Effects operate on SDR RGBA pixels; this is not an HDR color pipeline.
+
+Available passes: brightness, contrast, saturation, exposure, grayscale, invert, hue, sepia, tint, duotone, gamma, posterize, threshold, vignette, noise, scanlines, pixelate, dither, edge-detect, emboss, halftone, mirror, wave, twirl, bulge, kaleidoscope, barrel, chromatic-aberration, chroma-key, gaussian-blur, directional-blur, zoom-blur, glow, bloom, drop-shadow, vibrance, white-balance, shadows-highlights, levels, channel-mixer, curves, lift-gamma-gain, gradient-map, thermal, box-blur, radial-blur, outline, inner-shadow and lut. Projective, reveal and additional distortion passes are documented in [Projective transforms and reveals](PROJECTIVE-AND-REVEAL.md). Box blur uses premultiplied channels; outline uses a square dilation computed with sliding maxima.
+
+Levels exposes input/output black and white points and uses `amount` as gamma. White balance exposes normalized temperature/tint; shadows/highlights exposes signed tonal adjustments. Channel mixer accepts a row-major 3×4 RGB matrix including offsets. Curves accepts increasing input/output pairs with piecewise-linear interpolation. Lift/gamma/gain accepts RGB tuples. Gradient map maps luminance through ordered gradient stops; spatial gradient geometry is unused by this pass.
+
+An `adjustment` layer has `x`, `y`, `width`, `height` and an effects stack. It processes the composited content below its z position, before subsequent layers draw. Geometry, transform, opacity and masks limit the adjusted region. The original and processed premultiplied pixels are interpolated by coverage, preserving alpha outside the adjusted region. Its blend mode is `source-over`.
+
+Studio exposes addition, removal, bypass, reordering, stack copy/paste, numeric controls, color controls, center and amount animation. Full stack edits are also available through the shared project patch and semantic layer property APIs. Project files contain declarative data only.
+
+This implementation is awaiting the deferred regression and visual QA pass. The broader effects checklist remains open: the remaining effect families, color-management facilities and custom kernel SDK are separate work.

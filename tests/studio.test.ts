@@ -400,6 +400,60 @@ describe('Genmotion Studio', () => {
     } finally { await studio.close(); }
   }, 20_000);
 
+  it('freezes queued project revisions and exposes bounded render diagnostics', async () => {
+    const directory = await fixture();
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const headers = { 'content-type': 'application/json', 'x-genmotion-token': token };
+      const submit = (body: Record<string, unknown>): Promise<Response> => fetch(`${studio.url}/api/render`, { method: 'POST', headers, body: JSON.stringify(body) });
+      expect((await submit({ filename: 'wrong.mp4', codec: 'vp9' })).status).toBe(400);
+      expect((await submit({ filename: 'small.mp4', maxBufferedBytes: 1 })).status).toBe(400);
+      const first = await submit({ filename: 'first.mp4', quality: 'high', workers: 1 });
+      const firstJob = await first.json() as { id: string };
+      const queued = await submit({ filename: 'frozen.mp4', quality: 'draft', workers: 4, maxBufferedFrames: 1 });
+      expect(queued.status).toBe(202);
+      const queuedJob = await queued.json() as { id: string };
+      const bootstrap = await fetch(`${studio.url}/api/bootstrap`).then((response) => response.json()) as { project: GenmotionProject; revision: string };
+      const originalFps = bootstrap.project.fps;
+      const saved = await fetch(`${studio.url}/api/project`, { method: 'PUT', headers, body: JSON.stringify({ revision: bootstrap.revision, project: { ...bootstrap.project, fps: 12 } }) });
+      expect(saved.status).toBe(200);
+      await fetch(`${studio.url}/api/jobs/${firstJob.id}/cancel`, { method: 'POST', headers });
+      await expect.poll(async () => {
+        const jobs = await fetch(`${studio.url}/api/jobs`).then((response) => response.json()) as Array<{ id: string; status: string; diagnostics?: { maxBufferedFrames: number; stage: string } }>;
+        const job = jobs.find((candidate) => candidate.id === queuedJob.id);
+        if (job?.status === 'complete') expect(job.diagnostics).toMatchObject({ maxBufferedFrames: 1, stage: 'complete' });
+        return job?.status;
+      }, { timeout: 20_000 }).toBe('complete');
+      const probe = await fetch(`${studio.url}/api/exports/frozen.mp4/probe`).then((response) => response.json()) as { frameRate: number };
+      expect(probe.frameRate).toBe(originalFps);
+    } finally { await studio.close(); }
+  }, 30_000);
+
+  it('applies semantic edits atomically and returns authoritative state on external conflicts', async () => {
+    const directory = await fixture();
+    const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });
+    try {
+      const token = (await fetch(`${studio.url}/api/session`).then((response) => response.json()) as { token: string }).token;
+      const headers = { 'content-type': 'application/json', 'x-genmotion-token': token };
+      const bootstrap = await fetch(`${studio.url}/api/bootstrap`).then((response) => response.json()) as { project: GenmotionProject; revision: string };
+      const edits = [{ op: 'text', target: { kind: 'scene', id: 'intro', layerId: 'title' }, text: 'Semantic edit' }];
+      const preview = await fetch(`${studio.url}/api/edit`, { method: 'POST', headers, body: JSON.stringify({ revision: bootstrap.revision, edits, dryRun: true }) });
+      expect(await preview.json()).toMatchObject({ receipt: { state: 'validated', persisted: false, changed: true } });
+      expect((await loadProject(directory)).sourceProject).toEqual(bootstrap.project);
+      const applied = await fetch(`${studio.url}/api/edit`, { method: 'POST', headers, body: JSON.stringify({ revision: bootstrap.revision, edits }) });
+      expect(applied.status).toBe(200);
+      const result = await applied.json() as { revision: string; project: GenmotionProject };
+      expect(result.project.scenes[0]?.layers.find((layer) => layer.id === 'title')).toMatchObject({ text: 'Semantic edit' });
+      const external = { ...result.project, title: 'Newer external change' };
+      await writeFile(path.join(directory, 'genmotion.json'), JSON.stringify(external));
+      const conflict = await fetch(`${studio.url}/api/project`, { method: 'PUT', headers, body: JSON.stringify({ revision: result.revision, project: { ...result.project, title: 'Stale edit' } }) });
+      expect(conflict.status).toBe(409);
+      expect(await conflict.json()).toMatchObject({ code: 'REVISION_CONFLICT', project: { title: 'Newer external change' } });
+      expect((await loadProject(directory)).sourceProject.title).toBe('Newer external change');
+    } finally { await studio.close(); }
+  });
+
   it('rejects cross-site browser requests before exposing Studio state', async () => {
     const directory = await fixture();
     const studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime: fakeAgent() });

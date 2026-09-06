@@ -196,6 +196,10 @@ A project is `genmotion.json`, `genmotion.yaml`, or `genmotion.yml`. It declares
 
 See [docs/IR.md](docs/IR.md) for the complete authoring model, [docs/STUDIO.md](docs/STUDIO.md) for the human and agent collaboration contract, and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for renderer and throughput design.
 
+The shared [editing transaction API](docs/EDITING.md) supports stable target IDs, validated dry runs, conflict detection and inverse patches. The [rendering contract](docs/RENDERING.md) documents resource limits, stage diagnostics, cancellation, cache behavior and output formats.
+
+See [parameters and configurations](docs/PARAMETERS.md) for structured values and CSV/JSON matrices; [composition timing](docs/COMPOSITIONS.md) for instance overrides, loops and frame holds; [stagger timing](docs/STAGGER.md) for spatial and seeded schedules; [vector paths](docs/VECTOR-PATHS.md) for canonical geometry and native operation stacks; [gradient paint](docs/PAINT.md) for animated fills and strokes; and [audio processing](docs/AUDIO.md) for effect racks, processed previews and standalone mix export.
+
 The exhaustive, version-controlled capability program is tracked in [docs/NATIVE-CAPABILITY-BACKLOG.md](docs/NATIVE-CAPABILITY-BACKLOG.md). It defines Genmotion's native motion-design and agentic compositing requirements while preserving the native-rendering and single-IR guardrails. Partial or Studio-only implementations remain unchecked.
 
 ## Skills

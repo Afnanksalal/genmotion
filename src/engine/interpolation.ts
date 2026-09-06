@@ -1,8 +1,10 @@
 import { formatRgb, interpolate } from 'culori';
 import type { AnimationKeyframe, AnimationValue } from '../ir/schema.js';
 import { ease } from './easing.js';
+import { interpolatePath } from './path-editing.js';
+import { interpolateGradient } from './paint.js';
 
-export type InterpolationMode = 'linear' | 'shortest-angle' | 'discrete';
+export type InterpolationMode = 'linear' | 'shortest-angle' | 'discrete' | 'path';
 
 function isTuple(value: AnimationValue): value is [number, number] | [number, number, number, number] {
   return Array.isArray(value);
@@ -11,6 +13,11 @@ function isTuple(value: AnimationValue): value is [number, number] | [number, nu
 export function interpolateAnimationValue(from: AnimationValue, to: AnimationValue, progress: number, mode: InterpolationMode = 'linear'): AnimationValue {
   const bounded = Math.max(0, Math.min(1, progress));
   if (mode === 'discrete') return bounded < 1 ? from : to;
+  if (typeof from === 'object' && !Array.isArray(from) && typeof to === 'object' && !Array.isArray(to)) return interpolateGradient(from, to, progress);
+  if (mode === 'path') {
+    if (typeof from !== 'string' || typeof to !== 'string') throw new Error('Path interpolation requires SVG path strings');
+    return interpolatePath(from, to, progress);
+  }
   if (typeof from === 'number' && typeof to === 'number') {
     let delta = to - from;
     if (mode === 'shortest-angle') delta = ((delta + 540) % 360) - 180;

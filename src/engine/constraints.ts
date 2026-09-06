@@ -1,14 +1,17 @@
 import type { Layer, LayerConstraint } from '../ir/schema.js';
-import { evaluateLayerTracks } from './animation.js';
+import { layerSchema } from '../ir/schema.js';
+import { evaluateLayerTracks, readAnimationValue, writeAnimationValue } from './animation.js';
 import { layerBox, type LayerBox } from './geometry.js';
 import { staggerDelay } from './procedural.js';
 import { evaluateNumber } from './timeline.js';
-import { samplePath } from './path.js';
+import { samplePath, pathMetrics } from './path.js';
+import { measureTextLayer } from './text-layout.js';
 
 type Anchor = Extract<LayerConstraint, { type: 'anchor-to' }>['ownAnchor'];
 
 export function effectiveLayerStart(layer: Layer): number {
-  return layer.start + (layer.stagger ? staggerDelay(layer.stagger) : 0);
+  const box = layerBox(layer);
+  return layer.start + (layer.stagger ? staggerDelay({ ...layer.stagger, position: layer.stagger.position ?? [box.x + box.width / 2, box.y + box.height / 2] }) : 0);
 }
 
 function anchor(box: LayerBox, name: Anchor): [number, number] {
@@ -19,6 +22,14 @@ function anchor(box: LayerBox, name: Anchor): [number, number] {
 
 function materialize(layer: Layer, time: number, seed: number): Layer {
   const evaluated = structuredClone(evaluateLayerTracks(layer, time, seed));
+  if (evaluated.type === 'text' && evaluated.autoSize && evaluated.autoSize !== 'none') {
+    const layout = measureTextLayer(evaluated);
+    evaluated.width = layout.boxWidth; evaluated.height = layout.boxHeight;
+  }
+  if (evaluated.stagger?.from === 'distance' && !evaluated.stagger.position) {
+    const box = layerBox(layer);
+    evaluated.stagger.position = [box.x + box.width / 2, box.y + box.height / 2];
+  }
   evaluated.transform.x = evaluateNumber(evaluated.transform.x, time);
   evaluated.transform.y = evaluateNumber(evaluated.transform.y, time);
   evaluated.transform.scaleX = evaluateNumber(evaluated.transform.scaleX, time);
@@ -48,7 +59,7 @@ function transformedBox(layer: Layer): LayerBox {
 }
 
 export function layerDependencyGraph(layers: Layer[]): Record<string, string[]> {
-  return Object.fromEntries(layers.map((layer) => [layer.id, [layer.parentId, ...layer.constraints.map((constraint) => constraint.target)].filter((value): value is string => Boolean(value))]));
+  return Object.fromEntries(layers.map((layer) => [layer.id, [layer.parentId, ...layer.constraints.map((constraint) => constraint.target), ...(layer.propertyLinks ?? []).filter((link) => link.enabled).map((link) => link.sourceLayerId)].filter((value): value is string => Boolean(value))]));
 }
 
 export function layerDependencyCycles(layers: Layer[]): string[][] {
@@ -67,8 +78,9 @@ export function layerDependencyCycles(layers: Layer[]): string[][] {
   return cycles;
 }
 
-export function resolveLayerGraph(layers: Layer[], sceneTime: number, seed = 0): Layer[] {
+export function createLayerGraphSampler(layers: Layer[], seed = 0): (sceneTime: number, ids?: string[]) => Layer[] {
   const source = new Map(layers.map((layer) => [layer.id, layer]));
+  return (sceneTime, ids) => {
   const resolved = new Map<string, Layer>();
   const resolving = new Set<string>();
   const resolve = (id: string): Layer => {
@@ -113,7 +125,29 @@ export function resolveLayerGraph(layers: Layer[], sceneTime: number, seed = 0):
         layer.transform.y = Number(layer.transform.y) + targetPoint[1] - own[1] + constraint.offsetY;
       }
     }
+    for (const link of layer.propertyLinks ?? []) {
+      if (!link.enabled) continue;
+      const target = resolve(link.sourceLayerId);
+      const value = readAnimationValue(target, link.sourceProperty.split('.'), sceneTime - effectiveLayerStart(source.get(link.sourceLayerId)!));
+      const current = readAnimationValue(layer, link.target.split('.'), localTime);
+      if (value === undefined || current === undefined || typeof value !== typeof current || Array.isArray(value) !== Array.isArray(current)) throw new Error(`Property link ${layer.id}.${link.target} requires compatible existing properties`);
+      if (Array.isArray(value) && Array.isArray(current) && value.length !== current.length) throw new Error('Property link dimensions differ');
+      let mapped = structuredClone(value);
+      if (typeof value === 'number') mapped = value * link.scale + link.offset;
+      else if (Array.isArray(value)) mapped = value.map((item) => item * link.scale + link.offset) as typeof value;
+      else if (link.scale !== 1 || link.offset !== 0) throw new Error('Only numeric property links support scale and offset');
+      if (typeof mapped === 'number' && !Number.isFinite(mapped) || Array.isArray(mapped) && mapped.some((item) => !Number.isFinite(item))) throw new Error('Property link result is not finite');
+      if (link.target === 'transform.opacity' && typeof mapped === 'number' && (mapped < 0 || mapped > 1)) throw new Error('Linked opacity must stay within 0..1');
+      writeAnimationValue(layer, link.target.split('.'), mapped);
+    }
+    if (layer.propertyLinks?.some((link) => link.enabled)) {
+      layerSchema.parse(layer);
+      if (layer.type === 'shape' && layer.shape === 'path' && layer.propertyLinks.some((link) => link.enabled && link.target === 'path')) pathMetrics(layer.path!);
+    }
     resolving.delete(id); resolved.set(id, layer); return layer;
   };
-  return layers.map((layer) => resolve(layer.id));
+  return (ids ?? layers.map((layer) => layer.id)).map(resolve);
+  };
 }
+
+export function resolveLayerGraph(layers: Layer[], sceneTime: number, seed = 0): Layer[] { return createLayerGraphSampler(layers, seed)(sceneTime); }

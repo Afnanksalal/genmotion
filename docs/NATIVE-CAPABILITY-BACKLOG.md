@@ -2,6 +2,8 @@
 
 This is the canonical, version-controlled checklist for Genmotion's native motion-design and agentic compositing program. It is intentionally exhaustive: priority and release assignment may change, but an item must not be silently removed because it is difficult or niche.
 
+See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline gaps, implementation order and acceptance scenarios. `GM-*` requirements refine existing domains or add production workflows; `AE-*` requirements cover advanced compositing. Implement each capability once through the shared Creative IR and services.
+
 ## Status and completion contract
 
 - `[ ]` means not yet proven complete.
@@ -31,7 +33,7 @@ This is the canonical, version-controlled checklist for Genmotion's native motio
 - [ ] Sequence-style time offsets, nested offsets, negative offsets, and sequential scene containers.
 - [ ] Automatic sequence and composition duration calculation.
 - [ ] Trim-before, trim-after, premount, and postmount intervals.
-- [ ] Freeze a composition at a frame or only during a selected interval.
+- [x] Freeze a composition at a frame or only during a selected interval. Evidence: [shared source-time contract](COMPOSITIONS.md), native RGBA equality and interval-boundary checks in `tests/composition-parameters.test.ts`, timing tests, and Studio save/remove browser coverage. Optional fields preserve existing project documents.
 - [ ] Finite loops, infinite preview loops, nested loops, ping-pong loops, time remapping, playback-rate controls, and time stretching.
 - [x] Composition cycle detection, dependency graph, and usage search.
 - [ ] Composition folders, multiple deliverables per project, still compositions, variants, duplication, presets, and named sequences.
@@ -54,36 +56,36 @@ This is the canonical, version-controlled checklist for Genmotion's native motio
 ## 3. Animation and timing
 
 - [x] Multi-point numeric, perceptual color, angle, vector/point, and rectangle interpolation.
-- [ ] Gradient and compatible-path interpolation.
+- [x] Gradient and compatible-path interpolation. Evidence: [native paint contract](PAINT.md) and [path morph contract](VECTOR-PATHS.md), native intermediate-frame/alpha/angle tests, structural preflight, CLI/MCP/SDK schema access, Studio animated-paint/path persistence, and contact-sheet QA.
 - [x] Independent left/right extrapolation with clamp, extend, wrap, identity, loop, and ping-pong behavior.
 - [x] Shortest-path rotation interpolation, discrete steps, and hold keyframes.
 - [x] Named and per-segment easing, custom cubic Bezier easing, reversal, mirroring, and presets.
-- [ ] Easing copy/paste commands.
+- [x] Easing copy/paste commands. Evidence: [shared editing contract](EDITING.md), SDK pure/transaction tests, CLI commands, MCP copy/paste workflow, and Studio browser persistence coverage for complete named, Bezier, and spring settings.
 - [x] Springs with duration measurement, normalization, overshoot clamping, velocity, physical presets, and settling visualization.
 - [x] Deterministic seeded randomness and deterministic 2D, 3D, and 4D noise.
-- [ ] Stagger by index, distance, center, and seeded random order plus delay and trail utilities.
-- [ ] Frame-rate-independent helpers and subframe evaluation.
+- [x] Stagger by index, distance, center, and seeded random order plus delay and trail utilities. Evidence: [shared stagger timing](STAGGER.md), native activation and animated-position tests, bounded deterministic schedules, CLI/MCP checks and Studio persistence coverage. Existing timing defaults remain compatible.
+- [x] Frame-rate-independent helpers and subframe evaluation. Evidence: [exact-time contract](TIME.md), identical native pixels across frame rates, fractional-frame preview/CLI/MCP checks and Studio exact-seek browser coverage. Integer-frame defaults remain compatible.
 - [ ] Shutter-based temporal sampling, motion blur, motion trails, directional light trails, per-layer/effect control, shutter angle, and quality-dependent sample counts.
-- [ ] Velocity and acceleration visualization.
-- [ ] Track grouping, mute, solo, lock, and expression-free property linking.
+- [x] Velocity and acceleration visualization. Evidence: [native analysis contract](ANIMATION-ANALYSIS.md), scalar/vector/quadratic derivative tests, discontinuity handling, bounded CLI/MCP/SDK access and visually inspected Studio plots. Analysis is read-only and preserves existing project documents.
+- [x] Track grouping, mute, solo, lock, and expression-free property linking. Evidence: [shared track controls](TRACK-CONTROLS.md), deterministic group/solo and linked native pixels, transaction lock/deletion tests, CLI/MCP edits and inspection, and Studio typed-control persistence coverage. Optional fields preserve prior projects.
 - [x] Parent-child transform inheritance and follow-path, look-at, maintain-distance, and anchor-to-anchor constraints.
 
 ## 4. Vector geometry and paths
 
-- [ ] Complete SVG path parser, canonical normalization, relative-to-absolute conversion, and serialization.
+- [x] Complete SVG path parser, canonical normalization, relative-to-absolute conversion, and serialization. Evidence: [native path contract](VECTOR-PATHS.md), all-command grammar and native fill/stroke equivalence in `tests/svg-path.test.ts`, CLI/MCP inspection, and Studio normalization/persistence browser coverage. Canonicalization preserves curves, closure, and disjoint subpaths.
 - [x] Path bounds, length, point, tangent, and normal queries.
-- [ ] Path cutting, trimming, reversal, translation, scaling, centering, warping, subdivision, and subpath extraction.
-- [ ] Compatible-path normalization, interpolation, shape morphing, and multi-subpath morphing.
+- [x] Path cutting, trimming, reversal, translation, scaling, centering, warping, subdivision, and subpath extraction. Evidence: [shared geometry stack](VECTOR-PATHS.md), curve/contour and native-fill tests in `tests/path-editing.test.ts`, CLI/MCP/SDK operations, and Studio stack persistence/reload coverage. Geometry expansion is bounded and malformed operations fail preflight.
+- [x] Compatible-path normalization, interpolation, shape morphing, and multi-subpath morphing. Evidence: [native path morph contract](VECTOR-PATHS.md), deterministic native intermediate frames and topology validation in `tests/path-morph.test.ts`, Studio save/reload coverage, and five-frame native contact-sheet QA. Existing documents retain their animation defaults.
 - [ ] Motion-path attachment, automatic path orientation, offset paths, animated dashes, arrowheads, and start/middle/end markers.
-- [ ] Boolean union, intersection, subtraction, and exclusion.
-- [ ] Stroke expansion and rounded corners on arbitrary paths.
+- [x] Boolean union, intersection, subtraction, and exclusion. Evidence: [native geometry operation stack](VECTOR-PATHS.md), native pixel checks for all operations and hole winding, project rendering, CLI/MCP evaluation, and Studio stack persistence.
+- [x] Stroke expansion and rounded corners on arbitrary paths. Evidence: [native geometry operation stack](VECTOR-PATHS.md), outline cap/join and corner pixel checks, native renderer integration, CLI/MCP evaluation, and Studio add/edit/remove coverage.
 - [ ] Editable path nodes with smooth, symmetric, and corner modes plus direct Bezier handles.
 - [ ] Path, anchor, and shared-geometry snapping and constraints.
-- [ ] Native arcs, pies, callouts, arrows, stars, sparks, hearts, regular polygons, triangles, donuts, rings, spirals, waveform paths, line charts, and area charts.
+- [x] Native arcs, pies, callouts, arrows, stars, sparks, hearts, regular polygons, triangles, donuts, rings, spirals, waveform paths, line charts, and area charts. Evidence: [native primitive contract](VECTOR-PATHS.md), deterministic/boundary geometry and native contour/stroke pixels in `tests/primitives.test.ts`, Studio authoring tests, and native 15-primitive contact-sheet QA. Additive shape fields preserve prior project documents.
 
 ## 5. Text and typography
 
-- [ ] Native text measurement, line-breaking, overflow detection, fit-to-box, fit-to-line-count, and automatic box sizing.
+- [x] Native text measurement, line-breaking, overflow detection, fit-to-box, fit-to-line-count, and automatic box sizing. Evidence: [shared text layout contract](TEXT.md), complete-word/grapheme and fitting tests, native contact-sheet inspection, CLI/MCP measurement and Studio authoring/reload coverage. The documented correction removes silent max-line truncation.
 - [ ] Minimum/maximum font sizes, baseline alignment, cap-height alignment, and optical alignment.
 - [ ] Language-aware wrapping, automatic direction detection, RTL, and bidirectional text.
 - [ ] Word, character, line, and glyph reveals and animation.
@@ -114,10 +116,10 @@ This is the canonical, version-controlled checklist for Genmotion's native motio
 - [ ] Trimming, splitting, looping, reversing, playback rate, pitch-preserving stretch, and pitch shifting.
 - [ ] Decibel gain, volume envelopes, timeline automation, fade handles, crossfades, and equal-power crossfades.
 - [ ] Constant-power pan, stereo balance, track mute, solo, and lock.
-- [ ] Voice-aware ducking with configurable attack and release.
-- [ ] Noise gate, compressor, limiter, parametric EQ, high-pass, and low-pass filters.
-- [ ] Loudness, true-peak, and LUFS measurement, optional normalization, and clipping warnings.
-- [ ] Music, voice, SFX, and source stem rendering plus embedded audio metadata.
+- [x] Voice-aware ducking with configurable attack and release. Evidence: [shared audio graph](AUDIO.md), decoded PCM measurements of music attenuation and recovery after speech, full-duration tail preservation, and Studio project-control persistence.
+- [x] Noise gate, compressor, limiter, parametric EQ, high-pass, and low-pass filters. Evidence: [typed native audio rack](AUDIO.md), decoded PCM frequency/dynamics checks, all four video and audio output formats, CLI/MCP/SDK access, and Studio reorder/bypass/remove/processed-preview coverage.
+- [x] Loudness, true-peak, and LUFS measurement, optional normalization, and clipping warnings. Evidence: [two-pass audio delivery contract](AUDIO.md), measured PCM/AAC output, silence and clipping tests, shared CLI/MCP/SDK analysis, and Studio target/measurement persistence coverage. Normalization is opt-in for existing documents.
+- [x] Music, voice, SFX, and source stem rendering plus embedded audio metadata. Evidence: [pre-master stem contract](AUDIO.md), sample-level four-stem reconstruction with voice ducking, float PCM/duration/tag verification, CLI/MCP/SDK stem selection, and Studio download coverage.
 - [ ] Frozen searchable SFX library with intent, license, attribution, and peak-normalization metadata.
 
 ## 8. Captions and subtitles
@@ -298,6 +300,164 @@ This is the canonical, version-controlled checklist for Genmotion's native motio
 - [ ] Accessibility, keyboard, touch, Studio/Player browser compatibility, installer, upgrade, and package-integrity tests.
 - [ ] Historical speed, memory, and output-size benchmarks with regression gates.
 - [ ] Visual and transition-boundary regression gates plus a public compatibility matrix.
+
+## 25. Production intent, storyboards, and reusable direction
+
+Refines §§2, 14, 15, 21, 23. Evidence: audit H01–H04. These are authoring workflows; they do not introduce a second render timeline.
+
+- [x] **GM-001** Persist a versioned production brief with destination, aspect, language, audience, message, duration, source requirements, and user-stated versus inferred decisions; resume it without repeating resolved intake. Evidence: [production brief contract](PRODUCTION-BRIEF.md), bounded schema/provenance, revision and native-output invariance tests, CLI/MCP round trips, resumed agent context and Studio persistence coverage.
+- [ ] **GM-002** Route product films, explainers, existing-footage edits, captions, music-driven films, short motion units, and presentations through maintained workflows with explicit inputs, outputs, and capability requirements.
+- [ ] **GM-003** Track resumable production stages and dependencies from source collection through planning, authoring, verification, and delivery; invalidate only affected stages when the brief or assets change.
+- [ ] **GM-004** Provide a storyboard with stable shot IDs, sketches/references, visual direction, narration, source evidence, planned duration, and separate build and review states; link built shots to real IR scene/layer IDs.
+- [ ] **GM-005** Support shot-level comments, resolved feedback, and navigation from storyboard to native preview; bind review decisions to a revision so a later change cannot inherit stale approval.
+- [ ] **GM-006** Import a versioned brand/design specification with exact palette/font bindings, provenance, immutable identity requirements, medium-specific recommendations, and a drift report across scenes and variants.
+- [ ] **GM-007** Store inspectable project and personal creative preferences with source/confirmation history, explicit overrides and removal; inferred one-off choices must not silently become personal defaults.
+- [ ] **GM-008** Freeze approved workflows as versioned reusable bundles of brief structure, brand bindings, storyboard skeleton, parameters, assets and acceptance checks; reopen them with migration and missing-dependency diagnostics.
+
+## 26. Evidence capture, design ingestion, and media preparation
+
+Refines §§6, 8, 14, 19, 20. Evidence: audit H05–H08. Network access and model execution belong to explicit acquisition/preparation jobs; accepted render assets stay local.
+
+- [ ] **GM-009** Capture a website or real product session into frozen screenshots/footage, text, source URLs, viewport/time metadata and a contact sheet; distinguish real evidence from subsequently reconstructed graphics.
+- [ ] **GM-010** Extract candidate brand tokens, fonts, logos, media and source motion observations into an inspectable import manifest; report ambiguous identity and missing rights/provenance rather than silently substituting assets.
+- [ ] **GM-011** Bound each capture phase by time, concurrency and output size; report partial/degraded completion, navigation status, skipped assets and reasons so an incomplete capture cannot look complete.
+- [ ] **GM-012** Import Figma/design-tool exports as editable native layers where supported and frozen artwork otherwise; preserve source identities/tokens and emit compiled, flattened, unsupported and fidelity-loss reports.
+- [ ] **GM-013** Provide a provider-neutral resolve/search/import/generate interface for images, icons, music, SFX and voice, plus source-verified logo acquisition; record the chosen source, license, prompt/intent, settings, tool/model identity, job state and local content hash, and distinguish generated media from captured evidence.
+- [ ] **GM-014** Maintain a project media ledger and optional cross-project content-addressed cache with usage, derivation chains, relocation, deduplication and invalidation; a portable project must include its required files without relying on a personal cache.
+- [ ] **GM-015** Run reversible preparation jobs for trim, crop, conform, proxy, pitch-preserved constant-rate retiming, baked ramps/freezes and format conversion; preserve originals and source-to-derived time maps.
+- [ ] **GM-016** Offer optional local/provider-neutral transcription with language/model selection, timed words, confidence/correction review and provenance; convert accepted results into existing caption IR and invalidate timings when the source changes.
+- [ ] **GM-017** Offer optional subject segmentation/matting preparation for images and video with foreground and inverse-alpha outputs, transparent PNG/WebM/ProRes handoff, edge/temporal QA and frozen model settings; do not describe an inverse matte as an inpainted background.
+
+## 27. Discoverable native content and component packages
+
+Refines §§1, 4, 14, 23. Evidence: audit H09–H10 and the complete registry inventory. Named upstream assets are coverage references, not source to embed in the renderer.
+
+- [ ] **GM-018** Package native components, compositions, effects and workflow examples with typed parameters, dependency manifests, previews, compatibility versions, licenses and provenance; install dependencies transactionally inside the project.
+- [ ] **GM-019** Add local semantic catalog search alongside keyword/tag search with explicit answering tier, model/index version, offline status and scores; pin optional model downloads and keep query text local by default.
+- [ ] **GM-020** Detect and report index/registry skew in both directions, unavailable results and unindexed items; refresh safely and explain degraded ranking rather than returning misleading empty results.
+- [ ] **GM-021** Return a focused capability description with parameter ranges, animation support, example native payload, cost and unsupported conditions before applying a catalog item; keep direct IR authoring available.
+- [ ] **GM-022** Provide deterministic family/tag installation, update/diff/rollback, dependency conflicts, schema migrations and removal guarded by usage; include a per-item native-frame smoke check.
+- [ ] **GM-023** Maintain local search-miss and content-quality records that users can inspect or delete; any external report must be a separate explicit action, not background telemetry.
+- [ ] **GM-024** Build native parameterized families for charts, ranked/racing data, maps/routes/markers, diagrams, code explainers, device/product framing, lower thirds, logo/title units and editorial overlays; retain source data and validate labels/readability.
+- [ ] **GM-025** Build reusable caption/lyric identities with semantic emphasis, word timing, regional safe areas, language/font coverage and preview examples; audit every inventoried registry family for native coverage or a recorded intentional exclusion.
+
+## 28. Audio processing, analysis, and music-driven authoring
+
+Refines §§3, 7, 8, 12, 16. Evidence: audit H11–H15. Preview and export must implement one declared signal-flow contract.
+
+- [ ] **GM-026** Add a versioned ordered audio-effect rack with stable effect IDs, enabled state, duplication, copy/paste, presets, validated units/ranges and discoverable automation support.
+- [ ] **GM-027** Support editable gain, high/low-pass, peaking/shelf EQ, compressor, limiter, gate, saturation, delay, reverb, chorus, phaser and bitcrush primitives through native/offline DSP or deterministic frozen processing; reject unsupported parameter combinations.
+- [ ] **GM-028** Add volume/effect automation lanes with time units, interpolation, reset rules and source/clip/bus time mapping; expose the same values through Studio, CLI, MCP and SDK.
+- [ ] **GM-029** Model effect latency, preroll, tails and duration explicitly; preserve reverb/delay endings and validate preview/export parity at trims, loops, seeks and transitions.
+- [ ] **GM-030** Add audio submix buses whose effects process summed members, with stable membership, routing validation, group mute and automation; explicitly version any distinction between preview audition solo and output solo.
+- [ ] **GM-031** Analyze a voice/music pair or voice bus to propose dynamic spectral carving and gain envelopes with source measurements, editable strength and inspectable analysis metadata.
+- [ ] **GM-032** Tag generated carve effects and automation by ownership; recomputation replaces only those edits, preserves manual processing, handles changed group membership and detects stale source analysis.
+- [ ] **GM-033** Provide source and mix diagnostics for clipping, level imbalance, noise, silence, peaks and loudness; proposed levelling/repair must be reviewable and report measurement limitations.
+- [ ] **GM-034** Add intent-oriented audio repair presets/jobs with reversible parameter changes, before/after audition and measured acceptance; retain the original recording and avoid treating a preset name as quality proof.
+- [ ] **GM-035** Persist beat/onset/strength, phrase/energy and silence analysis against a source hash and time map; support manual correction and confidence/uncertainty instead of forcing every source onto a beat grid.
+- [ ] **GM-036** Bind native animation and cut landmarks to frozen audio feature tracks through safe declarative mappings with smoothing, range/clamp, latency and deterministic random-seek behavior.
+- [ ] **GM-037** Build music/lyric-driven workflows that select a real source range, plan around phrases and endings, expose beat markers, preserve verified lyrics and test readable holds against the actual soundtrack.
+
+## 29. Source-aware color and media treatment
+
+Refines §§6, 9, 10, 15, 18. Evidence: audit H16–H20. Existing effect families remain the owner; these entries specify missing contracts and authoring workflows.
+
+- [ ] **GM-038** Introduce a versioned native grading payload with primary correction, tonal wheels, master/RGB curves, hue-versus-hue/saturation/luma curves, keyed secondaries, enabled state and explicit working color space.
+- [ ] **GM-039** Import and validate local LUTs with dimensions/domain/interpolation/intensity, hashes and color-space expectations; preview the same grade and parameter order used for export.
+- [ ] **GM-040** Analyze representative source frames for luminance/chroma/saturation, clipping risk and color metadata; emit evidence plus a conservative suggested patch with dry-run/apply/clear and unsupported-log/HDR diagnostics.
+- [ ] **GM-041** Add parameterized native print/art treatments: two-ink print, ordered dithering, mono-screen patterns, ASCII glyph rendering, engraving, crosshatching and edge-preserving painterly filtering; retain readability controls and seek determinism.
+- [ ] **GM-042** Add source-driven tape tracking/chroma bleed, film artifacts, scanline/CRT, channel-separation and digital-tear/block treatments with explicit spatial/temporal parameters and seeds.
+- [ ] **GM-043** Make treatment animation support explicit per parameter; implement declared blur/pixelation/bloom/grain/reveal controls without hidden wall-clock state, and reject animation on unsupported controls.
+- [ ] **GM-044** Compare original and candidate grades, LUTs or composition variants at identical source/timeline times in labeled sheets or interactive views; retain exact settings and report failed/truncated candidates.
+- [ ] **GM-045** Compose original plate, foreground matte and regional treatment as editable native layers/masks with feather and alpha semantics; keep source time mapping identical across the stack and support later tracked-matte inputs.
+- [ ] **GM-046** Publish per-effect support and cost metadata for backend, precision, alpha, HDR, sampling and memory; surface incompatible stacks before rendering and offer explicit reduced-quality previews without changing the accepted master.
+
+## 30. Semantic editing SDK and agent evidence
+
+Refines §§1, 2, 11, 13, 21, 22. Evidence: audit H21–H25. Genmotion already has JSON patches and revision checks; this is the higher-level shared editing layer.
+
+- [ ] **GM-047** Provide a headless editing session over Creative IR with typed query, text/style/property/timing/asset/track operations, disposal and memory/filesystem/host persistence adapters; use it from Studio and agent tools.
+- [ ] **GM-048** Address nested targets by stable composition-instance/layer identity rather than array position alone; detect stale or ambiguous targets and expose dependency/usage paths before mutation.
+- [ ] **GM-049** Expose a pure capability/refusal query for an intended operation on the current target, including locks, inheritance, unsupported imported content and required materialization; derive relevant Studio controls from it.
+- [ ] **GM-050** Make a multi-operation edit one validated transaction, one persist event and one undo step; provide inverse patches, rollback on failure, change-origin metadata and event subscriptions.
+- [ ] **GM-051** Coalesce continuous gestures by target/property without merging unrelated edits; support host-owned history, persistence failure/retry and reopenable checkpoints through the same session.
+- [ ] **GM-052** Store versioned sparse overrides on reusable base compositions with scoped nested IDs, explicit removal markers, parameter/asset overrides and base-update conflict/orphan diagnostics.
+- [ ] **GM-053** Expose a bounded live scene/context view with playhead, selection, instance path, viewport, editability, revision and undo state; let tools select/seek the same targets the human is editing.
+- [ ] **GM-054** Offer a capability-negotiated in-Studio agent bridge where supported, using the same semantic service as local MCP; require source-safe handles and session permissions rather than broad browser scripting.
+- [ ] **GM-055** Return structured edit receipts distinguishing refused, dispatched, saved, verified and failed states, with a separate changed flag, before/after revision, affected targets and available readback/frame evidence.
+- [ ] **GM-056** Record canvas gestures into native keyframes with timestamped samples, endpoint-preserving smoothing/reduction, preview before acceptance and one reversible edit; later agent edits must retain user-authored trajectories unless targeted.
+
+## 31. Time-aware visual diagnostics and acceptance assertions
+
+Refines §§3, 5, 8, 13, 15, 16, 21, 24. Evidence: audit H26–H29. Static schema validation remains necessary but cannot establish visual quality.
+
+- [ ] **GM-057** Produce one structured check report spanning schema, assets, evaluated layout, media readiness, contrast, motion assertions and output contract, with explicit severity, sampled coverage and incomplete-check status.
+- [ ] **GM-058** Sample scene/track/transition boundaries and interior times, distinguish persistent defects from intentional transient entrance/exit states, and report omitted timestamps when a sampling budget truncates coverage.
+- [ ] **GM-059** Anchor findings to stable native targets, instance paths, source revision, frame/time and bounding boxes; include annotated frames and focused crops so agents can inspect the reported defect.
+- [ ] **GM-060** Detect evaluated text overflow, occlusion, off-canvas content and reserved caption/safe-area collisions through hierarchy, transforms and masks; allow scoped intentional exceptions with reasons.
+- [ ] **GM-061** Measure contrast against the rendered/composited background at relevant times, distinguish unreadable text from decorative shapes, and expose assumptions/limits for complex media backgrounds.
+- [ ] **GM-062** Add declarative acceptance assertions for appearance deadlines, ordering, frame containment, readable holds and maximum unintended static intervals; bind them to stable layer IDs and evaluated native output.
+- [ ] **GM-063** Version assertion schemas, reject missing/ambiguous targets, test false positives, and support intentional stillness/reduced motion; heuristic checks must not present themselves as exhaustive aesthetic approval.
+- [ ] **GM-064** Report composed world-space trajectories, local/global clocks, ancestor contributions, keyframe segments and discontinuities; visualize conflicts between host transitions, child motion and camera handoffs.
+- [ ] **GM-065** Support multi-stroke path/gesture diagnostics that distinguish drawn motion from jumps, retiming comparisons and before/after overlays; preserve semantic anchors when repairing timing.
+- [ ] **GM-066** Maintain a revision-bound review artifact containing the check report, representative frames, compared variants, audio findings and unresolved decisions; invalidate affected evidence after edits.
+
+## 32. Embedded preview, presentations, and accessible editing
+
+Refines §§1, 12, 15, 22. Evidence: audit H30–H32. Interactive playback metadata must resolve to declared native scene/timing data.
+
+- [ ] **GM-067** Ship a framework-neutral embeddable Player/thumbnail API for native preview transport with play/pause/seek/rate/volume/loop controls, responsive sizing and stable events; do not create a second browser scene renderer.
+- [ ] **GM-068** Define readiness, buffering, cancellation, stale-frame rejection, parameter changes and audio synchronization across embedded and Studio playback; test seek storms and slow preview delivery.
+- [ ] **GM-069** Provide portable review bundles/links with source revision, frozen assets or verified media, timestamps and comments; apply explicit access control for shared services and keep local review usable offline.
+- [ ] **GM-070** Add a presentation manifest for ordered scenes, fragment hold points, branches, hotspots and speaker notes, validated against stable IR identities with missing-target/cycle diagnostics.
+- [ ] **GM-071** Provide synchronized presenter and audience views with keyboard navigation, fragment/branch return behavior and persistent notes; preview every supported route without changing the source timeline implicitly.
+- [ ] **GM-072** Define deterministic video export of an interactive project through an explicit route and timing policy; report unreachable scenes, unresolved waits and unsupported interactions before rendering.
+- [ ] **GM-073** Make large timelines accessible as a virtualized hierarchical control with stable logical focus, row/clip/keyframe announcements, keyboard selection/editing and focus restoration after scroll/collapse.
+
+## 33. Delivery parity, batches, and render diagnostics
+
+Refines §§2, 6, 16, 17, 24. Evidence: audit H29, H33–H35. These refine existing export/distribution items; native and provider-neutral guardrails remain mandatory.
+
+- [ ] **GM-074** Validate alpha end to end through source decode, effects, transitions and PNG-sequence/WebM/ProRes output; test straight/premultiplied alpha and inspect against contrasting backgrounds.
+- [ ] **GM-075** Define source/working/output color transforms and explicit SDR/PQ/HLG policies before claiming HDR; probe metadata, test mixed-media compositing and report unsupported effect/backend combinations.
+- [ ] **GM-076** Publish an output compatibility matrix for codec/container/pixel format/alpha/color/audio/resolution/backend combinations; reject impossible combinations and make any fallback an explicit result.
+- [ ] **GM-077** Generate a dry-run render plan with frozen dependency hashes, variant values, dimensions, FPS, selected ranges, color/audio contract, backend requirements and output identity.
+- [ ] **GM-078** Support JSON/JSONL/CSV batch inputs with row-level validation, deterministic IDs/output names, concurrency limits, progress, isolated failure and selective retry without rerendering accepted rows.
+- [ ] **GM-079** Reuse content-addressed project uploads and assets across render jobs and providers with integrity checks, deduplication, quotas and deterministic local dependency resolution.
+- [ ] **GM-080** Implement provider-neutral plan/shard/assemble orchestration and backend adapters; include variable propagation, audio-tail handling, cancellation, retry/idempotency and local-versus-distributed seam tests.
+- [ ] **GM-081** Gate preview/local/distributed parity with representative image/video/alpha/audio/effect fixtures, random seek order, declared pixel/audio tolerances and inspectable failed-frame artifacts.
+- [ ] **GM-082** Track reproducible performance baselines by scene class, resolution, backend and hardware with frame-time distributions, memory, encode throughput and regression budgets; do not infer speed from renderer architecture.
+- [x] **GM-083** Bound in-flight and completed native frames by count/bytes and encoder backpressure; expose queue/memory diagnostics and verify slow-frame/slow-encoder behavior at high resolution. Evidence: [rendering contract](RENDERING.md), `tests/frame-stream.test.ts` (including 4K buffers), `tests/render.test.ts`, `tests/asset-cache.test.ts`, and Studio API/browser export tests.
+- [ ] **GM-084** Propagate cancellation, deadlines and errors through asset preparation, frame workers, encoding, audio DSP/mux and probing; own and reap every child process and remove partial artifacts at every stage.
+
+## 34. Reproducible agent workflows and developer tooling
+
+Refines §§14, 21, 22, 23, 24. Evidence: audit H35–H36 plus native integration needs identified in this audit.
+
+- [ ] **GM-085** Record the runtime, schema, font, media, model-preparation and backend versions/hashes that define a render's reproducibility envelope; verify manifests on load and report mismatches.
+- [ ] **GM-086** Generate focused capability documentation, examples and schemas from canonical contracts; detect drift between Studio controls, MCP/CLI/SDK support and bundled skills.
+- [ ] **GM-087** Package small domain/workflow skills with explicit input/output contracts, lazy capability loading, resumable state and executable examples; do not require all knowledge in every agent turn.
+- [ ] **GM-088** Check project/runtime/library version compatibility before upgrades; preserve pins, run migrations and representative validation, and provide rollback with a visible version/change report.
+- [ ] **GM-089** Provide bounded machine-readable progress and diagnostic bundles with stage, target, time, error code and next action; distinguish process success, validated project, saved edit and verified output.
+- [ ] **GM-090** Add executable cross-surface contract tests and documentation examples for every new family, including packaged installs and native golden output; inventory-only or Studio-only delivery does not satisfy completion.
+- [ ] **GM-091** Publish original complete workflow examples for evidence-based product films, narrated/carved mixes, music/lyrics, data stories, editable overlays, brand variants and embedded reviews, including frozen inputs and review artifacts.
+
+## 35. Agentic After Effects frontier
+
+Strategic additions for advanced compositing. Refines sections 1, 3-6, 9, 16, 18-21 and 24. See the native roadmap acceptance scenarios; a full After Effects capability audit remains separate work.
+
+- [ ] **AE-001** Provide point and planar tracking/stabilization with source-bound samples, confidence, lost-track diagnostics, correction ranges and native attachment to layers, nulls, masks and effect controls.
+- [ ] **AE-002** Add temporally propagated object/person mattes with manual correction strokes, refinement, frozen ranges, feather/edge/spill controls and source-edit invalidation; keep accepted results as portable native masks or frozen matte assets.
+- [ ] **AE-003** Support paint/clone/cleanup and temporally coherent clean-plate generation as reversible derived layers, with source/reference provenance, temporal QA and explicit distinction between real evidence and generated replacement pixels.
+- [ ] **AE-004** Add mesh/pin deformation, influence/overlap controls, bind poses and reusable rigs with deterministic sampling, editable constraints and failure diagnostics.
+- [ ] **AE-005** Build a native shape-operator stack with repeaters, offsets, trim/merge/boolean operations and per-character text selectors/animators; expose ordering and bounds rather than baking every variation into separate geometry.
+- [ ] **AE-006** Add a sandboxed declarative relationship graph for property links, units, remapping, conditions and derived timing; prohibit arbitrary project code, detect cycles and show dependency/override explanations.
+- [ ] **AE-007** Support layered design/animation interchange with stable identities and explicit fidelity/editability loss reports, starting with practical SVG and layered artwork handoff before proprietary project compatibility promises.
+- [ ] **AE-008** Introduce professional working/display/output color management, higher-precision compositing, alpha interpretation and scene-linear workflows with reference transforms and cross-backend tolerances.
+- [ ] **AE-009** Extend native 3D with solved camera/scene alignment, shadow-catching and depth/object-ID matte workflows so designed graphics can attach convincingly to real footage; record solve quality and frozen dependencies.
+- [ ] **AE-010** Provide deterministic particles/simulations with explicit seeds, timestep/checkpoints, cached state, collision/force inputs and repeatable arbitrary-frame evaluation; distinguish simulation baking from final rendering.
+- [ ] **AE-011** Translate creative requests into inspectable constraints and scoped semantic edit plans with alternatives, affected targets, preservation rules and native before/after evidence; retain human corrections through retries and regeneration.
+- [ ] **AE-012** Establish production shot benchmarks for tracking, roto edges, deformation, cleanup, typography, motion blur, alpha, color and long compositions; publish measured limitations and failure artifacts before claiming compositor parity.
 
 ## Audit sources
 

@@ -2,6 +2,14 @@
 
 Genmotion follows semantic versioning. GitHub releases contain the verified package archive and its `SHA256SUMS` manifest.
 
+## Unreleased — Native capability milestone (2026-09-06)
+
+- Added native effects, masks, adjustment layers, LUTs and declarative custom kernels; expanded vector, animation, text and composition controls.
+- Added shared revisioned editing, typed variants, immutable bundles, production planning/review, Player embedding and Studio authoring controls.
+- Added audio processing, analysis and nested source timing; sequences/sprites, media geometry, caption editing, stream inspection and SDR conforming.
+- Hardened bounded rendering, cancellation, persistence and media preparation. Fixed schema export, asset inventory refresh, checkbox visibility, Player development serving and conforming color/timing defects during QA.
+- Validation evidence and remaining scope: [milestone QA report](docs/MILESTONE-QA-2026-09-06.md). This milestone does not mark the full capability checklist complete.
+
 ## 2.3.0 - 2026-09-02
 
 ### Animation kernel

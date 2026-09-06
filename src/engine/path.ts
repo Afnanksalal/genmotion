@@ -1,9 +1,11 @@
 import { svgPathProperties } from 'svg-path-properties';
 import { Path2D } from '@napi-rs/canvas';
+import { absoluteSvgPath, serializeSvgPath } from './svg-path.js';
 
 export interface PathSample { x: number; y: number; angle: number; normalX: number; normalY: number }
 
 export function pathMetrics(data: string): { length: number; bounds: { x: number; y: number; width: number; height: number } } {
+  data = normalizePath(data);
   const properties = new svgPathProperties(data);
   const length = properties.getTotalLength();
   const [left, top, right, bottom] = new Path2D(data).getBounds();
@@ -11,6 +13,8 @@ export function pathMetrics(data: string): { length: number; bounds: { x: number
 }
 
 export function samplePath(data: string, progress: number): PathSample {
+  if (!Number.isFinite(progress)) throw new Error('Path progress must be finite.');
+  data = normalizePath(data);
   const properties = new svgPathProperties(data);
   const length = properties.getTotalLength();
   const distance = Math.max(0, Math.min(1, progress)) * length;
@@ -20,6 +24,8 @@ export function samplePath(data: string, progress: number): PathSample {
 }
 
 export function flattenPath(data: string, start = 0, end = 1, tolerance = 1): Array<[number, number]> {
+  if (![start, end, tolerance].every(Number.isFinite) || tolerance <= 0) throw new Error('Path range must be finite and tolerance positive.');
+  data = normalizePath(data);
   const properties = new svgPathProperties(data);
   const length = properties.getTotalLength();
   const from = Math.max(0, Math.min(1, start));
@@ -32,7 +38,8 @@ export function flattenPath(data: string, start = 0, end = 1, tolerance = 1): Ar
   });
 }
 
-/** Canonical absolute M/L representation at a declared geometric tolerance. */
+/** Canonical absolute commands. The legacy tolerance argument remains accepted. */
 export function normalizePath(data: string, tolerance = 0.5): string {
-  return flattenPath(data, 0, 1, tolerance).map((point, index) => `${index === 0 ? 'M' : 'L'}${point[0].toFixed(4)} ${point[1].toFixed(4)}`).join(' ');
+  if (!Number.isFinite(tolerance) || tolerance <= 0) throw new Error('Path tolerance must be finite and positive.');
+  return serializeSvgPath(absoluteSvgPath(data));
 }

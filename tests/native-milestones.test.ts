@@ -41,7 +41,7 @@ describe('five native capability milestones', () => {
     expect(samplePath(data, 0.5).y).toBeGreaterThan(40);
     expect(samplePath(data, 0.5).normalY).toBeGreaterThan(0);
     expect(flattenPath(data, 0, 0.5, 2).at(-1)?.[0]).toBeCloseTo(50, 0);
-    expect(normalizePath('m0 0 l10 0', 1)).toMatch(/^M0\.0000 0\.0000 L/);
+    expect(normalizePath('m0 0 l10 0', 1)).toBe('M0 0 L10 0');
   });
 
   it('round-trips SRT and WebVTT cues', () => {

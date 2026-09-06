@@ -1,0 +1,13 @@
+# Projective transforms and reveals
+
+The native effect stack includes `corner-pin` and `perspective`. Corner pin accepts `quad`: four normalized full-canvas coordinates in source top-left, top-right, bottom-right, bottom-left order. `amount` interpolates from the identity quad to the supplied quad. Perspective uses `amount` for yaw in degrees, `angle` for pitch, and `center` for the normalized projection center. These transform the isolated canvas, including transparent margins, rather than the layer's geometry bounds.
+
+The renderer inverse-maps each output pixel through a homography and samples premultiplied RGBA with bilinear interpolation. Singular transforms produce a transparent surface. This implements a projected plane; it does not create a depth-buffered 3D scene. Corner coordinates are static; amount, yaw and pitch can use numeric keyframes.
+
+Scene presentations now also include `slide-up`, `slide-down`, `wipe-up`, `wipe-down`, `clock`, `flip`, `cube` and `door`. They share existing transition timing, boundary modes and composition overlays. Flip swaps faces at its edge-on midpoint. Cube projects adjacent faces. Door reveals an incoming plane hinged on its left edge. Their uncovered regions show the project background. Studio exposes the presentations in both transition inspectors.
+
+Reveal effects are `linear-reveal`, `clock-reveal`, `iris-reveal`, `blinds`, `noise-reveal`, `pixel-dissolve` and `luma-reveal`. Amount is the revealed fraction, with exact fully hidden and fully visible endpoints. Radius is feather width in output pixels; pixel dissolve uses hard cell thresholds. Angle rotates linear, clock and blind reveals. Frequency controls blind count, noise field density, or dissolve cell size in output pixels. Noise and dissolve use stable project/effect seeds. Luma reveal thresholds the current input's encoded-sRGB luminance. These effects multiply existing alpha; they do not fill transparent pixels.
+
+`scale`, `tile`, `translate`, `skew` and `turbulence` operate on isolated-canvas pixels. Scale and tile use a normalized center, tile wraps sampling across edges, translate uses amount in pixels and direction in degrees, and skew uses horizontal amount/vertical angle in degrees. Turbulence displaces both coordinates using independently seeded four-octave interpolated lattice fields; speed advances the field continuously at exact seek time. It is value-noise turbulence, not a physical fluid model.
+
+Implementation is awaiting the deferred regression and visual QA pass. Native tests have been added for homography endpoints, singular planes, cube endpoints, reveal coverage and tile seams but have not yet been run.

@@ -1,0 +1,17 @@
+# Caption pages, words and styles
+
+Timed caption words can carry explicit UTF-16 `startOffset` and `endOffset` positions into cue text. Without offsets, words match sequentially, so repeated words resolve to distinct positions. Word timing is relative to the caption layer, just like cue timing. Validation reports words outside their cue, overlapping words, duplicate cue IDs and incomplete text alignment.
+
+`highlightMode` selects `current-word`, `karaoke` or `none`. Current-word highlights only the active timed word; karaoke progressively reveals the highlight across each word and retains completed words. The native renderer maps source character offsets into wrapped lines and clips a redraw of the complete shaped line. It supports repeated words and wrapped captions. Direction can be `ltr` or `rtl`. Complex mixed-direction word positioning still needs dedicated shaping/visual QA; direction is not a substitute for a full bidirectional glyph-position API.
+
+Layer `speakerStyles` maps speaker names to style overrides, and each cue can supply `style`. Precedence is layer, then speaker, then cue. Styles support text/highlight/background/outline colors, outline width, font size/weight and direction. `showSpeaker` controls the speaker label; caption layers also support shadows. Existing backgrounds, padding, outlines, layer motion and effect stacks remain composable.
+
+`paginateCaptions` splits aligned timed words using maximum words, characters, duration, silence gap and explicit word `breakBefore`. It preserves actual word times and source text punctuation. Untimed or incompletely aligned cues are returned unchanged with diagnostics. It does not invent word timestamps. Single oversized words or retained cue lead/tail time can exceed requested limits and produce a diagnostic.
+
+`editCaptions` supports word correction, timing correction, page breaks, complete timing shifts, literal text replacement and pagination. Word correction updates source offsets for subsequent words. Text replacement clears affected word timing with a diagnostic so stale highlighting cannot silently survive changed text. Negative times and overlapping word edits are rejected.
+
+CLI `captions-edit <timed-json> --action <json>` and MCP `genmotion_captions_edit` return edited cues plus warnings. Studio provides search, literal replacement, word/timing correction, page limits, shift controls, cue/speaker styling and native previews. Saving uses the shared project transaction. Caption editor pages display 50 cues, and word correction displays up to 500 words; paginate oversized cues first.
+
+Implementation and added alignment/pagination/correction regressions await the deferred QA pass. Embedded subtitle delivery, multilingual track routing and complete bidirectional shaping remain open checklist work.
+
+Studio can create caption layers, import SRT/WebVTT/timed JSON and download all three formats. WebVTT import preserves speaker tags and inline timestamp segments, ignores NOTE/STYLE/REGION metadata blocks, and decodes escaped entities. A timestamped segment containing multiple words remains one timed token; no timing is invented within it. SRT exports speaker labels as plain text; WebVTT uses escaped voice tags. Timed JSON preserves full word timing and style metadata; SRT/WebVTT exports preserve cue timing, text and speaker labels rather than every native style or word-timing field.

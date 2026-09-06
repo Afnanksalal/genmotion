@@ -14,16 +14,24 @@ export type PatchOperation = z.infer<typeof patchOperationSchema>;
 
 function segments(pointerValue: string): string[] {
   if (pointerValue === '') return [];
+  if (!pointerValue.startsWith('/') || /~(?![01])/u.test(pointerValue)) throw new GenmotionError('PATCH_PATH_INVALID', 'Expected a valid RFC 6901 JSON Pointer.');
   const values = pointerValue.slice(1).split('/').map((part) => part.replaceAll('~1', '/').replaceAll('~0', '~'));
   if (values.some((part) => ['__proto__', 'prototype', 'constructor'].includes(part))) throw new GenmotionError('PATCH_PATH_FORBIDDEN', 'Patch paths may not modify object prototypes.');
   return values;
+}
+
+function arrayIndex(segment: string, pointerValue: string): number {
+  if (!/^(0|[1-9]\d*)$/.test(segment)) throw new GenmotionError('PATCH_PATH_INVALID', `Invalid array index: ${pointerValue}`);
+  const index = Number(segment);
+  if (!Number.isSafeInteger(index)) throw new GenmotionError('PATCH_PATH_INVALID', `Invalid array index: ${pointerValue}`);
+  return index;
 }
 
 function resolve(root: unknown, pointerValue: string): unknown {
   let value = root;
   for (const segment of segments(pointerValue)) {
     if (Array.isArray(value)) {
-      const index = Number(segment);
+      const index = arrayIndex(segment, pointerValue);
       if (!Number.isInteger(index) || index < 0 || index >= value.length) throw new GenmotionError('PATCH_PATH_INVALID', `Array index does not exist: ${pointerValue}`);
       value = value[index];
     } else if (typeof value === 'object' && value !== null && Object.hasOwn(value, segment)) value = (value as Record<string, unknown>)[segment];
@@ -44,7 +52,7 @@ function parent(root: unknown, pointerValue: string): { container: unknown[] | R
 function remove(root: unknown, pointerValue: string): unknown {
   const { container, key } = parent(root, pointerValue);
   if (Array.isArray(container)) {
-    const index = Number(key);
+    const index = arrayIndex(key, pointerValue);
     if (!Number.isInteger(index) || index < 0 || index >= container.length) throw new GenmotionError('PATCH_PATH_INVALID', `Array index does not exist: ${pointerValue}`);
     return container.splice(index, 1)[0];
   }
@@ -57,7 +65,7 @@ function remove(root: unknown, pointerValue: string): unknown {
 function add(root: unknown, pointerValue: string, value: unknown, replace = false): void {
   const { container, key } = parent(root, pointerValue);
   if (Array.isArray(container)) {
-    const index = key === '-' ? container.length : Number(key);
+    const index = key === '-' && !replace ? container.length : arrayIndex(key, pointerValue);
     if (!Number.isInteger(index) || index < 0 || index > container.length || (replace && index === container.length)) throw new GenmotionError('PATCH_PATH_INVALID', `Invalid array index: ${pointerValue}`);
     if (replace) container[index] = value;
     else container.splice(index, 0, value);
@@ -68,8 +76,17 @@ function add(root: unknown, pointerValue: string, value: unknown, replace = fals
 }
 
 export function applyPatch<T>(document: T, operations: PatchOperation[]): T {
-  const result = structuredClone(document);
+  let result = structuredClone(document);
   for (const operation of operations) {
+    patchOperationSchema.parse(operation);
+    segments(operation.path);
+    if (operation.op === 'move' || operation.op === 'copy') segments(operation.from);
+    if (operation.op === 'move' && operation.path.startsWith(operation.from + '/')) throw new GenmotionError('PATCH_MOVE_DESCENDANT', 'A value cannot be moved inside itself.');
+    if (operation.op === 'move' && operation.path === operation.from) { resolve(result, operation.from); continue; }
+    if (operation.path === '' && ['add', 'replace', 'copy', 'move'].includes(operation.op)) {
+      result = structuredClone(operation.op === 'add' || operation.op === 'replace' ? operation.value : resolve(result, (operation as Extract<PatchOperation, { op: 'copy' | 'move' }>).from)) as T;
+      continue;
+    }
     if (operation.op === 'test') {
       if (!isDeepStrictEqual(resolve(result, operation.path), operation.value)) throw new GenmotionError('PATCH_TEST_FAILED', `Patch precondition failed at ${operation.path}`);
     } else if (operation.op === 'remove') remove(result, operation.path);

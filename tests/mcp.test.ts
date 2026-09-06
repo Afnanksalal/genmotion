@@ -28,7 +28,10 @@ describe('Genmotion MCP server', () => {
     await cp(path.resolve('tests/fixtures/basic'), project, { recursive: true });
     const client = new Client({ name: 'genmotion-test', version: '1.0.0' });
     const transport = new StdioClientTransport({ command: process.execPath, args: [path.resolve('dist/mcp.js')], cwd: process.cwd(), stderr: 'pipe' });
-    await client.connect(transport);
+    const diagnostics: string[] = [];
+    transport.stderr?.on('data', (chunk: Buffer) => diagnostics.push(chunk.toString('utf8')));
+    try { await client.connect(transport); }
+    catch (error) { throw new Error(`MCP startup failed: ${diagnostics.join('')}`, { cause: error }); }
     try {
       const listed = await client.listTools();
       const names = listed.tools.map((tool) => tool.name);
@@ -38,6 +41,10 @@ describe('Genmotion MCP server', () => {
         'genmotion_render', 'genmotion_probe', 'genmotion_contact_sheet', 'genmotion_studio_start', 'genmotion_animation_inspect',
       ]));
       expect(new Set(names).size).toBe(names.length);
+      const textLayout = await client.callTool({ name: 'genmotion_text_measure', arguments: { project, address: { containerId: 'intro', layerId: 'title' } } });
+      expect(textLayout.structuredContent).toMatchObject({ fits: true, overflowX: false, overflowY: false });
+      const measuredAudio = await client.callTool({ name: 'genmotion_audio_measure', arguments: { input: project } });
+      expect(measuredAudio.structuredContent).toMatchObject({ silence: true, integratedLufs: null, truePeakDbtp: null });
       const saveTool = listed.tools.find((tool) => tool.name === 'genmotion_project_save');
       const saveProperties = saveTool?.inputSchema.properties as Record<string, { properties?: Record<string, unknown> }> | undefined;
       expect(Object.keys(saveProperties?.document?.properties ?? {})).toEqual(expect.arrayContaining(['scenes', 'brand']));
@@ -81,6 +88,32 @@ describe('Genmotion MCP server', () => {
       const patched = await client.callTool({ name: 'genmotion_project_patch', arguments: { project, expectedRevision: savedContent.revision, operations: [{ op: 'add', path: '/metadata/agentic', value: 'true' }], strict: false } });
       expect(patched.structuredContent).toMatchObject({ operationsApplied: 1 });
 
+      const target = { kind: 'scene', id: 'intro', layerId: 'title' };
+      const inspected = await client.callTool({ name: 'genmotion_edit_inspect', arguments: { project, target } });
+      expect(inspected.structuredContent).toMatchObject({ target, layer: { type: 'text' } });
+      const refused = await client.callTool({ name: 'genmotion_edit_capability', arguments: { project, edit: { op: 'text', target: { ...target, layerId: 'accent' }, text: 'Wrong target' } } });
+      expect(refused.structuredContent).toMatchObject({ allowed: false, code: 'EDIT_UNSUPPORTED' });
+      const expectedRevision = (patched.structuredContent as { revision: string }).revision;
+      const edits = [{ op: 'text', target, text: 'Tool edit' }];
+      const proposal = await client.callTool({ name: 'genmotion_edit', arguments: { project, expectedRevision, edits, strict: false, dryRun: true } });
+      expect(proposal.structuredContent).toMatchObject({ state: 'validated', changed: true, persisted: false });
+      const applied = await client.callTool({ name: 'genmotion_edit', arguments: { project, expectedRevision, edits, strict: false } });
+      expect(applied.structuredContent).toMatchObject({ state: 'saved', changed: true, affectedTargets: [target] });
+      const afterEdit = applied.structuredContent as { revision: string; inverse: unknown[] };
+      const undo = await client.callTool({ name: 'genmotion_project_patch', arguments: { project, expectedRevision: afterEdit.revision, operations: afterEdit.inverse, strict: false } });
+      expect(undo.isError).not.toBe(true);
+
+      const easingAddress = { kind: 'scene', id: 'intro', path: ['transitionOut', 'timing'] };
+      const copiedEasing = await client.callTool({ name: 'genmotion_easing_copy', arguments: { project, address: easingAddress } });
+      expect(copiedEasing.structuredContent).toMatchObject({ easing: 'linear' });
+      const easingRevision = (copiedEasing.structuredContent as { revision: string }).revision;
+      const pastedEasing = await client.callTool({ name: 'genmotion_easing_paste', arguments: { project, address: easingAddress, easing: 'sine-out', expectedRevision: easingRevision } });
+      expect(pastedEasing.structuredContent).toMatchObject({ state: 'saved', changed: true });
+      const configurations = await client.callTool({ name: 'genmotion_variants', arguments: { project, matrix: {} } });
+      expect(configurations.structuredContent).toMatchObject({ variants: [{ id: 'variant-0001', values: {} }] });
+      const booleanPath = await client.callTool({ name: 'genmotion_path_operate', arguments: { path: 'M10 10H60V60H10Z', operations: [{ op: 'subtract', path: 'M20 20H50V50H20Z' }] } });
+      expect(booleanPath.structuredContent).toMatchObject({ bounds: { x: 10, y: 10, width: 50, height: 50 } });
+
       const timeline = await client.callTool({ name: 'genmotion_timeline_inspect', arguments: { project, at: 0.5 } });
       const timelineContent = timeline.structuredContent as { scene?: { id?: string }; layers?: unknown[] };
       expect(timelineContent.scene?.id).toBe('intro');
@@ -94,6 +127,10 @@ describe('Genmotion MCP server', () => {
       const staggerContent = stagger.structuredContent as { schedule: number[]; windows: unknown[] };
       expect(staggerContent.schedule).toEqual([0.15000000000000002, 0.05, 0.05, 0.15000000000000002]);
       expect(staggerContent.windows).toHaveLength(4);
+      const kinematics = await client.callTool({ name: 'genmotion_animation_inspect', arguments: { action: 'kinematics', track: { id: 'speed', target: 'x', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 10 }] }, options: { samples: 3 } } });
+      expect((kinematics.structuredContent as { samples: Array<{ velocity: number[] }> }).samples[1]!.velocity[0]).toBeCloseTo(10, 6);
+      const spatial = await client.callTool({ name: 'genmotion_animation_inspect', arguments: { action: 'stagger', count: 2, each: 0.1, delay: 0.3, trail: 0.2, from: 'distance', positions: [[0, 0], [300, 400]], distanceUnit: 100 } });
+      expect(spatial.structuredContent).toMatchObject({ schedule: [0.3, 0.8], windows: [{ index: 0, delay: 0.3, trailEnd: 0.5 }, { index: 1, delay: 0.8, trailEnd: 1 }] });
       const typedTrack = await client.callTool({ name: 'genmotion_animation_inspect', arguments: { action: 'track', at: 0.5, seed: 1, track: { id: 'color', target: 'fill', keyframes: [{ at: 0, value: '#ff0000' }, { at: 1, value: '#0000ff' }] } } });
       expect((typedTrack.structuredContent as { value: string }).value).toMatch(/^rgb/);
 
@@ -102,15 +139,31 @@ describe('Genmotion MCP server', () => {
 
       const frame = path.join(directory, 'review.png');
       const frameResult = await client.callTool({ name: 'genmotion_frame', arguments: { project, at: 0.5, output: frame, resolution: { width: 640, height: 360 } } });
+      const subframe = await client.callTool({ name: 'genmotion_frame', arguments: { project, at: 0.35, subframe: true, output: path.join(directory, 'subframe.png') } });
+      expect(subframe.structuredContent).toMatchObject({ at: 0.35, frame: 10.5 });
       expect(frameResult.structuredContent).toMatchObject({ output: frame, resolution: { width: 640, height: 360 } });
       expect(frameResult.content).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'image', mimeType: 'image/png' })]));
 
       const video = path.join(directory, 'tool-render.mp4');
       const render = await client.callTool({ name: 'genmotion_render', arguments: { project, output: video, quality: 'high', resolution: { width: 640, height: 360 }, workers: 2, strict: false } });
       expect(render.structuredContent).toMatchObject({ width: 640, height: 360, quality: 'high', probe: { width: 640, height: 360, videoCodec: 'h264' } });
+      const audioOutput = path.join(directory, 'tool-mix.wav');
+      const audioRender = await client.callTool({ name: 'genmotion_audio_render', arguments: { project, output: audioOutput } });
+      expect(audioRender.structuredContent).toMatchObject({ output: audioOutput, duration: 1 });
+      expect((await stat(audioOutput)).size).toBeGreaterThan(44);
 
       const probe = await client.callTool({ name: 'genmotion_probe', arguments: { video } });
       expect(probe.structuredContent).toMatchObject({ width: 640, height: 360, videoCodec: 'h264' });
+      const linkSnapshot = await client.callTool({ name: 'genmotion_project_read', arguments: { project } });
+      const linkEdit = await client.callTool({ name: 'genmotion_edit', arguments: { project, expectedRevision: (linkSnapshot.structuredContent as { revision: string }).revision, edits: [{ op: 'property', target: { kind: 'scene', id: 'intro', layerId: 'accent' }, path: ['propertyLinks'], value: [{ target: 'transform.x', sourceLayerId: 'title', sourceProperty: 'transform.x', scale: 1, offset: 7, enabled: true }] }], strict: false } });
+      expect(linkEdit.isError).not.toBe(true);
+      const linkedTimeline = await client.callTool({ name: 'genmotion_timeline_inspect', arguments: { project, at: .5 } });
+      const linkedLayers = (linkedTimeline.structuredContent as { layers: Array<{ id: string; transform: { x: number } }> }).layers;
+      expect(linkedLayers.find((layer) => layer.id === 'accent')!.transform.x).toBe(linkedLayers.find((layer) => layer.id === 'title')!.transform.x + 7);
+      const briefSnapshot = await client.callTool({ name: 'genmotion_brief', arguments: { project } });
+      expect(briefSnapshot.structuredContent).toMatchObject({ missing: ['destination', 'aspect', 'language', 'audience', 'message', 'duration'] });
+      const briefSaved = await client.callTool({ name: 'genmotion_brief', arguments: { project, expectedRevision: (briefSnapshot.structuredContent as { revision: string }).revision, brief: { version: 1, message: { value: 'Native agentic motion', origin: 'user' }, language: { value: 'en', origin: 'inferred' } } } });
+      expect(briefSaved.structuredContent).toMatchObject({ userStated: ['message'], inferred: ['language'], resolved: ['language', 'message'] });
 
       const sheet = path.join(directory, 'contact-sheet.png');
       const contactSheet = await client.callTool({ name: 'genmotion_contact_sheet', arguments: { video, output: sheet, count: 4, columns: 2 } });

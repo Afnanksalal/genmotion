@@ -43,4 +43,15 @@ describe('agent-authored composition primitives', () => {
     expect(ease({ type: 'cubic-bezier', x1: 0.25, y1: 0.1, x2: 0.25, y2: 1 }, 0.5)).toBeGreaterThan(0.5);
     expect(ease({ type: 'spring', mass: 1, stiffness: 170, damping: 26, velocity: 0 }, 0)).toBeCloseTo(0, 5);
   });
+
+  it('enforces JSON pointer and array syntax and supports root replacement for undo', () => {
+    const source = { items: ['a', 'b'], nested: { child: 1 } };
+    for (const pointer of ['/items/01', '/items/-1', '/items/0x1', '/items/ 0', '/items/1e0', '/items/0~2']) {
+      expect(() => applyPatch(source, [{ op: 'replace', path: pointer, value: 'bad' }])).toThrow();
+    }
+    expect(() => applyPatch(source, [{ op: 'move', from: '/nested', path: '/nested/deeper' }])).toThrow(/inside itself/);
+    expect(applyPatch(source, [{ op: 'move', from: '/nested', path: '/nested' }])).toEqual(source);
+    expect(applyPatch(source, [{ op: 'replace', path: '', value: { items: [], nested: { child: 2 } } }])).toEqual({ items: [], nested: { child: 2 } });
+    expect(source.items).toEqual(['a', 'b']);
+  });
 });

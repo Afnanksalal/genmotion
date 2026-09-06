@@ -1,4 +1,13 @@
+import { nativeKernelSchema } from './native-kernel.js';
+import { imageAnimationSchema } from './image-animation.js';
+import { lookupTableSchema } from './lut.js';
+import { timelineMarkersSchema, timelineRangesSchema } from './markers.js';
 import { z } from 'zod';
+import { pathOperationsSchema } from './path-operations.js';
+import { audioEffectsSchema, audioNormalizationSchema } from './audio-effects.js';
+import { gradientSchema } from './paint.js';
+import { productionBriefSchema } from './brief.js';
+import { productionWorkflowSchema } from './production.js';
 
 const finite = z.number().finite();
 const nonNegative = finite.nonnegative();
@@ -45,6 +54,68 @@ export const animatedNumberSchema = z.union([
   }),
 ]);
 
+export const visualEffectTypeSchema = z.enum(['brightness', 'contrast', 'saturation', 'exposure', 'grayscale', 'invert', 'hue', 'sepia', 'tint', 'duotone', 'gamma', 'posterize', 'threshold', 'vignette', 'noise', 'scanlines', 'pixelate', 'dither', 'edge-detect', 'emboss', 'halftone', 'mirror', 'wave', 'twirl', 'bulge', 'kaleidoscope', 'barrel', 'chromatic-aberration', 'chroma-key', 'gaussian-blur', 'directional-blur', 'zoom-blur', 'glow', 'bloom', 'drop-shadow', 'vibrance', 'white-balance', 'shadows-highlights', 'levels', 'channel-mixer', 'curves', 'lift-gamma-gain', 'gradient-map', 'thermal', 'box-blur', 'radial-blur', 'outline', 'inner-shadow', 'lut', 'corner-pin', 'perspective', 'linear-reveal', 'clock-reveal', 'iris-reveal', 'blinds', 'noise-reveal', 'pixel-dissolve', 'luma-reveal', 'scale', 'tile', 'translate', 'skew', 'turbulence', 'custom']);
+export function visualEffectParameters(type: z.infer<typeof visualEffectTypeSchema>): string[] {
+  const fields = ['amount'];
+  if (['glow', 'bloom', 'drop-shadow', 'inner-shadow', 'chroma-key'].includes(type)) fields.push('radius');
+  if (['directional-blur', 'drop-shadow', 'inner-shadow', 'chromatic-aberration', 'kaleidoscope'].includes(type)) fields.push('angle');
+  if (['wave', 'scanlines'].includes(type)) fields.push('frequency');
+  if (type === 'wave') fields.push('speed');
+  if (type === 'white-balance') fields.push('temperature', 'tint');
+  if (type === 'shadows-highlights') fields.push('shadows', 'highlights');
+  if (type === 'levels') fields.push('inputBlack', 'inputWhite', 'outputBlack', 'outputWhite');
+  if (['tint', 'duotone', 'chroma-key', 'outline', 'drop-shadow', 'inner-shadow'].includes(type)) fields.push('color');
+  if (type === 'duotone') fields.push('secondaryColor');
+  if (['twirl', 'bulge', 'kaleidoscope', 'barrel', 'vignette', 'zoom-blur', 'radial-blur'].includes(type)) fields.push('center');
+  if (type === 'channel-mixer') fields.push('channelMatrix');
+  if (type === 'curves') fields.push('curve');
+  if (type === 'lift-gamma-gain') fields.push('lift', 'gamma', 'gain');
+  if (type === 'gradient-map') fields.push('gradient');
+  if (type === 'noise') fields.push('seed');
+  if (type === 'lut') fields.push('lut');
+  if (type === 'custom') fields.push('kernel', 'kernelUniforms');
+  if (type === 'corner-pin') fields.push('quad');
+  if (type === 'perspective') fields.push('angle', 'center');
+  if (['linear-reveal', 'clock-reveal', 'iris-reveal', 'blinds', 'noise-reveal', 'luma-reveal'].includes(type)) fields.push('radius');
+  if (['linear-reveal', 'clock-reveal', 'blinds', 'translate', 'skew'].includes(type)) fields.push('angle');
+  if (['blinds', 'noise-reveal', 'pixel-dissolve', 'turbulence'].includes(type)) fields.push('frequency');
+  if (['noise-reveal', 'pixel-dissolve', 'turbulence'].includes(type)) fields.push('seed');
+  if (type === 'turbulence') fields.push('speed');
+  if (['clock-reveal', 'iris-reveal', 'scale', 'tile', 'skew'].includes(type)) fields.push('center');
+  return fields;
+}
+export const visualEffectSchema = z.object({
+  id: identifier, type: visualEffectTypeSchema, enabled: z.boolean().default(true),
+  amount: animatedNumberSchema.optional(), radius: animatedNumberSchema.optional(), angle: animatedNumberSchema.optional(),
+  frequency: animatedNumberSchema.optional(), speed: animatedNumberSchema.optional(),
+  inputBlack: finite.min(0).max(1).optional(), inputWhite: finite.min(0).max(1).optional(), outputBlack: finite.min(0).max(1).optional(), outputWhite: finite.min(0).max(1).optional(),
+  temperature: animatedNumberSchema.optional(), tint: animatedNumberSchema.optional(), shadows: animatedNumberSchema.optional(), highlights: animatedNumberSchema.optional(),
+  channelMatrix: z.array(finite.min(-8).max(8)).length(12).optional(),
+  curve: z.array(z.tuple([finite.min(0).max(1), finite.min(0).max(1)])).min(2).max(256).refine((points) => points.every((point, index) => index === 0 || point[0] > points[index - 1]![0]), 'Curve inputs must increase').optional(),
+  lift: z.tuple([finite, finite, finite]).optional(), gamma: z.tuple([positive, positive, positive]).optional(), gain: z.tuple([finite, finite, finite]).optional(),
+  kernel: nativeKernelSchema.optional(), kernelUniforms: z.record(z.string(), animatedNumberSchema).optional(),
+  gradient: gradientSchema.optional(), lut: lookupTableSchema.optional(),
+  quad: z.tuple([pointSchema, pointSchema, pointSchema, pointSchema]).optional(),
+  center: pointSchema.optional(), color: color.optional(), secondaryColor: color.optional(), seed: z.number().int().optional(),
+}).strict().superRefine((effect, context) => {
+  const allowed = new Set(['id', 'type', 'enabled', ...visualEffectParameters(effect.type)]);
+  if (effect.type === 'custom') {
+    if (!effect.kernel) context.addIssue({ code: 'custom', path: ['kernel'], message: 'Custom effects require a validated native kernel' });
+    for (const name of Object.keys(effect.kernelUniforms ?? {})) if (!effect.kernel || !Object.hasOwn(effect.kernel.uniforms, name)) context.addIssue({ code: 'custom', path: ['kernelUniforms', name], message: 'Uniform is not declared by the kernel' });
+  }
+  if (effect.type === 'lut' && !effect.lut) context.addIssue({ code: 'custom', path: ['lut'], message: 'A LUT effect requires a compiled lookup table' });
+  for (const [key, value] of Object.entries(effect)) if (value !== undefined && !allowed.has(key)) context.addIssue({ code: 'custom', path: [key], message: `${effect.type} does not support ${key}` });
+});
+export const visualEffectsSchema = z.array(visualEffectSchema).max(32).refine((effects) => new Set(effects.map((effect) => effect.id)).size === effects.length, 'Visual effect IDs must be unique within a stack');
+export const layerMaskSchema = z.object({
+  id: identifier, enabled: z.boolean().default(true),
+  path: z.union([z.string().min(1).max(10_000_000), z.object({ keyframes: z.array(z.object({ at: nonNegative, value: z.string().min(1).max(10_000_000), ease: easingSchema.default('linear') }).strict()).min(1).max(4096) }).strict()]),
+  mode: z.enum(['add', 'subtract', 'intersect', 'exclude']).default('add'),
+  inverted: z.boolean().default(false), fillRule: z.enum(['nonzero', 'evenodd']).default('nonzero'),
+  opacity: animatedNumberSchema.default(1), feather: animatedNumberSchema.default(0), expansion: animatedNumberSchema.default(0),
+}).strict();
+export const layerMasksSchema = z.array(layerMaskSchema).max(32).refine((masks) => new Set(masks.map((mask) => mask.id)).size === masks.length, 'Mask IDs must be unique within a layer');
+
 export const DEFAULT_TRANSFORM = {
   x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, opacity: 1, blur: 0, anchorX: 0.5, anchorY: 0.5,
 } as const;
@@ -72,7 +143,7 @@ export const motionDirectiveSchema = z.object({
 export const animationTargetSchema = z.enum([
   'x', 'y', 'width', 'height', 'z', 'fontSize', 'letterSpacing', 'lineHeight',
   'strokeWidth', 'radius', 'progress', 'revealProgress', 'countProgress',
-  'trimStart', 'playbackRate', 'volume',
+  'trimStart', 'playbackRate', 'volume', 'sourceFrame', 'crop.x', 'crop.y', 'crop.width', 'crop.height', 'border.width',
   'color', 'fill', 'stroke', 'background', 'highlightColor', 'outlineColor',
   'control1', 'control2',
   'transform.x', 'transform.y', 'transform.scaleX', 'transform.scaleY',
@@ -80,11 +151,15 @@ export const animationTargetSchema = z.enum([
   'shadow.blur', 'shadow.offsetX', 'shadow.offsetY',
   'shadow.color',
   'followPath.progress',
+  'path', 'innerRadius', 'startAngle', 'endAngle', 'headSize', 'turns',
+  'gradientFill', 'gradientStroke',
 ]);
 
 export const animationValueSchema = z.union([
   finite,
   color,
+  z.string().max(10_000_000).regex(/^\s*[Mm]/, 'Expected SVG path data'),
+  gradientSchema,
   z.tuple([finite, finite]),
   z.tuple([finite, finite, finite, finite]),
 ]);
@@ -115,10 +190,16 @@ export const animationTrackSchema = z.object({
   extrapolate: extrapolationSchema.default('clamp'),
   extrapolateLeft: extrapolationSchema.optional(),
   extrapolateRight: extrapolationSchema.optional(),
-  interpolation: z.enum(['linear', 'shortest-angle', 'discrete']).optional(),
+  interpolation: z.enum(['linear', 'shortest-angle', 'discrete', 'path']).optional(),
   noise: proceduralNoiseSchema.optional(),
   enabled: z.boolean().default(true),
+  group: identifier.optional(),
+  solo: z.boolean().optional(),
+  locked: z.boolean().optional(),
 }).strict();
+
+export const trackGroupSchema = z.object({ id: identifier, muted: z.boolean().optional(), solo: z.boolean().optional(), locked: z.boolean().optional() }).strict();
+export const propertyLinkSchema = z.object({ target: animationTargetSchema, sourceLayerId: identifier, sourceProperty: animationTargetSchema, scale: finite.default(1), offset: finite.default(0), enabled: z.boolean().default(true) }).strict();
 
 export const layerConstraintSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('follow'), target: identifier, offsetX: finite.default(0), offsetY: finite.default(0) }).strict(),
@@ -134,9 +215,13 @@ export const layerConstraintSchema = z.discriminatedUnion('type', [
 
 export const staggerSchema = z.object({
   index: z.number().int().nonnegative(),
-  count: z.number().int().positive(),
+  count: z.number().int().positive().max(100_000),
   each: nonNegative.default(0.08),
-  from: z.enum(['start', 'end', 'center', 'edges', 'random']).default('start'),
+  from: z.enum(['start', 'end', 'center', 'edges', 'random', 'distance']).default('start'),
+  position: pointSchema.optional(),
+  origin: pointSchema.optional(),
+  distanceUnit: positive.optional(),
+  delay: nonNegative.optional(),
   seed: z.number().int().default(0),
   trail: nonNegative.default(0),
 }).strict().refine((value) => value.index < value.count, { message: 'Stagger index must be smaller than count.' });
@@ -153,6 +238,10 @@ const baseLayerSchema = z.object({
   tags: z.array(z.string()).default([]),
   motion: z.array(motionDirectiveSchema).default([]),
   tracks: z.array(animationTrackSchema).default([]),
+  trackGroups: z.array(trackGroupSchema).max(256).optional(),
+  propertyLinks: z.array(propertyLinkSchema).max(256).optional(),
+  effects: visualEffectsSchema.optional(),
+  masks: layerMasksSchema.optional(),
   parentId: identifier.optional(),
   constraints: z.array(layerConstraintSchema).default([]),
   stagger: staggerSchema.optional(),
@@ -179,12 +268,17 @@ export const textLayerSchema = baseLayerSchema.extend({
   fontWeight: z.union([z.number().int().min(100).max(900), z.enum(['normal', 'bold'])]).default(400),
   fontStyle: z.enum(['normal', 'italic']).default('normal'),
   color: color,
+  gradientFill: gradientSchema.optional(),
   align: z.enum(['left', 'center', 'right']).default('left'),
   verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
   lineHeight: positive.default(1.15),
   letterSpacing: finite.default(0),
   maxLines: z.number().int().positive().optional(),
   fit: z.enum(['none', 'shrink']).default('shrink'),
+  minFontSize: positive.optional(),
+  maxFontSize: positive.optional(),
+  autoSize: z.enum(['none', 'height', 'both']).optional(),
+  breakWords: z.boolean().optional(),
   reveal: z.enum(['none', 'words', 'characters', 'lines']).default('none'),
   revealProgress: animatedNumberSchema.default(1),
   countFrom: finite.optional(),
@@ -200,17 +294,28 @@ export const textLayerSchema = baseLayerSchema.extend({
 
 export const shapeLayerSchema = baseLayerSchema.extend({
   type: z.literal('shape'),
-  shape: z.enum(['rect', 'round-rect', 'ellipse', 'line', 'bezier', 'polygon', 'path']),
+  shape: z.enum(['rect', 'round-rect', 'ellipse', 'line', 'bezier', 'polygon', 'path', 'arc', 'pie', 'callout', 'arrow', 'star', 'spark', 'heart', 'regular-polygon', 'triangle', 'donut', 'ring', 'spiral', 'waveform', 'line-chart', 'area-chart']),
   x: finite,
   y: finite,
   width: nonNegative,
   height: nonNegative,
   fill: color.optional(),
+  gradientFill: gradientSchema.optional(),
+  gradientStroke: gradientSchema.optional(),
   stroke: color.optional(),
   strokeWidth: nonNegative.default(0),
   radius: nonNegative.default(0),
   points: z.array(pointSchema).optional(),
   path: z.string().min(1).optional(),
+  pathOperations: pathOperationsSchema.optional(),
+  sides: z.number().int().min(3).max(256).optional(),
+  innerRadius: finite.min(0).max(1).optional(),
+  startAngle: finite.optional(),
+  endAngle: finite.optional(),
+  clockwise: z.boolean().optional(),
+  headSize: finite.min(0.01).max(0.99).optional(),
+  turns: finite.min(0.1).max(50).optional(),
+  samples: z.array(finite).min(2).max(10_000).optional(),
   startAnchor: identifier.optional(),
   endAnchor: identifier.optional(),
   centerAnchor: identifier.optional(),
@@ -220,31 +325,39 @@ export const shapeLayerSchema = baseLayerSchema.extend({
   shadow: z.object({ color, blur: nonNegative, offsetX: finite.default(0), offsetY: finite.default(0) }).optional(),
 }).refine((shape) => shape.width > 0 || shape.height > 0 || Boolean(shape.endAnchor), { message: 'A shape needs a non-zero width or height, or an anchored endpoint.' })
   .refine((shape) => shape.shape !== 'path' || Boolean(shape.path), { message: 'A path shape requires SVG path data.' })
+  .refine((shape) => !shape.pathOperations?.length || shape.shape === 'path', { message: 'Path operations require a path shape.' })
   .refine((shape) => shape.shape !== 'bezier' || Boolean(shape.control1 && shape.control2), { message: 'A bezier shape requires control1 and control2.' })
   .refine((shape) => !shape.centerAnchor || shape.shape === 'ellipse', { message: 'centerAnchor is only valid on ellipse shapes.' })
   .refine((shape) => !(shape.startAnchor || shape.endAnchor) || shape.shape === 'line' || shape.shape === 'bezier', { message: 'startAnchor and endAnchor are only valid on line or bezier shapes.' })
   .refine((shape) => !(shape.control1 || shape.control2) || shape.shape === 'bezier', { message: 'Bezier control points are only valid on bezier shapes.' });
 
+export const mediaCropSchema = z.object({ x: animatedNumberSchema, y: animatedNumberSchema, width: animatedNumberSchema, height: animatedNumberSchema, unit: z.enum(['pixels', 'ratio']).optional() }).strict();
+const mediaBorderSchema = z.object({ width: animatedNumberSchema, color }).strict();
 export const imageLayerSchema = baseLayerSchema.extend({
   type: z.literal('image'),
+  sourceAnimation: imageAnimationSchema.optional(), sourceFrame: animatedNumberSchema.optional(),
   src: z.string().min(1),
   x: finite,
   y: finite,
   width: positive,
   height: positive,
-  fit: z.enum(['cover', 'contain', 'fill']).default('cover'),
+  fit: z.enum(['cover', 'contain', 'fill', 'stretch']).default('cover'),
   radius: nonNegative.default(0),
-  crop: z.object({ x: nonNegative, y: nonNegative, width: positive, height: positive }).optional(),
+  crop: mediaCropSchema.optional(),
+  cornerRadii: z.tuple([nonNegative, nonNegative, nonNegative, nonNegative]).optional(), border: mediaBorderSchema.optional(),
 });
 
 export const videoLayerSchema = baseLayerSchema.extend({
   type: z.literal('video'),
+  loop: z.boolean().default(false),
+  crop: mediaCropSchema.optional(),
+  cornerRadii: z.tuple([nonNegative, nonNegative, nonNegative, nonNegative]).optional(), border: mediaBorderSchema.optional(),
   src: z.string().min(1),
   x: finite,
   y: finite,
   width: positive,
   height: positive,
-  fit: z.enum(['cover', 'contain', 'fill']).default('cover'),
+  fit: z.enum(['cover', 'contain', 'fill', 'stretch']).default('cover'),
   radius: nonNegative.default(0),
   trimStart: nonNegative.default(0),
   playbackRate: positive.default(1),
@@ -254,26 +367,39 @@ export const videoLayerSchema = baseLayerSchema.extend({
 export const compositionLayerSchema = baseLayerSchema.extend({
   type: z.literal('composition'),
   compositionId: identifier,
+  parameterValues: z.record(z.string(), z.lazy(() => parameterValueSchema)).optional(),
   x: finite,
   y: finite,
   width: positive,
   height: positive,
   timeOffset: finite.default(0),
-  timeScale: positive.default(1),
+  timeScale: finite.refine((value) => value !== 0, 'Time scale cannot be zero; use freeze for frame holds').default(1),
   loop: z.boolean().default(false),
+  loopMode: z.enum(['repeat', 'ping-pong']).optional(),
+  loopCount: z.number().int().positive().optional(),
+  trimBefore: nonNegative.optional(),
+  trimAfter: nonNegative.optional(),
+  timeRemap: animatedNumberSchema.optional(),
+  freeze: z.object({ frame: z.number().int().nonnegative(), from: nonNegative.optional(), to: positive.optional() }).strict().refine((value) => value.to === undefined || value.to > (value.from ?? 0), 'Freeze interval must have positive duration').optional(),
+  clipToBounds: z.boolean().optional(),
 });
 
+export const captionStyleSchema = z.object({ color: color.optional(), highlightColor: color.optional(), background: color.optional(), outlineColor: color.optional(), outlineWidth: nonNegative.optional(), fontSize: positive.optional(), fontWeight: z.union([z.number().int().min(100).max(900), z.enum(['normal', 'bold'])]).optional(), direction: z.enum(['ltr', 'rtl']).optional() }).strict();
 export const captionCueSchema = z.object({
   id: identifier,
   start: nonNegative,
   end: positive,
   text: z.string().min(1),
   speaker: z.string().min(1).optional(),
-  words: z.array(z.object({ text: z.string(), start: nonNegative, end: positive }).strict()).default([]),
+  style: captionStyleSchema.optional(),
+  words: z.array(z.object({ text: z.string(), start: nonNegative, end: positive, startOffset: z.number().int().nonnegative().optional(), endOffset: z.number().int().nonnegative().optional(), breakBefore: z.boolean().optional() }).strict().refine((word) => word.end > word.start, 'Word end must follow start')).default([]),
 }).strict().refine((cue) => cue.end > cue.start, { message: 'Caption cue end must be after start.' });
 
 export const captionLayerSchema = baseLayerSchema.extend({
   type: z.literal('caption'),
+  direction: z.enum(['ltr', 'rtl']).default('ltr'), highlightMode: z.enum(['current-word', 'karaoke', 'none']).default('current-word'),
+  showSpeaker: z.boolean().default(true), speakerStyles: z.record(z.string().min(1), captionStyleSchema).optional(),
+  shadow: z.object({ color, blur: nonNegative, offsetX: finite.default(0), offsetY: finite.default(0) }).optional(),
   x: finite,
   y: finite,
   width: positive,
@@ -295,7 +421,13 @@ export const captionLayerSchema = baseLayerSchema.extend({
   safeArea: z.boolean().default(true),
 });
 
+export const adjustmentLayerSchema = baseLayerSchema.extend({
+  type: z.literal('adjustment'), x: finite, y: finite, width: positive, height: positive,
+  blendMode: z.literal('source-over').default('source-over'),
+});
+
 export const layerSchema = z.discriminatedUnion('type', [
+  adjustmentLayerSchema,
   textLayerSchema,
   shapeLayerSchema,
   imageLayerSchema,
@@ -308,7 +440,7 @@ export const transitionSchema = z.object({
   type: z.enum(['cut', 'crossfade', 'slide-left', 'slide-right', 'push-up', 'zoom', 'blur']),
   duration: nonNegative.max(3).default(0.4),
   ease: easingSchema.default('cubic-in-out'),
-  presentation: z.enum(['cut', 'crossfade', 'slide-left', 'slide-right', 'push-up', 'zoom', 'blur', 'wipe-left', 'wipe-right', 'iris']).optional(),
+  presentation: z.enum(['cut', 'crossfade', 'slide-left', 'slide-right', 'push-up', 'zoom', 'blur', 'wipe-left', 'wipe-right', 'iris', 'slide-up', 'slide-down', 'wipe-up', 'wipe-down', 'clock', 'flip', 'cube', 'door']).optional(),
   timing: easingSchema.optional(),
   mode: z.enum(['symmetric', 'incoming', 'outgoing']).optional(),
   overlayCompositionId: identifier.optional(),
@@ -316,22 +448,62 @@ export const transitionSchema = z.object({
 
 export const compositionSchema = z.object({
   id: identifier,
+  parameters: z.array(z.lazy(() => parameterSchema)).optional(),
+  fps: z.number().int().min(1).max(120).optional(),
   width: positive,
   height: positive,
   duration: positive,
   background: color.optional(),
   layers: z.array(layerSchema).min(1),
+  effects: visualEffectsSchema.optional(),
 }).strict();
 
-export const parameterSchema = z.discriminatedUnion('type', [
-  z.object({ id: identifier, label: z.string().min(1), type: z.literal('number'), default: finite, min: finite.optional(), max: finite.optional(), step: positive.optional() }).strict(),
-  z.object({ id: identifier, label: z.string().min(1), type: z.literal('boolean'), default: z.boolean() }).strict(),
-  z.object({ id: identifier, label: z.string().min(1), type: z.literal('string'), default: z.string(), maxLength: z.number().int().positive().optional() }).strict(),
-  z.object({ id: identifier, label: z.string().min(1), type: z.literal('color'), default: color }).strict(),
-  z.object({ id: identifier, label: z.string().min(1), type: z.literal('enum'), default: z.string(), options: z.array(z.string()).min(1) }).strict(),
-]);
+export type ParameterValue = string | number | boolean | null | ParameterValue[] | { [key: string]: ParameterValue };
+export const parameterValueSchema: z.ZodType<ParameterValue> = z.lazy(() => z.preprocess((value, context) => {
+  if (value && typeof value === 'object' && Object.keys(value).some((key) => ['__proto__', 'prototype', 'constructor'].includes(key))) context.addIssue({ code: 'custom', message: 'Unsafe property' });
+  return value;
+}, z.union([
+  finite, z.boolean(), z.string(), z.null(), z.array(parameterValueSchema),
+  z.record(z.string().refine((key) => !['__proto__', 'prototype', 'constructor'].includes(key), 'Unsafe property'), parameterValueSchema),
+])));
 
-export const variantSchema = z.object({ id: identifier, label: z.string().min(1), values: z.record(z.string(), z.union([finite, z.boolean(), z.string()])) }).strict();
+export interface ParameterDefinition {
+  id: string;
+  label: string;
+  type: 'number' | 'boolean' | 'string' | 'color' | 'enum' | 'file' | 'asset' | 'font' | 'dimension' | 'duration' | 'object' | 'array';
+  default: ParameterValue;
+  optional?: boolean | undefined;
+  description?: string | undefined;
+  group?: string | undefined;
+  min?: number | undefined;
+  max?: number | undefined;
+  step?: number | undefined;
+  minLength?: number | undefined;
+  maxLength?: number | undefined;
+  options?: string[] | undefined;
+  properties?: Record<string, ParameterDefinition> | undefined;
+  items?: ParameterDefinition | undefined;
+}
+
+export const parameterSchema: z.ZodType<ParameterDefinition> = z.lazy(() => z.object({
+  id: identifier.refine((id) => !['__proto__', 'prototype', 'constructor'].includes(id), 'Unsafe parameter identifier'),
+  label: z.string().min(1),
+  type: z.enum(['number', 'boolean', 'string', 'color', 'enum', 'file', 'asset', 'font', 'dimension', 'duration', 'object', 'array']),
+  default: parameterValueSchema,
+  optional: z.boolean().optional(), description: z.string().optional(), group: z.string().optional(),
+  min: finite.optional(), max: finite.optional(), step: positive.optional(),
+  minLength: z.number().int().nonnegative().optional(), maxLength: z.number().int().nonnegative().optional(),
+  options: z.array(z.string()).min(1).optional(),
+  properties: z.record(identifier, parameterSchema).optional(), items: parameterSchema.optional(),
+}).strict().superRefine((definition, context) => {
+  if (definition.min !== undefined && definition.max !== undefined && definition.min > definition.max) context.addIssue({ code: 'custom', message: 'Minimum exceeds maximum' });
+  if (definition.minLength !== undefined && definition.maxLength !== undefined && definition.minLength > definition.maxLength) context.addIssue({ code: 'custom', message: 'Minimum length exceeds maximum length' });
+  if (definition.type === 'enum' && !definition.options) context.addIssue({ code: 'custom', message: 'Enum requires options' });
+  if (definition.type === 'object' && !definition.properties) context.addIssue({ code: 'custom', message: 'Object requires properties' });
+  if (definition.type === 'array' && !definition.items) context.addIssue({ code: 'custom', message: 'Array requires items' });
+}));
+
+export const variantSchema = z.object({ id: identifier, label: z.string().min(1), values: z.record(z.string(), parameterValueSchema) }).strict();
 
 export const sceneSchema = z.object({
   id: z.string().min(1).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/),
@@ -339,6 +511,7 @@ export const sceneSchema = z.object({
   duration: positive,
   background: color,
   layers: z.array(layerSchema).min(1),
+  effects: visualEffectsSchema.optional(),
   transitionIn: transitionSchema.default({ type: 'cut', duration: 0, ease: 'linear' }),
   transitionOut: transitionSchema.default({ type: 'cut', duration: 0, ease: 'linear' }),
   referenceDecisions: z.array(z.object({
@@ -357,6 +530,11 @@ export const audioTrackSchema = z.object({
   trimStart: nonNegative.default(0),
   duration: positive.optional(),
   volume: finite.min(0).max(2).default(1),
+  gainDb: finite.min(-96).max(24).optional(),
+  playbackRate: finite.min(0.0625).max(16).optional(),
+  reverse: z.boolean().optional(),
+  preservePitch: z.boolean().optional(),
+  effects: audioEffectsSchema.optional(),
   fadeIn: nonNegative.default(0),
   fadeOut: nonNegative.default(0),
   loop: z.boolean().default(false),
@@ -371,13 +549,16 @@ export const projectSchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string().min(1).regex(/^[a-z0-9][a-z0-9-]*$/),
   title: z.string().min(1),
+  productionBrief: productionBriefSchema.optional(),
+  productionWorkflow: productionWorkflowSchema.optional(),
+  markers: timelineMarkersSchema.optional(), ranges: timelineRangesSchema.optional(),
   width: z.number().int().min(64).max(8192),
   height: z.number().int().min(64).max(8192),
   fps: z.number().int().min(1).max(120),
   seed: z.number().int().default(1),
   anchors: z.array(geometryAnchorSchema).default([]),
   parameters: z.array(parameterSchema).default([]),
-  parameterValues: z.record(z.string(), z.union([finite, z.boolean(), z.string()])).default({}),
+  parameterValues: z.record(z.string(), parameterValueSchema).default({}),
   variants: z.array(variantSchema).default([]),
   compositions: z.array(compositionSchema).default([]),
   brand: z.object({
@@ -391,6 +572,13 @@ export const projectSchema = z.object({
   }),
   scenes: z.array(sceneSchema).min(1),
   audio: z.array(audioTrackSchema).default([]),
+  audioNormalization: audioNormalizationSchema.optional(),
+  audioDucking: z.object({
+    thresholdDb: finite.min(-60).max(0).default(-27.9588),
+    ratio: finite.min(1).max(20).default(8),
+    attackMs: finite.min(0.01).max(2_000).default(20),
+    releaseMs: finite.min(0.01).max(9_000).default(350),
+  }).strict().optional(),
   metadata: z.record(z.string(), z.string()).default({}),
 });
 
@@ -404,6 +592,7 @@ export type Stagger = z.infer<typeof staggerSchema>;
 export type GeometryAnchor = z.infer<typeof geometryAnchorSchema>;
 export type AnimatedNumber = z.infer<typeof animatedNumberSchema>;
 export type AnimationTrack = z.infer<typeof animationTrackSchema>;
+export type VisualEffect = z.infer<typeof visualEffectSchema>;
 export type Transform = z.infer<typeof transformSchema>;
 export type Layer = z.infer<typeof layerSchema>;
 export type TextLayer = z.infer<typeof textLayerSchema>;

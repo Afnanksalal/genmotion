@@ -21,5 +21,7 @@ describe('project asset confinement', () => {
     await writeFile(path.join(outside, 'secret.png'), 'not an image');
     await symlink(outside, path.join(project, 'assets', 'linked'), process.platform === 'win32' ? 'junction' : 'dir');
     expect(() => resolveProjectAsset(project, 'assets/linked/secret.png')).toThrow(/symlink|junction/i);
+    expect(() => resolveProjectAsset(project, 'assets/linked/not-created/nested.png')).toThrow(/symlink|junction/i);
+    expect(resolveProjectAsset(project, 'assets/not-created/nested.png')).toBe(path.join(project, 'assets', 'not-created', 'nested.png'));
   });
 });

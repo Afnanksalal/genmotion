@@ -5,14 +5,79 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { loadProject } from '../src/ir/loader.js';
 import { renderFramePng } from '../src/engine/draw.js';
-import { renderProject, resolveRenderResolution } from '../src/engine/render.js';
+import { defaultVideoExtension, renderProject, resolveRenderResolution, resolveRenderLimits, validateOutputContainer, type RenderStage, type VideoCodec } from '../src/engine/render.js';
 import { runProcess } from '../src/engine/process.js';
+import { audioEffectsSchema } from '../src/ir/audio-effects.js';
 
 const fixture = path.resolve('tests/fixtures/basic');
 const temporary: string[] = [];
 afterEach(async () => { await Promise.all(temporary.splice(0).map((directory) => rm(directory, { recursive: true, force: true }))); });
 
 describe('native renderer', () => {
+  it.each(['h264', 'h265', 'vp9', 'prores'] satisfies VideoCodec[])('encodes and decodes %s with audio in its delivery container', async (codec) => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-codec-'));
+    temporary.push(directory);
+    await runProcess('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=1', path.join(directory, 'tone.wav')]);
+    const loaded = await loadProject(fixture);
+    loaded.projectDir = directory;
+    loaded.project.fps = 4;
+    loaded.project.audio = [{ id: 'tone', src: 'tone.wav', start: 0, trimStart: 0, volume: 0.2, pan: 0, fadeIn: 0, fadeOut: 0, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' }];
+    Object.assign(loaded.project.audio[0]!, { gainDb: -3, reverse: true, effects: audioEffectsSchema.parse([
+      { id: 'hp', type: 'highpass', frequency: 80 }, { id: 'lp', type: 'lowpass', frequency: 8000 },
+      { id: 'eq', type: 'equalizer', frequency: 440, gainDb: -3 }, { id: 'gate', type: 'gate', thresholdDb: -50 },
+      { id: 'compressor', type: 'compressor', ratio: 2 }, { id: 'limiter', type: 'limiter', ceilingDb: -2 },
+    ]) });
+    const result = await renderProject(loaded, { output: path.join(directory, 'master' + defaultVideoExtension(codec)), quality: 'draft', codec, workers: 1 });
+    expect(result.probe).toMatchObject({ videoCodec: codec === 'h265' ? 'hevc' : codec, audioCodec: codec === 'vp9' ? 'opus' : 'aac', width: 320, height: 180, frameRate: 4 });
+    await runProcess('ffmpeg', ['-v', 'error', '-xerror', '-i', result.output, '-f', 'null', '-']);
+  }, 30_000);
+
+  it('rejects an incompatible delivery container before rendering', () => {
+    expect(() => validateOutputContainer('master.mp4', 'vp9')).toThrow(/requires .webm/);
+    expect(() => validateOutputContainer('master.webm', 'prores')).toThrow(/requires .mov/);
+  });
+
+  it('enforces deadlines and rejects competing writers without replacing an accepted master', async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-deadline-'));
+    temporary.push(directory);
+    const output = path.join(directory, 'master.mp4');
+    await writeFile(output, 'accepted master');
+    const loaded = await loadProject(fixture);
+    const controller = new AbortController();
+    const first = renderProject(loaded, { output, quality: 'draft', signal: controller.signal });
+    await expect(renderProject(loaded, { output, quality: 'draft' })).rejects.toMatchObject({ code: 'OUTPUT_BUSY' });
+    controller.abort();
+    await expect(first).rejects.toMatchObject({ code: 'RENDER_ABORTED' });
+    await expect(renderProject(loaded, { output, quality: 'high', timeoutMs: 1 })).rejects.toMatchObject({ code: 'RENDER_TIMEOUT' });
+    expect(await readFile(output, 'utf8')).toBe('accepted master');
+    expect(await readdir(directory)).toEqual(['master.mp4']);
+  });
+
+  it('reserves only the workers that fit the frame count and byte limits', () => {
+    expect(resolveRenderLimits({ width: 1920, height: 1080 }, { workers: 8, maxBufferedFrames: 4, maxBufferedBytes: 1920 * 1080 * 4 * 2 })).toMatchObject({ workers: 2, capacity: 2 });
+    expect(() => resolveRenderLimits({ width: 1920, height: 1080 }, { maxBufferedBytes: 100 })).toThrow(/one output frame/);
+    expect(() => resolveRenderLimits({ width: 320, height: 180 }, { workers: Number.NaN })).toThrow(/positive safe integer/);
+  });
+
+  it('preserves the accepted output and cleans staging on failure or cancellation in every stage', async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-atomic-'));
+    temporary.push(directory);
+    const output = path.join(directory, 'master.mp4');
+    await writeFile(output, 'accepted master');
+    const loaded = await loadProject(fixture);
+    loaded.project = { ...loaded.project, fps: 1 };
+    for (const stage of ['preparing', 'rendering', 'encoding', 'mixing', 'verifying'] satisfies RenderStage[]) {
+      const controller = new AbortController();
+      await expect(renderProject(loaded, { output, quality: 'draft', workers: 1, signal: controller.signal, onProgress: (progress) => { if (progress.stage === stage) controller.abort(); } })).rejects.toMatchObject({ code: 'RENDER_ABORTED' });
+      expect(await readFile(output, 'utf8')).toBe('accepted master');
+      expect(await readdir(directory)).toEqual(['master.mp4']);
+    }
+    loaded.project = { ...loaded.project, audio: [{ id: 'missing', src: 'missing.wav', start: 0, trimStart: 0, volume: 1, pan: 0, fadeIn: 0, fadeOut: 0, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' }] };
+    await expect(renderProject(loaded, { output, quality: 'draft', workers: 1 })).rejects.toThrow();
+    expect(await readFile(output, 'utf8')).toBe('accepted master');
+    expect(await readdir(directory)).toEqual(['master.mp4']);
+  });
+
   it('maps export quality to a real delivery resolution', () => {
     expect(resolveRenderResolution({ width: 320, height: 180 }, 'draft')).toEqual({ width: 320, height: 180 });
     expect(resolveRenderResolution({ width: 320, height: 180 }, 'standard')).toEqual({ width: 1280, height: 720 });

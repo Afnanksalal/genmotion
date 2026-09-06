@@ -24,16 +24,19 @@ function trackClock(track: AnimationTrack, time: number): TrackClock {
   return { time: Math.abs(iteration) % 2 === 0 ? first + cycle : last - cycle, extend: false, identity: false };
 }
 
-function readValue(target: Record<string, unknown>, path: string[], time: number): AnimationValue | undefined {
+export function readAnimationValue(target: Record<string, unknown>, path: string[], time: number): AnimationValue | undefined {
+  if (path.some((part) => ['__proto__', 'constructor', 'prototype'].includes(part))) throw new Error('Unsafe property path');
   let cursor: unknown = target;
   for (const part of path) cursor = typeof cursor === 'object' && cursor !== null ? (cursor as Record<string, unknown>)[part] : undefined;
   if (typeof cursor === 'number' || typeof cursor === 'string') return cursor;
+  if (typeof cursor === 'object' && cursor !== null && 'stops' in cursor) return cursor as AnimationValue;
   if (Array.isArray(cursor) && (cursor.length === 2 || cursor.length === 4) && cursor.every((value) => typeof value === 'number')) return cursor as AnimationValue;
   if (typeof cursor === 'object' && cursor !== null && 'keyframes' in cursor) return evaluateNumber(cursor as AnimatedNumber, time);
   return undefined;
 }
 
-function writeValue(target: Record<string, unknown>, path: string[], value: AnimationValue): void {
+export function writeAnimationValue(target: Record<string, unknown>, path: string[], value: AnimationValue): void {
+  if (!path.length || path.some((part) => ['__proto__', 'constructor', 'prototype'].includes(part))) throw new Error('Unsafe property path');
   let cursor = target;
   for (const part of path.slice(0, -1)) {
     const next = cursor[part];
@@ -66,21 +69,24 @@ export function evaluateTrack(track: AnimationTrack, time: number, projectSeed =
   const clock = trackClock(track, time);
   if (clock.identity) return undefined;
   const value = clock.extend
-    ? extendAnimationFrames(track.keyframes, clock.time, track.interpolation ?? 'linear')
-    : evaluateAnimationFrames(track.keyframes, clock.time, track.interpolation ?? 'linear');
+    ? extendAnimationFrames(track.keyframes, clock.time, track.interpolation ?? (track.target === 'path' ? 'path' : 'linear'))
+    : evaluateAnimationFrames(track.keyframes, clock.time, track.interpolation ?? (track.target === 'path' ? 'path' : 'linear'));
   return withNoise(value, track, time, projectSeed);
 }
 
 export function evaluateLayerTracks(layer: Layer, time: number, projectSeed = 0): Layer {
   if (layer.tracks.length === 0) return layer;
   const evaluated = structuredClone(layer);
-  for (const track of layer.tracks) {
-    if (!track.enabled) continue;
+  const groups = new Map(layer.trackGroups?.map((group) => [group.id, group]));
+  const candidates = layer.tracks.filter((track) => track.enabled && !groups.get(track.group ?? '')?.muted);
+  const soloed = candidates.some((track) => track.solo || groups.get(track.group ?? '')?.solo);
+  for (const track of candidates) {
+    if (soloed && !track.solo && !groups.get(track.group ?? '')?.solo) continue;
     const path = track.target.split('.');
     const value = evaluateTrack(track, time, projectSeed);
     if (value === undefined) continue;
     const record = evaluated as unknown as Record<string, unknown>;
-    writeValue(record, path, combine(readValue(record, path, time), value, track.operation));
+    writeAnimationValue(record, path, combine(readAnimationValue(record, path, time), value, track.operation));
   }
   return evaluated;
 }
