@@ -6,7 +6,7 @@ const root = resolve(import.meta.dirname, '..');
 const ease = { type: 'cubic-bezier', x1: .22, y1: 1, x2: .36, y2: 1 };
 const keys = points => ({ keyframes: points.map(([at, value]) => ({ at, value, ease })) });
 const track = (id, target, points) => ({ id, target, ...keys(points) });
-const text = (id, copy, x, y, width, height, size, color, extra = {}) => ({ id, type: 'text', text: copy, x, y, width, height, fontFamily: 'Inter', fontFile: 'assets/Inter.ttf', fontSize: size, fontWeight: 700, color, fit: 'shrink', verticalAlign: 'middle', ...extra });
+const text = (id, copy, x, y, width, height, size, color, extra = {}) => ({ id, type: 'text', text: copy, x, y, width, height, fontFamily: 'Inter', fontFile: 'assets/Inter.ttf', fontSize: size, fontWeight: 700, color, fit: 'shrink', verticalAlign: 'middle', ...(size >= 100 ? { horizontalMetrics: 'ink', verticalMetrics: 'cap-height', letterSpacing: -2 } : {}), ...extra });
 const shape = (id, kind, x, y, width, height, fill, extra = {}) => ({ id, type: 'shape', shape: kind, x, y, width, height, fill, ...extra });
 // Explicit, increasing timestamps keep every entrance seek-safe.
 const entrance = (id, at) => [track(id + '-opacity', 'transform.opacity', [[0, 0], [at, 0], [at + .65, 1]]), track(id + '-y', 'transform.y', [[0, 35], [at, 35], [at + .8, 0]])];

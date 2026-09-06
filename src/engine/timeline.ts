@@ -32,7 +32,7 @@ export function locateScene(project: GenmotionProject, time: number): ActiveScen
     const scene = project.scenes[index];
     if (!scene) continue;
     const end = cursor + scene.duration;
-    if (time < end || index === project.scenes.length - 1) {
+    if (time < end - Number.EPSILON * Math.max(1, Math.abs(time), Math.abs(end)) * 16 || index === project.scenes.length - 1) {
       return { scene, index, localTime: Math.max(0, Math.min(scene.duration, time - cursor)), globalStart: cursor };
     }
     cursor = end;

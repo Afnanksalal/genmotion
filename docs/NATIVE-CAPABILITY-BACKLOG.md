@@ -31,14 +31,14 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 - [ ] Component-local coordinate systems, timelines, frame rates, dimensions, anchors, masks, and automatic scaling when embedded.
 - [ ] Nested groups with transform, clipping, opacity, blend modes, effects, local timing, local anchors, and local masks.
 - [ ] Sequence-style time offsets, nested offsets, negative offsets, and sequential scene containers.
-- [ ] Automatic sequence and composition duration calculation.
+- [ ] Automatic sequence and composition duration calculation. Content-bound calculations are implemented; broader acceptance remains open: [automatic duration](AUTOMATIC-DURATION.md).
 - [ ] Trim-before, trim-after, premount, and postmount intervals.
 - [x] Freeze a composition at a frame or only during a selected interval. Evidence: [shared source-time contract](COMPOSITIONS.md), native RGBA equality and interval-boundary checks in `tests/composition-parameters.test.ts`, timing tests, and Studio save/remove browser coverage. Optional fields preserve existing project documents.
 - [ ] Finite loops, infinite preview loops, nested loops, ping-pong loops, time remapping, playback-rate controls, and time stretching.
 - [x] Composition cycle detection, dependency graph, and usage search.
 - [ ] Composition folders, multiple deliverables per project, still compositions, variants, duplication, presets, and named sequences.
 - [ ] Hide supporting sequences from the timeline and expand or collapse nested compositions.
-- [ ] Render a selected composition, scene, group, or still.
+- [ ] Render a selected composition, scene, group, or still. Composition, scene/frame intervals, parented layer groups and selected stills are implemented; broader acceptance remains open: [render selection](RENDER-SELECTION.md).
 - [ ] Import another Genmotion project as a frozen, versioned component dependency.
 
 ## 2. Parameters, data, and variants
@@ -48,8 +48,8 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 - [x] CLI, MCP, SDK, Player, and render-API parameter overrides. Evidence: [PARAMETERS.md](PARAMETERS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [x] Batch parameter matrices plus CSV- and JSON-driven variants. Evidence: [PARAMETERS.md](PARAMETERS.md); [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 - [ ] Locale, brand, canvas-format, and platform-safe-area variants.
-- [ ] Deterministic derived parameters and preflight calculation of duration, dimensions, FPS, and output names.
-- [ ] Frozen local data sources, dependency hashes, and pre-render data validation.
+- [x] Deterministic derived parameters and preflight calculation of duration, dimensions, FPS, and output names. Evidence: [2.4.0 milestone QA](MILESTONE-QA-2026-09-07.md).
+- [x] Frozen local data sources, dependency hashes, and pre-render data validation. Evidence: [2.4.0 milestone QA](MILESTONE-QA-2026-09-07.md).
 - [ ] Declarative parameter references in text, colors, assets, numeric tracks, effects, transitions, and component instances.
 - [ ] Preview-time parameter editing, side-by-side comparison, named configurations, and configuration import/export.
 
@@ -272,7 +272,7 @@ See [the native capability roadmap](NATIVE-CAPABILITY-ROADMAP.md) for baseline g
 - [ ] Agent action history, undoable agent transactions, and change summaries.
 - [ ] Agent-authored parameter schemas, components, effect stacks, 3D scenes, and local capture requests.
 - [ ] Extension manifests, safe declarative registration, schema migrations, codemods, structured diagnostics, and JSON output everywhere.
-- [ ] Shell completions, Creative IR language server, generated JSON Schema, YAML completion, editor diagnostics, and schema-derived examples.
+- [ ] Shell completions, Creative IR language server, generated JSON Schema, YAML completion, editor diagnostics, and schema-derived examples. Schema export and focused discovery are implemented; broader acceptance remains open: [authoring schema](AUTHORING-SCHEMA.md).
 
 ## 22. Studio reliability and UX
 
@@ -376,16 +376,16 @@ Refines §§6, 9, 10, 15, 18. Evidence: audit H16–H20. Existing effect familie
 
 Refines §§1, 2, 11, 13, 21, 22. Evidence: audit H21–H25. Genmotion already has JSON patches and revision checks; this is the higher-level shared editing layer.
 
-- [ ] **GM-047** Provide a headless editing session over Creative IR with typed query, text/style/property/timing/asset/track operations, disposal and memory/filesystem/host persistence adapters; use it from Studio and agent tools.
-- [ ] **GM-048** Address nested targets by stable composition-instance/layer identity rather than array position alone; detect stale or ambiguous targets and expose dependency/usage paths before mutation.
-- [ ] **GM-049** Expose a pure capability/refusal query for an intended operation on the current target, including locks, inheritance, unsupported imported content and required materialization; derive relevant Studio controls from it.
-- [ ] **GM-050** Make a multi-operation edit one validated transaction, one persist event and one undo step; provide inverse patches, rollback on failure, change-origin metadata and event subscriptions.
-- [ ] **GM-051** Coalesce continuous gestures by target/property without merging unrelated edits; support host-owned history, persistence failure/retry and reopenable checkpoints through the same session.
-- [ ] **GM-052** Store versioned sparse overrides on reusable base compositions with scoped nested IDs, explicit removal markers, parameter/asset overrides and base-update conflict/orphan diagnostics.
-- [ ] **GM-053** Expose a bounded live scene/context view with playhead, selection, instance path, viewport, editability, revision and undo state; let tools select/seek the same targets the human is editing.
-- [ ] **GM-054** Offer a capability-negotiated in-Studio agent bridge where supported, using the same semantic service as local MCP; require source-safe handles and session permissions rather than broad browser scripting.
-- [ ] **GM-055** Return structured edit receipts distinguishing refused, dispatched, saved, verified and failed states, with a separate changed flag, before/after revision, affected targets and available readback/frame evidence.
-- [ ] **GM-056** Record canvas gestures into native keyframes with timestamped samples, endpoint-preserving smoothing/reduction, preview before acceptance and one reversible edit; later agent edits must retain user-authored trajectories unless targeted.
+- [x] **GM-047** Provide a headless editing session over Creative IR with typed query, text/style/property/timing/asset/track operations, disposal and memory/filesystem/host persistence adapters; use it from Studio and agent tools. Evidence: [2.4.0 milestone QA](MILESTONE-QA-2026-09-07.md).
+- [x] **GM-048** Address nested targets by stable composition-instance/layer identity rather than array position alone; detect stale or ambiguous targets and expose dependency/usage paths before mutation. Evidence: [2.4.0 milestone QA](MILESTONE-QA-2026-09-07.md).
+- [ ] **GM-049** Expose a pure capability/refusal query for an intended operation on the current target, including locks, inheritance, unsupported imported content and required materialization; derive relevant Studio controls from it. Implemented subset; broader acceptance remains open: [editing sessions](EDITING-SESSIONS.md).
+- [x] **GM-050** Make a multi-operation edit one validated transaction, one persist event and one undo step; provide inverse patches, rollback on failure, change-origin metadata and event subscriptions. Evidence: [2.4.0 milestone QA](MILESTONE-QA-2026-09-07.md).
+- [ ] **GM-051** Coalesce continuous gestures by target/property without merging unrelated edits; support host-owned history, persistence failure/retry and reopenable checkpoints through the same session. Implemented subset; broader acceptance remains open: [editing sessions](EDITING-SESSIONS.md).
+- [x] **GM-052** Store versioned sparse overrides on reusable base compositions with scoped nested IDs, explicit removal markers, parameter/asset overrides and base-update conflict/orphan diagnostics. Evidence: [2.4.0 milestone QA](MILESTONE-QA-2026-09-07.md).
+- [x] **GM-053** Expose a bounded live scene/context view with playhead, selection, instance path, viewport, editability, revision and undo state; let tools select/seek the same targets the human is editing. Evidence: [2.4.0 milestone QA](MILESTONE-QA-2026-09-07.md).
+- [x] **GM-054** Offer a capability-negotiated in-Studio agent bridge where supported, using the same semantic service as local MCP; require source-safe handles and session permissions rather than broad browser scripting. Evidence: [2.4.0 milestone QA](MILESTONE-QA-2026-09-07.md).
+- [ ] **GM-055** Return structured edit receipts distinguishing refused, dispatched, saved, verified and failed states, with a separate changed flag, before/after revision, affected targets and available readback/frame evidence. Source readback and failure receipts are implemented; broader acceptance remains open: [editing sessions](EDITING-SESSIONS.md).
+- [x] **GM-056** Record canvas gestures into native keyframes with timestamped samples, endpoint-preserving smoothing/reduction, preview before acceptance and one reversible edit; later agent edits must retain user-authored trajectories unless targeted. Evidence: [2.4.0 milestone QA](MILESTONE-QA-2026-09-07.md).
 
 ## 31. Time-aware visual diagnostics and acceptance assertions
 
@@ -462,4 +462,3 @@ Strategic additions for advanced compositing. Refines sections 1, 3-6, 9, 16, 18
 ## Audit sources
 
 This program specifies product capabilities and acceptance requirements. Implementation belongs to Genmotion's shared Creative IR, native evaluator and services. The `AE-*` frontier is separately labeled strategic work.
-

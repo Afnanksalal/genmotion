@@ -7,9 +7,26 @@
   "audio": "aac",
   "strictValidation": "passed",
   "fullDecode": "passed",
-  "renderId": "4825668fb977a4ab",
+  "nativeReviewFrames": [
+    0,
+    23,
+    59,
+    119,
+    179,
+    227,
+    239
+  ],
+  "alphaOutput": {
+    "mode": "flatten",
+    "background": [
+      0,
+      0,
+      0
+    ]
+  },
+  "renderId": "ff31cc7b15c15912",
   "decodedFrames": 240,
-  "distinctDownsampledFrames": 174,
+  "distinctDownsampledFrames": 176,
   "minimumLumaRange": 182,
   "randomSeekPixelEquality": true,
   "audioChecks": {
@@ -19,8 +36,8 @@
     "clipping": false
   },
   "sha256": {
-    "source": "c7a6ee38f81554b7e4c03bc2fee5de22b9e3b7a3f2139db8ad4e2cf3d8ba3eff",
-    "master": "a97f784a99491f9252462cc435b15cf819cc5d90d00b5d7e6290cc8a39c24ee4",
-    "contactSheet": "e710f4f970c4d6b1d8b99a9db394d8313afd4de41f52b76b06c0603042023348"
+    "source": "0024111e798c765b9f247503c819afa83388e8265445f69bda96ebd6bb78148f",
+    "master": "f6997635d55a89b9f3b55e5c5d46e11cc406c92ee2ecc23121883413f551d6d7",
+    "contactSheet": "08370011f968a8bd85350b3fa004a8a194c56a21084b1af044916f552c6260db"
   }
 }

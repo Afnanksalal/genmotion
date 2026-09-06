@@ -1,4 +1,5 @@
 import type { GenmotionProject, Parameter, ParameterValue } from './schema.js';
+import { resolveParameters } from './parameters.js';
 
 /** Includes inactive parameter variants and definition-local assets for safe inventory/deletion. */
 export function projectAssetReferences(project: GenmotionProject): string[] {
@@ -16,17 +17,29 @@ export function projectAssetReferences(project: GenmotionProject): string[] {
     defaults(definition); parameter(definition, project.parameterValues[definition.id]);
     for (const variant of project.variants) parameter(definition, variant.values[definition.id]);
   }
-  for (const container of [...project.scenes, ...project.compositions]) {
-    if ('parameters' in container) for (const definition of container.parameters ?? []) defaults(definition);
-    for (const effect of [...(container.effects ?? []), ...container.layers.flatMap((layer) => layer.effects ?? [])]) add(effect.lut?.source?.path);
-    for (const layer of container.layers) {
-      if (layer.type === 'image' || layer.type === 'video') add(layer.src);
-      if (layer.type === 'image' && layer.sourceAnimation?.type === 'sequence') layer.sourceAnimation.frames.forEach(add);
-      if (layer.type === 'text' || layer.type === 'caption') add(layer.fontFile);
-      if (layer.type === 'composition') for (const definition of project.compositions.find((item) => item.id === layer.compositionId)?.parameters ?? []) parameter(definition, layer.parameterValues?.[definition.id]);
+  for (const source of project.dataSources ?? []) {
+    const definition = project.parameters.find(parameter => parameter.id === source.parameterId);
+    if (definition) parameter(definition, source.value);
+  }
+  function* documents(): Generator<GenmotionProject> {
+    yield project;
+    yield resolveParameters(project);
+    for (const variant of project.variants) yield resolveParameters(project, variant.values);
+  }
+  for (const document of documents()) {
+    for (const definition of document.parameters) parameter(definition, document.parameterValues[definition.id]);
+    for (const container of [...document.scenes, ...document.compositions]) {
+      if ('parameters' in container) for (const definition of container.parameters ?? []) defaults(definition);
+      for (const effect of [...(container.effects ?? []), ...container.layers.flatMap((layer) => layer.effects ?? [])]) add(effect.lut?.source?.path);
+      for (const layer of container.layers) {
+        if (layer.type === 'image' || layer.type === 'video') add(layer.src);
+        if (layer.type === 'image' && layer.sourceAnimation?.type === 'sequence') layer.sourceAnimation.frames.forEach(add);
+        if (layer.type === 'text' || layer.type === 'caption') add(layer.fontFile);
+        if (layer.type === 'composition') for (const definition of project.compositions.find((item) => item.id === layer.compositionId)?.parameters ?? []) parameter(definition, layer.parameterValues?.[definition.id]);
+      }
     }
   }
   for (const shot of project.productionWorkflow?.shots ?? []) for (const reference of shot.references) add(reference.path);
   for (const stage of project.productionWorkflow?.stages ?? []) for (const evidence of stage.evidence) add(evidence.path);
-  return files;
+  return [...new Set(files)];
 }

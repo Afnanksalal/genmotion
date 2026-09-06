@@ -56,7 +56,7 @@ test.beforeEach(async () => {
 
 test.afterEach(async () => {
   await studio?.close();
-  await rm(directory, { recursive: true, force: true });
+  await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 });
 
 test('edits generated typed parameter controls and persists nested defaults', async ({ page }) => {
@@ -454,6 +454,13 @@ test('scales workflow navigation, asset discovery, easing inspection, and audio 
   const audio = page.locator('#processedAudioPreview');
   await audio.evaluate((element: HTMLAudioElement) => { element.load(); });
   await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.duration)).toBeCloseTo(1, 1);
+  await expect(audio).not.toHaveAttribute('controls');
+  await page.getByRole('button', { name: 'Play audio preview', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Pause audio preview', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Pause audio preview', exact: true }).click();
+  await page.getByRole('slider', { name: 'Audio volume', exact: true }).fill('0.4');
+  await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.volume)).toBeCloseTo(.4);
+
   await page.keyboard.press('Escape');
   await page.locator('#deleteSelection').click();
   await page.getByRole('tab', { name: 'Assets' }).click();
@@ -767,7 +774,7 @@ test('uses packaged SVG controls and the selected agent brand', async ({ page })
   await page.locator('#agentHost').click();
   await expect(page.locator('#agentPopover .agent-host-mark .brand-icon')).toBeVisible();
   await page.getByRole('button', { name: 'Export' }).click();
-  await expect(page.locator('.select-button .ui-icon')).toHaveCount(2);
+  await expect(page.locator('.select-button .ui-icon')).toHaveCount(3);
   await expect(page.locator('#modalClose .ui-icon')).toBeVisible();
   await expect(page.locator('body')).not.toContainText(/[✦⌄⌃↗＋✕↻▶❚❚−◆▣▤◫✎●◇▧♪]/);
 });
@@ -943,6 +950,7 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
     return project.scenes[0]?.layers.find((layer) => layer.id === 'accent')?.duration ?? 1;
   }).toBeLessThan(0.7);
 
+  await expect(page.locator('[data-stage-layer="accent"]')).toBeVisible();
   const stageBox = await page.locator('[data-stage-layer="accent"]').boundingBox();
   expect(stageBox).not.toBeNull();
   if (stageBox) {
@@ -992,7 +1000,7 @@ test('persists text inspector changes through stable semantic transactions', asy
   await text.press('Tab');
   const response = await responsePromise;
   expect(response.status()).toBe(200);
-  expect(await response.json()).toMatchObject({ receipt: { state: 'saved', changed: true, affectedTargets: [{ kind: 'scene', id: 'intro', layerId: 'title' }] } });
+  expect(await response.json()).toMatchObject({ receipt: { state: 'verified', evidence: { verificationScope: 'source-document', readback: { status: 'matched' } }, changed: true, affectedTargets: [{ kind: 'scene', id: 'intro', layerId: 'title' }] } });
   await expect.poll(async () => {
     const project = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { scenes: Array<{ layers: Array<{ id: string; text?: string }> }> };
     return project.scenes[0]?.layers.find((layer) => layer.id === 'title')?.text;

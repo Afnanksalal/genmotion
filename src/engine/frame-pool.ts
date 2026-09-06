@@ -2,6 +2,7 @@ import { Worker } from 'node:worker_threads';
 import type { GenmotionProject } from '../ir/schema.js';
 import type { RenderDimensions } from './draw.js';
 import { GenmotionError } from '../errors.js';
+import type { RenderView } from './render-view.js';
 
 interface PendingFrame { frame: number; resolve: (buffer: Buffer) => void; reject: (error: Error) => void }
 interface Slot { worker: Worker; pending: PendingFrame | undefined; failure: Error | undefined }
@@ -10,17 +11,17 @@ export class NativeFramePool {
   private readonly slots: Slot[] = [];
   private closing = false;
   private constructor() {}
-  static async create(project: GenmotionProject, projectDir: string, dimensions: RenderDimensions, count: number): Promise<NativeFramePool> {
+  static async create(project: GenmotionProject, projectDir: string, dimensions: RenderDimensions, count: number, view?: RenderView): Promise<NativeFramePool> {
     const pool = new NativeFramePool();
-    try { pool.start(project, projectDir, dimensions, count); return pool; }
+    try { pool.start(project, projectDir, dimensions, count, view); return pool; }
     catch (error) { await pool.close(); throw error; }
   }
-  private start(project: GenmotionProject, projectDir: string, dimensions: RenderDimensions, count: number): void {
+  private start(project: GenmotionProject, projectDir: string, dimensions: RenderDimensions, count: number, view?: RenderView): void {
     const url = import.meta.url.includes('/src/engine/frame-pool.')
       ? new URL('../../dist/engine/worker.js', import.meta.url)
       : new URL('./worker.js', import.meta.url);
     for (let index = 0; index < count; index++) {
-      const worker = new Worker(url, { workerData: { project, projectDir, dimensions } });
+      const worker = new Worker(url, { workerData: { project, projectDir, dimensions, view } });
       const slot: Slot = { worker, pending: undefined, failure: undefined };
       const fail = (error: Error): void => { slot.failure = error; slot.pending?.reject(error); slot.pending = undefined; };
       worker.on('message', (message: { frame: number; buffer?: ArrayBuffer; error?: string }) => {

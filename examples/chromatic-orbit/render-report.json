@@ -7,15 +7,32 @@
   "audio": null,
   "strictValidation": "passed",
   "fullDecode": "passed",
-  "renderId": "7d628995315a596a",
+  "nativeReviewFrames": [
+    0,
+    23,
+    59,
+    119,
+    179,
+    227,
+    239
+  ],
+  "alphaOutput": {
+    "mode": "flatten",
+    "background": [
+      0,
+      0,
+      0
+    ]
+  },
+  "renderId": "3a32c9c5e8973f80",
   "decodedFrames": 240,
-  "distinctDownsampledFrames": 198,
-  "minimumLumaRange": 221,
+  "distinctDownsampledFrames": 205,
+  "minimumLumaRange": 222,
   "randomSeekPixelEquality": true,
   "audioChecks": null,
   "sha256": {
-    "source": "a68e37ffb096cdf8dd04932a36c4d399d513ed68cd776b2be87e02e5a2e76fd2",
-    "master": "cb11340cfc0bf5f697b5153fbf2a7f529e636c4b4964349359afb19247c59f8f",
-    "contactSheet": "6f0cc8d5468f44e79de91108c4ad11e665d70aab61e25f2f93e02829ab5c4af1"
+    "source": "7d8fe3b336e907bb6b2657fab11507459b0a10a6c256df3914b8651ad4764f66",
+    "master": "f527d843ee5435aff686ac36141d7b6f51e772001a5f735af2d52ba2d9a8af41",
+    "contactSheet": "7107fc49b4f26f1f37afd06910b76205ec394f8a41f0fc64ed84bfd16f288c2e"
   }
 }

@@ -1,9 +1,11 @@
+import type { RenderView } from './render-view.js';
 import { captionWordRanges, captionLineRanges } from './caption-layout.js';
 import { mediaSourceCrop, mediaRoundedPath } from './media-geometry.js';
 import { imageSourceFrame, spriteFrameRect } from './image-animation.js';
 import { warpCanvasQuad, perspectiveQuad, cubeTransitionQuads, type Quad } from './projective.js';
 import { applyLayerMasks } from './masks.js';
-import { canvasFontWeight, fontString, resolveTextLayout, measuredTextWidth, textGraphemes } from './text-layout.js';
+import { canvasFontWeight, fontString, resolveTextLayout } from './text-layout.js';
+import { revealUnicodeText } from './text-unicode.js';
 export { canvasFontWeight };
 import { createCanvas, Path2D, type SKRSContext2D } from '@napi-rs/canvas';
 import { access } from 'node:fs/promises';
@@ -47,16 +49,9 @@ function applyShadow(ctx: SKRSContext2D, shadow: { color: string; blur: number; 
   ctx.shadowOffsetY = shadow?.offsetY ?? 0;
 }
 
-function revealText(text: string, mode: TextLayer['reveal'], progress: number): string {
-  const p = Math.max(0, Math.min(1, progress));
-  if (mode === 'none') return text;
-  if (mode === 'characters') return text.slice(0, Math.ceil(text.length * p));
-  const separator = mode === 'lines' ? '\n' : ' ';
-  const parts = text.split(separator);
-  return parts.slice(0, Math.ceil(parts.length * p)).join(separator);
-}
-
 function drawText(ctx: SKRSContext2D, original: TextLayer, time: number): void {
+  ctx.save();
+  try {
   let content = original.text;
   if (original.countFrom !== undefined) {
     const target = Number(original.text.replace(/[^0-9.+-]/g, ''));
@@ -64,32 +59,25 @@ function drawText(ctx: SKRSContext2D, original: TextLayer, time: number): void {
       const progress = Math.max(0, Math.min(1, evaluateNumber(original.countProgress, time)));
       const value = original.countFrom + (target - original.countFrom) * progress;
       const format = original.numberFormat ?? { decimals: 0, prefix: '', suffix: '', grouping: true };
-      content = `${format.prefix}${value.toLocaleString('en-US', { useGrouping: format.grouping, minimumFractionDigits: format.decimals, maximumFractionDigits: format.decimals })}${format.suffix}`;
+      content = `${format.prefix}${value.toLocaleString(original.locale ?? 'en-US', { useGrouping: format.grouping, minimumFractionDigits: format.decimals, maximumFractionDigits: format.decimals })}${format.suffix}`;
     }
   }
-  let layer = { ...original, text: revealText(content, original.reveal, evaluateNumber(original.revealProgress, time)) };
+  let layer = { ...original, text: revealUnicodeText(content, original.reveal, evaluateNumber(original.revealProgress, time), original.locale) };
   const layout = resolveTextLayout(ctx, layer);
-  const { lines, fontSize, lineHeight } = layout;
+  const { lines, fontSize } = layout;
   layer = { ...layer, width: layout.boxWidth, height: layout.boxHeight };
   ctx.font = fontString(layer, fontSize);
   ctx.fillStyle = layer.gradientFill ? createGradient(ctx, layer.gradientFill, layer) : layer.color;
-  ctx.textBaseline = 'top';
+  ctx.textBaseline = layout.textBaseline;
+  ctx.textAlign = 'left';
+  ctx.letterSpacing = `${layer.letterSpacing}px`;
   applyShadow(ctx, layer.shadow);
-  const blockHeight = lines.length * lineHeight;
-  const yOffset = layer.verticalAlign === 'middle' ? (layer.height - blockHeight) / 2 : layer.verticalAlign === 'bottom' ? layer.height - blockHeight : 0;
   for (const [index, line] of lines.entries()) {
-    const measured = measuredTextWidth(ctx, line, layer.letterSpacing);
-    const xOffset = layer.align === 'center' ? (layer.width - measured) / 2 : layer.align === 'right' ? layer.width - measured : 0;
-    if (layer.letterSpacing === 0) ctx.fillText(line, layer.x + xOffset, layer.y + yOffset + index * lineHeight);
-    else {
-      let cursor = layer.x + xOffset;
-      for (const character of textGraphemes(line)) {
-        ctx.fillText(character, cursor, layer.y + yOffset + index * lineHeight);
-        cursor += ctx.measureText(character).width + layer.letterSpacing;
-      }
-    }
+    ctx.direction = layout.directions[index]!;
+    ctx.fillText(line, layer.x + layout.xOffsets[index]!, layer.y + layout.yOffsets[index]!);
   }
   applyShadow(ctx, undefined);
+  } finally { ctx.restore(); }
 }
 
 function drawCaption(ctx: SKRSContext2D, layer: CaptionLayer, time: number): void {
@@ -111,7 +99,7 @@ function drawCaption(ctx: SKRSContext2D, layer: CaptionLayer, time: number): voi
   const inset = { ...textLayer, x: layer.x + layer.padding, y: layer.y + layer.padding, width: Math.max(1, layer.width - layer.padding * 2), height: Math.max(1, layer.height - layer.padding * 2) };
   if (layer.outlineColor && layer.outlineWidth > 0) {
     const layout = resolveTextLayout(ctx, inset);
-    ctx.save(); ctx.font = fontString(inset, layout.fontSize); ctx.textBaseline = 'top'; ctx.strokeStyle = layer.outlineColor; ctx.lineWidth = layer.outlineWidth * 2; ctx.lineJoin = 'round';
+    ctx.save(); ctx.font = fontString(inset, layout.fontSize); ctx.textBaseline = 'top'; ctx.textAlign = 'left'; ctx.strokeStyle = layer.outlineColor; ctx.lineWidth = layer.outlineWidth * 2; ctx.lineJoin = 'round';
     const blockHeight = layout.lines.length * layout.lineHeight;
     for (const [index, line] of layout.lines.entries()) {
       const measured = ctx.measureText(line).width;
@@ -445,14 +433,16 @@ function locateBoundaryTransition(project: GenmotionProject, active: ReturnType<
   return undefined;
 }
 
-async function drawSceneContents(ctx: SKRSContext2D, scene: Scene, project: GenmotionProject, projectDir: string, time: number): Promise<void> {
-  ctx.fillStyle = scene.background;
+async function drawSceneContents(ctx: SKRSContext2D, scene: Scene, project: GenmotionProject, projectDir: string, time: number, view?: RenderView): Promise<void> {
+  ctx.fillStyle = view ? 'rgba(0,0,0,0)' : scene.background;
   ctx.fillRect(0, 0, project.width, project.height);
   const layers = resolveLayerGraph(scene.layers, time, project.seed);
-  for (const layer of [...layers].sort((a, b) => a.z - b.z)) await drawLayer(ctx, layer, scene, project, projectDir, time, [], true);
+  const included = view ? new Set(view.layerIds) : undefined;
+  for (const layer of [...layers].sort((a, b) => a.z - b.z)) if (!included || included.has(layer.id)) await drawLayer(ctx, layer, scene, project, projectDir, time, [], true);
 }
 
-async function drawScene(ctx: SKRSContext2D, scene: Scene, project: GenmotionProject, projectDir: string, time: number, pose: ScenePose, output: RenderDimensions): Promise<void> {
+async function drawScene(ctx: SKRSContext2D, scene: Scene, project: GenmotionProject, projectDir: string, time: number, pose: ScenePose, output: RenderDimensions, view?: RenderView): Promise<void> {
+  if (view && scene.id !== view.sceneId) return;
   if (pose.alpha <= 0) return;
   ctx.save();
   ctx.globalAlpha = pose.alpha;
@@ -477,11 +467,11 @@ async function drawScene(ctx: SKRSContext2D, scene: Scene, project: GenmotionPro
     const sceneCanvas = createCanvas(output.width, output.height);
     const sceneContext = sceneCanvas.getContext('2d');
     sceneContext.scale(output.width / project.width, output.height / project.height);
-    await drawSceneContents(sceneContext, scene, project, projectDir, time);
+    await drawSceneContents(sceneContext, scene, project, projectDir, time, view);
     const processed = applyVisualEffects(sceneCanvas, scene.effects ?? [], time, project.seed);
     ctx.drawImage(pose.quad ? warpCanvasQuad(processed, pose.quad) : processed, 0, 0, project.width, project.height);
   } else {
-    await drawSceneContents(ctx, scene, project, projectDir, time);
+    await drawSceneContents(ctx, scene, project, projectDir, time, view);
   }
   ctx.restore();
 }
@@ -493,7 +483,7 @@ function checkedDimensions(project: GenmotionProject, dimensions?: RenderDimensi
   return { width, height };
 }
 
-export async function renderFrame(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions): Promise<Buffer> {
+export async function renderFrame(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Buffer> {
   if (!Number.isFinite(frame) || frame < 0 || !Number.isFinite(project.fps) || project.fps <= 0 || !Number.isFinite(frame / project.fps)) throw new Error('Rendering requires a finite nonnegative frame and positive FPS.');
   registerProjectFonts(project, projectDir);
   const output = checkedDimensions(project, dimensions);
@@ -506,9 +496,9 @@ export async function renderFrame(project: GenmotionProject, projectDir: string,
 
   const boundary = locateBoundaryTransition(project, active, globalTime);
   if (boundary) {
-    await drawScene(ctx, boundary.previous, project, projectDir, boundary.previousTime, transitionPose(boundary.type, boundary.progress, project.width, project.height, false), output);
-    await drawScene(ctx, boundary.next, project, projectDir, boundary.nextTime, transitionPose(boundary.type, boundary.progress, project.width, project.height, true), output);
-    if (boundary.overlayCompositionId) {
+    await drawScene(ctx, boundary.previous, project, projectDir, boundary.previousTime, transitionPose(boundary.type, boundary.progress, project.width, project.height, false), output, view);
+    await drawScene(ctx, boundary.next, project, projectDir, boundary.nextTime, transitionPose(boundary.type, boundary.progress, project.width, project.height, true), output, view);
+    if (boundary.overlayCompositionId && !view) {
       const composition = project.compositions.find((candidate) => candidate.id === boundary.overlayCompositionId);
       if (composition) await drawCompositionLayer(ctx, {
         id: `transition-overlay-${composition.id}`, type: 'composition', compositionId: composition.id,
@@ -518,16 +508,16 @@ export async function renderFrame(project: GenmotionProject, projectDir: string,
       }, project, projectDir, boundary.progress, []);
     }
   } else {
-    await drawScene(ctx, active.scene, project, projectDir, active.localTime, identity, output);
+    await drawScene(ctx, active.scene, project, projectDir, active.localTime, identity, output, view);
   }
 
   return Buffer.from(ctx.getImageData(0, 0, output.width, output.height).data.buffer);
 }
 
-export async function renderFramePng(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions): Promise<Buffer> {
+export async function renderFramePng(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Buffer> {
   registerProjectFonts(project, projectDir);
   const output = checkedDimensions(project, dimensions);
-  const rgba = await renderFrame(project, projectDir, frame, output);
+  const rgba = await renderFrame(project, projectDir, frame, output, view);
   const canvas = createCanvas(output.width, output.height);
   const ctx = canvas.getContext('2d');
   const image = ctx.createImageData(output.width, output.height);

@@ -75,9 +75,10 @@ describe('Genmotion MCP server', () => {
       expect(staleSave.isError).toBe(true);
 
       const schema = await client.callTool({ name: 'genmotion_schema', arguments: {} });
-      const schemaContent = schema.structuredContent as { schema?: unknown; schemaSummary?: { trackRequired?: string[] }; authoring?: { recipePolicy?: string; transformSemantics?: string; canonicalExample?: { textLayer?: Record<string, unknown>; track?: Record<string, unknown> } } };
+      const schemaContent = schema.structuredContent as { schema?: unknown; schemaSummary?: { fields?: Array<{ name: string; required: boolean }> }; authoring?: { recipePolicy?: string; transformSemantics?: string; canonicalExample?: { textLayer?: Record<string, unknown>; track?: Record<string, unknown> } } };
       expect(schemaContent.schema).toBeUndefined();
-      expect(schemaContent.schemaSummary?.trackRequired).toContain('id');
+      expect(schemaContent.schemaSummary?.fields).toContainEqual(expect.objectContaining({ name: 'id', required: true }));
+      expect(Buffer.byteLength(JSON.stringify(listed))).toBeLessThan(1024 * 1024);
       expect(schemaContent.authoring?.recipePolicy).toContain('optional');
       expect(schemaContent.authoring?.transformSemantics).toContain('additional offsets');
       expect(schemaContent.authoring?.canonicalExample?.textLayer).toMatchObject({ width: 1440, fontFamily: 'Arial', color: '#f7f5ef' });
@@ -193,7 +194,7 @@ describe('Genmotion MCP server', () => {
 
       const forbidden = await client.callTool({ name: 'genmotion_project_read', arguments: { project: path.join(path.parse(process.cwd()).root, 'genmotion-forbidden') } });
       expect(forbidden.isError).toBe(true);
-    } finally {
+    } catch (error) { throw new Error(`MCP workflow failed: ${diagnostics.join('')}`, { cause: error }); } finally {
       await client.close();
     }
   }, process.platform === 'win32' ? 90_000 : 45_000);

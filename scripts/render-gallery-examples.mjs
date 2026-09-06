@@ -3,22 +3,27 @@ import path from 'node:path';
 import { loadProject } from '../dist/ir/loader.js';
 import { validateProject } from '../dist/ir/validate.js';
 import { renderFramePng } from '../dist/engine/draw.js';
-import { renderProject } from '../dist/engine/render.js';
+import { renderProject, resolveRenderRange } from '../dist/engine/render.js';
 import { makeContactSheet } from '../dist/engine/probe.js';
 import { runProcess } from '../dist/engine/process.js';
 
-const ids = process.argv.slice(2).filter(id => id !== '--stills');
+const allIds = ['kinetic-type', 'data-pulse', 'arc-one', 'native-milestones', 'animation-kernel', 'chromatic-orbit', 'route-study', 'type-beat'];
+const ids = process.argv.includes('--all') ? allIds : process.argv.slice(2).filter(id => id !== '--stills');
 for (const id of ids.length ? ids : ['chromatic-orbit', 'route-study', 'type-beat']) {
-  if (!['chromatic-orbit', 'route-study', 'type-beat'].includes(id)) throw new Error('Unknown gallery example');
+  if (!allIds.includes(id)) throw new Error('Unknown gallery example');
   const dir = path.resolve('examples', id), loaded = await loadProject(dir);
   const findings = await validateProject(loaded);
   if (findings.length) throw new Error(JSON.stringify({ id, findings }, null, 2));
   await mkdir(path.join(dir, 'review'), { recursive: true });
-  for (const time of [0, .5, 2, 4, 6, 7.9]) await writeFile(path.join(dir, 'review', `${time}.png`), await renderFramePng(loaded.project, dir, time * 30));
+  const totalFrames = resolveRenderRange(loaded.project, {}).endFrame;
+  const reviewFrames = new Set([0, ...[.1, .25, .5, .75, .95].map(fraction => Math.floor((totalFrames - 1) * fraction)), totalFrames - 1]);
+  let elapsed = 0;
+  for (const scene of loaded.project.scenes.slice(0, -1)) { elapsed += scene.duration; const boundary = Math.ceil(elapsed * loaded.project.fps - 1e-9); for (const delta of [-1, 0, 1]) reviewFrames.add(boundary + delta); }
+  for (const frame of [...reviewFrames].sort((a, b) => a - b)) await writeFile(path.join(dir, 'review', `frame-${frame}.png`), await renderFramePng(loaded.project, dir, frame));
   if (process.argv.includes('--stills')) { console.log(`${id}: strict validation and native review frames passed`); continue; }
   const result = await renderProject(loaded, { output: path.join(dir, `${id}.mp4`), quality: 'high', workers: 2, maxBufferedFrames: 3 });
   await runProcess('ffmpeg', ['-v', 'error', '-i', result.output, '-f', 'null', '-']);
   await makeContactSheet(result.output, path.join(dir, 'contact-sheet.png'), 6, 3);
-  await writeFile(path.join(dir, 'render-report.json'), JSON.stringify({ width: result.probe.width, height: result.probe.height, fps: result.probe.frameRate, duration: result.probe.duration, codec: result.probe.videoCodec, audio: result.probe.audioCodec ?? null, strictValidation: 'passed', fullDecode: 'passed', renderId: result.renderId }, null, 2) + '\n');
+  await writeFile(path.join(dir, 'render-report.json'), JSON.stringify({ width: result.probe.width, height: result.probe.height, fps: result.probe.frameRate, duration: result.probe.duration, codec: result.probe.videoCodec, audio: result.probe.audioCodec ?? null, strictValidation: 'passed', fullDecode: 'passed', nativeReviewFrames: [...reviewFrames].sort((a, b) => a - b), alphaOutput: result.alphaOutput, renderId: result.renderId }, null, 2) + '\n');
   console.log(`${id}: encoded and decoded ${result.probe.width}x${result.probe.height}, ${result.probe.duration}s`);
 }

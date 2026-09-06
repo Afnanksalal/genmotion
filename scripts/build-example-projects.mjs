@@ -9,7 +9,6 @@ const sharedLicense = join(root, 'examples', '_shared', 'fonts', 'OFL.txt');
 const ease = { type: 'cubic-bezier', x1: 0.22, y1: 1, x2: 0.36, y2: 1 };
 const spring = { type: 'spring', mass: 1, stiffness: 150, damping: 22, velocity: 0 };
 const cut = { type: 'cut', duration: 0, ease: 'linear' };
-const dissolve = { type: 'crossfade', duration: 0.35, ease: 'sine-in-out' };
 
 function track(id, target, points, operation = 'replace', extrapolate = 'clamp') {
   return { id, target, keyframes: points.map(([at, value, pointEase = ease]) => ({ at, value, ease: pointEase })), operation, extrapolate, enabled: true };
@@ -65,18 +64,18 @@ const kinetic = project('kinetic-type', 'Kinetic Type', '#09090b', '#f5f3ea', '#
     shape('orange-rail', 4, 0, { shape: 'round-rect', x: 122, y: 154, width: 18, height: 772, fill: '#ff5c35', radius: 9 }, { tracks: [track('rail-draw', 'height', [[0, 1], [0.8, 772], [4, 772]])] }),
     text('move', 4, 2, 'MOVE', { x: 190, y: 190, width: 1530, height: 480 }, { fontSize: 330, fontWeight: 850, letterSpacing: -16, clip: { x: 170, y: 190, width: 1580, height: 490, radius: 0 }, tracks: [track('move-rise', 'transform.y', [[0, 350], [1.05, 0, spring], [4, 0]]), track('move-open', 'letterSpacing', [[0, -48], [1.3, -16], [4, -16]])] }),
     text('sub', 3.2, 3, 'Motion starts with hierarchy.', { x: 205, y: 730, width: 1120, height: 120 }, { start: 0.8, fontSize: 54, fontWeight: 450, letterSpacing: 0, color: '#b3b1aa', tracks: [track('sub-in', 'transform.opacity', [[0, 0], [0.5, 1], [3.2, 1]])] }),
-  ], cut, dissolve, ['The headline settles by 1.3 seconds and holds for comprehension.']),
+  ], cut, cut, ['The headline settles by 1.3 seconds and holds for comprehension.']),
   scene('build-rhythm', 'Turn type into a paced sequence rather than a static title.', 4, '#ff5c35', [
     shape('black-band', 4, 0, { shape: 'rect', x: 0, y: 760, width: 1920, height: 320, fill: '#f5f3ea' }),
-    text('type', 4, 2, 'TYPE', { x: 130, y: 100, width: 1600, height: 250 }, { fontSize: 190, color: '#09090b', letterSpacing: -8, tracks: [track('type-slide', 'transform.x', [[0, -260], [0.75, 0], [4, 0]])] }),
+    text('type', 4, 2, 'TYPE', { x: 130, y: 100, width: 1600, height: 250 }, { fontSize: 190, color: '#09090b', letterSpacing: -8, tracks: [] }),
     text('becomes', 3.35, 2, 'BECOMES', { x: 130, y: 365, width: 1600, height: 250 }, { start: 0.65, fontSize: 190, color: '#09090b', letterSpacing: -8, tracks: [track('becomes-slide', 'transform.x', [[0, 280], [0.75, 0], [3.35, 0]])] }),
     text('rhythm', 2.65, 2, 'RHYTHM', { x: 130, y: 770, width: 1600, height: 220 }, { start: 1.35, fontSize: 190, color: '#09090b', letterSpacing: -8, tracks: [track('rhythm-rise', 'transform.y', [[0, 190], [0.7, 0], [2.65, 0]])] }),
-  ], dissolve, dissolve),
+  ], cut, cut),
   scene('resolve', 'Resolve on a concise statement with a stable final hold.', 4, '#f5f3ea', [
     shape('period', 4, 0, { shape: 'ellipse', x: 1545, y: 682, width: 118, height: 118, fill: '#ff5c35' }, { tracks: [track('period-scale', 'transform.scaleX', [[0, 0.01], [0.65, 1, spring], [4, 1]]), track('period-scale-y', 'transform.scaleY', [[0, 0.01], [0.65, 1, spring], [4, 1]])] }),
-    text('make-time', 4, 2, 'MAKE TIME\nVISIBLE', { x: 210, y: 235, width: 1420, height: 590 }, { fontSize: 230, color: '#09090b', lineHeight: 0.88, letterSpacing: -11, tracks: [track('resolve-in', 'transform.opacity', [[0, 0], [0.65, 1], [4, 1]]), track('resolve-track', 'letterSpacing', [[0, -30], [0.9, -11], [4, -11]])] }),
+    text('make-time', 4, 2, 'MAKE TIME\nVISIBLE', { x: 210, y: 235, width: 1420, height: 590 }, { fontSize: 230, color: '#09090b', lineHeight: 0.88, letterSpacing: -11, tracks: [] }),
     text('signature', 3.1, 3, 'GENMOTION / PUBLIC EXAMPLE 01', { x: 220, y: 900, width: 1000, height: 55 }, { start: 0.9, fontSize: 28, fontWeight: 550, color: '#4b4b4f', letterSpacing: 3, tracks: [track('signature-in', 'transform.opacity', [[0, 0], [0.4, 1], [3.1, 1]])] }),
-  ], dissolve, cut, ['The final layout is fully settled for more than two seconds.']),
+  ], cut, cut, ['The final layout is fully settled for more than two seconds.']),
 ], { family: 'kinetic-typography', duration: '12' });
 
 const pulseAnchor = { x: 1744, y: 494 };
@@ -113,7 +112,7 @@ const dataPulse = project('data-pulse', 'Data Pulse', '#05070a', '#f5f1e8', '#d7
     }),
     shape('pulse-ring-outer', 5.2, 14, { shape: 'ellipse', x: 0, y: 0, width: 112, height: 112, centerAnchor: 'pulse-target', fill: '#00000000', stroke: '#d7ff3f', strokeWidth: 5 }, { tracks: [track('pulse-ring-scale', 'transform.scaleX', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]]), track('pulse-ring-scale-y', 'transform.scaleY', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]])], shadow: { color: '#d7ff3f99', blur: 28, offsetX: 0, offsetY: 0 } }),
     shape('pulse-core', 5.2, 15, { shape: 'ellipse', x: 0, y: 0, width: 40, height: 40, centerAnchor: 'pulse-target', fill: '#f5f1e8' }, { tracks: [track('pulse-core-scale', 'transform.scaleX', [[0, 0.01], [1.55, 1, spring], [5.2, 1]]), track('pulse-core-scale-y', 'transform.scaleY', [[0, 0.01], [1.55, 1, spring], [5.2, 1]])] }),
-    text('find', 5.2, 20, 'FIND', { x: 110, y: 120, width: 650, height: 210 }, { fontSize: 180, fontWeight: 820, letterSpacing: -9, tracks: [track('find-in', 'transform.x', [[0, -820], [0.72, 0], [5.2, 0]])] }),
+    text('find', 5.2, 20, 'FIND', { x: 110, y: 120, width: 650, height: 210 }, { fontSize: 180, fontWeight: 820, letterSpacing: -9, tracks: [] }),
     text('the', 4.75, 20, 'THE', { x: 110, y: 325, width: 650, height: 210 }, { start: 0.45, fontSize: 180, fontWeight: 820, color: '#8886a2', letterSpacing: -9, tracks: [track('the-in', 'transform.x', [[0, -130], [0.72, 0], [4.75, 0]])] }),
     text('pulse', 4.3, 20, 'PULSE', { x: 110, y: 530, width: 850, height: 230 }, { start: 0.9, fontSize: 180, fontWeight: 820, color: '#d7ff3f', letterSpacing: -9, tracks: [track('pulse-in', 'transform.x', [[0, -130], [0.72, 0], [4.3, 0]])] }),
     text('coherence-note', 3.35, 20, 'MILLIONS OF EVENTS. ONE DIRECTION.', { x: 122, y: 850, width: 980, height: 70 }, { start: 1.85, fontSize: 29, fontWeight: 620, color: '#aaa8b6', letterSpacing: 4, tracks: [track('coherence-note-in', 'transform.opacity', [[0, 0], [0.45, 1], [3.35, 1]])] }),
@@ -131,24 +130,24 @@ const arcOne = project('arc-one', 'Arc One', '#07090d', '#f4f6f8', '#5fa8ff', [
   scene('promise', 'Open with a restrained product promise.', 3.5, '#07090d', [
     shape('halo', 3.5, 0, { shape: 'ellipse', x: 620, y: 230, width: 680, height: 680, fill: '#102746', stroke: '#5fa8ff55', strokeWidth: 3 }, { blendMode: 'screen', tracks: [track('halo-breathe', 'transform.scaleX', [[0, 0.72], [1.5, 1], [3.5, 1]]), track('halo-breathe-y', 'transform.scaleY', [[0, 0.72], [1.5, 1], [3.5, 1]])] }),
     text('promise-copy', 3.5, 2, 'Sound, shaped.', { x: 300, y: 430, width: 1320, height: 220 }, { fontSize: 142, align: 'center', letterSpacing: -6, clip: { x: 280, y: 430, width: 1360, height: 230, radius: 0 }, tracks: [track('promise-rise', 'transform.y', [[0, 160], [0.95, 0], [3.5, 0]])] }),
-  ], cut, dissolve),
+  ], cut, cut),
   scene('object', 'Reveal an original vector speaker silhouette and material system.', 4.2, '#090c12', [
     shape('speaker-shadow', 4.2, 0, { shape: 'ellipse', x: 560, y: 842, width: 800, height: 90, fill: '#00000099' }, { tracks: [track('shadow-in', 'transform.opacity', [[0, 0], [0.9, 1], [4.2, 1]])] }),
     shape('speaker-body', 4.2, 2, { shape: 'round-rect', x: 670, y: 140, width: 580, height: 720, fill: '#b7bcc5', stroke: '#f8fafc', strokeWidth: 3, radius: 86, shadow: { color: '#000000aa', blur: 70, offsetX: 0, offsetY: 30 } }, { tracks: [track('body-scale', 'transform.scaleX', [[0, 0.78], [1.1, 1, spring], [4.2, 1]]), track('body-scale-y', 'transform.scaleY', [[0, 0.78], [1.1, 1, spring], [4.2, 1]]), track('body-tilt', 'transform.rotation', [[0, -8], [1.2, 0], [4.2, 0]])] }),
     shape('speaker-grille', 4.2, 3, { shape: 'path', path: 'M 30 0 L 550 0 Q 580 0 580 30 L 580 520 Q 580 550 550 550 L 30 550 Q 0 550 0 520 L 0 30 Q 0 0 30 0 M 84 88 L 496 88 M 84 156 L 496 156 M 84 224 L 496 224 M 84 292 L 496 292 M 84 360 L 496 360 M 84 428 L 496 428', x: 670, y: 190, width: 580, height: 550, fill: '#151a23', stroke: '#697385', strokeWidth: 4 }, { tracks: [track('grille-draw', 'progress', [[0.45, 0], [1.65, 1], [4.2, 1]])] }),
     text('product-name', 3.1, 4, 'ARC ONE', { x: 120, y: 830, width: 450, height: 70 }, { start: 1.1, fontSize: 40, fontWeight: 650, letterSpacing: 6, color: '#5fa8ff', tracks: [track('name-in', 'transform.opacity', [[0, 0], [0.5, 1], [3.1, 1]])] }),
-  ], dissolve, dissolve),
+  ], cut, cut),
   scene('details', 'Show three product attributes with a controlled macro push.', 4.3, '#dfe3e8', [
     shape('detail-body', 4.3, 0, { shape: 'round-rect', x: 930, y: -180, width: 950, height: 1320, fill: '#9ea6b2', stroke: '#ffffff', strokeWidth: 4, radius: 130, shadow: { color: '#52607066', blur: 80, offsetX: -20, offsetY: 30 } }, { tracks: [track('macro-push', 'transform.scaleX', [[0, 0.94], [1.25, 1.08], [4.3, 1.08]]), track('macro-push-y', 'transform.scaleY', [[0, 0.94], [1.25, 1.08], [4.3, 1.08]])] }),
-    text('detail-one', 4.3, 2, 'SEAMLESS\nALUMINUM', { x: 120, y: 145, width: 750, height: 250 }, { fontSize: 92, color: '#111720', lineHeight: 0.92, letterSpacing: -3, tracks: [track('detail-one-in', 'transform.opacity', [[0, 0], [0.5, 1], [4.3, 1]])] }),
+    text('detail-one', 4.3, 2, 'SEAMLESS\nALUMINUM', { x: 120, y: 145, width: 750, height: 250 }, { fontSize: 92, color: '#111720', lineHeight: 0.92, letterSpacing: -3, tracks: [] }),
     text('detail-two', 3.55, 2, 'SPATIAL AUDIO', { x: 120, y: 500, width: 760, height: 95 }, { start: 0.75, fontSize: 54, color: '#35506f', letterSpacing: 2, tracks: [track('detail-two-in', 'transform.x', [[0, -80], [0.55, 0], [3.55, 0]])] }),
     text('detail-three', 2.75, 2, '30-HOUR BATTERY', { x: 120, y: 630, width: 760, height: 95 }, { start: 1.55, fontSize: 54, color: '#35506f', letterSpacing: 2, tracks: [track('detail-three-in', 'transform.x', [[0, -80], [0.55, 0], [2.75, 0]])] }),
-  ], dissolve, dissolve),
+  ], cut, cut),
   scene('lockup', 'End with a completely stable product lockup.', 3, '#07090d', [
     shape('lockup-mark', 3, 0, { shape: 'path', path: 'M 50 0 L 100 86 L 50 172 L 0 86 Z', x: 885, y: 230, width: 150, height: 172, fill: '#5fa8ff' }, { tracks: [track('mark-in', 'transform.scaleX', [[0, 0.01], [0.55, 1, spring], [3, 1]]), track('mark-in-y', 'transform.scaleY', [[0, 0.01], [0.55, 1, spring], [3, 1]])] }),
-    text('arc-lockup', 3, 2, 'Arc One', { x: 360, y: 450, width: 1200, height: 220 }, { fontSize: 160, align: 'center', letterSpacing: -6, tracks: [track('lockup-in', 'transform.opacity', [[0, 0], [0.45, 1], [3, 1]])] }),
+    text('arc-lockup', 3, 2, 'Arc One', { x: 360, y: 450, width: 1200, height: 220 }, { fontSize: 160, align: 'center', letterSpacing: -6, tracks: [] }),
     text('arc-tagline', 2.45, 2, 'Hear the space between.', { x: 520, y: 680, width: 880, height: 80 }, { start: 0.55, fontSize: 44, fontWeight: 450, align: 'center', letterSpacing: 0, color: '#9ea9b9', tracks: [track('tagline-in', 'transform.opacity', [[0, 0], [0.35, 1], [2.45, 1]])] }),
-  ], dissolve, cut, ['All animation finishes by 0.9 seconds, leaving a stable 2.1-second hold.']),
+  ], cut, cut, ['All animation finishes by 0.9 seconds, leaving a stable 2.1-second hold.']),
 ], { family: 'product-launch', duration: '15', soundtrack: 'deterministic-original' }, [
   { id: 'original-bed', src: 'assets/original-bed.wav', start: 0, trimStart: 0, duration: 15, volume: 0.42, pan: 0, fadeIn: 0.35, fadeOut: 0.8, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' },
 ]);

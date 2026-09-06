@@ -13,6 +13,9 @@ import { GenmotionError } from '../errors.js';
 import { prepareVideoAssets } from './assets.js';
 import { mixAudio } from './audio.js';
 import { probeVideo, type VideoProbe } from './probe.js';
+import { projectForRenderComposition } from './render-projection.js';
+import { resolveRenderView } from './render-view.js';
+import { resolveAlphaOutput, flattenRgbaInPlace, type AlphaMode, type AlphaOutput } from './alpha-output.js';
 
 export type RenderQuality = 'draft' | 'standard' | 'high';
 export type VideoCodec = 'h264' | 'h265' | 'vp9' | 'prores';
@@ -28,12 +31,18 @@ export function validateOutputContainer(output: string, codec: VideoCodec): void
 }
 
 export interface RenderOptions {
-  output: string;
+  output?: string | undefined;
   quality?: RenderQuality;
   codec?: VideoCodec;
   workers?: number | undefined;
   hardwareAcceleration?: boolean;
   resolution?: RenderResolution;
+  range?: { startFrame: number; endFrame: number } | undefined;
+  sceneId?: string | undefined;
+  compositionId?: string | undefined;
+  group?: { sceneId: string; layerId: string } | undefined;
+  alphaMode?: AlphaMode | undefined;
+  alphaBackground?: string | undefined;
   signal?: AbortSignal;
   timeoutMs?: number | undefined;
   maxBufferedFrames?: number | undefined;
@@ -66,6 +75,37 @@ export interface RenderResult {
   height: number;
   quality: RenderQuality;
   codec: VideoCodec;
+  sourceRange: { startFrame: number; endFrame: number };
+  sourceCompositionId?: string;
+  sourceGroup?: { sceneId: string; layerId: string };
+  alphaOutput: AlphaOutput;
+}
+
+export function resolveRenderRange(project: GenmotionProject, options: Pick<RenderOptions, 'range' | 'sceneId' | 'group'>): { startFrame: number; endFrame: number } {
+  if (options.range && options.sceneId !== undefined) throw new GenmotionError('RENDER_SELECTION_CONFLICT', 'Choose a scene or a frame range, not both.');
+  if (options.group && options.sceneId !== undefined) throw new GenmotionError('RENDER_SELECTION_CONFLICT', 'A group already identifies its scene.');
+  // Decimal scene sums can land a few ULPs above an exact frame boundary.
+  const frameCeiling = (time: number): number => { const frame = time * project.fps; return Math.ceil(frame - Number.EPSILON * Math.max(1, Math.abs(frame)) * 16); };
+  const frames = frameCeiling(projectDuration(project));
+  let range = options.range ?? { startFrame: 0, endFrame: frames };
+  const sceneId = options.sceneId ?? options.group?.sceneId;
+  if (sceneId !== undefined) {
+    const matches = project.scenes.filter(scene => scene.id === sceneId);
+    if (matches.length !== 1) throw new GenmotionError('RENDER_SCENE_MISSING', 'Render selection requires one unambiguous scene.');
+    let start = 0;
+    for (const scene of project.scenes) {
+      if (scene.id === sceneId) {
+        const sceneRange = { startFrame: frameCeiling(start), endFrame: frameCeiling(start + scene.duration) };
+        if (options.group && options.range) {
+          if (range.startFrame < sceneRange.startFrame || range.endFrame > sceneRange.endFrame) throw new GenmotionError('INVALID_RENDER_RANGE', 'Group frame range must remain inside its scene.');
+        } else range = sceneRange;
+        break;
+      }
+      start += scene.duration;
+    }
+  }
+  if (!Number.isSafeInteger(range.startFrame) || !Number.isSafeInteger(range.endFrame) || range.startFrame < 0 || range.startFrame >= range.endFrame || range.endFrame > frames) throw new GenmotionError('INVALID_RENDER_RANGE', 'Render range requires integer frames, an exclusive end and at least one frame inside the project.');
+  return { ...range };
 }
 
 export interface RenderResolution { width: number; height: number }
@@ -83,13 +123,13 @@ export function resolveRenderResolution(project: Pick<GenmotionProject, 'width' 
   }
   const minimumLongEdge = quality === 'draft' ? 0 : quality === 'standard' ? 1280 : 1920;
   const currentLongEdge = Math.max(project.width, project.height);
-  if (currentLongEdge >= minimumLongEdge) return { width: project.width, height: project.height };
-  const scale = minimumLongEdge / currentLongEdge;
   const even = (value: number): number => Math.max(2, Math.round(value / 2) * 2);
+  if (currentLongEdge >= minimumLongEdge) return { width: even(project.width), height: even(project.height) };
+  const scale = minimumLongEdge / currentLongEdge;
   return { width: even(project.width * scale), height: even(project.height * scale) };
 }
 
-function ffmpegEncoderArgs(project: GenmotionProject, dimensions: RenderResolution, codec: VideoCodec, quality: RenderQuality, output: string, hardware: boolean): string[] {
+function ffmpegEncoderArgs(project: GenmotionProject, dimensions: RenderResolution, codec: VideoCodec, quality: RenderQuality, output: string, hardware: boolean, alpha: AlphaOutput): string[] {
   const base = [
     '-hide_banner', '-loglevel', 'error', '-y',
     '-f', 'rawvideo', '-pixel_format', 'rgba',
@@ -106,9 +146,10 @@ function ffmpegEncoderArgs(project: GenmotionProject, dimensions: RenderResoluti
     base.push('-c:v', 'libx265', '-preset', preset, '-crf', crf, '-pix_fmt', 'yuv420p10le');
   } else if (codec === 'vp9') {
     // Do not let newer FFmpeg builds select experimental planar RGB+alpha.
-    base.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-row-mt', '1', '-pix_fmt', 'yuva420p');
+    base.push('-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-row-mt', '1', '-pix_fmt', alpha.mode === 'preserve' ? 'yuva420p' : 'yuv420p');
   } else {
-    base.push('-c:v', 'prores_ks', '-profile:v', quality === 'high' ? '3' : '2', '-pix_fmt', 'yuv422p10le');
+    if (alpha.mode === 'preserve') base.push('-c:v', 'prores_ks', '-profile:v', quality === 'high' ? '4444xq' : '4444', '-pix_fmt', 'yuva444p10le', '-alpha_bits', '16');
+    else base.push('-c:v', 'prores_ks', '-profile:v', quality === 'high' ? '3' : '2', '-pix_fmt', 'yuv422p10le');
   }
   if (dimensions.width >= 1280 || dimensions.height >= 720) base.push('-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709');
   if (codec !== 'vp9') base.push('-movflags', '+faststart');
@@ -137,15 +178,23 @@ export function resolveRenderLimits(dimensions: RenderResolution, options: Pick<
 export async function renderProject(loaded: LoadedProject, options: RenderOptions): Promise<RenderResult> {
   if (options.signal?.aborted) throw new GenmotionError('RENDER_ABORTED', 'Render was aborted before it started.');
   const started = performance.now();
-  const { project, projectDir } = loaded;
+  const { projectDir } = loaded;
+  if (options.compositionId !== undefined && (options.sceneId !== undefined || options.group)) throw new GenmotionError('RENDER_SELECTION_CONFLICT', 'Choose a scene, group or standalone composition.');
+  const project = projectForRenderComposition(loaded.project, options.compositionId);
+  const view = resolveRenderView(project, options.group);
   const quality = options.quality ?? 'high';
   const codec = options.codec ?? 'h264';
   if (!['draft', 'standard', 'high'].includes(quality) || !['h264', 'h265', 'vp9', 'prores'].includes(codec)) throw new GenmotionError('INVALID_RENDER_OPTIONS', 'Unknown output quality or codec.');
+  const alphaOutput = resolveAlphaOutput(codec, options.alphaMode, options.alphaBackground);
   const dimensions = resolveRenderResolution(project, quality, options.resolution);
   const limits = resolveRenderLimits(dimensions, options);
-  const totalFrames = Math.ceil(projectDuration(project) * project.fps);
+  const sourceRange = resolveRenderRange(project, options);
+  const totalFrames = sourceRange.endFrame - sourceRange.startFrame;
+  const selected = options.range !== undefined || options.sceneId !== undefined || options.group !== undefined;
+  const duration = selected ? totalFrames / project.fps : projectDuration(project);
   if (!Number.isSafeInteger(totalFrames) || totalFrames < 1) throw new GenmotionError('INVALID_RENDER_DURATION', 'A render must contain a finite positive frame count.');
-  const output = path.resolve(options.output);
+  const selectionSuffix = (options.compositionId !== undefined ? `-composition-${options.compositionId}` : '') + (options.group ? `-group-${options.group.sceneId}-${options.group.layerId}` : '') + (options.sceneId !== undefined ? `-scene-${options.sceneId}` : options.range ? `-frames-${sourceRange.startFrame}-${sourceRange.endFrame}` : '');
+  const output = path.resolve(options.output ?? path.join(projectDir, 'renders', `${project.outputName ?? project.id}${selectionSuffix}${defaultVideoExtension(codec)}`));
   validateOutputContainer(output, codec);
   const outputKey = process.platform === 'win32' ? output.toLowerCase() : output;
   if (activeOutputs.has(outputKey)) throw new GenmotionError('OUTPUT_BUSY', 'An active render already owns this output path.');
@@ -156,7 +205,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
     controller.abort(new GenmotionError('RENDER_TIMEOUT', 'Render exceeded its deadline.', { timeoutMs: options.timeoutMs }));
   }, options.timeoutMs);
   deadline?.unref();
-  const renderId = createHash('sha256').update(JSON.stringify({ project, dimensions, quality, codec })).digest('hex').slice(0, 16);
+  const renderId = createHash('sha256').update(JSON.stringify({ project, dimensions, quality, codec, alphaOutput, ...(selected ? { sourceRange } : {}), ...(view ? { view } : {}) })).digest('hex').slice(0, 16);
   let stage: RenderStage = 'preparing';
   let peakBufferedBytes = 0;
   let state: FrameStreamState = { renderedFrames: 0, encodedFrames: 0, inFlightFrames: 0, bufferedFrames: 0, bufferedBytes: 0, maxBufferedFrames: Math.min(limits.capacity, totalFrames), maxBufferedBytes: Math.min(limits.capacity, totalFrames) * limits.frameBytes };
@@ -179,16 +228,17 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
     const silentVideo = path.join(staging, 'silent' + (codec === 'vp9' ? '.webm' : codec === 'prores' ? '.mov' : '.mp4'));
     const candidate = path.join(staging, 'master' + (path.extname(output) || '.mp4'));
     enter('rendering');
-    encoder = startProcess('ffmpeg', ffmpegEncoderArgs(project, dimensions, codec, quality, silentVideo, options.hardwareAcceleration ?? false), projectDir, { signal });
+    encoder = startProcess('ffmpeg', ffmpegEncoderArgs(project, dimensions, codec, quality, silentVideo, options.hardwareAcceleration ?? false, alphaOutput), projectDir, { signal });
     const encoding = encoder;
-    pool = await NativeFramePool.create(project, projectDir, dimensions, Math.min(limits.workers, totalFrames));
+    pool = await NativeFramePool.create(project, projectDir, dimensions, Math.min(limits.workers, totalFrames), view);
     const framePool = pool;
     await Promise.race([
       streamOrderedFrames({
         totalFrames, frameBytes: limits.frameBytes, capacity: Math.min(limits.capacity, totalFrames), signal,
-        render: async (frame) => framePool.render(frame),
+        render: async (frame) => framePool.render(sourceRange.startFrame + frame),
         write: async (buffer) => {
           throwIfAborted(signal);
+          if (alphaOutput.mode === 'flatten') flattenRgbaInPlace(buffer, alphaOutput.background);
           // Wait for ownership of every chunk to leave Node's writable queue,
           // including small frames below the stream's high-water mark.
           await new Promise<void>((resolve, reject) => {
@@ -205,12 +255,13 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
     encoding.child.stdin.end();
     await encoding.completed;
     enter('mixing');
-    await mixAudio(project, projectDir, silentVideo, candidate, { signal });
+    await mixAudio(project, projectDir, silentVideo, candidate, { signal, view, ...(selected ? { range: { start: sourceRange.startFrame / project.fps, duration } } : {}) });
     enter('verifying');
     const probe = await probeVideo(candidate, { signal });
     acceptedProbe = probe;
-    if (probe.width !== dimensions.width || probe.height !== dimensions.height || !Number.isFinite(probe.frameRate) || Math.abs(probe.frameRate - project.fps) > 0.01 || !Number.isFinite(probe.duration) || Math.abs(probe.duration - projectDuration(project)) > Math.max(0.12, 2 / project.fps)) {
-      throw new GenmotionError('OUTPUT_VERIFICATION_FAILED', 'Encoded output does not match the render contract.', { expected: { ...dimensions, frameRate: project.fps, duration: projectDuration(project) }, actual: probe });
+    if (alphaOutput.mode === 'preserve' && !probe.alphaSignaled) throw new GenmotionError('OUTPUT_ALPHA_MISSING', 'The encoded output does not signal an alpha plane.');
+    if (probe.width !== dimensions.width || probe.height !== dimensions.height || !Number.isFinite(probe.frameRate) || Math.abs(probe.frameRate - project.fps) > 0.01 || !Number.isFinite(probe.duration) || Math.abs(probe.duration - duration) > Math.max(0.12, 2 / project.fps)) {
+      throw new GenmotionError('OUTPUT_VERIFICATION_FAILED', 'Encoded output does not match the render contract.', { expected: { ...dimensions, frameRate: project.fps, duration }, actual: probe });
     }
     throwIfAborted(signal);
     // The only write to the destination happens after a successful verification.
@@ -230,5 +281,5 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
     } finally { activeOutputs.delete(outputKey); }
   }
   const elapsedMs = performance.now() - started;
-  return { output, duration: projectDuration(project), frames: totalFrames, elapsedMs, averageFps: totalFrames / (elapsedMs / 1000), renderId, ...dimensions, quality, codec, peakBufferedBytes, workers: Math.min(limits.workers, totalFrames), probe: acceptedProbe };
+  return { output, duration, frames: totalFrames, elapsedMs, averageFps: totalFrames / (elapsedMs / 1000), renderId, ...dimensions, quality, codec, alphaOutput, sourceRange, ...(options.compositionId !== undefined ? { sourceCompositionId: options.compositionId } : {}), ...(view ? { sourceGroup: { sceneId: view.sceneId, layerId: view.layerIds[0]! } } : {}), peakBufferedBytes, workers: Math.min(limits.workers, totalFrames), probe: acceptedProbe };
 }

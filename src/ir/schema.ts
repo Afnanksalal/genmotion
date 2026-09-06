@@ -4,6 +4,9 @@ import { lookupTableSchema } from './lut.js';
 import { timelineMarkersSchema, timelineRangesSchema } from './markers.js';
 import { z } from 'zod';
 import { pathOperationsSchema } from './path-operations.js';
+import { pathEditStateSchema } from './path-nodes.js';
+import { gestureProvenanceSchema } from './gesture-recording.js';
+import { parameterExpressionSchema, type ParameterExpression } from './expressions.js';
 import { audioEffectsSchema, audioNormalizationSchema } from './audio-effects.js';
 import { gradientSchema } from './paint.js';
 import { productionBriefSchema } from './brief.js';
@@ -238,6 +241,7 @@ const baseLayerSchema = z.object({
   tags: z.array(z.string()).default([]),
   motion: z.array(motionDirectiveSchema).default([]),
   tracks: z.array(animationTrackSchema).default([]),
+  gestureRecordings: z.array(gestureProvenanceSchema).max(64).optional(),
   trackGroups: z.array(trackGroupSchema).max(256).optional(),
   propertyLinks: z.array(propertyLinkSchema).max(256).optional(),
   effects: visualEffectsSchema.optional(),
@@ -258,6 +262,9 @@ const baseLayerSchema = z.object({
 export const textLayerSchema = baseLayerSchema.extend({
   type: z.literal('text'),
   text: z.string(),
+  locale: z.string().min(1).max(100).refine(value => { try { return Intl.getCanonicalLocales(value).length === 1; } catch { return false; } }, 'Expected a valid language tag').optional(),
+  direction: z.enum(['ltr', 'rtl', 'auto']).optional(),
+  wrap: z.enum(['word', 'grapheme', 'none']).optional(),
   x: finite,
   y: finite,
   width: positive,
@@ -271,6 +278,9 @@ export const textLayerSchema = baseLayerSchema.extend({
   gradientFill: gradientSchema.optional(),
   align: z.enum(['left', 'center', 'right']).default('left'),
   verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
+  horizontalMetrics: z.enum(['advance', 'ink']).optional(),
+  verticalMetrics: z.enum(['line-box', 'cap-height', 'ink']).optional(),
+  baselineOffset: finite.optional(),
   lineHeight: positive.default(1.15),
   letterSpacing: finite.default(0),
   maxLines: z.number().int().positive().optional(),
@@ -308,6 +318,7 @@ export const shapeLayerSchema = baseLayerSchema.extend({
   points: z.array(pointSchema).optional(),
   path: z.string().min(1).optional(),
   pathOperations: pathOperationsSchema.optional(),
+  pathEditState: pathEditStateSchema.optional(),
   sides: z.number().int().min(3).max(256).optional(),
   innerRadius: finite.min(0).max(1).optional(),
   startAngle: finite.optional(),
@@ -364,10 +375,20 @@ export const videoLayerSchema = baseLayerSchema.extend({
   volume: finite.min(0).max(2).default(1),
 });
 
+export const instanceOverrideChangeSchema = z.discriminatedUnion('op', [
+  z.object({ op: z.literal('set'), target: z.array(identifier).min(1).max(128), path: z.array(z.string().min(1)).min(1).max(16), value: z.lazy(() => parameterValueSchema), expected: z.object({ exists: z.boolean(), value: z.lazy(() => parameterValueSchema).optional() }).strict().optional() }).strict(),
+  z.object({ op: z.literal('unset'), target: z.array(identifier).min(1).max(128), path: z.array(z.string().min(1)).min(1).max(16), expected: z.object({ exists: z.boolean(), value: z.lazy(() => parameterValueSchema).optional() }).strict().optional() }).strict(),
+  z.object({ op: z.literal('remove-layer'), target: z.array(identifier).min(1).max(128), expectedLayerHash: z.string().regex(/^[a-f0-9]{64}$/).optional() }).strict(),
+]);
+export const instanceOverridesSchema = z.object({ version: z.literal(1), baseRevision: z.string().regex(/^[a-f0-9]{64}$/).optional(), changes: z.array(instanceOverrideChangeSchema).max(500) }).strict();
+export type InstanceOverrideChange = z.infer<typeof instanceOverrideChangeSchema>;
+export type InstanceOverrides = z.infer<typeof instanceOverridesSchema>;
+
 export const compositionLayerSchema = baseLayerSchema.extend({
   type: z.literal('composition'),
   compositionId: identifier,
   parameterValues: z.record(z.string(), z.lazy(() => parameterValueSchema)).optional(),
+  overrides: instanceOverridesSchema.optional(),
   x: finite,
   y: finite,
   width: positive,
@@ -453,6 +474,8 @@ export const compositionSchema = z.object({
   width: positive,
   height: positive,
   duration: positive,
+  durationMode: z.enum(['explicit', 'content']).optional(), durationPadding: nonNegative.optional(),
+  parameterBindings: z.object({ width: identifier.optional(), height: identifier.optional(), fps: identifier.optional(), duration: identifier.optional() }).strict().optional(),
   background: color.optional(),
   layers: z.array(layerSchema).min(1),
   effects: visualEffectsSchema.optional(),
@@ -467,11 +490,32 @@ export const parameterValueSchema: z.ZodType<ParameterValue> = z.lazy(() => z.pr
   z.record(z.string().refine((key) => !['__proto__', 'prototype', 'constructor'].includes(key), 'Unsafe property'), parameterValueSchema),
 ])));
 
+export const frozenDataSourceSchema = z.object({
+  version: z.literal(1), id: identifier, parameterId: identifier,
+  format: z.enum(['json', 'csv']), sourceName: z.string().min(1).max(200),
+  capturedAt: z.string().datetime(), sourceHash: z.string().regex(/^[a-f0-9]{64}$/),
+  valueHash: z.string().regex(/^[a-f0-9]{64}$/),
+  value: z.preprocess((input, context) => {
+    const pending: Array<{ value: unknown; depth: number }> = [{ value: input, depth: 0 }]; let count = 0;
+    while (pending.length) {
+      const entry = pending.pop()!;
+      if (++count > 100_000 || entry.depth > 32) { context.addIssue({ code: 'custom', message: 'Frozen data exceeds 100000 values or 32 levels.' }); return z.NEVER; }
+      if (entry.value && typeof entry.value === 'object') for (const value of Object.values(entry.value)) {
+        if (pending.length >= 100_000) { context.addIssue({ code: 'custom', message: 'Frozen data exceeds its traversal budget.' }); return z.NEVER; }
+        pending.push({ value, depth: entry.depth + 1 });
+      }
+    }
+    return input;
+  }, parameterValueSchema),
+}).strict();
+export type FrozenDataSource = z.infer<typeof frozenDataSourceSchema>;
+
 export interface ParameterDefinition {
   id: string;
   label: string;
   type: 'number' | 'boolean' | 'string' | 'color' | 'enum' | 'file' | 'asset' | 'font' | 'dimension' | 'duration' | 'object' | 'array';
   default: ParameterValue;
+  derive?: ParameterExpression | undefined;
   optional?: boolean | undefined;
   description?: string | undefined;
   group?: string | undefined;
@@ -490,6 +534,7 @@ export const parameterSchema: z.ZodType<ParameterDefinition> = z.lazy(() => z.ob
   label: z.string().min(1),
   type: z.enum(['number', 'boolean', 'string', 'color', 'enum', 'file', 'asset', 'font', 'dimension', 'duration', 'object', 'array']),
   default: parameterValueSchema,
+  derive: parameterExpressionSchema.optional(),
   optional: z.boolean().optional(), description: z.string().optional(), group: z.string().optional(),
   min: finite.optional(), max: finite.optional(), step: positive.optional(),
   minLength: z.number().int().nonnegative().optional(), maxLength: z.number().int().nonnegative().optional(),
@@ -509,6 +554,8 @@ export const sceneSchema = z.object({
   id: z.string().min(1).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/),
   purpose: z.string().min(1),
   duration: positive,
+  durationMode: z.enum(['explicit', 'content']).optional(), durationPadding: nonNegative.optional(),
+  parameterBindings: z.object({ duration: identifier.optional() }).strict().optional(),
   background: color,
   layers: z.array(layerSchema).min(1),
   effects: visualEffectsSchema.optional(),
@@ -549,15 +596,18 @@ export const projectSchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string().min(1).regex(/^[a-z0-9][a-z0-9-]*$/),
   title: z.string().min(1),
+  outputName: z.string().min(1).max(180).refine(value => !/[<>:"/\\|?*]/.test(value) && ![...value].some(character => character.charCodeAt(0) < 32) && !/[. ]$/.test(value) && !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(value) && value !== '.', 'Output name must be a portable filename stem.').optional(),
   productionBrief: productionBriefSchema.optional(),
   productionWorkflow: productionWorkflowSchema.optional(),
   markers: timelineMarkersSchema.optional(), ranges: timelineRangesSchema.optional(),
   width: z.number().int().min(64).max(8192),
   height: z.number().int().min(64).max(8192),
   fps: z.number().int().min(1).max(120),
+  parameterBindings: z.object({ width: identifier.optional(), height: identifier.optional(), fps: identifier.optional(), title: identifier.optional(), outputName: identifier.optional() }).strict().optional(),
   seed: z.number().int().default(1),
   anchors: z.array(geometryAnchorSchema).default([]),
   parameters: z.array(parameterSchema).default([]),
+  dataSources: z.array(frozenDataSourceSchema).max(64).optional(),
   parameterValues: z.record(z.string(), parameterValueSchema).default({}),
   variants: z.array(variantSchema).default([]),
   compositions: z.array(compositionSchema).default([]),

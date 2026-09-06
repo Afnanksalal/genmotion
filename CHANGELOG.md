@@ -2,7 +2,19 @@
 
 Genmotion follows semantic versioning. GitHub releases contain the verified package archive and its `SHA256SUMS` manifest.
 
-## Unreleased — Native capability milestone (2026-09-06)
+## 2.4.0 - 2026-09-07
+
+- Replaced Studio browser-default widgets with shared custom dropdowns, steppers, checkboxes, sliders, file controls, color selection, search clearing and audio playback controls. Added keyboard navigation and synchronized disabled states.
+
+- Added shared headless editing sessions, coalesced undo/redo, durable named checkpoints, sparse nested overrides and explicit conflict reconciliation.
+- Added permission-scoped live Studio agent sessions, shared playhead/selection context, canvas gesture recording with native previews, and path-node editing.
+- Added deterministic derived metadata, frozen typed JSON/CSV inputs, generated schema discovery, Unicode-aware text controls and native cap-height/ink alignment.
+- Added scene/range/composition/group exports and explicit VP9/ProRes alpha preservation or opaque flattening.
+- Fixed oversized MCP tool schemas, missing gesture-button wiring, blocked preview images and floating-point frame-boundary drift during QA.
+- Regenerated all eight 1080p examples; improved typography and replaced overlapping or empty scene handoffs with readable cuts.
+- Nine further checklist requirements accepted: **75/317** checked. See [milestone QA](docs/MILESTONE-QA-2026-09-07.md) for evidence and limits.
+
+### Earlier changes included in this release
 
 - Added three editable 1080p motion studies: Chromatic Orbit, Route Study and Type / Beat, with local assets, original audio, rendered masters, inspected contact sheets and reproducible generation/render/verification scripts.
 

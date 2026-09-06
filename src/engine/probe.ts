@@ -10,12 +10,15 @@ export interface VideoProbe {
   videoCodec: string;
   audioCodec?: string;
   size: number;
+  pixelFormat?: string;
+  profile?: string;
+  alphaSignaled?: boolean;
 }
 
 export async function probeVideo(file: string, options: ProcessOptions = {}): Promise<VideoProbe> {
   const result = await runProcess('ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', path.resolve(file)], undefined, options);
   const parsed = JSON.parse(result.stdout) as {
-    streams: Array<{ codec_type: string; codec_name: string; width?: number; height?: number; avg_frame_rate?: string }>;
+    streams: Array<{ codec_type: string; codec_name: string; width?: number; height?: number; avg_frame_rate?: string; pix_fmt?: string; profile?: string; tags?: Record<string, string> }>;
     format: { duration?: string; size?: string };
   };
   const video = parsed.streams.find((stream) => stream.codec_type === 'video');
@@ -26,6 +29,8 @@ export async function probeVideo(file: string, options: ProcessOptions = {}): Pr
     duration: Number(parsed.format.duration ?? 0), width: video.width, height: video.height,
     frameRate: (numerator ?? 0) / Math.max(1, denominator ?? 1), videoCodec: video.codec_name,
     ...(audio ? { audioCodec: audio.codec_name } : {}), size: Number(parsed.format.size ?? 0),
+    ...(video.pix_fmt ? { pixelFormat: video.pix_fmt } : {}), ...(video.profile ? { profile: video.profile } : {}),
+    alphaSignaled: /^(?:yuva|rgba|bgra|argb|abgr|gbrap|ya\d)/.test(video.pix_fmt ?? '') || Object.entries(video.tags ?? {}).some(([key, value]) => key.toLowerCase() === 'alpha_mode' && value === '1'),
   };
 }
 

@@ -20,7 +20,7 @@ test.beforeEach(async () => {
 test.afterEach(async () => {
   await studio?.close(); await preview?.close(); studio = undefined; preview = undefined;
   const relative = path.relative(os.tmpdir(), directory);
-  if (!relative.startsWith('..') && !path.isAbsolute(relative) && path.basename(directory).startsWith('genmotion-milestone-')) await rm(directory, { recursive: true, force: true });
+  if (!relative.startsWith('..') && !path.isAbsolute(relative) && path.basename(directory).startsWith('genmotion-milestone-')) await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 });
 
 test('authors custom effects and masks, persists them and renders native pixels', async ({ page }) => {
@@ -109,6 +109,13 @@ test('edits caption words and timing, then persists a timeline marker', async ({
   await page.locator('[data-marker-field="0:label"]').fill('Review this');
   await page.locator('[data-marker-field="0:label"]').press('Tab');
   await expect.poll(async () => (await loadProject(directory)).project.markers?.[0]?.label).toBe('Review this');
+  const markerColor = page.locator('[data-marker-field="0:color"]');
+  await expect(markerColor).toHaveAttribute('type', 'text');
+  await markerColor.locator('..').getByRole('button').click();
+  await page.locator('[data-color-hex]').fill('#32a8f0');
+  await page.locator('[data-color-hex]').press('Tab');
+  await page.locator('[data-color-apply]').click();
+  await expect.poll(async () => (await loadProject(directory)).project.markers?.[0]?.color).toBe('#32a8f0');
   await page.locator('#addTimelineRange').click();
   await page.locator('[data-range-field="0:start"]').fill('0.2'); await page.locator('[data-range-field="0:start"]').press('Tab');
   await page.locator('[data-range-field="0:end"]').fill('0.6'); await page.locator('[data-range-field="0:end"]').press('Tab');
@@ -130,6 +137,8 @@ test('imports a frozen LUT and reorders, bypasses and copies its native stack', 
   await page.goto(studio.url); await page.locator('[data-select="layer"][data-id="accent"]').click();
   await page.locator('#addVisualEffect').click(); await page.locator('[data-visual-fx-choice="lut"]').click();
   await page.locator('#lutFile').setInputFiles({ name: 'inverse.cube', mimeType: 'text/plain', buffer: Buffer.from('LUT_1D_SIZE 2\n1 1 1\n0 0 0\n') });
+  await expect(page.locator('.gm-file')).toContainText('inverse.cube');
+  await expect(page.locator('.gm-file button')).toBeVisible();
   await page.locator('#importLut').click();
   await expect.poll(async () => (await loadProject(directory)).project.scenes[0]!.layers[0]!.effects?.[0]?.lut?.data).toEqual([1, 1, 1, 0, 0, 0]);
   await page.locator('#addVisualEffect').click(); await page.locator('[data-visual-fx-choice="exposure"]').click();
@@ -253,4 +262,104 @@ test('Player seeks and plays against the processed native audio clock', async ({
   expect(Math.abs(result.time - result.audioTime)).toBeLessThan(.15);
   await page.getByRole('button', { name: 'Fullscreen', exact: true }).click();
   await expect.poll(async () => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true);
+});
+
+
+test('records a real pointer gesture, previews native frames, persists it and undoes it after reload', async ({ page }) => {
+  const source = (await loadProject(directory)).sourceProject;
+  source.scenes[0]!.duration = 4; source.scenes[0]!.layers[0]!.duration = 4; source.scenes[0]!.layers[0]!.motion = [];
+  await writeFile(path.join(directory, 'genmotion.json'), JSON.stringify(source));
+  studio = await startStudio(await loadProject(directory), { port: 0 });
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await page.goto(studio.url);
+  await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('#recordGesture').click();
+  const box = await page.locator('#gestureCanvas').boundingBox();
+  if (!box) throw new Error('Gesture canvas missing');
+  await page.mouse.move(box.x + box.width * .2, box.y + box.height * .4);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * .7, box.y + box.height * .6, { steps: 20 });
+  await page.mouse.up();
+  await page.locator('#gesturePreview').click();
+  await expect(page.locator('#gesturePreviewFrames img')).toHaveCount(3);
+  for (const image of await page.locator('#gesturePreviewFrames img').all()) await expect(image).toHaveJSProperty('naturalWidth', 320);
+  await expect(page.locator('#gestureAccept')).toBeEnabled();
+  await page.locator('#gestureAccept').click();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers[0]!.gestureRecordings?.length).toBe(1);
+  await page.reload();
+  await page.locator('body').click({ position: { x: 2, y: 2 } });
+  await page.keyboard.press('Control+z');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.scenes[0]!.layers[0]!.gestureRecordings?.length ?? 0).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+test('previews a selected frame interval before queuing its export', async ({ page }) => {
+  studio = await startStudio(await loadProject(directory), { port: 0 });
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await page.goto(studio.url); await page.getByRole('button', { name: 'Export' }).click();
+  await page.locator('#renderSelection').selectOption('custom');
+  await page.locator('#renderRangeStart').fill('4'); await page.locator('#renderRangeEnd').fill('15');
+  await page.locator('#previewRenderSelection').click();
+  await expect(page.locator('#renderSelectionPreview img')).toHaveCount(3);
+  for (const image of await page.locator('#renderSelectionPreview img').all()) await expect(image).toHaveJSProperty('naturalWidth', 320);
+  await expect(page.locator('#renderSelectionPreview')).toContainText('4–15');
+  await page.screenshot({ path: 'output/playwright/milestone-range-preview.png', fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+
+test('edits a native path node with the keyboard and persists its curve split', async ({ page }) => {
+  const source = (await loadProject(directory)).sourceProject, shape = source.scenes[0]!.layers[0]!;
+  if (shape.type !== 'shape') throw new Error('Expected path fixture');
+  shape.shape = 'path'; shape.path = 'M0 0 C0 100 100 100 100 0'; shape.motion = [];
+  await writeFile(path.join(directory, 'genmotion.json'), JSON.stringify(source));
+  studio = await startStudio(await loadProject(directory), { port: 0 });
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await page.goto(studio.url); await page.locator('[data-select="layer"][data-id="accent"]').click();
+  await page.locator('#pathNodeEditor').click();
+  await page.locator('[data-path-node="0:0:point"]').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(async () => { const layer = (await loadProject(directory)).sourceProject.scenes[0]!.layers[0]!; return layer.type === 'shape' ? layer.path : ''; }).toMatch(/^M\s*1[ ,]/);
+  await page.locator('#splitPathNode').click();
+  await expect(page.locator('[data-path-node$=":point"]')).toHaveCount(3);
+  await page.screenshot({ path: 'output/playwright/milestone-path-nodes.png', fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+
+test('custom Studio controls support keyboard choices, escape, bounds and disabled states', async ({ page }) => {
+  studio = await startStudio(await loadProject(directory), { port: 0 });
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await page.goto(studio.url);
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
+  await page.locator('#viewportSettings').click();
+  const select = page.locator('#canvasSafeZone');
+  const trigger = select.locator('..').getByRole('combobox');
+  await trigger.focus(); await trigger.press('ArrowDown');
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await trigger.press('Home'); await trigger.press('ArrowDown'); await trigger.press('Enter');
+  await expect(select).toHaveValue('title');
+  await trigger.click(); await trigger.press('Escape');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect(page.locator('#canvasZoom')).toBeVisible();
+  await select.evaluate((element: HTMLSelectElement) => { element.disabled = true; });
+  await expect(trigger).toBeDisabled();
+  await select.evaluate((element: HTMLSelectElement) => { element.disabled = false; element.value = 'action'; });
+  await expect(trigger).toContainText('action');
+  const zoom = page.locator('#canvasZoom');
+  await zoom.fill('150'); await zoom.press('Tab');
+  await zoom.locator('..').getByRole('button', { name: /Increase/ }).click();
+  await expect(zoom).toHaveValue('151');
+  await trigger.click();
+  await page.screenshot({ path: 'output/playwright/studio-custom-controls.png', fullPage: true });
+  const menu = await page.getByRole('listbox').boundingBox();
+  expect(menu).not.toBeNull(); expect(menu!.x).toBeGreaterThanOrEqual(0);
+  expect(menu!.x + menu!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await page.setViewportSize({ width: 390, height: 780 });
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await expect.poll(async () => { const box = await page.getByRole('listbox').boundingBox(); return box !== null && box.x >= 0 && box.x + box.width <= 390 && box.y >= 0 && box.y + box.height <= 780; }).toBe(true);
+  await page.screenshot({ path: 'output/playwright/studio-custom-controls-mobile.png', fullPage: true });
+
+  expect(errors).toEqual([]);
 });

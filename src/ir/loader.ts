@@ -16,6 +16,7 @@ export interface LoadedProject {
   projectDir: string;
   projectFile: string;
   parameterDependencies?: Array<{ path: string; sha256: string; bytes: number }>;
+  dataDependencies?: Array<{ id: string; parameterId: string; sha256: string; bytes: number }>;
 }
 
 export async function findProjectFile(input: string): Promise<string> {
@@ -94,7 +95,8 @@ export async function loadProjectDocument(raw: unknown, projectFile: string, par
   }
   const project = compileProjectMotions(resolved, catalog.motions);
   await prepareLutSources(project, projectDir);
-  return { project, sourceProject: parsed.data, projectDir, projectFile, parameterDependencies };
+  const dataDependencies = (parsed.data.dataSources ?? []).map(source => ({ id: source.id, parameterId: source.parameterId, sha256: source.valueHash, bytes: Buffer.byteLength(JSON.stringify(source.value)) }));
+  return { project, sourceProject: parsed.data, projectDir, projectFile, parameterDependencies, dataDependencies };
 }
 
 function canonicalFuturePath(target: string): string {

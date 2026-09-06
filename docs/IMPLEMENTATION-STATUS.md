@@ -1,6 +1,16 @@
-# Native capability implementation status — 2026-09-06
+# Native capability implementation status — 2026-09-07
 
 The full checklist is **not complete**. Genmotion is **not production-ready against the full native capability program**. This record describes implemented and tested changes without treating narrower fixes as completion of larger requirements.
+
+## 2.4.0 editing and export milestone
+
+The editing tranche has passed native tests and Studio browser QA. It adds shared editing sessions, atomic batches, bounded history, reopenable checkpoints, nested sparse overrides, conflict reconciliation, live agent permissions and context, timestamped canvas recording, Unicode text controls, direct path nodes, derived preflight metadata and frozen JSON/CSV inputs. Export controls include scenes, frame intervals, standalone compositions, parented groups and explicit alpha preservation or flattening.
+
+The [2.4.0 milestone QA report](MILESTONE-QA-2026-09-07.md) records acceptance evidence and limits. Nine additional complete requirements are checked, bringing the canonical count to **75/317**. Broader requirements stay open where they include unimplemented behavior, such as full receipt dispatch/frame verification, imported-content capability controls, host-owned external history, language-server support, distributed rendering and advanced compositing.
+
+Studio now uses [shared custom controls](STUDIO-CONTROLS.md) throughout its inspectors and dialogs, with anchored dropdowns, numeric steppers, themed toggles/sliders, file selection, color editing and audio transport.
+
+All eight public examples were freshly rendered at 1920×1080, decoded and validated. Display typography and scene handoffs were improved after inspecting native and encoded frames. These examples demonstrate the native renderer; they do not certify the entire remaining roadmap.
 
 ## Validated implementation milestone
 

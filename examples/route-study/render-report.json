@@ -7,15 +7,32 @@
   "audio": null,
   "strictValidation": "passed",
   "fullDecode": "passed",
-  "renderId": "4acdc6bbc90ca4c6",
+  "nativeReviewFrames": [
+    0,
+    23,
+    59,
+    119,
+    179,
+    227,
+    239
+  ],
+  "alphaOutput": {
+    "mode": "flatten",
+    "background": [
+      0,
+      0,
+      0
+    ]
+  },
+  "renderId": "f7d15e214d8b786c",
   "decodedFrames": 240,
-  "distinctDownsampledFrames": 163,
+  "distinctDownsampledFrames": 167,
   "minimumLumaRange": 139,
   "randomSeekPixelEquality": true,
   "audioChecks": null,
   "sha256": {
-    "source": "08d83e69987043ab6248a5f1061a857a4cdf5458ec411fcd6144726c88b75ff4",
-    "master": "f87ebdfde07a9bd5454b2edb104930d7c3600c4c5b683fa3479f3fa4f89ea8b2",
-    "contactSheet": "f8ada8c7a753c538a7696d03411eb042c7abb28676af21994d663661c2b2c0cf"
+    "source": "9ec38f7596a0b1258dfd216e50bf14157e6f4f21001381a4acde17103fd6039b",
+    "master": "e1b2ceaeddabaeeabe4f3d80e557ee2408655b81586586a451048b4ff580355c",
+    "contactSheet": "6bef24affebc99fa41004d36e08aa6dfaa9181b2719b3237cb7035852dae3a0c"
   }
 }

@@ -1,50 +1,17 @@
-import { parse as parseColor } from 'culori';
+import { validateParameterValue } from './parameter-values.js';
+export { validateParameterValue } from './parameter-values.js';
 import { createHash } from 'node:crypto';
 import { compositionTime } from '../engine/composition-time.js';
+import { evaluateParameterExpression } from './expressions.js';
+import { frozenDataValues } from './data-sources.js';
+import { automaticDuration } from './automatic-duration.js';
+import { isDeepStrictEqual } from 'node:util';
+import { applyDirectInstanceOverrides } from './instance-overrides.js';
+import type { InstanceOverrideChange } from './schema.js';
 import { parameterValueSchema, projectSchema, type Composition, type GenmotionProject, type Layer, type Parameter, type ParameterValue } from './schema.js';
 
 export type { ParameterValue } from './schema.js';
 const unsafeKeys = new Set(['__proto__', 'prototype', 'constructor']);
-
-/** Validate recursively without executing project expressions or coercing supplied types. */
-export function validateParameterValue(parameter: Parameter, input: ParameterValue): ParameterValue {
-  const value = parameterValueSchema.parse(input);
-  const fail = (message: string): never => { throw new Error(`Parameter ${parameter.id} ${message}.`); };
-  if (value === null) return parameter.optional ? null : fail('is required');
-  if (['number', 'dimension', 'duration'].includes(parameter.type)) {
-    if (typeof value !== 'number') return fail('requires a finite number');
-    if (parameter.type === 'dimension' && (!Number.isInteger(value) || value <= 0)) return fail('requires positive integer pixels');
-    if (parameter.type === 'duration' && value < 0) return fail('requires nonnegative seconds');
-    if (parameter.min !== undefined && value < parameter.min) return fail(`is below ${String(parameter.min)}`);
-    if (parameter.max !== undefined && value > parameter.max) return fail(`is above ${String(parameter.max)}`);
-    return value;
-  }
-  if (parameter.type === 'boolean') return typeof value === 'boolean' ? value : fail('requires a boolean');
-  if (parameter.type === 'array') {
-    if (!Array.isArray(value)) return fail('requires an array');
-    if (!parameter.items) return fail('requires an item definition');
-    if (parameter.minLength !== undefined && value.length < parameter.minLength) return fail('has too few items');
-    if (parameter.maxLength !== undefined && value.length > parameter.maxLength) return fail('has too many items');
-    return value.map((item, index) => validateParameterValue({ ...parameter.items!, id: `${parameter.id}[${String(index)}]` }, item));
-  }
-  if (parameter.type === 'object') {
-    if (typeof value !== 'object' || Array.isArray(value)) return fail('requires an object');
-    const properties = parameter.properties;
-    if (!properties) return fail('requires property definitions');
-    for (const key of Object.keys(value)) if (!Object.hasOwn(properties, key)) return fail(`has unknown property ${key}`);
-    return Object.fromEntries(Object.entries(properties).map(([key, definition]) => {
-      if (unsafeKeys.has(key)) return fail(`has unsafe property ${key}`);
-      return [key, validateParameterValue({ ...definition, id: `${parameter.id}.${key}` }, Object.hasOwn(value, key) ? value[key]! : definition.default)];
-    }));
-  }
-  if (typeof value !== 'string') return fail('requires a string');
-  if (parameter.minLength !== undefined && value.length < parameter.minLength) return fail(`requires at least ${String(parameter.minLength)} characters`);
-  if (parameter.maxLength !== undefined && value.length > parameter.maxLength) return fail(`exceeds ${String(parameter.maxLength)} characters`);
-  if (parameter.type === 'color' && !parseColor(value)) return fail('requires a CSS color');
-  if (parameter.type === 'enum' && !parameter.options?.includes(value)) return fail(`must be one of: ${parameter.options?.join(', ') ?? ''}`);
-  if (['file', 'asset', 'font'].includes(parameter.type) && (!value || /(^[/\\]|^[a-z][a-z\d+.-]*:|(^|[/\\])\.\.([/\\]|$)|\0)/i.test(value))) return fail('requires a project-local relative file path');
-  return value;
-}
 
 function writePath(target: Record<string, unknown>, path: string, value: ParameterValue): void {
   const parts = path.split('.');
@@ -71,55 +38,96 @@ function bindLayer(layer: Layer, values: Record<string, ParameterValue>): Layer 
   return result;
 }
 
-export function resolveParameters(project: GenmotionProject, overrides: Record<string, ParameterValue> = {}): GenmotionProject {
-  const definitions = new Map(project.parameters.map((parameter) => [parameter.id, parameter]));
-  if (definitions.size !== project.parameters.length) throw new Error('Duplicate project parameter identifiers.');
-  for (const id of [...Object.keys(project.parameterValues), ...Object.keys(overrides)]) if (!definitions.has(id)) throw new Error(`Unknown project parameter: ${id}`);
-  const values: Record<string, ParameterValue> = {};
-  for (const parameter of project.parameters) {
-    validateParameterValue(parameter, parameter.default);
-    values[parameter.id] = validateParameterValue(parameter, Object.hasOwn(overrides, parameter.id) ? overrides[parameter.id]! : Object.hasOwn(project.parameterValues, parameter.id) ? project.parameterValues[parameter.id]! : parameter.default);
+export function resolveParameterScope(parameters: Parameter[], supplied: Record<string, ParameterValue> = {}, parent: Record<string, ParameterValue> = {}): Record<string, ParameterValue> {
+  const definitions = new Map(parameters.map(parameter => [parameter.id, parameter]));
+  if (definitions.size !== parameters.length) throw new Error('Duplicate parameter identifiers.');
+  for (const id of Object.keys(supplied)) if (!definitions.has(id)) throw new Error(`Unknown parameter: ${id}`);
+  const values: Record<string, ParameterValue> = {}, active: string[] = [];
+  const resolve = (id: string): ParameterValue => {
+    if (id.startsWith('project.')) { const key = id.slice('project.'.length); if (!Object.hasOwn(parent, key)) throw new Error(`Unknown project parameter reference: ${id}`); return parent[key]!; }
+    if (Object.hasOwn(values, id)) return values[id]!;
+    const definition = definitions.get(id);
+    if (!definition) { if (Object.hasOwn(parent, id)) return parent[id]!; throw new Error(`Unknown derived parameter reference: ${id}`); }
+    if (active.includes(id)) throw new Error(`Derived parameter cycle: ${[...active, id].join(' -> ')}`);
+    if (active.length >= 64) throw new Error('Derived parameter dependency depth exceeds 64.');
+    active.push(id);
+    try {
+      validateParameterValue(definition, definition.default);
+      const value = definition.derive ? evaluateParameterExpression(definition.derive, resolve) : Object.hasOwn(supplied, id) ? supplied[id]! : definition.default;
+      const parsed = validateParameterValue(definition, value);
+      if (definition.derive && Object.hasOwn(supplied, id) && !isDeepStrictEqual(supplied[id], parsed)) throw new Error(`Derived parameter ${id} cannot be overridden; edit its inputs instead.`);
+      values[id] = parsed; return parsed;
+    } finally { active.pop(); }
+  };
+  for (const parameter of parameters) resolve(parameter.id);
+  return values;
+}
+
+function bindContainer<T extends object>(container: T & { parameterBindings?: Record<string, string | undefined> | undefined }, values: Record<string, ParameterValue>): T {
+  const result = structuredClone(container);
+  for (const [field, id] of Object.entries(container.parameterBindings ?? {})) {
+    if (id === undefined) continue;
+    if (!Object.hasOwn(values, id)) throw new Error(`Unknown preflight parameter ${id} for ${field}.`);
+    (result as Record<string, unknown>)[field] = structuredClone(values[id]);
   }
+  return result;
+}
+
+export function resolveParameters(project: GenmotionProject, overrides: Record<string, ParameterValue> = {}): GenmotionProject {
+  return resolveParameterGraph(project, overrides).project;
+}
+
+/** Preserve the source identity behind each evaluated, specialized definition. */
+export function resolveParameterGraph(project: GenmotionProject, overrides: Record<string, ParameterValue> = {}): { project: GenmotionProject; compositionSources: Record<string, string> } {
+  const compositionSources: Record<string, string> = {};
+  const values = resolveParameterScope(project.parameters, { ...frozenDataValues(project), ...project.parameterValues, ...overrides });
+  const boundProject = bindContainer(project, values);
   const definitionsById = new Map(project.compositions.map((composition) => [composition.id, composition]));
   if (definitionsById.size !== project.compositions.length) throw new Error('Duplicate composition identifiers.');
   const resolvedCompositions = new Map<string, Composition>();
-  const instantiate = (id: string, overrides: Record<string, ParameterValue>, trail: string[]): string => {
+  let instanceCount = 0;
+  const instantiate = (id: string, overrides: Record<string, ParameterValue>, trail: string[], changes: InstanceOverrideChange[] = []): string => {
     if (trail.includes(id)) throw new Error(`Composition cycle: ${[...trail, id].join(' -> ')}`);
     if (trail.length >= 128) throw new Error('Composition nesting exceeds 128 levels.');
     const source = definitionsById.get(id);
     if (!source) throw new Error(`Unknown composition: ${id}`);
     const definitions = source.parameters ?? [];
-    if (new Set(definitions.map((parameter) => parameter.id)).size !== definitions.length) throw new Error(`Duplicate parameters in composition ${id}.`);
-    for (const key of Object.keys(overrides)) if (!definitions.some((parameter) => parameter.id === key)) throw new Error(`Unknown composition parameter ${id}.${key}.`);
-    const localValues: Record<string, ParameterValue> = {};
-    for (const definition of definitions) {
-      validateParameterValue(definition, definition.default);
-      localValues[definition.id] = validateParameterValue(definition, Object.hasOwn(overrides, definition.id) ? overrides[definition.id]! : definition.default);
-    }
-    const specialized = Object.keys(overrides).length > 0;
-    const resolvedId = specialized ? `${id}-instance-${createHash('sha256').update(JSON.stringify(localValues)).digest('hex').slice(0, 20)}` : id;
+    for (const key of Object.keys(overrides)) if (!definitions.some(definition => definition.id === key)) throw new Error(`Unknown composition parameter: ${key}`);
+    const localValues = resolveParameterScope(definitions, overrides, values);
+    const specialized = Object.keys(overrides).length > 0 || changes.length > 0;
+    const resolvedId = specialized ? `${id}-instance-${createHash('sha256').update(JSON.stringify({ values: localValues, changes })).digest('hex').slice(0, 20)}` : id;
     if (specialized && definitionsById.has(resolvedId)) throw new Error(`Composition identifier collides with generated instance: ${resolvedId}`);
     if (resolvedCompositions.has(resolvedId)) return resolvedId;
-    if (resolvedCompositions.size >= 10_000) throw new Error('Resolved composition count exceeds 10000.');
+    compositionSources[resolvedId] = id;
+    if (++instanceCount > 10_000) throw new Error('Resolved composition count exceeds 10000.');
     const scope = { ...values, ...localValues };
-    const layers = source.layers.map((layer) => resolveInstance(bindLayer(layer, scope), [...trail, id]));
-    resolvedCompositions.set(resolvedId, { ...source, id: resolvedId, layers });
+    const layers = applyDirectInstanceOverrides(source.layers, changes).map((layer) => {
+      const nested = changes.filter(change => change.target.length > 1 && change.target[0] === layer.id).map(change => ({ ...change, target: change.target.slice(1) }));
+      return resolveInstance(bindLayer(layer, scope), [...trail, id], nested);
+    });
+    const definition = { ...bindContainer(source, scope), id: resolvedId,
+      parameters: definitions.map(parameter => ({ ...parameter, default: structuredClone(localValues[parameter.id]!) })), layers };
+    definition.duration = automaticDuration(definition, resolvedCompositions);
+    resolvedCompositions.set(resolvedId, definition);
     return resolvedId;
   };
-  const resolveInstance = (layer: Layer, trail: string[]): Layer => {
+  const resolveInstance = (layer: Layer, trail: string[], inherited: InstanceOverrideChange[] = []): Layer => {
     if (layer.type !== 'composition') return layer;
-    const compositionId = instantiate(layer.compositionId, layer.parameterValues ?? {}, trail);
-    compositionTime(layer, resolvedCompositions.get(compositionId)!, 0, project.fps);
-    return { ...layer, compositionId };
+    const compositionId = instantiate(layer.compositionId, layer.parameterValues ?? {}, trail, [...(layer.overrides?.changes ?? []), ...inherited]);
+    compositionTime(layer, resolvedCompositions.get(compositionId)!, 0, boundProject.fps);
+    return { ...layer, compositionId, overrides: undefined };
   };
   for (const composition of project.compositions) instantiate(composition.id, {}, []);
-  const scenes = project.scenes.map((scene) => ({ ...scene, layers: scene.layers.map((layer) => resolveInstance(bindLayer(layer, values), [])) }));
+  const scenes = project.scenes.map(scene => {
+    const resolved = { ...bindContainer(scene, values), layers: scene.layers.map(layer => resolveInstance(bindLayer(layer, values), [])) };
+    resolved.duration = automaticDuration(resolved, resolvedCompositions); return resolved;
+  });
   // Materialize distinct instance values before motion compilation and asset preparation.
   // Repeated identical instances share one immutable evaluated definition.
-  return projectSchema.parse({
-    ...project, parameterValues: values,
+  return { project: projectSchema.parse({
+    ...boundProject, parameterValues: values,
     scenes, compositions: [...resolvedCompositions.values()],
-  });
+  }), compositionSources };
 }
 
 export function parseParameterAssignments(assignments: string[] = []): Record<string, ParameterValue> {

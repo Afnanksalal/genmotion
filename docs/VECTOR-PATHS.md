@@ -1,5 +1,17 @@
 # Native SVG path geometry
 
+## Direct node editing
+
+Studio's path inspector now opens a node-and-handle editor. It exposes corner, smooth and symmetric modes, drag or keyboard movement, curve splitting and node removal. The SVG view is an authoring guide in source-path coordinates; accepted edits update the canonical path and native preview through the shared editing transaction. Path effects and animated tracks still apply after the edited base geometry.
+
+The shared `path-nodes` semantic operation accepts a stable layer target, the inspected path hash, and typed node edits. `query: {kind: "path-nodes", target}` returns contours, nodes and handles. SDK helpers are `inspectPathNodes`, `editPathNodes` and `serializePathNodes`; CLI, MCP and the live Studio bridge use the same command schemas. Each accepted batch is one undo step.
+
+Smooth handles retain the opposite handle length while aligning tangents; symmetric handles also mirror its length. Splitting uses de Casteljau subdivision to preserve the curve, downgrading affected symmetric endpoints to smooth when their handle lengths change. Removing a node retains neighboring handles and intentionally changes the connecting curve. A contour retains at least its move point; removing the entire path remains a layer operation.
+
+Line and quadratic segments become equivalent cubic controls. Arc input is converted through Skia's native Bezier representation. Node modes are stored separately as `pathEditState` with the exact source-path hash. Stale modes require an explicit reset; stale geometry revisions are refused. Interactive editing is bounded to 4096 nodes and 500 operations per batch. A close command followed directly by another drawing command requires an explicit new move for this editor. The renderer continues to support such source paths.
+
+Implemented in 2.4.0. See the [milestone QA report](MILESTONE-QA-2026-09-07.md) for tested paths and remaining acceptance limits.
+
 Genmotion parses the SVG path-data grammar described in the [SVG 2 path specification](https://www.w3.org/TR/SVG2/paths.html#PathDataBNF). This includes absolute and relative moveto, line, horizontal/vertical line, cubic and quadratic curves, smooth reflected curves, elliptical arcs, and closepath commands. Repeated tuples, implicit lineto after moveto, exponent notation, compact decimals, and adjacent arc flags are supported.
 
 `parseSvgPath` returns command/value records. `absoluteSvgPath` converts them to absolute `M`, `L`, `C`, `Q`, `A`, and `Z` commands, expanding reflected controls while preserving curve geometry, closed contours, and disconnected subpaths. `serializeSvgPath` emits validated path data. Arc radii are normalized to positive magnitudes. Malformed syntax and nonfinite coordinate overflow fail explicitly; parsing is bounded to 10 MB and 100,000 commands.

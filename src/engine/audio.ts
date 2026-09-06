@@ -11,18 +11,21 @@ import { audioEffectFilters, audioTempoFilters, decibelsToGain } from './audio-e
 import { probeVideo } from './probe.js';
 import { GenmotionError } from '../errors.js';
 import { replaceFile } from '../ir/atomic.js';
+import type { RenderView } from './render-view.js';
 import { loudnessFilter, measureAudioFile, parseLoudnessReport, type LoudnessMeasurement } from './loudness.js';
 
 interface PositionedTrack extends AudioTrack { source: string; prepared?: boolean; timeMap?: AudioTimeMap; sourceDuration?: number }
-export interface AudioRenderOptions extends ProcessOptions { stem?: AudioTrack['kind'] }
+export interface AudioSourceOptions extends ProcessOptions { view?: RenderView | undefined }
+export interface AudioRenderOptions extends AudioSourceOptions { stem?: AudioTrack['kind'] }
 
-async function collectTracks(project: GenmotionProject, projectDir: string, options: ProcessOptions): Promise<PositionedTrack[]> {
-  const authored = project.audio.filter((track) => !track.muted);
+async function collectTracks(project: GenmotionProject, projectDir: string, options: AudioSourceOptions): Promise<PositionedTrack[]> {
+  const authored = options.view ? [] : project.audio.filter((track) => !track.muted);
   const soloed = authored.some((track) => track.solo);
   const tracks = authored.filter((track) => !soloed || track.solo).map((track) => ({ ...track, source: resolveProjectAsset(projectDir, track.src) }));
   let sceneStart = 0;
   const probes = new Map<string, Awaited<ReturnType<typeof probeVideo>>>();
   for (const scene of project.scenes) {
+    if (options.view && options.view.sceneId !== scene.id) { sceneStart += scene.duration; continue; }
     const visit = async (layers: GenmotionProject['scenes'][number]['layers'], containerDuration: number, chain: AudioTimeMap['chain']): Promise<void> => {
       if (chain.length > 128) throw new Error('Nested source audio exceeds 128 composition levels');
       const byId = new Map(layers.map((layer) => [layer.id, layer]));
@@ -32,6 +35,7 @@ async function collectTracks(project: GenmotionProject, projectDir: string, opti
         return layer.visible && (!layer.parentId || visible(layer.parentId, trail));
       };
       for (const layer of layers) {
+        if (options.view && chain.length === 0 && !options.view.layerIds.includes(layer.id)) continue;
         if (!visible(layer.id) || soloed) continue;
         if (effectiveLayerStart(layer) >= containerDuration) continue;
         if (layer.type === 'composition') {
@@ -158,7 +162,9 @@ async function deliveryAudioGraph(project: GenmotionProject, tracks: PositionedT
   return filters;
 }
 
-export async function mixAudio(project: GenmotionProject, projectDir: string, silentVideo: string, output: string, options: ProcessOptions = {}): Promise<void> {
+export interface AudioMixOptions extends AudioSourceOptions { range?: { start: number; duration: number } | undefined }
+export async function mixAudio(project: GenmotionProject, projectDir: string, silentVideo: string, output: string, options: AudioMixOptions = {}): Promise<void> {
+  if (options.range && (!Number.isFinite(options.range.start) || options.range.start < 0 || !Number.isFinite(options.range.duration) || options.range.duration <= 0 || options.range.start + options.range.duration > projectDuration(project) + 1 / project.fps + 1e-9)) throw new GenmotionError('INVALID_AUDIO_RANGE', 'Audio range must be finite and inside the project frame interval.');
   throwIfAborted(options.signal);
   let tracks = await collectTracks(project, projectDir, options);
   await mkdir(path.dirname(output), { recursive: true });
@@ -177,12 +183,13 @@ export async function mixAudio(project: GenmotionProject, projectDir: string, si
       args.push('-i', track.source);
     }
 
-    const duration = projectDuration(project);
+    const duration = options.range?.duration ?? projectDuration(project);
     const filters = await deliveryAudioGraph(project, tracks, 1, projectDir, options);
+    if (options.range) filters.push(`[aout]atrim=start=${options.range.start}:end=${options.range.start + options.range.duration},asetpts=PTS-STARTPTS[arange]`);
 
     args.push(
       '-filter_complex', filters.join(';'),
-      '-map', '0:v:0', '-map', '[aout]',
+      '-map', '0:v:0', '-map', options.range ? '[arange]' : '[aout]',
       '-c:v', 'copy', '-c:a', path.extname(output).toLowerCase() === '.webm' ? 'libopus' : 'aac', '-b:a', '320k',
     );
     if (path.extname(output).toLowerCase() !== '.webm') args.push('-movflags', '+faststart');

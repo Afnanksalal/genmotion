@@ -7,6 +7,10 @@
   "fps": 30,
   "seed": 17,
   "anchors": [],
+  "parameters": [],
+  "parameterValues": {},
+  "variants": [],
+  "compositions": [],
   "brand": {
     "background": "#07090d",
     "foreground": "#f4f6f8",
@@ -138,6 +142,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "ellipse",
           "x": 620,
@@ -221,6 +227,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "Sound, shaped.",
           "x": 300,
@@ -249,9 +257,9 @@
         "ease": "linear"
       },
       "transitionOut": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "referenceDecisions": [
         {
@@ -355,6 +363,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "ellipse",
           "x": 560,
@@ -514,6 +524,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "round-rect",
           "x": 670,
@@ -596,6 +608,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 670,
@@ -673,6 +687,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "ARC ONE",
           "x": 120,
@@ -696,14 +712,14 @@
         }
       ],
       "transitionIn": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "transitionOut": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "referenceDecisions": [
         {
@@ -849,6 +865,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "round-rect",
           "x": 930,
@@ -887,50 +905,9 @@
           "blendMode": "source-over",
           "tags": [],
           "motion": [],
-          "tracks": [
-            {
-              "id": "detail-one-in",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.5,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.3,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "SEAMLESS\nALUMINUM",
           "x": 120,
@@ -1016,6 +993,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "SPATIAL AUDIO",
           "x": 120,
@@ -1101,6 +1080,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "30-HOUR BATTERY",
           "x": 120,
@@ -1124,14 +1105,14 @@
         }
       ],
       "transitionIn": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "transitionOut": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "referenceDecisions": [
         {
@@ -1277,6 +1258,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 885,
@@ -1309,50 +1292,9 @@
           "blendMode": "source-over",
           "tags": [],
           "motion": [],
-          "tracks": [
-            {
-              "id": "lockup-in",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.45,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 3,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "Arc One",
           "x": 360,
@@ -1438,6 +1380,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "Hear the space between.",
           "x": 520,
@@ -1461,9 +1405,9 @@
         }
       ],
       "transitionIn": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "transitionOut": {
         "type": "cut",

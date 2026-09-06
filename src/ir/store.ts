@@ -15,13 +15,20 @@ export function fileRevision(source: string): string { return createHash('sha256
 export function projectRevision(project: GenmotionProject): string { return fileRevision(JSON.stringify(project)).slice(0, 16); }
 
 export interface ProjectSnapshot extends LoadedProject { revision: string; documentRevision: string; source: string }
-export async function readProjectSnapshot(input: string): Promise<ProjectSnapshot> {
+export interface ProjectSourceSnapshot { sourceProject: GenmotionProject; projectFile: string; projectDir: string; revision: string; documentRevision: string; source: string }
+/** Source inspection remains available when evaluation is blocked by an override conflict. */
+export async function readProjectSourceSnapshot(input: string): Promise<ProjectSourceSnapshot> {
   const projectFile = await realpath(await findProjectFile(input));
   await verifyBundleIfPresent(projectFile);
   const source = await readFile(projectFile, 'utf8');
   const raw: unknown = /\.ya?ml$/i.test(projectFile) ? YAML.parse(source) : JSON.parse(source);
-  const loaded = await loadProjectDocument(raw, projectFile);
-  return { ...loaded, source, revision: fileRevision(source), documentRevision: projectRevision(loaded.sourceProject) };
+  const sourceProject = projectSchema.parse(raw);
+  return { sourceProject, projectFile, projectDir: path.dirname(projectFile), source, revision: fileRevision(source), documentRevision: projectRevision(sourceProject) };
+}
+export async function readProjectSnapshot(input: string): Promise<ProjectSnapshot> {
+  const snapshot = await readProjectSourceSnapshot(input);
+  const loaded = await loadProjectDocument(snapshot.sourceProject, snapshot.projectFile);
+  return { ...loaded, source: snapshot.source, revision: snapshot.revision, documentRevision: snapshot.documentRevision };
 }
 
 export interface ProjectCommitOptions {
@@ -87,7 +94,7 @@ export async function commitProject(input: string, options: ProjectCommitOptions
   const release = await acquireLock(projectFile, options);
   let temporary: string | undefined;
   try {
-    const before = await readProjectSnapshot(projectFile);
+    const before = await readProjectSourceSnapshot(projectFile);
     const actual = options.revisionKind === 'document' ? before.documentRevision : before.revision;
     if (actual !== options.expectedRevision) throw new GenmotionError('REVISION_CONFLICT', 'The project changed after it was read. Read the current revision and reconcile the edit.', { expected: options.expectedRevision, actual });
     throwIfAborted(options.signal);

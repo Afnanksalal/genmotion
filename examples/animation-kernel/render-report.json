@@ -1,0 +1,28 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "duration": 6,
+  "codec": "h264",
+  "audio": null,
+  "strictValidation": "passed",
+  "fullDecode": "passed",
+  "nativeReviewFrames": [
+    0,
+    17,
+    44,
+    89,
+    134,
+    170,
+    179
+  ],
+  "alphaOutput": {
+    "mode": "flatten",
+    "background": [
+      0,
+      0,
+      0
+    ]
+  },
+  "renderId": "3c30e1cd271095db"
+}

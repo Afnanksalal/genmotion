@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+import { alphaModeSchema } from './engine/alpha-output.js';
+import { importFrozenData } from './ir/data-sources.js';
+import { resolveRenderView } from './engine/render-view.js';
+import { projectForRenderComposition } from './engine/render-projection.js';
+import { readFrozenDataFile } from './ir/data-import-file.js';
+import { authoringSchemaKindSchema, describeAuthoringSchema } from './ir/authoring-schema.js';
 import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from './engine/media-conform.js';
 import { inspectMedia } from './engine/media-probe.js';
 import { editCaptions, captionEditSchema } from './ir/caption-editing.js';
@@ -21,6 +27,8 @@ import { loadProject } from './ir/loader.js';
 import { commitProject, readProjectSnapshot } from './ir/store.js';
 import { applyPatch, patchOperationSchema } from './ir/patch.js';
 import { commitSemanticEdits, semanticEditSchema } from './ir/edit.js';
+import { EditingSession, filesystemEditingAdapter, editingCommandSchema, editingCheckpointSchema, executeEditingCommand } from './ir/session.js';
+import { executeStudioCommand, studioBridgeCommandSchema } from './studio/bridge.js';
 import { hasErrors, summarizeProject, validateProject } from './ir/validate.js';
 import { renderFramePng } from './engine/draw.js';
 import { defaultVideoExtension, renderProject, type RenderQuality, type VideoCodec } from './engine/render.js';
@@ -68,6 +76,13 @@ function parseResolution(value: string): { width: number; height: number } {
   return { width: Number(match[1]), height: Number(match[2]) };
 }
 
+function parseRenderGroup(value?: string): { sceneId: string; layerId: string } | undefined {
+  if (value === undefined) return undefined;
+  const parts = value.split('/');
+  if (parts.length !== 2 || !parts[0] || !parts[1]) throw new GenmotionError('INVALID_RENDER_GROUP', 'Group selection must use scene-id/layer-id.');
+  return { sceneId: parts[0], layerId: parts[1] };
+}
+
 async function loadConfiguredProject(input: string, options: { params?: string; variant?: string }) {
   const initial = await loadProject(input);
   const variant = options.variant ? initial.sourceProject.variants.find((candidate) => candidate.id === options.variant) : undefined;
@@ -75,6 +90,38 @@ async function loadConfiguredProject(input: string, options: { params?: string; 
   const explicit = options.params ? JSON.parse(options.params) as Record<string, ParameterValue> : {};
   return loadProject(input, { ...(variant?.values ?? {}), ...explicit });
 }
+
+program.command('schema')
+  .description('Discover current authoring fields or export input JSON Schema')
+  .option('--kind <kind>', 'Schema kind: ' + authoringSchemaKindSchema.options.join(', '), 'project')
+  .option('--full', 'Return complete input JSON Schema')
+  .option('--output <file>', 'Write full input JSON Schema for editor integrations')
+  .action(async (options: { kind: string; full?: boolean; output?: string }) => {
+    const kind = authoringSchemaKindSchema.parse(options.kind);
+    const schema = describeAuthoringSchema(kind, Boolean(options.full || options.output));
+    if (options.output) { await writeFile(path.resolve(options.output), JSON.stringify(schema, null, 2) + '\n'); output({ kind, output: path.resolve(options.output) }); }
+    else output(schema);
+  });
+
+program.command('data-import')
+  .argument('<project>')
+  .requiredOption('--source <file>', 'Local UTF-8 JSON or CSV file to freeze')
+  .requiredOption('--id <id>', 'Stable frozen source ID')
+  .requiredOption('--parameter <id>', 'Typed project parameter supplied by this source')
+  .requiredOption('--expected-revision <hash>', 'File revision returned by project-read')
+  .option('--format <format>', 'json or csv; defaults to the file extension')
+  .option('--dry-run', 'Validate without saving')
+  .action(async (input: string, options: { source: string; id: string; parameter: string; expectedRevision: string; format?: string; dryRun?: boolean }) => {
+    const content = await readFrozenDataFile(path.resolve(options.source));
+    const session = new EditingSession(filesystemEditingAdapter(input));
+    try {
+      const snapshot = await session.read();
+      if (snapshot.revision !== options.expectedRevision) throw new GenmotionError('REVISION_CONFLICT', 'Data import uses a stale source revision.');
+      const imported = importFrozenData(snapshot.project, { id: options.id, parameterId: options.parameter, format: z.enum(['json', 'csv']).parse(options.format ?? path.extname(options.source).slice(1).toLowerCase()), sourceName: path.basename(options.source), content });
+      const receipt = await session.replace(imported.project, { expectedRevision: snapshot.revision, origin: 'cli:data-import', dryRun: options.dryRun });
+      output({ receipt, source: { id: imported.source.id, parameterId: imported.source.parameterId, valueHash: imported.source.valueHash } });
+    } finally { await session.dispose(); }
+  });
 
 program.command('init')
   .argument('<directory>')
@@ -107,6 +154,29 @@ program.command('edit')
     const edits = semanticEditSchema.array().min(1).max(500).parse(JSON.parse(await readFile(options.edits, 'utf8')));
     const { loaded, ...receipt } = await commitSemanticEdits(input, edits, { expectedRevision: options.expectedRevision, strict: options.strict ?? false, dryRun: options.dryRun ?? false, origin: 'cli' });
     output({ ...receipt, projectFile: loaded.projectFile });
+  });
+
+program.command('editing-session')
+  .argument('<project>')
+  .requiredOption('--command <json-file>', 'Typed read, inspect, can, apply, undo, redo or checkpoint command')
+  .option('--checkpoint <json-file>', 'Restore bounded history from a matching document revision')
+  .option('--include-checkpoint', 'Return a checkpoint for the next invocation')
+  .action(async (input: string, options: { command: string; checkpoint?: string; includeCheckpoint?: boolean }) => {
+    const command = editingCommandSchema.parse(JSON.parse(await readFile(options.command, 'utf8')));
+    const session = new EditingSession(filesystemEditingAdapter(input));
+    try {
+      if (options.checkpoint) await session.restore(editingCheckpointSchema.parse(JSON.parse(await readFile(options.checkpoint, 'utf8'))));
+      const result = await executeEditingCommand(session, command);
+      output({ result, ...(options.includeCheckpoint ? { checkpoint: await session.checkpoint() } : {}) });
+    } finally { await session.dispose(); }
+  });
+
+program.command('studio-session')
+  .argument('<project>')
+  .requiredOption('--command <json-file>', 'Typed live Studio capabilities, context, navigation or editing command')
+  .action(async (input: string, options: { command: string }) => {
+    const command = studioBridgeCommandSchema.parse(JSON.parse(await readFile(options.command, 'utf8')));
+    output(await executeStudioCommand(input, command));
   });
 
 program.command('project-patch')
@@ -152,12 +222,16 @@ program.command('frame')
   .option('--subframe', 'Evaluate the exact timestamp without rounding to a frame')
   .requiredOption('--output <file>')
   .option('--params <json>', 'Typed parameter overrides as a JSON object')
+  .option('--group <scene/layer>', 'Isolate a layer and its parented descendants on the source canvas')
+  .option('--composition <id>', 'Render a still on a standalone composition local timeline')
   .option('--variant <id>', 'Named project variant')
-  .action(async (input: string, options: { at: string; subframe?: boolean; output: string; params?: string; variant?: string }) => {
+  .action(async (input: string, options: { at: string; subframe?: boolean; output: string; params?: string; variant?: string; composition?: string; group?: string }) => {
     const loaded = await loadConfiguredProject(input, options);
+    if (options.group && options.composition) throw new GenmotionError('RENDER_SELECTION_CONFLICT', 'Choose a group or a standalone composition.');
+    loaded.project = projectForRenderComposition(loaded.project, options.composition);
     const frame = secondsToFrames(Number(options.at), loaded.project.fps, options.subframe ? 'none' : 'floor');
     if (options.subframe && Number(options.at) >= loaded.project.scenes.reduce((sum, scene) => sum + scene.duration, 0)) throw new GenmotionError('FRAME_OUTSIDE_COMPOSITION', 'Exact timestamp must be inside the composition.');
-    const png = await renderFramePng(loaded.project, loaded.projectDir, frame);
+    const png = await renderFramePng(loaded.project, loaded.projectDir, frame, undefined, resolveRenderView(loaded.project, parseRenderGroup(options.group)));
     const destination = path.resolve(options.output);
     await mkdir(path.dirname(destination), { recursive: true });
     await writeFile(destination, png);
@@ -166,18 +240,26 @@ program.command('frame')
 
 program.command('render')
   .argument('<project>')
-  .requiredOption('--output <file>')
+  .option('--output <file>', 'Explicit output path; defaults to the resolved project output name in renders/')
   .option('--quality <quality>', 'draft, standard, or high', 'high')
   .option('--codec <codec>', 'h264, h265, vp9, or prores', 'h264')
+  .option('--alpha-mode <mode>', 'auto, preserve, or flatten', 'auto')
+  .option('--alpha-background <color>', 'Opaque background used when flattening transparency')
   .option('--workers <count>', 'Frame workers')
   .option('--max-buffered-frames <count>', 'Maximum reserved frames, including in-flight work')
   .option('--max-buffered-bytes <bytes>', 'Maximum reserved RGBA frame bytes')
   .option('--timeout-ms <milliseconds>', 'Cancel the entire render pipeline after this deadline')
   .option('--resolution <WIDTHxHEIGHT>', 'Exact even-sized output resolution; must preserve the project aspect ratio')
+  .option('--group <scene/layer>', 'Isolate a layer and its parented descendants on the source canvas')
+  .option('--composition <id>', 'Render a standalone composition on its local canvas')
+  .option('--scene <id>', 'Render the scene interval in the full timeline')
+  .option('--frames <start:end>', 'Integer source-frame interval with an exclusive end')
   .option('--hardware', 'Require a platform hardware encoder')
   .option('--params <json>', 'Typed parameter overrides as a JSON object')
   .option('--variant <id>', 'Named project variant')
-  .action(async (input: string, options: { output: string; quality: RenderQuality; codec: VideoCodec; workers?: string; maxBufferedFrames?: string; maxBufferedBytes?: string; timeoutMs?: string; resolution?: string; hardware?: boolean; params?: string; variant?: string }) => {
+  .action(async (input: string, options: { output?: string; quality: RenderQuality; codec: VideoCodec; alphaMode?: string; alphaBackground?: string; workers?: string; maxBufferedFrames?: string; maxBufferedBytes?: string; timeoutMs?: string; resolution?: string; hardware?: boolean; params?: string; variant?: string; scene?: string; composition?: string; group?: string; frames?: string }) => {
+    let range: { startFrame: number; endFrame: number } | undefined;
+    if (options.frames) { const match = /^(\d+):(\d+)$/.exec(options.frames); if (!match) throw new GenmotionError('INVALID_RENDER_RANGE', 'Frames must use start:end with an exclusive end.'); range = { startFrame: Number(match[1]), endFrame: Number(match[2]) }; }
     const loaded = await loadConfiguredProject(input, options);
     const findings = await validateProject(loaded);
     if (hasErrors(findings)) throw new GenmotionError('VALIDATION_FAILED', 'Render blocked by validation errors.', findings);
@@ -188,7 +270,7 @@ program.command('render')
     let lastReport = 0;
     try {
       const result = await renderProject(loaded, {
-        output: options.output, quality: options.quality, codec: options.codec,
+        output: options.output, sceneId: options.scene, compositionId: options.composition, group: parseRenderGroup(options.group), range, quality: options.quality, codec: options.codec, alphaMode: alphaModeSchema.parse(options.alphaMode ?? "auto"), alphaBackground: options.alphaBackground,
         ...(options.workers ? { workers: Number(options.workers) } : {}),
         ...(options.maxBufferedFrames !== undefined ? { maxBufferedFrames: Number(options.maxBufferedFrames) } : {}),
         ...(options.maxBufferedBytes !== undefined ? { maxBufferedBytes: Number(options.maxBufferedBytes) } : {}),
@@ -316,11 +398,13 @@ program.command('render-variants')
   .requiredOption('--output <directory>')
   .option('--quality <quality>', 'draft, standard, or high', 'high')
   .option('--codec <codec>', 'h264, h265, vp9, or prores', 'h264')
+  .option('--alpha-mode <mode>', 'auto, preserve, or flatten', 'auto')
+  .option('--alpha-background <color>', 'Opaque background used when flattening transparency')
   .option('--workers <count>', 'Frame workers')
   .option('--max-buffered-frames <count>', 'Maximum reserved frames per render')
   .option('--max-buffered-bytes <bytes>', 'Maximum reserved RGBA frame bytes per render')
   .option('--timeout-ms <milliseconds>', 'Deadline for each variant render')
-  .action(async (input: string, options: { output: string; quality: RenderQuality; codec: VideoCodec; workers?: string; maxBufferedFrames?: string; maxBufferedBytes?: string; timeoutMs?: string }) => {
+  .action(async (input: string, options: { output: string; quality: RenderQuality; codec: VideoCodec; alphaMode?: string; alphaBackground?: string; workers?: string; maxBufferedFrames?: string; maxBufferedBytes?: string; timeoutMs?: string }) => {
     const source = await loadProject(input);
     if (source.sourceProject.variants.length === 0) throw new GenmotionError('VARIANTS_EMPTY', 'The project defines no named variants.');
     const directory = path.resolve(options.output); await mkdir(directory, { recursive: true });
@@ -334,7 +418,7 @@ program.command('render-variants')
         const findings = await validateProject(loaded);
         if (hasErrors(findings)) throw new GenmotionError('VALIDATION_FAILED', `Variant ${variant.id} failed validation.`, findings);
         results.push({ variant: variant.id, ...await renderProject(loaded, {
-          output: path.join(directory, `${source.sourceProject.id}-${variant.id}${defaultVideoExtension(options.codec)}`), quality: options.quality, codec: options.codec,
+          output: path.join(directory, `${source.sourceProject.id}-${variant.id}${defaultVideoExtension(options.codec)}`), quality: options.quality, codec: options.codec, alphaMode: alphaModeSchema.parse(options.alphaMode ?? "auto"), alphaBackground: options.alphaBackground,
           signal: controller.signal, workers: options.workers === undefined ? undefined : Number(options.workers),
           maxBufferedFrames: options.maxBufferedFrames === undefined ? undefined : Number(options.maxBufferedFrames),
           maxBufferedBytes: options.maxBufferedBytes === undefined ? undefined : Number(options.maxBufferedBytes),

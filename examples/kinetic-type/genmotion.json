@@ -7,6 +7,10 @@
   "fps": 30,
   "seed": 17,
   "anchors": [],
+  "parameters": [],
+  "parameterValues": {},
+  "variants": [],
+  "compositions": [],
   "brand": {
     "background": "#09090b",
     "foreground": "#f5f3ea",
@@ -96,6 +100,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "round-rect",
           "x": 122,
@@ -220,6 +226,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "MOVE",
           "x": 190,
@@ -305,6 +313,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "Motion starts with hierarchy.",
           "x": 205,
@@ -333,9 +343,9 @@
         "ease": "linear"
       },
       "transitionOut": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "referenceDecisions": [
         {
@@ -398,6 +408,8 @@
           "tags": [],
           "motion": [],
           "tracks": [],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "rect",
           "x": 0,
@@ -429,50 +441,9 @@
           "blendMode": "source-over",
           "tags": [],
           "motion": [],
-          "tracks": [
-            {
-              "id": "type-slide",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -260,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.75,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "TYPE",
           "x": 130,
@@ -558,6 +529,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "BECOMES",
           "x": 130,
@@ -643,6 +616,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "RHYTHM",
           "x": 130,
@@ -666,14 +641,14 @@
         }
       ],
       "transitionIn": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "transitionOut": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "referenceDecisions": [
         {
@@ -819,6 +794,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "ellipse",
           "x": 1545,
@@ -850,92 +827,9 @@
           "blendMode": "source-over",
           "tags": [],
           "motion": [],
-          "tracks": [
-            {
-              "id": "resolve-in",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.65,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "resolve-track",
-              "target": "letterSpacing",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -30,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.9,
-                  "value": -11,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4,
-                  "value": -11,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "MAKE TIME\nVISIBLE",
           "x": 210,
@@ -1021,6 +915,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "GENMOTION / PUBLIC EXAMPLE 01",
           "x": 220,
@@ -1044,9 +940,9 @@
         }
       ],
       "transitionIn": {
-        "type": "crossfade",
-        "duration": 0.35,
-        "ease": "sine-in-out"
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
       },
       "transitionOut": {
         "type": "cut",

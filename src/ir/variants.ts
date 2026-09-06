@@ -1,3 +1,5 @@
+import { csvRows } from './csv.js';
+export { csvRows } from './csv.js';
 import { z } from 'zod';
 import { parameterValueSchema, variantSchema, type GenmotionProject, type ParameterValue } from './schema.js';
 import { resolveParameters } from './parameters.js';
@@ -21,33 +23,6 @@ export function expandParameterMatrix(project: GenmotionProject, input: Record<s
     resolveParameters(project, values);
     return { id: `variant-${String(index + 1).padStart(4, '0')}`, label: axes.length ? axes.map(([id]) => `${id}: ${JSON.stringify(values[id])}`).join(' · ') : 'Default', values };
   });
-}
-
-/** RFC 4180 quoting, including embedded newlines and doubled quotes. */
-function csvRows(content: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [], cell = '', quoted = false, closed = false;
-  const emitCell = (): void => { row.push(cell); cell = ''; closed = false; };
-  for (let index = 0; index < content.length; index += 1) {
-    const character = content[index]!;
-    if (quoted) {
-      if (character === '"') {
-        if (content[index + 1] === '"') { cell += '"'; index += 1; }
-        else { quoted = false; closed = true; }
-      } else cell += character;
-    } else if (character === ',') emitCell();
-    else if (character === '\r' || character === '\n') {
-      if (character === '\r' && content[index + 1] === '\n') index += 1;
-      emitCell(); rows.push(row); row = [];
-    } else if (character === '"' && !cell && !closed) quoted = true;
-    else {
-      if (closed || character === '"') throw new Error('Malformed CSV quoting.');
-      cell += character;
-    }
-  }
-  if (quoted) throw new Error('Unterminated CSV quoted cell.');
-  if (cell || row.length || closed) { emitCell(); rows.push(row); }
-  return rows;
 }
 
 export function importParameterVariants(project: GenmotionProject, content: string, format: 'json' | 'csv', limit = 1_000): ParameterVariant[] {

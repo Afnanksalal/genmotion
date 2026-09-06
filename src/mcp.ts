@@ -1,4 +1,11 @@
 #!/usr/bin/env node
+import { alphaModeSchema } from './engine/alpha-output.js';
+import { renderFrameRangeSchema, renderGroupSchema } from './ir/render-selection.js';
+import { frozenDataImportSchema, importFrozenData } from './ir/data-sources.js';
+import { resolveRenderView } from './engine/render-view.js';
+import { projectForRenderComposition } from './engine/render-projection.js';
+import { readFrozenDataFile } from './ir/data-import-file.js';
+import { authoringSchemaKindSchema, describeAuthoringSchema } from './ir/authoring-schema.js';
 import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from './engine/media-conform.js';
 import { inspectMedia } from './engine/media-probe.js';
 import { captionCueSchema } from './ir/schema.js';
@@ -35,6 +42,8 @@ import { animationTrackSchema, easingSchema, parameterValueSchema, projectSchema
 import { applyPatch, patchOperationSchema } from './ir/patch.js';
 import { commitProject, readProjectSnapshot } from './ir/store.js';
 import { canApplySemanticEdit, commitSemanticEdits, editTargetSchema, inspectEditTarget, semanticEditSchema } from './ir/edit.js';
+import { EditingSession, filesystemEditingAdapter, editingCommandSchema, editingCheckpointSchema, executeEditingCommand } from './ir/session.js';
+import { executeStudioCommand, studioBridgeCommandSchema } from './studio/bridge.js';
 import { hasErrors, summarizeProject, validateProject } from './ir/validate.js';
 import { evaluateTrack } from './engine/animation.js';
 import { layerIsActive, locateScene } from './engine/timeline.js';
@@ -53,6 +62,16 @@ import { compositionDependencyGraph, compositionUses } from './ir/compositions.j
 import { analyzeSpring, easingPresets } from './engine/easing.js';
 import { fractalNoise, noiseND, seededRandom, staggerSchedule, staggerWindows } from './engine/procedural.js';
 import { effectiveLayerStart, layerDependencyGraph, resolveLayerGraph } from './engine/constraints.js';
+
+/** Keep repeated IR definitions as local JSON Schema references on the MCP wire. */
+function compactSchema<T extends z.ZodType>(schema: T): T {
+  const standard = schema['~standard'];
+  Object.defineProperty(standard, 'jsonSchema', { value: {
+    input: () => z.toJSONSchema(schema, { io: 'input', reused: 'ref' }),
+    output: () => z.toJSONSchema(schema, { io: 'output', reused: 'ref' }),
+  } });
+  return schema;
+}
 
 type ToolValue = Record<string, unknown>;
 const qualitySchema = z.enum(['draft', 'standard', 'high']);
@@ -118,50 +137,49 @@ function serverFactory(): McpServer {
   const studios = new Map<string, StudioServer>();
 
   server.registerTool('genmotion_doctor', {
-    title: 'Check Genmotion runtime', description: 'Verify FFmpeg, ffprobe, Node.js, and renderer readiness.', inputSchema: z.object({}).strict(), annotations: { readOnlyHint: true },
+    title: 'Check Genmotion runtime', description: 'Verify FFmpeg, ffprobe, Node.js, and renderer readiness.', inputSchema: compactSchema(z.object({}).strict()), annotations: { readOnlyHint: true },
   }, async () => { const checks = await doctor(); return toolResult({ ok: checks.every((check) => check.ok), checks }); });
 
   server.registerTool('genmotion_init', {
     title: 'Create Genmotion project', description: 'Create a neutral Genmotion artboard and truth-linked creative brief for the calling agent to author. No canned scene design is generated.',
-    inputSchema: z.object({ directory: z.string().min(1), title: z.string().min(1), promise: z.string().min(1), proof: z.string().min(1), action: z.string().min(1), audience: z.string().min(1), mode: z.enum(['walkthrough', 'launch', 'pitch', 'explainer']), duration: z.number().positive().max(3600) }).strict(),
+    inputSchema: compactSchema(z.object({ directory: z.string().min(1), title: z.string().min(1), promise: z.string().min(1), proof: z.string().min(1), action: z.string().min(1), audience: z.string().min(1), mode: z.enum(['walkthrough', 'launch', 'pitch', 'explainer']), duration: z.number().positive().max(3600) }).strict()),
   }, async (input) => toolResult(await initializeProject(await allowedPath(input.directory, 'Project directory'), { title: input.title, promise: input.promise, proof: input.proof, desiredAction: input.action, audience: input.audience, mode: input.mode, duration: input.duration })));
 
   server.registerTool('genmotion_catalog', {
     title: 'Search motion catalog', description: 'Search Genmotion motions, scene blueprints, and taste references by creative intent.',
-    inputSchema: z.object({ query: z.string().default(''), limit: z.number().int().min(1).max(50).default(12) }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ query: z.string().default(''), limit: z.number().int().min(1).max(50).default(12) }).strict()), annotations: { readOnlyHint: true },
   }, (input) => Promise.resolve(toolResult({ results: searchCatalog(input.query, input.limit) })));
 
   server.registerTool('genmotion_catalog_audit', {
-    title: 'Audit motion catalog', description: 'Validate catalog implementations, references, and licenses.', inputSchema: z.object({}).strict(), annotations: { readOnlyHint: true },
+    title: 'Audit motion catalog', description: 'Validate catalog implementations, references, and licenses.', inputSchema: compactSchema(z.object({}).strict()), annotations: { readOnlyHint: true },
   }, () => Promise.resolve(toolResult({ ...auditCatalog() })));
 
   server.registerTool('genmotion_project_read', {
-    title: 'Read Genmotion project', description: 'Read the authoritative Creative IR with its revision for safe agent editing.', inputSchema: z.object({ project: z.string().min(1) }).strict(), annotations: { readOnlyHint: true },
+    title: 'Read Genmotion project', description: 'Read the authoritative Creative IR with its revision for safe agent editing.', inputSchema: compactSchema(z.object({ project: z.string().min(1) }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => {
     const loaded = await readProjectSnapshot(await allowedPath(input.project, 'Project'));
     return toolResult({ projectFile: loaded.projectFile, projectDir: loaded.projectDir, revision: loaded.revision, project: loaded.sourceProject, summary: summarizeProject(loaded.project) });
   });
 
+  server.registerTool('genmotion_data_import', {
+    title: 'Freeze typed project data', description: 'Import a local UTF-8 JSON/CSV file into a content-hashed typed parameter snapshot. The original file is not read during later renders.',
+    inputSchema: frozenDataImportSchema.omit({ content: true, sourceName: true }).extend({ project: z.string().min(1), sourceFile: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), dryRun: z.boolean().default(false) }).strict(),
+  }, async (input) => {
+    const content = await readFrozenDataFile(await allowedPath(input.sourceFile, 'Data source'));
+    const session = new EditingSession(filesystemEditingAdapter(await allowedPath(input.project, 'Project')));
+    try {
+      const snapshot = await session.read();
+      if (snapshot.revision !== input.expectedRevision) throw new GenmotionError('REVISION_CONFLICT', 'Data import uses a stale source revision.');
+      const imported = importFrozenData(snapshot.project, { id: input.id, parameterId: input.parameterId, format: input.format, sourceName: path.basename(input.sourceFile), content });
+      const receipt = await session.replace(imported.project, { expectedRevision: snapshot.revision, origin: 'mcp:data-import', dryRun: input.dryRun });
+      return toolResult({ receipt, source: { id: imported.source.id, parameterId: imported.source.parameterId, valueHash: imported.source.valueHash } });
+    } finally { await session.dispose(); }
+  });
+
   server.registerTool('genmotion_schema', {
-    title: 'Inspect Genmotion authoring schema', description: 'Return a compact authoritative Creative IR authoring contract by default. Request full=true only when the inline save-tool schema does not answer a field-level question.', inputSchema: z.object({ full: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true },
+    title: 'Inspect Genmotion authoring schema', description: 'Return a schema-derived Creative IR contract. Choose kind for focused layer, parameter, expression, gesture, edit or query fields. Request full=true for the complete input JSON Schema. Runtime semantic validation is still required.', inputSchema: compactSchema(z.object({ full: z.boolean().default(false), kind: authoringSchemaKindSchema.default('project') }).strict()), annotations: { readOnlyHint: true },
   }, (input) => Promise.resolve(toolResult({
-    ...(input.full ? { schema: z.toJSONSchema(projectSchema, { io: 'input' }) } : { schemaSummary: {
-      project: ['schemaVersion', 'id', 'title', 'width', 'height', 'fps', 'seed', 'anchors', 'parameters', 'parameterValues', 'variants', 'compositions', 'brand', 'scenes', 'audio', 'audioDucking', 'metadata'],
-      scene: ['id', 'purpose', 'duration', 'background', 'layers', 'transitionIn', 'transitionOut', 'effects'],
-      adjustmentRequired: ['id', 'type=adjustment', 'x', 'y', 'width', 'height', 'effects'],
-      visualEffects: { scope: ['layer', 'composition', 'scene', 'adjustment'], controls: ['id', 'type', 'enabled', 'amount', 'radius', 'angle', 'center'], animation: 'Numeric controls accept native keyframes at layer-local time' },
-      masks: { controls: ['id', 'path', 'mode', 'opacity', 'feather', 'expansion', 'inverted', 'fillRule'], modes: ['add', 'subtract', 'intersect', 'exclude'], animation: 'SVG path keyframes and numeric keyframes' },
-      textRequired: ['id', 'type=text', 'text', 'x', 'y', 'width', 'height', 'fontFamily', 'fontSize', 'color'],
-      shapeRequired: ['id', 'type=shape', 'shape', 'x', 'y', 'width', 'height'],
-      trackRequired: ['id', 'target', 'keyframes[{at,value,ease}]'],
-      trackControls: ['enabled', 'solo', 'locked', 'group', 'layer.trackGroups', 'layer.propertyLinks'],
-      parameterTypes: ['string', 'number', 'boolean', 'color', 'enum', 'file', 'asset', 'font', 'dimension', 'duration', 'object', 'array'],
-      compositionControls: ['parameterValues', 'timeOffset', 'timeScale', 'trimBefore', 'trimAfter', 'loop', 'loopMode', 'loopCount', 'freeze', 'timeRemap', 'clipToBounds'],
-      pathOperations: ['union', 'intersection', 'subtract', 'exclude', 'transform', 'stroke', 'round', 'trim', 'dash', 'simplify', 'cut', 'reverse', 'translate', 'scale', 'center', 'subpaths', 'subdivide', 'warp'],
-      gradientPaint: { types: ['linear', 'radial', 'conic'], targets: ['gradientFill', 'gradientStroke'], animation: 'Matching gradient types and stop counts; discrete switching otherwise' },
-      shapePrimitives: ['rect', 'round-rect', 'ellipse', 'line', 'bezier', 'polygon', 'path', 'arc', 'pie', 'callout', 'arrow', 'star', 'spark', 'heart', 'regular-polygon', 'triangle', 'donut', 'ring', 'spiral', 'waveform', 'line-chart', 'area-chart'],
-      audioEffects: ['highpass', 'lowpass', 'equalizer', 'compressor', 'gate', 'limiter'],
-    } }),
+    ...(input.full ? { schema: describeAuthoringSchema(input.kind, true) } : { schemaSummary: describeAuthoringSchema(input.kind) }),
     authoring: {
       model: 'Agents may author complete projects, granular RFC 6902 patches, arbitrary numeric property tracks, custom cubic-bezier and spring easing, and SVG path geometry.',
       layoutSemantics: 'For every layer, x/y are the top-left corner of its layout box, never its center. Text align and verticalAlign work inside that box; anchorX/anchorY only select the transform pivot.',
@@ -178,7 +196,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_audio_analyze', {
     title: 'Analyze source audio', description: 'Analyze a bounded window of local audio/video for stereo waveforms, spectrum bands, transients, silence and estimated fixed-tempo beats. Detection is advisory. Dense waveform/spectrum data is opt-in.',
-    inputSchema: z.object({ source: z.string(), options: audioAnalysisOptionsSchema.optional(), includeDenseData: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ source: z.string(), options: audioAnalysisOptionsSchema.optional(), includeDenseData: z.boolean().default(false) }).strict()), annotations: { readOnlyHint: true },
   }, async (input, context) => {
     const result = await analyzeAudioFile(await allowedPath(input.source, 'Audio source'), input.options, { signal: context.mcpReq.signal });
     if (input.includeDenseData) return toolResult({ ...result });
@@ -188,7 +206,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_audio_measure', {
     title: 'Measure audio loudness', description: 'Measure integrated LUFS, loudness range and true peak for a processed project mix or a local media file, with silence and clipping diagnostics.',
-    inputSchema: z.object({ input: z.string(), media: z.boolean().default(false), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ input: z.string(), media: z.boolean().default(false), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict()), annotations: { readOnlyHint: true },
   }, async (input, context) => {
     const source = await allowedPath(input.input, 'Audio analysis input');
     if (input.media) return toolResult({ ...await measureAudioFile(source, { signal: context.mcpReq.signal }) });
@@ -200,7 +218,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_audio_render', {
     title: 'Render processed audio mix', description: 'Export the native processed project mix to WAV, FLAC, M4A or Opus, verifying decode before atomic output replacement.',
-    inputSchema: z.object({ project: z.string(), output: z.string(), parameters: parameterValuesSchema.default({}), variant: z.string().optional(), stem: z.enum(['music', 'voice', 'sfx', 'source']).optional() }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string(), output: z.string(), parameters: parameterValuesSchema.default({}), variant: z.string().optional(), stem: z.enum(['music', 'voice', 'sfx', 'source']).optional() }).strict()),
   }, async (input, context) => {
     const loaded = await loadConfiguredProject(await allowedPath(input.project, 'Project'), input.parameters, input.variant);
     const findings = await validateProject(loaded);
@@ -209,13 +227,13 @@ function serverFactory(): McpServer {
   });
 
   server.registerTool('genmotion_easing_copy', {
-    title: 'Copy easing', description: 'Copy a named, Bezier, or spring easing from a stable scene or layer address.', inputSchema: z.object({ project: z.string(), address: easingAddressSchema }).strict(), annotations: { readOnlyHint: true },
+    title: 'Copy easing', description: 'Copy a named, Bezier, or spring easing from a stable scene or layer address.', inputSchema: compactSchema(z.object({ project: z.string(), address: easingAddressSchema }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => {
     const snapshot = await readProjectSnapshot(await allowedPath(input.project, 'Project'));
     return toolResult({ revision: snapshot.revision, easing: copyEasing(snapshot.sourceProject, input.address) });
   });
   server.registerTool('genmotion_easing_paste', {
-    title: 'Paste easing', description: 'Validate and save a copied easing through a revision-safe project transaction.', inputSchema: z.object({ project: z.string(), address: easingAddressSchema, easing: easingSchema, expectedRevision: z.string(), dryRun: z.boolean().default(false) }).strict(),
+    title: 'Paste easing', description: 'Validate and save a copied easing through a revision-safe project transaction.', inputSchema: compactSchema(z.object({ project: z.string(), address: easingAddressSchema, easing: easingSchema, expectedRevision: z.string(), dryRun: z.boolean().default(false) }).strict()),
   }, async (input, context) => {
     const { loaded: _loaded, ...receipt } = await commitEasing(await allowedPath(input.project, 'Project'), input.address, input.easing, { expectedRevision: input.expectedRevision, dryRun: input.dryRun, signal: context.mcpReq.signal, origin: 'mcp' });
     void _loaded; return toolResult(receipt);
@@ -223,7 +241,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_variants', {
     title: 'Expand and validate parameter configurations', description: 'Generate bounded parameter matrices or validate CSV/JSON named configurations. Returns configurations and serialized export without mutating the project.',
-    inputSchema: z.object({ project: z.string().min(1), matrix: parameterMatrixSchema.optional(), content: z.string().optional(), inputFormat: z.enum(['csv', 'json']).default('json'), outputFormat: z.enum(['csv', 'json']).default('json') }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), matrix: parameterMatrixSchema.optional(), content: z.string().optional(), inputFormat: z.enum(['csv', 'json']).default('json'), outputFormat: z.enum(['csv', 'json']).default('json') }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => {
     if (input.matrix && input.content !== undefined) throw new Error('Choose matrix or imported content.');
     const loaded = await loadProject(await allowedPath(input.project, 'Project'));
@@ -233,15 +251,35 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_edit_inspect', {
     title: 'Inspect stable native edit target', description: 'Resolve a scene or reusable composition layer by stable identity, including direct dependants and affected composition instances.',
-    inputSchema: z.object({ project: z.string().min(1), target: editTargetSchema }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), target: editTargetSchema }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => {
     const snapshot = await readProjectSnapshot(await allowedPath(input.project, 'Project'));
     return toolResult({ revision: snapshot.revision, ...inspectEditTarget(snapshot.sourceProject, input.target) });
   });
 
+  server.registerTool('genmotion_editing_session', {
+    title: 'Native editing session', description: 'Typed session queries and atomic edits with bounded undo/redo, checkpoint restore and revision-safe filesystem persistence. Return a checkpoint to retain history across calls.',
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), command: editingCommandSchema, checkpoint: editingCheckpointSchema.optional(), includeCheckpoint: z.boolean().default(false) }).strict()),
+  }, async (input, context) => {
+    const session = new EditingSession(filesystemEditingAdapter(await allowedPath(input.project, 'Project')));
+    const cancel = (): void => { void session.dispose(); };
+    context.mcpReq.signal.addEventListener('abort', cancel, { once: true });
+    try {
+      if (context.mcpReq.signal.aborted) throw context.mcpReq.signal.reason;
+      if (input.checkpoint) await session.restore(input.checkpoint);
+      const result = await executeEditingCommand(session, input.command);
+      return toolResult({ result, ...(input.includeCheckpoint ? { checkpoint: await session.checkpoint() } : {}) });
+    } finally { context.mcpReq.signal.removeEventListener('abort', cancel); await session.dispose(); }
+  });
+
+  server.registerTool('genmotion_studio_session', {
+    title: 'Live Studio session', description: 'Read capabilities and shared Studio context, navigate its playhead/selection, or perform revision-checked semantic edits with Studio session permissions and shared undo history. Requires this project to be open in Studio.',
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), command: studioBridgeCommandSchema }).strict()),
+  }, async (input, context) => toolResult({ result: await executeStudioCommand(await allowedPath(input.project, 'Project'), input.command, context.mcpReq.signal) }));
+
   server.registerTool('genmotion_edit_capability', {
     title: 'Check native editing capability', description: 'Pure structural capability/refusal query for a semantic edit. Does not certify assets or evaluated semantic validity.',
-    inputSchema: z.object({ project: z.string().min(1), edit: semanticEditSchema }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), edit: semanticEditSchema }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => {
     const snapshot = await readProjectSnapshot(await allowedPath(input.project, 'Project'));
     return toolResult({ revision: snapshot.revision, ...canApplySemanticEdit(snapshot.sourceProject, input.edit) });
@@ -249,7 +287,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_edit', {
     title: 'Apply stable native edits', description: 'Apply text, property, timing, asset, layer and track edits as one validated transaction addressed by stable scene/composition and layer IDs. Returns affected targets and an inverse patch for revision-safe undo.',
-    inputSchema: z.object({ project: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), edits: semanticEditSchema.array().min(1).max(500), strict: z.boolean().default(true), dryRun: z.boolean().default(false) }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), edits: semanticEditSchema.array().min(1).max(500), strict: z.boolean().default(true), dryRun: z.boolean().default(false) }).strict()),
   }, async (input, context) => {
     const { loaded, ...receipt } = await commitSemanticEdits(await allowedPath(input.project, 'Project'), input.edits, { expectedRevision: input.expectedRevision, strict: input.strict, dryRun: input.dryRun, origin: 'mcp', signal: context.mcpReq.signal });
     return toolResult({ ...receipt, projectFile: loaded.projectFile });
@@ -257,7 +295,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_project_save', {
     title: 'Save Genmotion project', description: 'Validate and atomically save a complete Creative IR document under a cross-process project lock. Dry runs return validated proposals without committing. Stale revisions and invalid documents preserve accepted work.',
-    inputSchema: z.object({ project: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), document: projectSchema, strict: z.boolean().default(true), dryRun: z.boolean().default(false) }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), document: projectSchema, strict: z.boolean().default(true), dryRun: z.boolean().default(false) }).strict()),
   }, async (input, context) => {
     const receipt = await commitProject(await allowedPath(input.project, 'Project'), { expectedRevision: input.expectedRevision, update: () => input.document, strict: input.strict, dryRun: input.dryRun, origin: 'mcp', signal: context.mcpReq.signal });
     const { loaded, ...result } = receipt;
@@ -266,7 +304,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_project_patch', {
     title: 'Patch Genmotion project', description: 'Apply an ordered RFC 6902 transaction, validate before committing, preserve raw-source history and reject competing or stale revisions. Dry runs return validated proposals without committing.',
-    inputSchema: z.object({ project: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), operations: z.array(patchOperationSchema).min(1).max(500), strict: z.boolean().default(true), dryRun: z.boolean().default(false) }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), expectedRevision: z.string().regex(/^[a-f0-9]{64}$/), operations: z.array(patchOperationSchema).min(1).max(500), strict: z.boolean().default(true), dryRun: z.boolean().default(false) }).strict()),
   }, async (input, context) => {
     const receipt = await commitProject(await allowedPath(input.project, 'Project'), { expectedRevision: input.expectedRevision, update: (project) => applyPatch(project, input.operations), strict: input.strict, dryRun: input.dryRun, origin: 'mcp', signal: context.mcpReq.signal });
     const { loaded, ...result } = receipt;
@@ -275,7 +313,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_validate', {
     title: 'Validate Genmotion project', description: 'Validate Creative IR, assets, layout, timing, motion ownership, and delivery constraints.',
-    inputSchema: z.object({ project: z.string().min(1), strict: z.boolean().default(true) }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), strict: z.boolean().default(true) }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => {
     const loaded = await loadProject(await allowedPath(input.project, 'Project'));
     const findings = await validateProject(loaded);
@@ -284,14 +322,16 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_frame', {
     title: 'Render Genmotion frame', description: 'Render an exact native PNG frame at a requested timestamp and optional delivery resolution.',
-    inputSchema: z.object({ project: z.string().min(1), at: z.number().finite().nonnegative(), subframe: z.boolean().default(false), output: z.string().min(1), resolution: resolutionSchema.optional(), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), at: z.number().finite().nonnegative(), subframe: z.boolean().default(false), output: z.string().min(1), resolution: resolutionSchema.optional(), compositionId: z.string().min(1).optional(), group: renderGroupSchema.optional(), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict()),
   }, async (input) => {
     const loaded = await loadConfiguredProject(await allowedPath(input.project, 'Project'), input.parameters, input.variant);
+    if (input.group && input.compositionId) throw new GenmotionError('RENDER_SELECTION_CONFLICT', 'Choose a group or a standalone composition.');
+    loaded.project = projectForRenderComposition(loaded.project, input.compositionId);
     const destination = await allowedPath(input.output, 'Frame output');
     const duration = loaded.project.scenes.reduce((sum, scene) => sum + scene.duration, 0);
     if (input.subframe && input.at >= duration) throw new GenmotionError('FRAME_OUTSIDE_COMPOSITION', 'Exact timestamp must be inside the composition.');
     const frame = input.subframe ? input.at * loaded.project.fps : Math.min(Math.ceil(duration * loaded.project.fps) - 1, Math.floor(input.at * loaded.project.fps));
-    const png = await renderFramePng(loaded.project, loaded.projectDir, frame, input.resolution);
+    const png = await renderFramePng(loaded.project, loaded.projectDir, frame, input.resolution, resolveRenderView(loaded.project, input.group));
     await mkdir(path.dirname(destination), { recursive: true });
     await writeFile(destination, png);
     return imageToolResult({ output: destination, frame, at: frame / loaded.project.fps, resolution: input.resolution ?? { width: loaded.project.width, height: loaded.project.height } }, [{ data: png, mimeType: 'image/png' }]);
@@ -299,7 +339,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_timeline_inspect', {
     title: 'Inspect evaluated timeline', description: 'Evaluate the active scene and every visible layer at an exact time after recipe compilation and arbitrary property-track animation.',
-    inputSchema: z.object({ project: z.string().min(1), at: z.number().nonnegative() }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), at: z.number().nonnegative() }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => {
     const loaded = await loadProject(await allowedPath(input.project, 'Project'));
     const active = locateScene(loaded.project, input.at);
@@ -311,20 +351,20 @@ function serverFactory(): McpServer {
   });
 
   server.registerTool('genmotion_render', {
-    title: 'Render Genmotion master', description: 'Validate and render a reproducible high-resolution video master. High quality guarantees at least a 1920-pixel long edge.',
-    inputSchema: z.object({ project: z.string().min(1), output: z.string().min(1), quality: qualitySchema.default('high'), codec: codecSchema.default('h264'), resolution: resolutionSchema.optional(), workers: z.number().int().min(1).max(16).optional(), maxBufferedFrames: z.number().int().positive().optional(), maxBufferedBytes: z.number().int().positive().optional(), timeoutMs: z.number().int().min(1).max(2_147_483_647).optional(), hardwareAcceleration: z.boolean().default(false), strict: z.boolean().default(true), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict(),
+    title: 'Render Genmotion master', description: 'Validate and render a reproducible high-resolution video master. High quality guarantees at least a 1920-pixel long edge. Optional sceneId or an exclusive-end frame range exports an interval while preserving global timing and audio processing.',
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), output: z.string().min(1), quality: qualitySchema.default('high'), codec: codecSchema.default('h264'), alphaMode: alphaModeSchema.default('auto'), alphaBackground: z.string().optional(), resolution: resolutionSchema.optional(), sceneId: z.string().min(1).optional(), compositionId: z.string().min(1).optional(), group: renderGroupSchema.optional(), range: renderFrameRangeSchema.optional(), workers: z.number().int().min(1).max(16).optional(), maxBufferedFrames: z.number().int().positive().optional(), maxBufferedBytes: z.number().int().positive().optional(), timeoutMs: z.number().int().min(1).max(2_147_483_647).optional(), hardwareAcceleration: z.boolean().default(false), strict: z.boolean().default(true), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict()),
   }, async (input, context) => {
     const loaded = await loadConfiguredProject(await allowedPath(input.project, 'Project'), input.parameters, input.variant);
     const findings = await validateProject(loaded);
     if (hasErrors(findings) || (input.strict && findings.length > 0)) throw new GenmotionError('VALIDATION_FAILED', 'Render blocked by validation findings.', findings);
     const output = await allowedPath(input.output, 'Render output');
-    const result = await renderProject(loaded, { output, quality: input.quality, codec: input.codec, ...(input.resolution ? { resolution: input.resolution } : {}), workers: input.workers, maxBufferedFrames: input.maxBufferedFrames, maxBufferedBytes: input.maxBufferedBytes, timeoutMs: input.timeoutMs, hardwareAcceleration: input.hardwareAcceleration, signal: context.mcpReq.signal });
+    const result = await renderProject(loaded, { output, sceneId: input.sceneId, compositionId: input.compositionId, group: input.group, range: input.range, quality: input.quality, codec: input.codec, alphaMode: input.alphaMode, alphaBackground: input.alphaBackground, ...(input.resolution ? { resolution: input.resolution } : {}), workers: input.workers, maxBufferedFrames: input.maxBufferedFrames, maxBufferedBytes: input.maxBufferedBytes, timeoutMs: input.timeoutMs, hardwareAcceleration: input.hardwareAcceleration, signal: context.mcpReq.signal });
     return toolResult({ ...result });
   });
 
   server.registerTool('genmotion_path_operate', {
     title: 'Apply native path geometry operations', description: 'Evaluate ordered boolean, stroke expansion, rounding, affine transform, trim, dash and simplify operations without changing a project.',
-    inputSchema: z.object({ path: z.string().max(10_000_000), operations: pathOperationsSchema }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ path: z.string().max(10_000_000), operations: pathOperationsSchema }).strict()), annotations: { readOnlyHint: true },
   }, (input) => {
     const path = applyPathOperations(input.path, input.operations);
     return Promise.resolve(toolResult({ path, ...pathMetrics(path) }));
@@ -332,7 +372,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_path_inspect', {
     title: 'Inspect native vector path', description: 'Measure SVG path data and sample deterministic position, tangent, and trimmed polyline geometry.',
-    inputSchema: z.object({ path: z.string().min(1), progress: z.number().min(0).max(1).default(1), tolerance: z.number().positive().default(1) }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ path: z.string().min(1), progress: z.number().min(0).max(1).default(1), tolerance: z.number().positive().default(1) }).strict()), annotations: { readOnlyHint: true },
   }, (input) => Promise.resolve(toolResult({ ...pathMetrics(input.path), normalized: normalizePath(input.path, input.tolerance), sample: samplePath(input.path, input.progress), prefix: flattenPath(input.path, 0, input.progress, input.tolerance) })));
 
   server.registerTool('genmotion_bundle', {
@@ -350,7 +390,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_lut_import', {
     title: 'Import a frozen native CUBE LUT', description: 'Validate a local 1D/3D CUBE file, freeze its source in the project, and return a compact hash-bound LUT payload for a visual effect. Color spaces must be explicit.',
-    inputSchema: z.object({ project: z.string().min(1), file: z.string().min(1), inputColorSpace: lookupTableSchema.shape.inputColorSpace, outputColorSpace: lookupTableSchema.shape.outputColorSpace, interpolation: lookupTableSchema.shape.interpolation }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), file: z.string().min(1), inputColorSpace: lookupTableSchema.shape.inputColorSpace, outputColorSpace: lookupTableSchema.shape.outputColorSpace, interpolation: lookupTableSchema.shape.interpolation }).strict()),
   }, async (input) => {
     const project = await loadProject(await allowedPath(input.project, 'Project')), file = await allowedPath(input.file, 'LUT source');
     if ((await stat(file)).size > 32 * 1024 ** 2) throw new Error('CUBE input exceeds 32 MiB');
@@ -360,7 +400,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_markers', {
     title: 'Timeline markers and named ranges', description: 'Read scene-relative/global markers and in/out ranges. Optional replacements require the current file revision and preserve other project data.',
-    inputSchema: z.object({ project: z.string().min(1), markers: timelineMarkersSchema.optional(), ranges: timelineRangesSchema.optional(), expectedRevision: z.string().optional() }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), markers: timelineMarkersSchema.optional(), ranges: timelineRangesSchema.optional(), expectedRevision: z.string().optional() }).strict()),
   }, async (input) => {
     const project = await allowedPath(input.project, 'Project');
     if (input.markers || input.ranges) {
@@ -373,12 +413,12 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_effects', {
     title: 'Native visual effect capabilities and cost', description: 'Inspect implemented effect controls, sampling, alpha, precision, SDR/HDR support and estimated working memory. Estimates exclude enclosing surfaces and backend scratch allocations.',
-    inputSchema: z.object({ effects: visualEffectsSchema.optional(), width: z.number().int().min(1).max(8192).default(1920), height: z.number().int().min(1).max(8192).default(1080) }).strict(),
+    inputSchema: compactSchema(z.object({ effects: visualEffectsSchema.optional(), width: z.number().int().min(1).max(8192).default(1920), height: z.number().int().min(1).max(8192).default(1080) }).strict()),
   }, (input) => toolResult(input.effects ? estimateEffectStack(input.effects, input.width, input.height) : { effects: visualEffectTypeSchema.options.map(visualEffectCapabilities) }));
 
   server.registerTool('genmotion_production', {
     title: 'Production workflow and storyboard', description: 'Inspect resumable stages, asset fingerprints and shot reviews. Apply explicit revision-checked planning, review, comment and stage actions. Changed inputs invalidate affected completion and approval.',
-    inputSchema: z.object({ project: z.string().min(1), action: productionActionSchema.optional(), expectedRevision: z.string().optional() }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), action: productionActionSchema.optional(), expectedRevision: z.string().optional() }).strict()),
   }, async (input, context) => {
     const project = await allowedPath(input.project, 'Project');
     if (input.action) {
@@ -392,7 +432,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_brief', {
     title: 'Read or update production brief', description: 'Resume versioned requirements, distinguish user decisions from inference, and report unresolved fields and sources. Writes require the current file revision.',
-    inputSchema: z.object({ project: z.string().min(1), brief: productionBriefSchema.optional(), expectedRevision: z.string().optional() }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), brief: productionBriefSchema.optional(), expectedRevision: z.string().optional() }).strict()),
   }, async (input) => {
     const project = await allowedPath(input.project, 'Project');
     if (input.brief) {
@@ -407,7 +447,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_text_measure', {
     title: 'Measure native text layout', description: 'Measure complete text, fitted font size, line breaks, automatic dimensions and overflow using native project fonts.',
-    inputSchema: z.object({ project: z.string().min(1), address: textMeasureAddressSchema }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), address: textMeasureAddressSchema }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => toolResult(measureProjectText(await loadProject(await allowedPath(input.project, 'Project')), input.address)));
 
   server.registerTool('genmotion_animation_inspect', {
@@ -438,7 +478,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_compositions_inspect', {
     title: 'Inspect composition graph', description: 'Return reusable composition dependencies and every scene or composition instance that uses a selected definition.',
-    inputSchema: z.object({ project: z.string().min(1), compositionId: z.string().optional() }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), compositionId: z.string().optional() }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => {
     const loaded = await loadProject(await allowedPath(input.project, 'Project'));
     return toolResult({ graph: compositionDependencyGraph(loaded.project), layerGraphs: Object.fromEntries([...loaded.project.scenes, ...loaded.project.compositions].map((container) => [container.id, layerDependencyGraph(container.layers)])), ...(input.compositionId ? { uses: compositionUses(loaded.project, input.compositionId) } : {}) });
@@ -446,12 +486,12 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_captions_edit', {
     title: 'Edit caption timing and pages', description: 'Return corrected, shifted, paginated or text-replaced cues with diagnostics. Apply returned cues through the shared semantic edit API to save them.',
-    inputSchema: z.object({ cues: z.array(captionCueSchema).max(10000), action: captionEditSchema }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ cues: z.array(captionCueSchema).max(10000), action: captionEditSchema }).strict()), annotations: { readOnlyHint: true },
   }, (input) => toolResult(editCaptions(input.cues, input.action)));
 
   server.registerTool('genmotion_captions_convert', {
     title: 'Convert captions', description: 'Convert provider-neutral SRT, WebVTT, or timed JSON captions without network dependencies.',
-    inputSchema: z.object({ content: z.string(), inputFormat: z.enum(['srt', 'vtt', 'json']), outputFormat: z.enum(['srt', 'vtt', 'json']) }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ content: z.string(), inputFormat: z.enum(['srt', 'vtt', 'json']), outputFormat: z.enum(['srt', 'vtt', 'json']) }).strict()), annotations: { readOnlyHint: true },
   }, (input) => {
     const cues = parseCaptions(input.content, input.inputFormat);
     return Promise.resolve(toolResult({ cues, output: serializeCaptions(cues, input.outputFormat), format: input.outputFormat }));
@@ -459,7 +499,7 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_media_conform', {
     title: 'Conform source media', description: 'Create a new verified CFR SDR BT.709 derivative with explicit input color assumptions, optional HDR tone mapping and source/output hashes. Refuses existing destinations. Dry run returns the conversion plan.',
-    inputSchema: z.object({ source: z.string().min(1), output: z.string().min(1), options: mediaConformOptionsSchema, dryRun: z.boolean().default(false) }).strict(),
+    inputSchema: compactSchema(z.object({ source: z.string().min(1), output: z.string().min(1), options: mediaConformOptionsSchema, dryRun: z.boolean().default(false) }).strict()),
   }, async (input, context) => {
     const source = await allowedPath(input.source, 'Media source'), destination = await allowedPath(input.output, 'Conforming output');
     return toolResult(input.dryRun ? mediaConformPlan(await inspectMedia(source, { signal: context.mcpReq.signal }), input.options) : await conformMedia(source, destination, input.options, { signal: context.mcpReq.signal }));
@@ -467,16 +507,16 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_media_info', {
     title: 'Inspect source media', description: 'Inspect local audio/video stream metadata, display geometry, rotation, color tags, HDR transfer, audio formats and timing hints. Does not claim frame-by-frame VFR verification or ICC conversion.',
-    inputSchema: z.object({ source: z.string().min(1) }).strict(), annotations: { readOnlyHint: true },
+    inputSchema: compactSchema(z.object({ source: z.string().min(1) }).strict()), annotations: { readOnlyHint: true },
   }, async (input, context) => toolResult({ ...await inspectMedia(await allowedPath(input.source, 'Media source'), { signal: context.mcpReq.signal }) }));
 
   server.registerTool('genmotion_probe', {
-    title: 'Probe video', description: 'Inspect the encoded video contract including dimensions, frame rate, codecs, duration, and size.', inputSchema: z.object({ video: z.string().min(1) }).strict(), annotations: { readOnlyHint: true },
+    title: 'Probe video', description: 'Inspect the encoded video contract including dimensions, frame rate, codecs, duration, and size.', inputSchema: compactSchema(z.object({ video: z.string().min(1) }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => toolResult({ ...await probeVideo(await allowedPath(input.video, 'Video')) }));
 
   server.registerTool('genmotion_contact_sheet', {
     title: 'Create contact sheet', description: 'Create a representative contact sheet for visual review of a rendered video.',
-    inputSchema: z.object({ video: z.string().min(1), output: z.string().min(1), count: z.number().int().min(4).max(40).default(12), columns: z.number().int().min(2).max(8).default(4) }).strict(),
+    inputSchema: compactSchema(z.object({ video: z.string().min(1), output: z.string().min(1), count: z.number().int().min(4).max(40).default(12), columns: z.number().int().min(2).max(8).default(4) }).strict()),
   }, async (input) => {
     const video = await allowedPath(input.video, 'Video');
     const output = await allowedPath(input.output, 'Contact sheet output');
@@ -485,24 +525,24 @@ function serverFactory(): McpServer {
   });
 
   server.registerTool('genmotion_requests', {
-    title: 'List Studio requests', description: 'Read durable human requests captured by Genmotion Studio.', inputSchema: z.object({ project: z.string().min(1), pendingOnly: z.boolean().default(false) }).strict(), annotations: { readOnlyHint: true },
+    title: 'List Studio requests', description: 'Read durable human requests captured by Genmotion Studio.', inputSchema: compactSchema(z.object({ project: z.string().min(1), pendingOnly: z.boolean().default(false) }).strict()), annotations: { readOnlyHint: true },
   }, async (input) => { const requests = await getStudioRequests(await allowedPath(input.project, 'Project')); return toolResult({ requests: input.pendingOnly ? requests.filter((item) => ['pending', 'queued', 'running'].includes(item.status)) : requests }); });
 
   server.registerTool('genmotion_request_resolve', {
     title: 'Resolve Studio request', description: 'Close a durable Studio request after its real project edit has been saved and verified.',
-    inputSchema: z.object({ project: z.string().min(1), id: z.string().min(1), response: z.string().min(3).max(20_000) }).strict(),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), id: z.string().min(1), response: z.string().min(3).max(20_000) }).strict()),
   }, async (input) => toolResult({ request: await resolveStudioRequest(await allowedPath(input.project, 'Project'), input.id, input.response) }));
 
   server.registerTool('genmotion_preview_start', {
-    title: 'Start native preview', description: 'Start a localhost-only native frame preview and return its URL.', inputSchema: z.object({ project: z.string().min(1), port: z.number().int().min(1024).max(65535).default(4178) }).strict(),
+    title: 'Start native preview', description: 'Start a localhost-only native frame preview and return its URL.', inputSchema: compactSchema(z.object({ project: z.string().min(1), port: z.number().int().min(1024).max(65535).default(4178) }).strict()),
   }, async (input) => { const preview = await startPreview(await loadProject(await allowedPath(input.project, 'Project')), { host: '127.0.0.1', port: input.port }); const id = randomUUID(); previews.set(id, preview); return toolResult({ id, url: preview.url }); });
 
   server.registerTool('genmotion_studio_start', {
-    title: 'Start Genmotion Studio', description: 'Start the localhost-only workflow and timeline editor for a project.', inputSchema: z.object({ project: z.string().min(1), port: z.number().int().min(1024).max(65535).default(4180), workspace: z.string().optional() }).strict(),
+    title: 'Start Genmotion Studio', description: 'Start the localhost-only workflow and timeline editor for a project.', inputSchema: compactSchema(z.object({ project: z.string().min(1), port: z.number().int().min(1024).max(65535).default(4180), workspace: z.string().optional() }).strict()),
   }, async (input) => { const loaded = await loadProject(await allowedPath(input.project, 'Project')); const workspaceRoot = input.workspace ? await allowedPath(input.workspace, 'Studio workspace') : loaded.projectDir; const studio = await startStudio(loaded, { host: '127.0.0.1', port: input.port, workspaceRoot }); const id = randomUUID(); studios.set(id, studio); return toolResult({ id, url: studio.url, project: loaded.projectFile }); });
 
   server.registerTool('genmotion_server_stop', {
-    title: 'Stop Genmotion local server', description: 'Stop a preview or Studio server previously started by this MCP connection.', inputSchema: z.object({ id: z.string().uuid() }).strict(),
+    title: 'Stop Genmotion local server', description: 'Stop a preview or Studio server previously started by this MCP connection.', inputSchema: compactSchema(z.object({ id: z.string().uuid() }).strict()),
   }, async (input) => { const instance = previews.get(input.id) ?? studios.get(input.id); if (!instance) throw new GenmotionError('SERVER_NOT_FOUND', 'No Genmotion server exists with that id.'); await instance.close(); previews.delete(input.id); studios.delete(input.id); return toolResult({ stopped: true, id: input.id }); });
 
   return server;

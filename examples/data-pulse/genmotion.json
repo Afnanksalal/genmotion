@@ -58,6 +58,10 @@
       "y": 910
     }
   ],
+  "parameters": [],
+  "parameterValues": {},
+  "variants": [],
+  "compositions": [],
   "brand": {
     "background": "#05070a",
     "foreground": "#f5f1e8",
@@ -136,6 +140,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "ellipse",
           "x": 1180,
@@ -200,6 +206,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "ellipse",
           "x": -180,
@@ -306,6 +314,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -413,6 +423,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -520,6 +532,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -627,6 +641,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -734,6 +750,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -841,6 +859,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -954,6 +974,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -1061,6 +1083,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -1168,6 +1192,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -1275,6 +1301,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -1382,6 +1410,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 380,
@@ -1458,6 +1488,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "line",
           "x": 132,
@@ -1533,6 +1565,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "RAW EVENTS / SECOND",
           "x": 255,
@@ -1660,6 +1694,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "2438901",
           "x": 112,
@@ -1845,6 +1881,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "ellipse",
           "x": 980,
@@ -1920,6 +1958,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "bezier",
           "x": 0,
@@ -2005,6 +2045,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "bezier",
           "x": 0,
@@ -2090,6 +2132,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "bezier",
           "x": 0,
@@ -2175,6 +2219,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "bezier",
           "x": 0,
@@ -2260,6 +2306,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "bezier",
           "x": 0,
@@ -2351,6 +2399,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "bezier",
           "x": 0,
@@ -2436,6 +2486,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "bezier",
           "x": 0,
@@ -2521,6 +2573,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "bezier",
           "x": 0,
@@ -2606,6 +2660,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "bezier",
           "x": 0,
@@ -2733,6 +2789,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "ellipse",
           "x": 0,
@@ -2858,6 +2916,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "ellipse",
           "x": 0,
@@ -2890,50 +2950,9 @@
           "blendMode": "source-over",
           "tags": [],
           "motion": [],
-          "tracks": [
-            {
-              "id": "find-in",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -820,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.72,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 5.2,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "FIND",
           "x": 110,
@@ -3019,6 +3038,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "THE",
           "x": 110,
@@ -3104,6 +3125,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "PULSE",
           "x": 110,
@@ -3189,6 +3212,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "MILLIONS OF EVENTS. ONE DIRECTION.",
           "x": 122,
@@ -3325,6 +3350,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "path",
           "x": 0,
@@ -3401,6 +3428,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "NOISE",
           "x": 105,
@@ -3486,6 +3515,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "BECOMES",
           "x": 118,
@@ -3613,6 +3644,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
           "text": "DIRECTION.",
           "x": 105,
@@ -3740,6 +3773,8 @@
               "enabled": true
             }
           ],
+          "constraints": [],
+          "bindings": {},
           "type": "shape",
           "shape": "ellipse",
           "x": 1752,

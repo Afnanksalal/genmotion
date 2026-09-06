@@ -3,6 +3,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import { pathToFileURL } from 'node:url';
 
 const exec = promisify(execFile);
 const root = path.resolve(import.meta.dirname, '..');
@@ -11,7 +12,7 @@ const scratch = await mkdtemp(path.join(os.tmpdir(), 'genmotion-package-'));
 try {
   const packed = await exec('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', scratch], { cwd: root, shell: process.platform === 'win32' });
   const [{ filename, files }] = JSON.parse(packed.stdout);
-  const required = ['dist/cli.js', 'dist/mcp.js', 'dist/index.js', 'npm-shrinkwrap.json', 'CHANGELOG.md', 'README.md', 'SECURITY.md', 'LICENSE', 'skills/genmotion/SKILL.md'];
+  const required = ['dist/cli.js', 'dist/mcp.js', 'dist/index.js', 'npm-shrinkwrap.json', 'CHANGELOG.md', 'README.md', 'SECURITY.md', 'LICENSE', 'UNICODE-LICENSE.txt', 'dist/ir/session.js', 'dist/engine/alpha-output.js', 'dist/studio/controls.js', 'skills/genmotion/SKILL.md'];
   const packaged = new Set(files.map((file) => file.path));
   for (const requiredPath of required) {
     if (!packaged.has(requiredPath)) throw new Error(`Package is missing ${requiredPath}`);
@@ -24,6 +25,9 @@ try {
   const cli = path.join(prefix, 'node_modules', 'genmotion', 'dist', 'cli.js');
   const version = await exec(process.execPath, [cli, '--version'], { cwd: scratch });
   if (version.stdout.trim() !== manifest.version) throw new Error(`Installed CLI reported ${version.stdout.trim()}, expected ${manifest.version}`);
+  const sdkUrl = pathToFileURL(path.join(prefix, 'node_modules', 'genmotion', 'dist', 'index.js')).href;
+  await exec(process.execPath, ['--input-type=module', '-e', "const sdk = await import(process.argv[1]); for (const name of ['EditingSession','describeAuthoringSchema','compileGestureRecording','resolveAlphaOutput','importFrozenData']) if (typeof sdk[name] !== 'function') throw new Error('Missing SDK export: ' + name); if (sdk.resolveAlphaOutput('vp9').mode !== 'preserve') throw new Error('Invalid alpha contract');", sdkUrl], { cwd: scratch });
+  await exec(process.execPath, [cli, 'schema', '--kind', 'gesture', '--full'], { cwd: scratch });
   const doctor = await exec(process.execPath, [cli, 'doctor', '--json'], { cwd: scratch });
   const report = JSON.parse(doctor.stdout);
   if (!report.ok) throw new Error('Packaged CLI doctor did not pass.');

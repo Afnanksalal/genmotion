@@ -1,3 +1,4 @@
+import { alphaModeSchema, resolveAlphaOutput } from '../engine/alpha-output.js';
 import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from '../engine/media-conform.js';
 import { inspectMedia } from '../engine/media-probe.js';
 import { parseCaptions, serializeCaptions } from '../captions.js';
@@ -7,11 +8,13 @@ import { projectAssetReferences } from '../ir/asset-references.js';
 import { analyzeAudioFile, audioAnalysisOptionsSchema } from '../engine/audio-analysis.js';
 import { parseTimelineTime } from '../engine/time.js';
 import { resolveParameters } from '../ir/parameters.js';
+import { projectPreflight } from '../ir/preflight.js';
+import { frozenDataImportSchema, importFrozenData } from '../ir/data-sources.js';
 import { prepareLutSources } from '../ir/lut-import.js';
 import { importCubeLut } from '../ir/lut-import.js';
 import { createProjectBundle } from '../ir/bundle.js';
 import { inspectProduction, commitProductionAction, productionActionSchema } from '../ir/production-service.js';
-import { readProjectSnapshot } from '../ir/store.js';
+import { readProjectSnapshot, readProjectSourceSnapshot } from '../ir/store.js';
 import { measureProjectText, textMeasureAddressSchema } from '../engine/text-measure.js';
 import { analyzeTrack, trackAnalysisOptionsSchema } from '../engine/kinematics.js';
 import express from 'express';
@@ -23,7 +26,7 @@ import { mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from
 import os from 'node:os';
 import path from 'node:path';
 import { z } from 'zod';
-import { loadProject, resolveProjectAsset, type LoadedProject } from '../ir/loader.js';
+import { loadProject, loadProjectDocument, resolveProjectAsset, type LoadedProject } from '../ir/loader.js';
 import { animationTrackSchema, projectDuration, projectSchema, type GenmotionProject } from '../ir/schema.js';
 import { compileProjectMotions } from '../engine/motion.js';
 import { renderFramePng } from '../engine/draw.js';
@@ -32,16 +35,23 @@ import { normalizePath, pathMetrics } from '../engine/path.js';
 import { renderAudio, measureProjectAudio } from '../engine/audio.js';
 import { layerIsActive, locateScene } from '../engine/timeline.js';
 import { makeContactSheet, probeVideo } from '../engine/probe.js';
-import { renderProject, resolveRenderLimits, resolveRenderResolution, validateOutputContainer, type RenderProgress } from '../engine/render.js';
+import { renderProject, resolveRenderLimits, resolveRenderResolution, resolveRenderRange, validateOutputContainer, type RenderProgress } from '../engine/render.js';
+import { renderFrameRangeSchema, renderGroupSchema } from '../ir/render-selection.js';
+import { projectForRenderComposition } from '../engine/render-projection.js';
+import { resolveRenderView } from '../engine/render-view.js';
 import { commitProject, projectRevision } from '../ir/store.js';
 import { replaceFile } from '../ir/atomic.js';
-import { commitSemanticEdits, semanticEditSchema } from '../ir/edit.js';
+import { applySemanticEdits, semanticEditSchema } from '../ir/edit.js';
+import { EditingSession, filesystemEditingAdapter, editingCommandSchema, editingCheckpointSchema, executeEditingCommand } from '../ir/session.js';
 import { expandParameterMatrix, exportParameterVariants, importParameterVariants, parameterMatrixSchema } from '../ir/variants.js';
 import { validateProject, hasErrors } from '../ir/validate.js';
 import { compileCustomLibrary, loadMotionLibraries, saveMotionLibrary } from '../catalog/custom.js';
 import { tasteReferences } from '../catalog/references.js';
 import { sceneBlueprints } from '../catalog/blueprints.js';
 import { studioHtml } from './ui.js';
+import { studioCommands, studioShortcutsSchema, resolvedShortcuts } from './commands.js';
+import { editingContextPatchSchema, type EditingContextPatch } from '../ir/editing-context.js';
+import { studioBridgeDescriptorPath, studioBridgePermissionsSchema, studioBridgeCommandSchema, studioBridgePermission, editingCommandIsMutation, editingResultPersisted } from './bridge.js';
 import { GenmotionError } from '../errors.js';
 import { isNonExecutionResponse, LocalAgentRuntime, requestRequiresProjectChange, type AgentHostId, type AgentRuntime, type AgentSelection } from '../agent/runtime.js';
 import { initializeProject, type InitOptions } from '../commands/init.js';
@@ -91,6 +101,8 @@ const studioStateSchema = z.object({
     tags: z.array(z.string()).default([]), createdAt: z.string().datetime(),
   })),
   updatedAt: z.string().datetime(),
+  shortcuts: studioShortcutsSchema.optional(),
+  editorContext: editingContextPatchSchema.optional(),
   viewport: z.object({
     zoom: z.number().finite().min(.1).max(32).default(1), panX: z.number().finite().min(-100000).max(100000).default(0), panY: z.number().finite().min(-100000).max(100000).default(0),
     grid: z.boolean().default(false), gridSize: z.number().finite().min(1).max(2048).default(32),
@@ -107,11 +119,14 @@ const requestSchema = z.object({
   selection: z.object({ sceneId: z.string().optional(), layerId: z.string().optional(), frame: z.number().int().nonnegative().optional() }).default({}),
   host: z.enum(['codex', 'claude', 'hermes']).optional(),
 });
+const exportFilenameSchema = z.string().max(240).refine(name => /[.](mp4|mov|webm)$/.test(name) && projectSchema.shape.outputName.unwrap().safeParse(name.slice(0, name.lastIndexOf('.'))).success, 'Use a portable filename with an mp4, mov or webm extension.');
 const renderRequestSchema = z.object({
-  filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
+  filename: exportFilenameSchema,
   quality: z.enum(['draft', 'standard', 'high']).default('high'),
   codec: z.enum(['h264', 'h265', 'vp9', 'prores']).default('h264'),
+  alphaMode: alphaModeSchema.default('auto'), alphaBackground: z.string().optional(),
   overwrite: z.boolean().default(false),
+  sceneId: z.string().min(1).optional(), compositionId: z.string().min(1).optional(), group: renderGroupSchema.optional(), range: renderFrameRangeSchema.optional(),
   workers: z.number().int().min(1).max(16).optional(),
   maxBufferedFrames: z.number().int().positive().optional(),
   maxBufferedBytes: z.number().int().positive().optional(),
@@ -119,7 +134,7 @@ const renderRequestSchema = z.object({
   resolution: z.object({ width: z.number().int().positive(), height: z.number().int().positive() }).optional(),
 });
 const revealExportSchema = z.object({
-  filename: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(mp4|mov|webm)$/),
+  filename: exportFilenameSchema,
 });
 const contactSheetSchema = z.object({
   count: z.number().int().min(4).max(40).default(12), columns: z.number().int().min(2).max(8).default(4),
@@ -153,7 +168,7 @@ export function isTransientAgentFailure(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return /(?:\b429\b|rate.?limit|too many requests|\b50[234]\b|service unavailable|gateway timeout|connection (?:reset|closed|refused)|socket hang up|timed? ?out|temporar(?:y|ily)|provider overloaded)/i.test(message);
 }
-interface RenderJob { id: string; status: 'queued' | 'rendering' | 'complete' | 'failed' | 'cancelled'; progress: number; diagnostics?: RenderProgress; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
+interface RenderJob { sourceCompositionId?: string; sourceSceneId?: string; sourceGroup?: { sceneId: string; layerId: string }; sourceRange?: { startFrame: number; endFrame: number }; id: string; status: 'queued' | 'rendering' | 'complete' | 'failed' | 'cancelled'; progress: number; diagnostics?: RenderProgress; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
 interface ExportRecord { filename: string; output: string; size: number; modifiedAt: string }
 interface AssetRecord { path: string; size: number; modifiedAt: string; kind: 'image' | 'video' | 'audio' | 'font' | 'asset'; uses: number }
 interface StudioWorkspace { root: string; servers: Map<string, StudioServer> }
@@ -452,6 +467,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   const host = options.host ?? '127.0.0.1';
   const port = options.port ?? 4180;
   const token = randomBytes(24).toString('base64url');
+  const bridgeToken = randomBytes(32).toString('base64url'), bridgeHandle = randomUUID();
+  let bridgePermissions = studioBridgePermissionsSchema.parse({});
   const studioDir = path.join(loaded.projectDir, '.genmotion');
   const stateFile = path.join(studioDir, 'studio.json');
   const historyDir = path.join(studioDir, 'history');
@@ -463,18 +480,61 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
 
   let motionCatalog = await loadMotionLibraries(loaded.projectDir);
   let sourceProject = loaded.sourceProject;
+  const editingSession = new EditingSession(filesystemEditingAdapter(loaded.projectFile));
+  const checkpointFile = path.join(studioDir, 'editing-checkpoint.json');
+  let checkpointError: string | undefined;
+  try {
+    const metadata = await stat(checkpointFile);
+    if (metadata.size > 32 * 1024 * 1024) throw new GenmotionError('SESSION_CHECKPOINT_TOO_LARGE', 'Stored editing history exceeds 32 MiB.');
+    await editingSession.restore(editingCheckpointSchema.parse(JSON.parse(await readFile(checkpointFile, 'utf8'))));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') checkpointError = error instanceof Error ? error.message : String(error);
+  }
+  let checkpointQueue: Promise<void> = Promise.resolve();
+  const persistEditingCheckpoint = (): Promise<void> => {
+    checkpointQueue = checkpointQueue.then(async () => {
+      try { await atomicWrite(checkpointFile, JSON.stringify(await editingSession.checkpoint())); checkpointError = undefined; }
+      catch (error) { checkpointError = error instanceof Error ? error.message : String(error); }
+    });
+    return checkpointQueue;
+  };
   let compiledProject = loaded.project;
   const storedStudioState = studioStateSchema.parse(await readJson(stateFile, initialStudioState(sourceProject)));
   let studioState = reconcileStudioState(sourceProject, storedStudioState);
+  let studioWriteQueue: Promise<void> = Promise.resolve();
+  const persistStudioState = (): Promise<void> => {
+    const serialized = `${JSON.stringify(studioState, null, 2)}\n`;
+    studioWriteQueue = studioWriteQueue.catch(() => undefined).then(async () => atomicWrite(stateFile, serialized));
+    return studioWriteQueue;
+  };
+  let contextRecoveryError: string | undefined;
+  if (studioState.editorContext) {
+    try { const snapshot = await editingSession.read(); await editingSession.updateContext(studioState.editorContext, { expectedSequence: 0, expectedRevision: snapshot.revision, origin: 'restored' }); }
+    catch (error) { contextRecoveryError = error instanceof Error ? error.message : String(error); }
+  }
+  let contextTimer: ReturnType<typeof setTimeout> | undefined, pendingContext: EditingContextPatch | undefined;
+  const flushContext = async (): Promise<void> => {
+    if (contextTimer) clearTimeout(contextTimer); contextTimer = undefined;
+    if (!pendingContext) return;
+    const context = pendingContext;
+    studioState = { ...studioState, editorContext: context }; pendingContext = undefined;
+    try { await persistStudioState(); contextRecoveryError = undefined; }
+    catch (error) { pendingContext ??= context; contextRecoveryError = error instanceof Error ? error.message : String(error); }
+  };
+  const unsubscribeContext = editingSession.subscribe(event => {
+    if (event.type !== 'context') return;
+    const { frame, selection, viewport, range } = event.context; pendingContext = { frame, selection, viewport, range };
+    if (!contextTimer) { contextTimer = setTimeout(() => { void flushContext(); }, 2000); contextTimer.unref(); }
+  });
   if (JSON.stringify(studioState) !== JSON.stringify(storedStudioState)) {
     studioState = { ...studioState, updatedAt: new Date().toISOString() };
-    await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
+    await persistStudioState();
   }
   const reconcileAndPersistStudio = async (project: GenmotionProject): Promise<void> => {
     const reconciled = reconcileStudioState(project, studioState);
     if (JSON.stringify(reconciled) === JSON.stringify(studioState)) return;
     studioState = { ...reconciled, updatedAt: new Date().toISOString() };
-    await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
+    await persistStudioState();
   };
   const jobs = new Map<string, RenderJob>();
   const renderControllers = new Map<string, AbortController>();
@@ -502,7 +562,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
       'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Resource-Policy': 'same-origin',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
-      'Content-Security-Policy': `default-src 'self'; img-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'nonce-${scriptNonce}'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`,
+      'Content-Security-Policy': `default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'nonce-${scriptNonce}'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`,
       'Cache-Control': 'no-store',
     });
     const fetchSite = request.header('sec-fetch-site');
@@ -512,7 +572,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       try { if (new URL(origin).host !== request.header('host')) { response.status(403).json({ error: 'Studio request origin does not match this host.' }); return; } } catch { response.status(403).json({ error: 'Studio request origin is invalid.' }); return; }
     }
     if (!request.path.startsWith('/api/') || request.method === 'GET') { next(); return; }
-    if (request.header('x-genmotion-token') !== token) { response.status(403).json({ error: 'Invalid Studio session token.' }); return; }
+    const bridgeRequest = request.path === '/api/agent-bridge' && request.header('x-genmotion-bridge-token') === bridgeToken;
+    if (!bridgeRequest && request.header('x-genmotion-token') !== token) { response.status(403).json({ error: 'Invalid Studio session token.' }); return; }
     next();
   });
   app.use('/api', express.json({ limit: '10mb', type: ['application/json', 'application/*+json'] }));
@@ -547,8 +608,10 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       }
       const currentLoaded = { ...loaded, project: compiledProject, sourceProject };
       response.json({
-        project: sourceProject, studio: studioState, revision: revision(sourceProject),
-        findings: await validateProject(currentLoaded), duration: projectDuration(sourceProject),
+        project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState, revision: revision(sourceProject),
+        commands: studioCommands, shortcuts: resolvedShortcuts(studioState.shortcuts ?? {}),
+        contextRecoveryError,
+        findings: await validateProject(currentLoaded), duration: projectDuration(compiledProject),
         catalog: { motions: motionCatalog.motions, motionLibraries: motionCatalog.libraries, references: tasteReferences, blueprints: sceneBlueprints },
         requests: await listRequests(requestsDir), jobs: [...jobs.values()], exports: await listExports(rendersDir, loaded.projectDir), assets: await listProjectAssets(loaded.projectDir, sourceProject, studioState), projects: await discoverProjects(workspace, loaded.projectDir), workspaceRoot: workspace.root, currentProjectId: projectId(loaded.projectDir), agents: agentHosts, projectFile: path.basename(loaded.projectFile),
       });
@@ -576,7 +639,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (before.documentRevision !== input.expectedRevision) throw new GenmotionError('REVISION_CONFLICT', 'Production action requires the current project revision');
       const receipt = await commitProductionAction(loaded.projectFile, before.revision, input.action, controller.signal);
       sourceProject = receipt.loaded.sourceProject; compiledProject = receipt.loaded.project; frameCache.clear(); await reconcileAndPersistStudio(sourceProject);
-      response.json({ revision: receipt.documentRevision, project: sourceProject, studio: studioState, findings: receipt.findings, state: await inspectProduction(receipt.loaded, controller.signal) });
+      response.json({ revision: receipt.documentRevision, project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState, findings: receipt.findings, state: await inspectProduction(receipt.loaded, controller.signal) });
     } catch (error) { if (!response.destroyed) next(error); }
     finally { request.removeListener('aborted', abort); response.removeListener('close', abort); }
   });
@@ -713,44 +776,160 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       response.json({ variants, content: exportParameterVariants(variants, body.outputFormat) });
     } catch (error) { next(error); }
   });
+  let editPreviewBusy = false;
+  app.post('/api/render-preview', async (request, response, next) => {
+    if (editPreviewBusy) { response.status(429).json({ error: 'A selection preview is already rendering.' }); return; }
+    editPreviewBusy = true;
+    try {
+      const body = z.object({ revision: z.string().regex(/^[a-f0-9]{16}$/), sceneId: z.string().min(1).optional(), compositionId: z.string().min(1).optional(), group: renderGroupSchema.optional(), range: renderFrameRangeSchema.optional(), maxEdge: z.number().int().min(128).max(1280).default(640) }).strict().parse(request.body);
+      const before = await readProjectSnapshot(loaded.projectFile);
+      if (before.documentRevision !== body.revision) throw new GenmotionError('REVISION_CONFLICT', 'Selection preview uses a stale revision.');
+      if (body.compositionId && (body.sceneId || body.group)) throw new GenmotionError('RENDER_SELECTION_CONFLICT', 'Choose a scene, group or composition.');
+      const project = projectForRenderComposition(before.project, body.compositionId), view = resolveRenderView(project, body.group), range = resolveRenderRange(project, body);
+      const scale = Math.min(1, body.maxEdge / Math.max(project.width, project.height));
+      const dimensions = { width: Math.max(2, Math.round(project.width * scale)), height: Math.max(2, Math.round(project.height * scale)) };
+      const frames: Array<{ frame: number; png: string; sha256: string }> = [];
+      for (const frame of [...new Set([range.startFrame, Math.floor((range.startFrame + range.endFrame - 1) / 2), range.endFrame - 1])]) {
+        if (request.aborted || response.destroyed) return;
+        const png = await renderFramePng(project, loaded.projectDir, frame, dimensions, view);
+        frames.push({ frame, png: `data:image/png;base64,${png.toString('base64')}`, sha256: createHash('sha256').update(png).digest('hex') });
+      }
+      if ((await readProjectSourceSnapshot(loaded.projectFile)).revision !== before.revision) throw new GenmotionError('REVISION_CONFLICT', 'Project changed while selection frames rendered.');
+      response.json({ revision: body.revision, sourceRange: range, fps: project.fps, dimensions, frames });
+    } catch (error) { next(error); }
+    finally { editPreviewBusy = false; }
+  });
+  app.post('/api/data-import', async (request, response, next) => {
+    try {
+      if (agentBusy) throw new GenmotionError('PROJECT_LOCKED', 'The agent is applying a project change.');
+      const body = frozenDataImportSchema.extend({ revision: z.string().regex(/^[a-f0-9]{16}$/) }).strict().parse(request.body);
+      const before = await readProjectSourceSnapshot(loaded.projectFile);
+      if (body.revision !== before.documentRevision) throw new GenmotionError('REVISION_CONFLICT', 'Data import uses a stale Studio revision.');
+      const { revision: _revision, ...input } = body; void _revision;
+      const imported = importFrozenData(before.sourceProject, input);
+      const receipt = await editingSession.replace(imported.project, { expectedRevision: before.revision, origin: 'studio:data-import' });
+      const accepted = await loadProject(loaded.projectFile);
+      sourceProject = accepted.sourceProject; compiledProject = accepted.project; frameCache.clear();
+      await reconcileAndPersistStudio(sourceProject); await persistEditingCheckpoint();
+      response.json({ receipt, revision: projectRevision(sourceProject), project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState, findings: receipt.findings, checkpointError });
+    } catch (error) { next(error); }
+  });
+  app.post('/api/edit-preview', async (request, response, next) => {
+    if (editPreviewBusy) { response.status(429).json({ error: 'A proposed-edit preview is already rendering.' }); return; }
+    editPreviewBusy = true;
+    try {
+      const body = z.object({ revision: z.string().regex(/^[a-f0-9]{16}$/), edits: semanticEditSchema.array().min(1).max(500), frames: z.array(z.number().finite().nonnegative()).min(1).max(3), maxEdge: z.number().int().min(128).max(1280).default(640) }).strict().parse(request.body);
+      const before = await readProjectSourceSnapshot(loaded.projectFile);
+      if (body.revision !== before.documentRevision) throw new GenmotionError('REVISION_CONFLICT', 'The preview uses a stale Studio revision.');
+      const proposed = await loadProjectDocument(applySemanticEdits(before.sourceProject, body.edits).project, loaded.projectFile);
+      const findings = await validateProject(proposed);
+      if (hasErrors(findings)) throw new GenmotionError('VALIDATION_FAILED', 'The proposed edit failed validation.', findings);
+      const totalFrames = Math.ceil(projectDuration(proposed.project) * proposed.project.fps);
+      const scale = Math.min(1, body.maxEdge / Math.max(proposed.project.width, proposed.project.height));
+      const dimensions = { width: Math.max(2, Math.round(proposed.project.width * scale)), height: Math.max(2, Math.round(proposed.project.height * scale)) };
+      const frames: Array<{ frame: number; png: string; sha256: string }> = [];
+      for (const frame of body.frames) {
+        if (frame >= totalFrames) throw new GenmotionError('FRAME_OUT_OF_RANGE', 'Proposed preview frame is outside the project.');
+        if (request.aborted || response.destroyed) return;
+        const png = await renderFramePng(proposed.project, loaded.projectDir, frame, dimensions);
+        frames.push({ frame, png: `data:image/png;base64,${png.toString('base64')}`, sha256: createHash('sha256').update(png).digest('hex') });
+      }
+      const observed = await readProjectSourceSnapshot(loaded.projectFile);
+      if (observed.revision !== before.revision) throw new GenmotionError('REVISION_CONFLICT', 'Project changed while proposed frames rendered.');
+      response.json({ persisted: false, revision: before.documentRevision, proposedRevision: projectRevision(proposed.sourceProject), dimensions, frames, findings });
+    } catch (error) { next(error); }
+    finally { editPreviewBusy = false; }
+  });
   app.post('/api/edit', async (request, response, next) => {
     try {
       if (agentBusy) { response.status(423).json({ error: 'The agent is applying a project change.' }); return; }
-      const body = z.object({ revision: z.string().regex(/^[a-f0-9]{16}$/), edits: semanticEditSchema.array().min(1).max(500), dryRun: z.boolean().default(false) }).strict().parse(request.body);
-      const { loaded: accepted, ...receipt } = await commitSemanticEdits(loaded.projectFile, body.edits, { expectedRevision: body.revision, revisionKind: 'document', dryRun: body.dryRun, origin: 'studio' });
+      const body = z.object({ revision: z.string().regex(/^[a-f0-9]{16}$/), edits: semanticEditSchema.array().min(1).max(500), dryRun: z.boolean().default(false), coalesce: z.string().min(1).max(200).optional() }).strict().parse(request.body);
+      const before = await readProjectSnapshot(loaded.projectFile);
+      if (body.revision !== before.documentRevision) throw new GenmotionError('REVISION_CONFLICT', 'The edit uses a stale Studio revision.');
+      const receipt = await editingSession.apply(body.edits, { expectedRevision: before.revision, dryRun: body.dryRun, origin: 'studio', coalesce: body.coalesce });
+      const accepted = body.dryRun ? await loadProjectDocument(applySemanticEdits(before.sourceProject, body.edits).project, loaded.projectFile) : await loadProject(loaded.projectFile);
       if (!body.dryRun) {
         sourceProject = accepted.sourceProject; compiledProject = accepted.project; frameCache.clear();
         await reconcileAndPersistStudio(sourceProject);
+        await persistEditingCheckpoint();
       }
-      response.json({ ok: true, revision: receipt.documentRevision, project: accepted.sourceProject, studio: studioState, findings: receipt.findings, receipt });
+      response.json({ ok: true, revision: projectRevision(accepted.sourceProject), project: accepted.sourceProject, renderSpec: projectPreflight(accepted.sourceProject), studio: studioState, findings: receipt.findings, checkpointError, receipt: { ...receipt, documentRevision: projectRevision(accepted.sourceProject) } });
+    } catch (error) { next(error); }
+  });
+  app.post('/api/editing-session', async (request, response, next) => {
+    try {
+      const command = editingCommandSchema.parse(request.body);
+      if (agentBusy && command.action !== 'context' && command.action !== 'context-update') { response.status(423).json({ error: 'The agent is applying a project change.' }); return; }
+      const result = await executeEditingCommand(editingSession, command);
+      if (command.action === 'checkpoint') await persistEditingCheckpoint();
+      if (editingCommandIsMutation(command) && editingResultPersisted(result)) {
+        const accepted = await loadProject(loaded.projectFile); sourceProject = accepted.sourceProject; compiledProject = accepted.project; frameCache.clear(); await reconcileAndPersistStudio(sourceProject);
+        await persistEditingCheckpoint();
+      }
+      const includesDocument = ['apply', 'replace', 'undo', 'redo', 'reconcile', 'checkpoint-restore'].includes(command.action);
+      const observed = await readProjectSourceSnapshot(loaded.projectFile);
+      response.json({ result, revision: observed.documentRevision, checkpointError, ...(includesDocument ? { project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState } : {}) });
+    } catch (error) { next(error); }
+  });
+  app.get('/api/agent-bridge/permissions', (_request, response) => { response.json(bridgePermissions); });
+  app.put('/api/agent-bridge/permissions', (request, response, next) => {
+    try { bridgePermissions = studioBridgePermissionsSchema.parse(request.body); response.json(bridgePermissions); } catch (error) { next(error); }
+  });
+  app.post('/api/agent-bridge', async (request, response, next) => {
+    try {
+      if (request.header('x-genmotion-bridge-token') !== bridgeToken) throw new GenmotionError('STUDIO_BRIDGE_AUTH', 'Invalid agent bridge token.');
+      const body = z.object({ handle: z.literal(bridgeHandle), command: studioBridgeCommandSchema }).strict().parse(request.body);
+      const permission = studioBridgePermission(body.command);
+      if (!bridgePermissions[permission]) { response.status(403).json({ code: 'STUDIO_PERMISSION_DENIED', error: `Studio has not enabled ${permission} permission for this session.` }); return; }
+      if (body.command.action === 'capabilities') { response.json({ version: 1, permissions: bridgePermissions, operations: ['read', 'query', 'inspect', 'can', 'context', 'context-update', 'history', 'apply', 'replace', 'reconcile', 'undo', 'redo', 'checkpoint', 'checkpoint-save', 'checkpoint-list', 'checkpoint-compare', 'checkpoint-restore', 'checkpoint-delete'], transport: 'native-editing-session' }); return; }
+      if (agentBusy && permission === 'edit') { response.status(423).json({ error: 'An agent transaction is already running.' }); return; }
+      const command = body.command;
+      if (permission === 'edit' && command.action !== 'checkpoint-delete' && !('expectedRevision' in command && command.expectedRevision)) throw new GenmotionError('REVISION_REQUIRED', 'Bridge edits require the file revision returned by a live query.');
+      const result = await executeEditingCommand(editingSession, command);
+      if (editingCommandIsMutation(command) && editingResultPersisted(result)) {
+        const accepted = await loadProject(loaded.projectFile); sourceProject = accepted.sourceProject; compiledProject = accepted.project; frameCache.clear();
+        await reconcileAndPersistStudio(sourceProject); await persistEditingCheckpoint();
+      }
+      response.json({ result, checkpointError });
     } catch (error) { next(error); }
   });
   app.put('/api/project', async (request, response, next) => {
     try {
       if (agentBusy) { response.status(423).json({ error: 'The agent is applying a project change. Editing unlocks when the turn finishes.' }); return; }
-      const body = z.object({ revision: z.string(), project: projectSchema }).parse(request.body);
+      const body = z.object({ revision: z.string(), project: projectSchema, coalesce: z.string().min(1).max(200).optional() }).parse(request.body);
       const currentRevision = revision(sourceProject);
       if (body.revision !== currentRevision) { response.status(409).json({ error: 'Project changed since this Studio loaded it.', revision: currentRevision, project: sourceProject }); return; }
-      const receipt = await commitProject(loaded.projectFile, { expectedRevision: body.revision, revisionKind: 'document', update: () => body.project, origin: 'studio' });
-      sourceProject = receipt.loaded.sourceProject;
-      compiledProject = receipt.loaded.project;
+      const before = await readProjectSnapshot(loaded.projectFile);
+      if (body.revision !== before.documentRevision) throw new GenmotionError('REVISION_CONFLICT', 'The project changed outside Studio.');
+      const receipt = await editingSession.replace(body.project, { expectedRevision: before.revision, origin: 'studio', coalesce: body.coalesce });
+      const accepted = await loadProject(loaded.projectFile);
+      sourceProject = accepted.sourceProject;
+      compiledProject = accepted.project;
       frameCache.clear();
       await reconcileAndPersistStudio(sourceProject);
-      response.json({ ok: true, revision: receipt.documentRevision, project: sourceProject, studio: studioState, findings: receipt.findings, receipt: { id: receipt.id, state: receipt.state, changed: receipt.changed, beforeRevision: receipt.beforeDocumentRevision, revision: receipt.documentRevision } });
+      await persistEditingCheckpoint();
+      response.json({ ok: true, revision: projectRevision(sourceProject), project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState, findings: receipt.findings, checkpointError, receipt: { ...receipt, beforeRevision: before.documentRevision, revision: projectRevision(sourceProject) } });
     } catch (error) { next(error); }
   });
   app.put('/api/studio', async (request, response, next) => {
     try {
-      const submitted = studioStateSchema.parse({ ...request.body, updatedAt: new Date().toISOString() });
+      const submitted = studioStateSchema.parse({ ...request.body, shortcuts: studioState.shortcuts, editorContext: studioState.editorContext, updatedAt: new Date().toISOString() });
       studioState = reconcileStudioState(sourceProject, submitted);
-      await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
+      await persistStudioState();
       response.json({ ok: true, studio: studioState });
+    } catch (error) { next(error); }
+  });
+  app.put('/api/studio/shortcuts', async (request, response, next) => {
+    try {
+      const body = z.object({ shortcuts: studioShortcutsSchema }).strict().parse(request.body);
+      studioState = { ...studioState, shortcuts: body.shortcuts, updatedAt: new Date().toISOString() };
+      await persistStudioState(); response.json({ studio: studioState, shortcuts: resolvedShortcuts(body.shortcuts) });
     } catch (error) { next(error); }
   });
   app.post('/api/studio/auto-layout', async (request, response, next) => {
     try {
       studioState = autoLayoutStudioState(sourceProject, studioState);
-      await atomicWrite(stateFile, `${JSON.stringify(studioState, null, 2)}\n`);
+      await persistStudioState();
       response.json({ ok: true, studio: studioState });
     } catch (error) { next(error); }
   });
@@ -759,7 +938,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (agentBusy) { response.status(423).json({ error: 'The agent is applying a project change. Editing unlocks when the turn finishes.' }); return; }
       const body = connectReferenceSchema.parse(request.body);
       const currentRevision = revision(sourceProject);
-      if (body.revision !== currentRevision) { response.status(409).json({ error: 'Project changed since this Studio loaded it.', revision: currentRevision, project: sourceProject, studio: studioState }); return; }
+      if (body.revision !== currentRevision) { response.status(409).json({ error: 'Project changed since this Studio loaded it.', revision: currentRevision, project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState }); return; }
       const nextStudio = reconcileStudioState(sourceProject, studioStateSchema.parse({ ...body.studio, updatedAt: new Date().toISOString() }));
       const reference = nextStudio.references.find((item) => item.id === body.referenceId);
       const nextProject = structuredClone(sourceProject);
@@ -772,7 +951,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const receipt = await commitProject(loaded.projectFile, { expectedRevision: currentRevision, revisionKind: 'document', update: () => nextProject, origin: 'studio-reference' });
       sourceProject = receipt.loaded.sourceProject; compiledProject = receipt.loaded.project; studioState = nextStudio; frameCache.clear();
       await atomicWrite(stateFile, `${JSON.stringify(nextStudio, null, 2)}\n`);
-      response.json({ ok: true, revision: receipt.documentRevision, project: sourceProject, studio: studioState, findings: receipt.findings });
+      response.json({ ok: true, revision: receipt.documentRevision, project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState, findings: receipt.findings });
     } catch (error) { next(error); }
   });
   app.get('/api/history', async (_request, response) => {
@@ -786,10 +965,14 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (!/^[a-f0-9]{16}$/.test(requested)) { response.status(400).json({ error: 'Invalid revision.' }); return; }
       const restored = projectSchema.parse(JSON.parse(await readFile(path.join(historyDir, `${requested}.json`), 'utf8')));
       const currentRevision = revision(sourceProject);
-      const receipt = await commitProject(loaded.projectFile, { expectedRevision: currentRevision, revisionKind: 'document', update: () => restored, origin: 'studio-history' });
-      sourceProject = receipt.loaded.sourceProject; compiledProject = receipt.loaded.project; frameCache.clear();
+      const current = await readProjectSnapshot(loaded.projectFile);
+      if (current.documentRevision !== currentRevision) throw new GenmotionError('REVISION_CONFLICT', 'Project changed before history restoration.');
+      await editingSession.replace(restored, { expectedRevision: current.revision, origin: 'studio-history' });
+      const accepted = await loadProject(loaded.projectFile);
+      sourceProject = accepted.sourceProject; compiledProject = accepted.project; frameCache.clear();
       await reconcileAndPersistStudio(sourceProject);
-      response.json({ ok: true, revision: revision(restored), project: restored, studio: studioState });
+      await persistEditingCheckpoint();
+      response.json({ ok: true, revision: revision(restored), project: restored, renderSpec: projectPreflight(restored), studio: studioState });
     } catch (error) { next(error); }
   });
   app.post('/api/assets', async (request, response, next) => {
@@ -1044,6 +1227,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       const id = randomUUID();
       const output = path.join(rendersDir, body.filename);
       validateOutputContainer(output, body.codec);
+      resolveAlphaOutput(body.codec, body.alphaMode, body.alphaBackground);
       const relativeOutput = path.relative(loaded.projectDir, output).replaceAll('\\', '/');
       if ([...jobs.values()].some((candidate) => candidate.output === relativeOutput && (candidate.status === 'queued' || candidate.status === 'rendering'))) {
         response.status(409).json({ error: 'An export for this filename is already running.' });
@@ -1052,10 +1236,14 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (!body.overwrite) {
         try { if ((await stat(output)).isFile()) { response.status(409).json({ error: 'An export with this filename already exists.', code: 'OUTPUT_EXISTS' }); return; } } catch { /* The filename is available. */ }
       }
-      const dimensions = resolveRenderResolution(compiledProject, body.quality, body.resolution);
+      if ((body.sceneId || body.group) && body.compositionId) throw new GenmotionError('RENDER_SELECTION_CONFLICT', 'Choose a scene, group or standalone composition.');
+      const selectedProject = projectForRenderComposition(compiledProject, body.compositionId);
+      resolveRenderView(selectedProject, body.group);
+      const dimensions = resolveRenderResolution(selectedProject, body.quality, body.resolution);
+      const sourceRange = resolveRenderRange(selectedProject, body);
       resolveRenderLimits(dimensions, body);
       const submittedProject = structuredClone({ ...loaded, project: compiledProject, sourceProject });
-      const job: RenderJob = { id, status: 'queued', progress: 0, output: relativeOutput, ...dimensions, quality: body.quality };
+      const job: RenderJob = { id, sourceRange, ...(body.compositionId ? { sourceCompositionId: body.compositionId } : {}), ...(body.sceneId ? { sourceSceneId: body.sceneId } : {}), ...(body.group ? { sourceGroup: body.group } : {}), status: 'queued', progress: 0, output: relativeOutput, ...dimensions, quality: body.quality };
       const controller = new AbortController();
       jobs.set(id, job);
       renderControllers.set(id, controller);
@@ -1069,7 +1257,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
           if (controller.signal.aborted) return;
           job.status = 'rendering';
           await renderProject(submittedProject, {
-            output, quality: body.quality, codec: body.codec, ...(body.resolution ? { resolution: body.resolution } : {}),
+            output, quality: body.quality, codec: body.codec, alphaMode: body.alphaMode, alphaBackground: body.alphaBackground, sceneId: body.sceneId, compositionId: body.compositionId, group: body.group, range: body.range, ...(body.resolution ? { resolution: body.resolution } : {}),
             ...(body.workers !== undefined ? { workers: body.workers } : {}),
             ...(body.maxBufferedFrames !== undefined ? { maxBufferedFrames: body.maxBufferedFrames } : {}),
             ...(body.maxBufferedBytes !== undefined ? { maxBufferedBytes: body.maxBufferedBytes } : {}),
@@ -1200,7 +1388,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       if (latest) { sourceProject = latest.sourceProject; compiledProject = latest.project; frameCache.clear(); }
     }
     const message = error instanceof z.ZodError ? error.issues.slice(0, 3).map((issue) => `${issue.path.join('.') || 'request'}: ${issue.message}`).join(' ') : error instanceof Error ? error.message : String(error);
-    response.status(conflict ? 409 : error instanceof GenmotionError && error.code === 'PROJECT_LOCKED' ? 423 : error instanceof z.ZodError || error instanceof GenmotionError ? 400 : 500).json({ error: message, code: error instanceof GenmotionError ? error.code : undefined, ...(conflict ? { revision: revision(sourceProject), project: sourceProject, studio: studioState } : {}), details: error instanceof z.ZodError ? error.issues : error instanceof GenmotionError ? error.details : undefined });
+    response.status(conflict ? 409 : error instanceof GenmotionError && error.code === 'PROJECT_LOCKED' ? 423 : error instanceof z.ZodError || error instanceof GenmotionError ? 400 : 500).json({ error: message, code: error instanceof GenmotionError ? error.code : undefined, ...(conflict ? { revision: revision(sourceProject), project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState } : {}), details: error instanceof z.ZodError ? error.issues : error instanceof GenmotionError ? error.details : undefined });
   });
 
   const server = await new Promise<Server>((resolve, reject) => {
@@ -1208,10 +1396,27 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     instance.on('error', reject);
   });
   const actualPort = (server.address() as AddressInfo).port;
+  const canonicalProjectFile = await realpath(loaded.projectFile);
+  const bridgeDescriptorFile = studioBridgeDescriptorPath(canonicalProjectFile);
+  const localBridge = ['127.0.0.1', 'localhost', '0.0.0.0', '::1', '::'].includes(host);
+  if (localBridge) {
+    try {
+      await mkdir(path.dirname(bridgeDescriptorFile), { recursive: true, mode: 0o700 });
+      await writeFile(bridgeDescriptorFile, JSON.stringify({ version: 1, handle: bridgeHandle, token: bridgeToken, port: actualPort, address: (server.address() as AddressInfo).family === 'IPv6' ? '::1' : '127.0.0.1', projectFile: canonicalProjectFile }), { mode: 0o600 });
+    }
+    catch (error) { await editingSession.dispose(); await new Promise<void>(resolve => server.close(() => resolve())); throw error; }
+  }
   let closed = false;
   const studioServer: StudioServer = { url: `http://${host}:${String(actualPort)}`, server, close: async () => {
     if (closed) return;
     closed = true;
+    unsubscribeContext(); await flushContext(); await studioWriteQueue.catch(() => undefined);
+    if (localBridge) {
+      try { const descriptor = JSON.parse(await readFile(bridgeDescriptorFile, 'utf8')) as { handle?: string }; if (descriptor.handle === bridgeHandle) await rm(bridgeDescriptorFile, { force: true }); }
+      catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') checkpointError = error instanceof Error ? error.message : String(error); }
+    }
+    await checkpointQueue;
+    await editingSession.dispose();
     if (ownsWorkspace) for (const child of [...workspace.servers.values()]) if (child !== studioServer) await child.close();
     workspace.servers.delete(path.resolve(loaded.projectDir));
     for (const [id, controller] of renderControllers) {

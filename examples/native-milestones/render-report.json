@@ -1,0 +1,44 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "duration": 4,
+  "codec": "h264",
+  "audio": null,
+  "strictValidation": "passed",
+  "fullDecode": "passed",
+  "nativeReviewFrames": [
+    0,
+    11,
+    29,
+    59,
+    60,
+    61,
+    89,
+    113,
+    119
+  ],
+  "alphaOutput": {
+    "mode": "flatten",
+    "background": [
+      0,
+      0,
+      0
+    ]
+  },
+  "renderId": "cce47b0e56c87c08",
+  "encodedBoundaryFrames": [
+    {
+      "frame": 59,
+      "sha256": "5dd43c4be90e735154b3adabcdea5f61b292e56b94029d8e8e8326f01c536a4d"
+    },
+    {
+      "frame": 60,
+      "sha256": "dd99c41989859e82fc273b6f3e8611d440c27c9f4de21786526c23dd120b536c"
+    },
+    {
+      "frame": 61,
+      "sha256": "02a95bc5c9985dd27b02d8d5bade57b233aa7724123ffb4274c7cd2885b25199"
+    }
+  ]
+}
