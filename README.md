@@ -49,13 +49,16 @@ General agents can write animation code, but code generation alone gives them a 
 
 ## Public examples
 
-The [`examples/`](examples/) gallery contains five complete, editable projects with frozen assets, strict validation, rendered masters, and inspected contact sheets:
+The [`examples/`](examples/) gallery contains eight complete, editable projects with local assets, strict validation, rendered masters, and inspected contact sheets:
 
 - **Kinetic Type** demonstrates clipped typography, direct property tracks, custom easing, and scene rhythm.
 - **Data Pulse** demonstrates animated counters, converging signal fields, SVG path drawing, blend modes, and an editorial data-story resolve.
 - **Arc One** demonstrates original vector product geometry, shadows, blend modes, macro movement, stable lockups, and a mixed stereo soundtrack.
 - **Native Milestones** is an asset-free integration fixture for reusable compositions, typed variants, measured path motion, captions, and transition presentations.
 - **Animation Kernel** demonstrates typed color and point animation, measured springs, seeded drift, stagger timing, transform inheritance, and four live constraints in one asset-free composition.
+- **Chromatic Orbit** builds a layered orbital sculpture with native ring geometry, gradient paint and independent rotation tracks.
+- **Route Study** draws an imaginary transit network with shared anchors, measured Bezier progress and timed station labels.
+- **Type / Beat** combines oversized typography, an original synthesized pulse, authored beat-synchronized geometry and karaoke captions.
 
 Every project is reproducible with `npm run examples:build` and verified with `npm run examples:verify`; no remote render asset or external template is required.
 

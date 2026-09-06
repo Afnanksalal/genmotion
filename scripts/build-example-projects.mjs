@@ -227,3 +227,4 @@ for (const [directory, value] of projects) {
 
 writeWav(join(root, 'examples', 'arc-one', 'assets', 'original-bed.wav'));
 console.log(`Built ${projects.length} reproducible public example projects.`);
+await import('./build-gallery-examples.mjs');

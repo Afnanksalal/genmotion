@@ -1,0 +1,12 @@
+{
+  "title": "Chromatic Orbit",
+  "audience": "Motion designers exploring native authoring",
+  "promise": "Editable geometry, deliberate timing and inspectable native output.",
+  "proof": "This local Creative IR and its rendered master.",
+  "desiredAction": "Open, inspect and remix the project.",
+  "duration": 8,
+  "sources": [
+    "Original authored vector artwork; bundled Inter font under OFL."
+  ],
+  "audio": "Intentionally silent."
+}

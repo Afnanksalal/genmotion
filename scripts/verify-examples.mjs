@@ -12,6 +12,9 @@ const examples = [
   { id: 'arc-one', duration: 15, audio: true },
   { id: 'native-milestones', duration: 4, audio: false, font: false },
   { id: 'animation-kernel', duration: 6, audio: false, font: false },
+  { id: 'chromatic-orbit', duration: 8, audio: false },
+  { id: 'route-study', duration: 8, audio: false },
+  { id: 'type-beat', duration: 8, audio: true },
 ];
 
 for (const example of examples) {
@@ -28,3 +31,4 @@ for (const example of examples) {
   if (example.audio !== Boolean(probe.audioCodec)) throw new Error(`${example.id} audio contract does not match its source project.`);
   console.log(`${example.id}: strict, ${probe.width}x${probe.height}, ${probe.duration}s, ${probe.videoCodec}${probe.audioCodec ? ` + ${probe.audioCodec}` : ''}`);
 }
+await import('./verify-gallery-examples.mjs');

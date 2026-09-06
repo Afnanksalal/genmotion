@@ -1,0 +1,26 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "duration": 8,
+  "codec": "h264",
+  "audio": "aac",
+  "strictValidation": "passed",
+  "fullDecode": "passed",
+  "renderId": "4825668fb977a4ab",
+  "decodedFrames": 240,
+  "distinctDownsampledFrames": 174,
+  "minimumLumaRange": 182,
+  "randomSeekPixelEquality": true,
+  "audioChecks": {
+    "peak": 0.335129976272583,
+    "initial100msPeak": 0,
+    "final250msPeak": 0,
+    "clipping": false
+  },
+  "sha256": {
+    "source": "c7a6ee38f81554b7e4c03bc2fee5de22b9e3b7a3f2139db8ad4e2cf3d8ba3eff",
+    "master": "a97f784a99491f9252462cc435b15cf819cc5d90d00b5d7e6290cc8a39c24ee4",
+    "contactSheet": "e710f4f970c4d6b1d8b99a9db394d8313afd4de41f52b76b06c0603042023348"
+  }
+}
