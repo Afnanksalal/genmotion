@@ -18,7 +18,7 @@ import { readProjectSnapshot, readProjectSourceSnapshot } from '../ir/store.js';
 import { measureProjectText, textMeasureAddressSchema } from '../engine/text-measure.js';
 import { analyzeTrack, trackAnalysisOptionsSchema } from '../engine/kinematics.js';
 import express from 'express';
-import type { Server } from 'node:http';
+import http, { type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
@@ -171,10 +171,65 @@ export function isTransientAgentFailure(error: unknown): boolean {
 interface RenderJob { sourceCompositionId?: string; sourceSceneId?: string; sourceGroup?: { sceneId: string; layerId: string }; sourceRange?: { startFrame: number; endFrame: number }; id: string; status: 'queued' | 'rendering' | 'complete' | 'failed' | 'cancelled'; progress: number; diagnostics?: RenderProgress; output?: string; error?: string; width?: number; height?: number; quality?: 'draft' | 'standard' | 'high' }
 interface ExportRecord { filename: string; output: string; size: number; modifiedAt: string }
 interface AssetRecord { path: string; size: number; modifiedAt: string; kind: 'image' | 'video' | 'audio' | 'font' | 'asset'; uses: number }
-interface StudioWorkspace { root: string; servers: Map<string, StudioServer> }
+interface StudioWorkspace {
+  root: string;
+  servers: Map<string, StudioServer>;
+  publicUrl?: string;
+  gatewayListen?: { host: string; port: number };
+  activePort?: number;
+  gatewayServer?: Server;
+}
 interface StudioProjectSummary { id: string; title: string; directory: string; width: number; height: number; modifiedAt: string; active: boolean }
-export interface StudioOptions { host?: string; port?: number; agentRuntime?: AgentRuntime; agentRuntimeFactory?: (projectDir: string) => AgentRuntime; revealFile?: (file: string) => Promise<void>; workspaceRoot?: string; workspace?: StudioWorkspace }
+export interface StudioOptions { host?: string; port?: number; publicUrl?: string; agentRuntime?: AgentRuntime; agentRuntimeFactory?: (projectDir: string) => AgentRuntime; revealFile?: (file: string) => Promise<void>; workspaceRoot?: string; workspace?: StudioWorkspace }
 export interface StudioServer { url: string; close: () => Promise<void>; server: Server }
+
+function normalizeStudioPublicUrl(value: string | undefined): string | undefined {
+  if (!value?.trim()) return undefined;
+  const parsed = new URL(value.trim());
+  if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Studio public URL must be http or https.');
+  parsed.hash = '';
+  parsed.search = '';
+  return parsed.toString().replace(/\/$/, '');
+}
+
+function advertiseStudioHost(host: string): string {
+  if (host === '0.0.0.0' || host === '::') return '127.0.0.1';
+  if (host === '[::]') return '::1';
+  return host;
+}
+
+async function ensureStudioGateway(workspace: StudioWorkspace): Promise<void> {
+  if (!workspace.publicUrl || !workspace.gatewayListen || workspace.gatewayServer) return;
+  const listen = workspace.gatewayListen;
+  const gateway = http.createServer((clientReq: IncomingMessage, clientRes: ServerResponse) => {
+    const port = workspace.activePort;
+    if (!port) {
+      clientRes.writeHead(503, { 'content-type': 'text/plain; charset=utf-8' });
+      clientRes.end('Studio backend is not ready.');
+      return;
+    }
+    const headers = { ...clientReq.headers };
+    const proxyReq = http.request({
+      hostname: '127.0.0.1',
+      port,
+      path: clientReq.url,
+      method: clientReq.method,
+      headers,
+    }, (proxyRes) => {
+      clientRes.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers);
+      proxyRes.pipe(clientRes);
+    });
+    proxyReq.on('error', () => {
+      if (!clientRes.headersSent) clientRes.writeHead(502, { 'content-type': 'text/plain; charset=utf-8' });
+      clientRes.end('Studio backend proxy failed.');
+    });
+    clientReq.pipe(proxyReq);
+  });
+  workspace.gatewayServer = await new Promise<Server>((resolve, reject) => {
+    gateway.once('error', reject);
+    gateway.listen(listen.port, listen.host, () => resolve(gateway));
+  });
+}
 
 const mediaExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.mp4', '.mov', '.webm', '.mkv', '.m4v', '.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.woff', '.woff2', '.ttf', '.otf']);
 const referenceExtensions = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif']);
@@ -464,8 +519,9 @@ export async function getStudioRequests(projectDir: string): Promise<StudioReque
 }
 
 export async function startStudio(loaded: LoadedProject, options: StudioOptions = {}): Promise<StudioServer> {
-  const host = options.host ?? '127.0.0.1';
-  const port = options.port ?? 4180;
+  const requestedHost = options.host ?? '127.0.0.1';
+  const requestedPort = options.port ?? 4180;
+  const publicUrl = normalizeStudioPublicUrl(options.publicUrl ?? process.env.GENMOTION_STUDIO_PUBLIC_URL ?? process.env.STUDIO_PUBLIC_URL);
   const token = randomBytes(24).toString('base64url');
   const bridgeToken = randomBytes(32).toString('base64url'), bridgeHandle = randomUUID();
   let bridgePermissions = studioBridgePermissionsSchema.parse({});
@@ -476,6 +532,13 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   const rendersDir = path.join(loaded.projectDir, 'renders');
   const ownsWorkspace = options.workspace === undefined;
   const workspace = options.workspace ?? { root: path.resolve(options.workspaceRoot ?? path.join(os.homedir(), 'Genmotion Projects')), servers: new Map<string, StudioServer>() };
+  if (publicUrl) {
+    workspace.publicUrl = publicUrl;
+    if (!workspace.gatewayListen) workspace.gatewayListen = { host: requestedHost, port: requestedPort === 0 ? 4180 : requestedPort };
+  }
+  // Behind a public URL / reverse proxy, bind each project server on loopback and advertise the public origin via a shared gateway.
+  const host = publicUrl ? '127.0.0.1' : requestedHost;
+  const port = publicUrl ? 0 : requestedPort;
   await Promise.all([mkdir(historyDir, { recursive: true }), mkdir(requestsDir, { recursive: true }), mkdir(rendersDir, { recursive: true })]);
 
   let motionCatalog = await loadMotionLibraries(loaded.projectDir);
@@ -1352,8 +1415,19 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   const launchProject = async (directory: string): Promise<StudioServer> => {
     const resolved = path.resolve(directory);
     const existing = workspace.servers.get(resolved);
-    if (existing) return existing;
-    return startStudio(await loadProject(resolved), { host, port: 0, workspace, ...(options.agentRuntimeFactory ? { agentRuntimeFactory: options.agentRuntimeFactory } : {}), ...(options.revealFile ? { revealFile: options.revealFile } : {}) });
+    if (existing) {
+      const address = existing.server.address();
+      if (workspace.publicUrl && address && typeof address === 'object') workspace.activePort = address.port;
+      return existing;
+    }
+    return startStudio(await loadProject(resolved), {
+      host: publicUrl ? '127.0.0.1' : host,
+      port: 0,
+      workspace,
+      ...(publicUrl ? { publicUrl } : {}),
+      ...(options.agentRuntimeFactory ? { agentRuntimeFactory: options.agentRuntimeFactory } : {}),
+      ...(options.revealFile ? { revealFile: options.revealFile } : {}),
+    });
   };
   app.post('/api/projects/open', async (request, response, next) => {
     try {
@@ -1424,8 +1498,20 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     }
     catch (error) { await editingSession.dispose(); await new Promise<void>(resolve => server.close(() => resolve())); throw error; }
   }
+  if (publicUrl) {
+    workspace.activePort = actualPort;
+    try { await ensureStudioGateway(workspace); }
+    catch (error) {
+      await editingSession.dispose();
+      await new Promise<void>(resolve => server.close(() => resolve()));
+      throw error;
+    }
+  }
   let closed = false;
-  const studioServer: StudioServer = { url: `http://${host}:${String(actualPort)}`, server, close: async () => {
+  const studioServer: StudioServer = {
+    url: publicUrl ?? `http://${advertiseStudioHost(host)}:${String(actualPort)}`,
+    server,
+    close: async () => {
     if (closed) return;
     closed = true;
     unsubscribeContext(); await flushContext(); await studioWriteQueue.catch(() => undefined);
@@ -1448,6 +1534,11 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       server.close((error) => error ? reject(error) : resolve());
       server.closeAllConnections();
     });
+    if (ownsWorkspace && workspace.gatewayServer) {
+      const gateway = workspace.gatewayServer;
+      delete workspace.gatewayServer;
+      await new Promise<void>((resolve) => gateway.close(() => resolve()));
+    }
   } };
   workspace.servers.set(path.resolve(loaded.projectDir), studioServer);
   return studioServer;
