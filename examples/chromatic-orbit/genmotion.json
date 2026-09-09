@@ -494,8 +494,8 @@
             }
           ],
           "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
+            "shutterAngle": 120,
+            "samples": 3
           },
           "constraints": [],
           "bindings": {},
@@ -651,8 +651,8 @@
             }
           ],
           "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
+            "shutterAngle": 120,
+            "samples": 3
           },
           "constraints": [],
           "bindings": {},
@@ -807,10 +807,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
@@ -964,10 +960,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
@@ -1121,10 +1113,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
@@ -1278,10 +1266,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
@@ -1435,10 +1419,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
@@ -1592,10 +1572,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
@@ -1749,10 +1725,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
@@ -1906,10 +1878,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
@@ -2063,10 +2031,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
@@ -2220,10 +2184,6 @@
               "enabled": true
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 140,
-            "samples": 4
-          },
           "constraints": [],
           "bindings": {},
           "type": "shape",

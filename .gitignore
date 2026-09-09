@@ -14,7 +14,13 @@ renders/
 .tmp-*/
 output/
 .playwright-cli/
-examples/**/review/
+examples/**/review/*
+!examples/**/review/opening.png
+!examples/**/review/midpoint.png
+!examples/**/review/final-hold.png
+!examples/native-milestones/review/boundary-before.png
+!examples/native-milestones/review/boundary-at.png
+!examples/native-milestones/review/boundary-after.png
 examples/**/.genmotion-render-*/
 !examples/**/*.mp4
 !examples/**/.genmotion/
