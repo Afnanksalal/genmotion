@@ -914,7 +914,25 @@
       "notes": []
     }
   ],
-  "audio": [],
+  "audio": [
+    {
+      "id": "kinetic-bed",
+      "src": "assets/kinetic-bed.wav",
+      "start": 0,
+      "trimStart": 0,
+      "volume": 0.68,
+      "fadeIn": 0.1,
+      "fadeOut": 0.9,
+      "loop": false,
+      "duckUnderVoice": false,
+      "muted": false,
+      "solo": false,
+      "pan": 0,
+      "balance": 0,
+      "locked": false,
+      "kind": "music"
+    }
+  ],
   "metadata": {
     "publicExample": "true",
     "duration": "8",

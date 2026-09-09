@@ -2287,7 +2287,25 @@
       "notes": []
     }
   ],
-  "audio": [],
+  "audio": [
+    {
+      "id": "orbit-bed",
+      "src": "assets/orbit-bed.wav",
+      "start": 0,
+      "trimStart": 0,
+      "volume": 0.64,
+      "fadeIn": 0.15,
+      "fadeOut": 0.9,
+      "loop": false,
+      "duckUnderVoice": false,
+      "muted": false,
+      "solo": false,
+      "pan": 0,
+      "balance": 0,
+      "locked": false,
+      "kind": "music"
+    }
+  ],
   "metadata": {
     "publicExample": "true",
     "duration": "7",

@@ -3,7 +3,7 @@
     "id": "kinetic-type",
     "title": "Kinetic Type",
     "duration": 8,
-    "audio": false
+    "audio": true
   },
   {
     "id": "data-pulse",
@@ -33,7 +33,7 @@
     "id": "chromatic-orbit",
     "title": "Chromatic Orbit",
     "duration": 7,
-    "audio": false
+    "audio": true
   },
   {
     "id": "route-study",
@@ -57,12 +57,12 @@
     "id": "camera-flight",
     "title": "Camera Flight",
     "duration": 7,
-    "audio": false
+    "audio": true
   },
   {
     "id": "motion-lab",
     "title": "Motion Lab",
     "duration": 7,
-    "audio": false
+    "audio": true
   }
 ]

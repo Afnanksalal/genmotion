@@ -840,7 +840,25 @@
       "notes": []
     }
   ],
-  "audio": [],
+  "audio": [
+    {
+      "id": "motion-bed",
+      "src": "assets/motion-bed.wav",
+      "start": 0,
+      "trimStart": 0,
+      "volume": 0.66,
+      "fadeIn": 0.08,
+      "fadeOut": 0.8,
+      "loop": false,
+      "duckUnderVoice": false,
+      "muted": false,
+      "solo": false,
+      "pan": 0,
+      "balance": 0,
+      "locked": false,
+      "kind": "music"
+    }
+  ],
   "metadata": {
     "publicExample": "true",
     "duration": "7",

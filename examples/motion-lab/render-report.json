@@ -14,10 +14,15 @@
     "meanFrameDelta": 0.4445497740563528,
     "finalSecondMeanDelta": 0
   },
-  "audioChecks": null,
+  "audioChecks": {
+    "peak": 0.2919187843799591,
+    "initial5msPeak": 0.000011051370165660046,
+    "final5msPeak": 1.65146936126348e-8,
+    "clipping": false
+  },
   "sha256": {
-    "source": "88ef56ccd67b7a0f46a5b452463459d2d2b3623019785a2732f1d62545e064aa",
-    "master": "4f39f75a73c15fb39d0f6815cf5848d9ffd0cb87a483217b0e2408377ac780c7",
+    "source": "5f768a222294c1eb0b6c517f4ec0b4ed5eb68425f70e062709c71fc3ceb16683",
+    "master": "04b17d71c13ea5ee2689d9ad2f65c0005d95912615ed4823c9e824ce93b9cd31",
     "contactSheet": "cc79ede47651000842c205d03c3a95c893cf543e867f31a4f003a3a91c5b922c"
   }
 }

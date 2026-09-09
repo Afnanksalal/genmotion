@@ -6,23 +6,23 @@
   "strictValidation": "passed",
   "fullDecode": "passed",
   "decodedFrames": 210,
-  "distinctDownsampledFrames": 117,
+  "distinctDownsampledFrames": 141,
   "minimumLumaRange": 118,
   "randomSeekPixelEquality": true,
   "timingChecks": {
-    "peakFrameDelta": 3.1640277777777777,
-    "meanFrameDelta": 0.38397395002658236,
-    "finalSecondMeanDelta": 0.00003472222222222222
+    "peakFrameDelta": 2.453611111111111,
+    "meanFrameDelta": 0.4749853801169593,
+    "finalSecondMeanDelta": 0.1889328703703704
   },
   "audioChecks": {
-    "peak": 0.25497299432754517,
-    "initial5msPeak": 0.000059489248087629676,
-    "final5msPeak": 1.2958147443953294e-8,
+    "peak": 0.33563947677612305,
+    "initial5msPeak": 0.00021256555919535458,
+    "final5msPeak": 1.601936006068172e-8,
     "clipping": false
   },
   "sha256": {
-    "source": "e6e906951409db19a32f8c0c8418ebfb3255527c58f67d45fc1c093ac621f287",
-    "master": "f4a7bb42cc984ffc21eb0df1b1218b87706eba6ec23c7990708256fa4f0b863f",
-    "contactSheet": "4e6540be02b2d2cc7b38884c45130c6bd49cfa48c03b1472b28fd0a54bc3ea44"
+    "source": "72547fbdb81eda669832b4a1ae56297a356731c51c139673897fc10e4d971494",
+    "master": "da52ca16092c6c90daf8dfd42ee2dfb2df4dfeaa3882103089d029c70b02f7f1",
+    "contactSheet": "701a0291aa6b5e665306adf76f57ff1b40074403a618404d8a8acf1ac09b6738"
   }
 }

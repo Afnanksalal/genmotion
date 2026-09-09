@@ -2080,7 +2080,25 @@
       "notes": []
     }
   ],
-  "audio": [],
+  "audio": [
+    {
+      "id": "camera-bed",
+      "src": "assets/camera-bed.wav",
+      "start": 0,
+      "trimStart": 0,
+      "volume": 0.62,
+      "fadeIn": 0.12,
+      "fadeOut": 0.85,
+      "loop": false,
+      "duckUnderVoice": false,
+      "muted": false,
+      "solo": false,
+      "pan": 0,
+      "balance": 0,
+      "locked": false,
+      "kind": "music"
+    }
+  ],
   "metadata": {
     "publicExample": "true",
     "duration": "7",

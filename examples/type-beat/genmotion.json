@@ -139,7 +139,7 @@
                   }
                 },
                 {
-                  "at": 0.1,
+                  "at": 0.25,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -150,7 +150,7 @@
                   }
                 },
                 {
-                  "at": 0.6,
+                  "at": 0.75,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -181,7 +181,7 @@
                   }
                 },
                 {
-                  "at": 0.1,
+                  "at": 0.25,
                   "value": 80,
                   "ease": {
                     "type": "cubic-bezier",
@@ -192,7 +192,7 @@
                   }
                 },
                 {
-                  "at": 0.82,
+                  "at": 0.97,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -277,7 +277,7 @@
                   }
                 },
                 {
-                  "at": 0.55,
+                  "at": 0.75,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -288,7 +288,7 @@
                   }
                 },
                 {
-                  "at": 1.05,
+                  "at": 1.25,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -319,7 +319,7 @@
                   }
                 },
                 {
-                  "at": 0.55,
+                  "at": 0.75,
                   "value": 100,
                   "ease": {
                     "type": "cubic-bezier",
@@ -330,7 +330,7 @@
                   }
                 },
                 {
-                  "at": 1.27,
+                  "at": 1.47,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -415,7 +415,7 @@
                   }
                 },
                 {
-                  "at": 1,
+                  "at": 1.25,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -426,7 +426,7 @@
                   }
                 },
                 {
-                  "at": 1.5,
+                  "at": 1.75,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -457,7 +457,7 @@
                   }
                 },
                 {
-                  "at": 1,
+                  "at": 1.25,
                   "value": 120,
                   "ease": {
                     "type": "cubic-bezier",
@@ -468,7 +468,7 @@
                   }
                 },
                 {
-                  "at": 1.72,
+                  "at": 1.97,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -553,7 +553,7 @@
                   }
                 },
                 {
-                  "at": 0.2,
+                  "at": 0.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -564,7 +564,7 @@
                   }
                 },
                 {
-                  "at": 0.27,
+                  "at": 0.25,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -575,7 +575,7 @@
                   }
                 },
                 {
-                  "at": 0.44,
+                  "at": 0.42000000000000004,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -586,7 +586,7 @@
                   }
                 },
                 {
-                  "at": 0.7,
+                  "at": 0.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -597,7 +597,7 @@
                   }
                 },
                 {
-                  "at": 0.77,
+                  "at": 0.75,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -608,7 +608,7 @@
                   }
                 },
                 {
-                  "at": 0.94,
+                  "at": 0.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -619,7 +619,7 @@
                   }
                 },
                 {
-                  "at": 1.2,
+                  "at": 1.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -630,7 +630,7 @@
                   }
                 },
                 {
-                  "at": 1.27,
+                  "at": 1.25,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -641,7 +641,7 @@
                   }
                 },
                 {
-                  "at": 1.44,
+                  "at": 1.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -652,7 +652,7 @@
                   }
                 },
                 {
-                  "at": 1.7,
+                  "at": 1.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -663,7 +663,7 @@
                   }
                 },
                 {
-                  "at": 1.77,
+                  "at": 1.75,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -674,7 +674,7 @@
                   }
                 },
                 {
-                  "at": 1.94,
+                  "at": 1.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -685,7 +685,7 @@
                   }
                 },
                 {
-                  "at": 2.2,
+                  "at": 2.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -696,7 +696,7 @@
                   }
                 },
                 {
-                  "at": 2.27,
+                  "at": 2.25,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -707,7 +707,7 @@
                   }
                 },
                 {
-                  "at": 2.4400000000000004,
+                  "at": 2.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -718,7 +718,7 @@
                   }
                 },
                 {
-                  "at": 2.7,
+                  "at": 2.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -729,7 +729,7 @@
                   }
                 },
                 {
-                  "at": 2.77,
+                  "at": 2.75,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -740,7 +740,7 @@
                   }
                 },
                 {
-                  "at": 2.9400000000000004,
+                  "at": 2.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -751,7 +751,7 @@
                   }
                 },
                 {
-                  "at": 3.2,
+                  "at": 3.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -762,7 +762,7 @@
                   }
                 },
                 {
-                  "at": 3.27,
+                  "at": 3.25,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -773,7 +773,7 @@
                   }
                 },
                 {
-                  "at": 3.4400000000000004,
+                  "at": 3.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -784,7 +784,7 @@
                   }
                 },
                 {
-                  "at": 3.7,
+                  "at": 3.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -795,7 +795,7 @@
                   }
                 },
                 {
-                  "at": 3.77,
+                  "at": 3.75,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -806,7 +806,7 @@
                   }
                 },
                 {
-                  "at": 3.9400000000000004,
+                  "at": 3.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -817,7 +817,7 @@
                   }
                 },
                 {
-                  "at": 4.2,
+                  "at": 4.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -828,7 +828,7 @@
                   }
                 },
                 {
-                  "at": 4.2700000000000005,
+                  "at": 4.25,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -839,7 +839,7 @@
                   }
                 },
                 {
-                  "at": 4.44,
+                  "at": 4.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -850,7 +850,7 @@
                   }
                 },
                 {
-                  "at": 4.7,
+                  "at": 4.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -861,7 +861,7 @@
                   }
                 },
                 {
-                  "at": 4.7700000000000005,
+                  "at": 4.75,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -872,7 +872,106 @@
                   }
                 },
                 {
-                  "at": 4.94,
+                  "at": 4.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.25,
+                  "value": 0.81,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.42,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.695,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.75,
+                  "value": 0.99,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.25,
+                  "value": 0.45,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -952,7 +1051,7 @@
                   }
                 },
                 {
-                  "at": 0.2,
+                  "at": 0.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -963,7 +1062,7 @@
                   }
                 },
                 {
-                  "at": 0.27,
+                  "at": 0.25,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -974,7 +1073,7 @@
                   }
                 },
                 {
-                  "at": 0.44,
+                  "at": 0.42000000000000004,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -985,7 +1084,7 @@
                   }
                 },
                 {
-                  "at": 0.7,
+                  "at": 0.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -996,7 +1095,7 @@
                   }
                 },
                 {
-                  "at": 0.77,
+                  "at": 0.75,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1007,7 +1106,7 @@
                   }
                 },
                 {
-                  "at": 0.94,
+                  "at": 0.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1018,7 +1117,7 @@
                   }
                 },
                 {
-                  "at": 1.2,
+                  "at": 1.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1029,7 +1128,7 @@
                   }
                 },
                 {
-                  "at": 1.27,
+                  "at": 1.25,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1040,7 +1139,7 @@
                   }
                 },
                 {
-                  "at": 1.44,
+                  "at": 1.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1051,7 +1150,7 @@
                   }
                 },
                 {
-                  "at": 1.7,
+                  "at": 1.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1062,7 +1161,7 @@
                   }
                 },
                 {
-                  "at": 1.77,
+                  "at": 1.75,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1073,7 +1172,7 @@
                   }
                 },
                 {
-                  "at": 1.94,
+                  "at": 1.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1084,7 +1183,7 @@
                   }
                 },
                 {
-                  "at": 2.2,
+                  "at": 2.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1095,7 +1194,7 @@
                   }
                 },
                 {
-                  "at": 2.27,
+                  "at": 2.25,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1106,7 +1205,7 @@
                   }
                 },
                 {
-                  "at": 2.4400000000000004,
+                  "at": 2.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1117,7 +1216,7 @@
                   }
                 },
                 {
-                  "at": 2.7,
+                  "at": 2.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1128,7 +1227,7 @@
                   }
                 },
                 {
-                  "at": 2.77,
+                  "at": 2.75,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1139,7 +1238,7 @@
                   }
                 },
                 {
-                  "at": 2.9400000000000004,
+                  "at": 2.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1150,7 +1249,7 @@
                   }
                 },
                 {
-                  "at": 3.2,
+                  "at": 3.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1161,7 +1260,7 @@
                   }
                 },
                 {
-                  "at": 3.27,
+                  "at": 3.25,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1172,7 +1271,7 @@
                   }
                 },
                 {
-                  "at": 3.4400000000000004,
+                  "at": 3.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1183,7 +1282,7 @@
                   }
                 },
                 {
-                  "at": 3.7,
+                  "at": 3.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1194,7 +1293,7 @@
                   }
                 },
                 {
-                  "at": 3.77,
+                  "at": 3.75,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1205,7 +1304,7 @@
                   }
                 },
                 {
-                  "at": 3.9400000000000004,
+                  "at": 3.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1216,7 +1315,7 @@
                   }
                 },
                 {
-                  "at": 4.2,
+                  "at": 4.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1227,7 +1326,7 @@
                   }
                 },
                 {
-                  "at": 4.2700000000000005,
+                  "at": 4.25,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1238,7 +1337,7 @@
                   }
                 },
                 {
-                  "at": 4.44,
+                  "at": 4.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1249,7 +1348,7 @@
                   }
                 },
                 {
-                  "at": 4.7,
+                  "at": 4.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1260,7 +1359,7 @@
                   }
                 },
                 {
-                  "at": 4.7700000000000005,
+                  "at": 4.75,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1271,7 +1370,106 @@
                   }
                 },
                 {
-                  "at": 4.94,
+                  "at": 4.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.25,
+                  "value": 0.99,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.42,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.695,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.75,
+                  "value": 0.45,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.25,
+                  "value": 0.63,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1351,7 +1549,7 @@
                   }
                 },
                 {
-                  "at": 0.2,
+                  "at": 0.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1362,7 +1560,7 @@
                   }
                 },
                 {
-                  "at": 0.27,
+                  "at": 0.25,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1373,7 +1571,7 @@
                   }
                 },
                 {
-                  "at": 0.44,
+                  "at": 0.42000000000000004,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1384,7 +1582,7 @@
                   }
                 },
                 {
-                  "at": 0.7,
+                  "at": 0.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1395,7 +1593,7 @@
                   }
                 },
                 {
-                  "at": 0.77,
+                  "at": 0.75,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1406,7 +1604,7 @@
                   }
                 },
                 {
-                  "at": 0.94,
+                  "at": 0.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1417,7 +1615,7 @@
                   }
                 },
                 {
-                  "at": 1.2,
+                  "at": 1.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1428,7 +1626,7 @@
                   }
                 },
                 {
-                  "at": 1.27,
+                  "at": 1.25,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1439,7 +1637,7 @@
                   }
                 },
                 {
-                  "at": 1.44,
+                  "at": 1.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1450,7 +1648,7 @@
                   }
                 },
                 {
-                  "at": 1.7,
+                  "at": 1.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1461,7 +1659,7 @@
                   }
                 },
                 {
-                  "at": 1.77,
+                  "at": 1.75,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1472,7 +1670,7 @@
                   }
                 },
                 {
-                  "at": 1.94,
+                  "at": 1.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1483,7 +1681,7 @@
                   }
                 },
                 {
-                  "at": 2.2,
+                  "at": 2.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1494,7 +1692,7 @@
                   }
                 },
                 {
-                  "at": 2.27,
+                  "at": 2.25,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1505,7 +1703,7 @@
                   }
                 },
                 {
-                  "at": 2.4400000000000004,
+                  "at": 2.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1516,7 +1714,7 @@
                   }
                 },
                 {
-                  "at": 2.7,
+                  "at": 2.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1527,7 +1725,7 @@
                   }
                 },
                 {
-                  "at": 2.77,
+                  "at": 2.75,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1538,7 +1736,7 @@
                   }
                 },
                 {
-                  "at": 2.9400000000000004,
+                  "at": 2.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1549,7 +1747,7 @@
                   }
                 },
                 {
-                  "at": 3.2,
+                  "at": 3.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1560,7 +1758,7 @@
                   }
                 },
                 {
-                  "at": 3.27,
+                  "at": 3.25,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1571,7 +1769,7 @@
                   }
                 },
                 {
-                  "at": 3.4400000000000004,
+                  "at": 3.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1582,7 +1780,7 @@
                   }
                 },
                 {
-                  "at": 3.7,
+                  "at": 3.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1593,7 +1791,7 @@
                   }
                 },
                 {
-                  "at": 3.77,
+                  "at": 3.75,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1604,7 +1802,7 @@
                   }
                 },
                 {
-                  "at": 3.9400000000000004,
+                  "at": 3.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1615,7 +1813,7 @@
                   }
                 },
                 {
-                  "at": 4.2,
+                  "at": 4.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1626,7 +1824,7 @@
                   }
                 },
                 {
-                  "at": 4.2700000000000005,
+                  "at": 4.25,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1637,7 +1835,7 @@
                   }
                 },
                 {
-                  "at": 4.44,
+                  "at": 4.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1648,7 +1846,7 @@
                   }
                 },
                 {
-                  "at": 4.7,
+                  "at": 4.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1659,7 +1857,7 @@
                   }
                 },
                 {
-                  "at": 4.7700000000000005,
+                  "at": 4.75,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1670,7 +1868,106 @@
                   }
                 },
                 {
-                  "at": 4.94,
+                  "at": 4.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.25,
+                  "value": 0.45,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.42,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.695,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.75,
+                  "value": 0.63,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.25,
+                  "value": 0.81,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1750,7 +2047,7 @@
                   }
                 },
                 {
-                  "at": 0.2,
+                  "at": 0.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1761,7 +2058,7 @@
                   }
                 },
                 {
-                  "at": 0.27,
+                  "at": 0.25,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1772,7 +2069,7 @@
                   }
                 },
                 {
-                  "at": 0.44,
+                  "at": 0.42000000000000004,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1783,7 +2080,7 @@
                   }
                 },
                 {
-                  "at": 0.7,
+                  "at": 0.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1794,7 +2091,7 @@
                   }
                 },
                 {
-                  "at": 0.77,
+                  "at": 0.75,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1805,7 +2102,7 @@
                   }
                 },
                 {
-                  "at": 0.94,
+                  "at": 0.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1816,7 +2113,7 @@
                   }
                 },
                 {
-                  "at": 1.2,
+                  "at": 1.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1827,7 +2124,7 @@
                   }
                 },
                 {
-                  "at": 1.27,
+                  "at": 1.25,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1838,7 +2135,7 @@
                   }
                 },
                 {
-                  "at": 1.44,
+                  "at": 1.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1849,7 +2146,7 @@
                   }
                 },
                 {
-                  "at": 1.7,
+                  "at": 1.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1860,7 +2157,7 @@
                   }
                 },
                 {
-                  "at": 1.77,
+                  "at": 1.75,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1871,7 +2168,7 @@
                   }
                 },
                 {
-                  "at": 1.94,
+                  "at": 1.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1882,7 +2179,7 @@
                   }
                 },
                 {
-                  "at": 2.2,
+                  "at": 2.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1893,7 +2190,7 @@
                   }
                 },
                 {
-                  "at": 2.27,
+                  "at": 2.25,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1904,7 +2201,7 @@
                   }
                 },
                 {
-                  "at": 2.4400000000000004,
+                  "at": 2.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1915,7 +2212,7 @@
                   }
                 },
                 {
-                  "at": 2.7,
+                  "at": 2.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1926,7 +2223,7 @@
                   }
                 },
                 {
-                  "at": 2.77,
+                  "at": 2.75,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1937,7 +2234,7 @@
                   }
                 },
                 {
-                  "at": 2.9400000000000004,
+                  "at": 2.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1948,7 +2245,7 @@
                   }
                 },
                 {
-                  "at": 3.2,
+                  "at": 3.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1959,7 +2256,7 @@
                   }
                 },
                 {
-                  "at": 3.27,
+                  "at": 3.25,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1970,7 +2267,7 @@
                   }
                 },
                 {
-                  "at": 3.4400000000000004,
+                  "at": 3.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1981,7 +2278,7 @@
                   }
                 },
                 {
-                  "at": 3.7,
+                  "at": 3.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1992,7 +2289,7 @@
                   }
                 },
                 {
-                  "at": 3.77,
+                  "at": 3.75,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2003,7 +2300,7 @@
                   }
                 },
                 {
-                  "at": 3.9400000000000004,
+                  "at": 3.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2014,7 +2311,7 @@
                   }
                 },
                 {
-                  "at": 4.2,
+                  "at": 4.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2025,7 +2322,7 @@
                   }
                 },
                 {
-                  "at": 4.2700000000000005,
+                  "at": 4.25,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2036,7 +2333,7 @@
                   }
                 },
                 {
-                  "at": 4.44,
+                  "at": 4.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2047,7 +2344,7 @@
                   }
                 },
                 {
-                  "at": 4.7,
+                  "at": 4.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2058,7 +2355,7 @@
                   }
                 },
                 {
-                  "at": 4.7700000000000005,
+                  "at": 4.75,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2069,7 +2366,106 @@
                   }
                 },
                 {
-                  "at": 4.94,
+                  "at": 4.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.25,
+                  "value": 0.63,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.42,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.695,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.75,
+                  "value": 0.81,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.25,
+                  "value": 0.99,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2149,7 +2545,7 @@
                   }
                 },
                 {
-                  "at": 0.2,
+                  "at": 0.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2160,7 +2556,7 @@
                   }
                 },
                 {
-                  "at": 0.27,
+                  "at": 0.25,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2171,7 +2567,7 @@
                   }
                 },
                 {
-                  "at": 0.44,
+                  "at": 0.42000000000000004,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2182,7 +2578,7 @@
                   }
                 },
                 {
-                  "at": 0.7,
+                  "at": 0.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2193,7 +2589,7 @@
                   }
                 },
                 {
-                  "at": 0.77,
+                  "at": 0.75,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2204,7 +2600,7 @@
                   }
                 },
                 {
-                  "at": 0.94,
+                  "at": 0.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2215,7 +2611,7 @@
                   }
                 },
                 {
-                  "at": 1.2,
+                  "at": 1.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2226,7 +2622,7 @@
                   }
                 },
                 {
-                  "at": 1.27,
+                  "at": 1.25,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2237,7 +2633,7 @@
                   }
                 },
                 {
-                  "at": 1.44,
+                  "at": 1.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2248,7 +2644,7 @@
                   }
                 },
                 {
-                  "at": 1.7,
+                  "at": 1.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2259,7 +2655,7 @@
                   }
                 },
                 {
-                  "at": 1.77,
+                  "at": 1.75,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2270,7 +2666,7 @@
                   }
                 },
                 {
-                  "at": 1.94,
+                  "at": 1.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2281,7 +2677,7 @@
                   }
                 },
                 {
-                  "at": 2.2,
+                  "at": 2.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2292,7 +2688,7 @@
                   }
                 },
                 {
-                  "at": 2.27,
+                  "at": 2.25,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2303,7 +2699,7 @@
                   }
                 },
                 {
-                  "at": 2.4400000000000004,
+                  "at": 2.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2314,7 +2710,7 @@
                   }
                 },
                 {
-                  "at": 2.7,
+                  "at": 2.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2325,7 +2721,7 @@
                   }
                 },
                 {
-                  "at": 2.77,
+                  "at": 2.75,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2336,7 +2732,7 @@
                   }
                 },
                 {
-                  "at": 2.9400000000000004,
+                  "at": 2.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2347,7 +2743,7 @@
                   }
                 },
                 {
-                  "at": 3.2,
+                  "at": 3.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2358,7 +2754,7 @@
                   }
                 },
                 {
-                  "at": 3.27,
+                  "at": 3.25,
                   "value": 0.81,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2369,7 +2765,7 @@
                   }
                 },
                 {
-                  "at": 3.4400000000000004,
+                  "at": 3.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2380,7 +2776,7 @@
                   }
                 },
                 {
-                  "at": 3.7,
+                  "at": 3.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2391,7 +2787,7 @@
                   }
                 },
                 {
-                  "at": 3.77,
+                  "at": 3.75,
                   "value": 0.99,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2402,7 +2798,7 @@
                   }
                 },
                 {
-                  "at": 3.9400000000000004,
+                  "at": 3.92,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2413,7 +2809,7 @@
                   }
                 },
                 {
-                  "at": 4.2,
+                  "at": 4.195,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2424,7 +2820,7 @@
                   }
                 },
                 {
-                  "at": 4.2700000000000005,
+                  "at": 4.25,
                   "value": 0.45,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2435,7 +2831,7 @@
                   }
                 },
                 {
-                  "at": 4.44,
+                  "at": 4.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2446,7 +2842,7 @@
                   }
                 },
                 {
-                  "at": 4.7,
+                  "at": 4.695,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2457,7 +2853,7 @@
                   }
                 },
                 {
-                  "at": 4.7700000000000005,
+                  "at": 4.75,
                   "value": 0.63,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2468,7 +2864,106 @@
                   }
                 },
                 {
-                  "at": 4.94,
+                  "at": 4.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.25,
+                  "value": 0.81,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.42,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.695,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.75,
+                  "value": 0.99,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.92,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.195,
+                  "value": 0.18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.25,
+                  "value": 0.45,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6.42,
                   "value": 0.18,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2546,40 +3041,40 @@
           "cues": [
             {
               "id": "build",
-              "start": 1,
-              "end": 2,
+              "start": 1.25,
+              "end": 2.25,
               "text": "BUILD.",
               "words": [
                 {
                   "text": "BUILD.",
-                  "start": 1,
-                  "end": 2
+                  "start": 1.25,
+                  "end": 2.25
                 }
               ]
             },
             {
               "id": "breathe",
-              "start": 2,
-              "end": 3.5,
+              "start": 2.25,
+              "end": 3.75,
               "text": "BREATHE.",
               "words": [
                 {
                   "text": "BREATHE.",
-                  "start": 2,
-                  "end": 3.5
+                  "start": 2.25,
+                  "end": 3.75
                 }
               ]
             },
             {
               "id": "resolve",
-              "start": 3.5,
-              "end": 5.15,
+              "start": 3.75,
+              "end": 5.75,
               "text": "RESOLVE.",
               "words": [
                 {
                   "text": "RESOLVE.",
-                  "start": 3.5,
-                  "end": 5.15
+                  "start": 3.75,
+                  "end": 5.75
                 }
               ]
             }

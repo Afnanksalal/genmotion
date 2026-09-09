@@ -22,7 +22,7 @@ function kineticType() {
     text('kinetic', 'KINETIC', 88, 230, 1600, 240, 222, ink, { tracks: [...enter('kinetic', .25, 90), track('kinetic-x', 'transform.x', [[0, -70], [1.05, 0], [2.5, 0], [3.15, 100], [4.45, 100], [5.15, 0], [8, 0]])] }),
     text('type', 'TYPE', 90, 455, 1080, 260, 250, red, { tracks: [...enter('type', .45, 120), track('type-scale', 'transform.scaleX', [[0, .4], [1.25, 1], [2.5, 1], [3.15, 1.1], [4.45, 1.1], [5.15, 1], [8, 1]])] }),
     text('phrase', 'Scale changes meaning.\nTiming changes the sentence.', 106, 785, 1060, 115, 38, ink, { fontWeight: 500, lineHeight: 1.25, tracks: enter('phrase', 1.05, 28) }), footer('KINETIC TYPE / 01', ink),
-  ])]);
+  ])], { audio: [{ id: 'kinetic-bed', src: 'assets/kinetic-bed.wav', kind: 'music', volume: .68, fadeIn: .1, fadeOut: .9 }] });
 }
 
 function dataPulse() {
@@ -64,7 +64,7 @@ function animationKernel() {
 function chromaticOrbit() {
   const bg = '#171024', ivory = '#f7f1ff', acid = '#dfff64';
   const rings = Array.from({ length: 12 }, (_, i) => { const d = 700 - i * 42; return shape(`orbit-${i}`, 'ring', 1180 - d / 2, 500 - d / 2, d, d, acid, { innerRadius: .91, gradientFill: { type: 'linear', angle: i * 31, stops: [{ offset: 0, color: acid }, { offset: .5, color: '#ff5cab' }, { offset: 1, color: '#736bff' }] }, transform: { scaleY: .64, rotation: -35 }, tracks: [track(`orbit-${i}-rotation`, 'transform.rotation', [[0, -125 - i * 7], [1.35 + i * .055, -35 + i * 4], [3.8, -12 + i * 4], [7, -12 + i * 4]]), track(`orbit-${i}-scale`, 'transform.scaleX', [[0, .08], [.65 + i * .055, 1], [7, 1]])], ...(i < 2 ? { motionBlur: { shutterAngle: 120, samples: 3 } } : {}) }); });
-  return base('chromatic-orbit', 'Chromatic Orbit', 7, bg, ivory, acid, [scene('orbit', 'Build one luminous body from independent trajectories', 7, bg, [text('label', 'FORM / LIGHT / COLOR', 96, 88, 900, 50, 27, '#bbb1d4', { letterSpacing: 5 }), text('title', 'CHROMATIC\nORBIT', 90, 250, 900, 330, 140, ivory, { lineHeight: .9, tracks: enter('title', .15, 80) }), text('copy', 'Twelve paths resolve\ninto one luminous body.', 102, 680, 720, 120, 36, '#bbb1d4', { fontWeight: 500, lineHeight: 1.25, tracks: enter('copy', .85, 30) }), ...rings, footer('CHROMATIC ORBIT / 06', '#bbb1d4')])]);
+  return base('chromatic-orbit', 'Chromatic Orbit', 7, bg, ivory, acid, [scene('orbit', 'Build one luminous body from independent trajectories', 7, bg, [text('label', 'FORM / LIGHT / COLOR', 96, 88, 900, 50, 27, '#bbb1d4', { letterSpacing: 5 }), text('title', 'CHROMATIC\nORBIT', 90, 250, 900, 330, 140, ivory, { lineHeight: .9, tracks: enter('title', .15, 80) }), text('copy', 'Twelve paths resolve\ninto one luminous body.', 102, 680, 720, 120, 36, '#bbb1d4', { fontWeight: 500, lineHeight: 1.25, tracks: enter('copy', .85, 30) }), ...rings, footer('CHROMATIC ORBIT / 06', '#bbb1d4')])], { audio: [{ id: 'orbit-bed', src: 'assets/orbit-bed.wav', kind: 'music', volume: .64, fadeIn: .15, fadeOut: .9 }] });
 }
 
 function routeStudy() {
@@ -78,9 +78,10 @@ function routeStudy() {
 
 function typeBeat() {
   const bg = '#ed623e', ink = '#171716', cream = '#fff5df';
-  const layers = [text('label', 'A SMALL STUDY IN TIMING', 96, 85, 1200, 48, 27, ink, { letterSpacing: 5 }), text('make', 'MAKE', 82, 220, 1060, 200, 205, ink, { tracks: enter('make', .1, 80) }), text('it', 'IT', 84, 405, 520, 200, 205, cream, { tracks: enter('it', .55, 100) }), text('move', 'MOVE.', 82, 590, 1100, 210, 205, ink, { tracks: enter('move', 1, 120) })];
-  for (let i = 0; i < 5; i++) { const points = [[0,.18]]; for (let b = 0; b < 10; b++) { const at = .2 + b * .5; points.push([at,.18],[at+.07,.45+((b+i)%4)*.18],[at+.24,.18]); } points.push([7,.18]); layers.push(shape(`meter-${i}`, 'round-rect', 1270 + i * 96, 280, 58, 500, cream, { radius: 30, tracks: [track(`meter-${i}-pulse`, 'transform.scaleY', points)], motionBlur: { shutterAngle: 140, samples: 4 } })); }
-  layers.push({ id: 'caption', type: 'caption', x: 1030, y: 805, width: 790, height: 125, fontFamily: 'Inter', fontFile: 'assets/Inter.ttf', fontSize: 68, fontWeight: 800, color: cream, highlightColor: cream, highlightBackground: ink, highlightPadding: 10, highlightRadius: 12, identity: 'kinetic', highlightMode: 'current-word', showSpeaker: false, padding: 10, radius: 12, cues: [{ id: 'build', start: 1, end: 2, text: 'BUILD.', words: [{ text: 'BUILD.', start: 1, end: 2 }] }, { id: 'breathe', start: 2, end: 3.5, text: 'BREATHE.', words: [{ text: 'BREATHE.', start: 2, end: 3.5 }] }, { id: 'resolve', start: 3.5, end: 5.15, text: 'RESOLVE.', words: [{ text: 'RESOLVE.', start: 3.5, end: 5.15 }] }] }, footer('TYPE / BEAT / 08', ink));
+  const beats = Array.from({ length: 13 }, (_, index) => .25 + index * .5);
+  const layers = [text('label', 'A SMALL STUDY IN TIMING', 96, 85, 1200, 48, 27, ink, { letterSpacing: 5 }), text('make', 'MAKE', 82, 220, 1060, 200, 205, ink, { tracks: enter('make', .25, 80) }), text('it', 'IT', 84, 405, 520, 200, 205, cream, { tracks: enter('it', .75, 100) }), text('move', 'MOVE.', 82, 590, 1100, 210, 205, ink, { tracks: enter('move', 1.25, 120) })];
+  for (let i = 0; i < 5; i++) { const points = [[0,.18]]; for (let b = 0; b < beats.length; b++) { const at = beats[b]; points.push([at-.055,.18],[at,.45+((b+i)%4)*.18],[at+.17,.18]); } points.push([7,.18]); layers.push(shape(`meter-${i}`, 'round-rect', 1270 + i * 96, 280, 58, 500, cream, { radius: 30, tracks: [track(`meter-${i}-pulse`, 'transform.scaleY', points)], motionBlur: { shutterAngle: 140, samples: 4 } })); }
+  layers.push({ id: 'caption', type: 'caption', x: 1030, y: 805, width: 790, height: 125, fontFamily: 'Inter', fontFile: 'assets/Inter.ttf', fontSize: 68, fontWeight: 800, color: cream, highlightColor: cream, highlightBackground: ink, highlightPadding: 10, highlightRadius: 12, identity: 'kinetic', highlightMode: 'current-word', showSpeaker: false, padding: 10, radius: 12, cues: [{ id: 'build', start: 1.25, end: 2.25, text: 'BUILD.', words: [{ text: 'BUILD.', start: 1.25, end: 2.25 }] }, { id: 'breathe', start: 2.25, end: 3.75, text: 'BREATHE.', words: [{ text: 'BREATHE.', start: 2.25, end: 3.75 }] }, { id: 'resolve', start: 3.75, end: 5.75, text: 'RESOLVE.', words: [{ text: 'RESOLVE.', start: 3.75, end: 5.75 }] }] }, footer('TYPE / BEAT / 08', ink));
   return base('type-beat', 'Type / Beat', 7, bg, ink, cream, [scene('beat', 'Synchronize type, geometry, captions and original sound', 7, bg, layers)], { audio: [{ id: 'pulse', src: 'assets/original-pulse.wav', kind: 'music', volume: .75, fadeIn: .08, fadeOut: .8 }] });
 }
 
@@ -99,19 +100,41 @@ function cameraFlight() {
   const bg = '#dbe7e2', ink = '#102522', green = '#3bb78f', orange = '#ff6b45';
   const world = shape('world', 'round-rect', 240, 150, 1440, 760, '#edf3ef', { radius: 54, stroke: '#abc7bc', strokeWidth: 3, tracks: [track('world-x', 'transform.x', [[0,0],[.8,0],[2.4,-220],[3,-220],[4.55,180],[5.2,180],[7,180]]), track('world-y', 'transform.y', [[0,0],[.8,0],[2.4,100],[3,100],[4.55,-70],[5.2,-70],[7,-70]]), track('world-scale-x', 'transform.scaleX', [[0,.86],[.8,1],[2.4,1.38],[3,1.38],[4.55,1.12],[5.2,1.12],[7,1.12]]), track('world-scale-y', 'transform.scaleY', [[0,.86],[.8,1],[2.4,1.38],[3,1.38],[4.55,1.12],[5.2,1.12],[7,1.12]])], motionBlur: { shutterAngle: 140, samples: 4 }, shadow: { color: '#10252233', blur: 45, offsetX: 0, offsetY: 20 } });
   const tiles = Array.from({ length: 18 }, (_, i) => shape(`tile-${i}`, 'round-rect', 330 + (i % 6) * 210, 250 + Math.floor(i / 6) * 190, 150, 120, i === 8 ? orange : i === 15 ? green : '#c8dbd3', { radius: 24, parentId: 'world', tracks: [track(`tile-${i}-opacity`, 'transform.opacity', [[0,.15],[.3+i*.03,1],[7,1]])] }));
-  return base('camera-flight', 'Camera Flight', 7, bg, ink, green, [scene('flight', 'Demonstrate a continuous establish, travel, settle and hold camera move', 7, bg, [world, ...tiles, text('label', 'ESTABLISH  →  TRAVEL  →  SETTLE  →  HOLD', 95, 72, 1450, 48, 24, ink, { letterSpacing: 4 }), text('focus', 'CAMERA\nWITH INTENT', 104, 690, 900, 190, 78, ink, { lineHeight: .9, tracks: enter('focus', 3.9, 28) }), footer('CAMERA FLIGHT / 10', ink)])]);
+  return base('camera-flight', 'Camera Flight', 7, bg, ink, green, [scene('flight', 'Demonstrate a continuous establish, travel, settle and hold camera move', 7, bg, [world, ...tiles, text('label', 'ESTABLISH  →  TRAVEL  →  SETTLE  →  HOLD', 95, 72, 1450, 48, 24, ink, { letterSpacing: 4 }), text('focus', 'CAMERA\nWITH INTENT', 104, 690, 900, 190, 78, ink, { lineHeight: .9, tracks: enter('focus', 3.9, 28) }), footer('CAMERA FLIGHT / 10', ink)])], { audio: [{ id: 'camera-bed', src: 'assets/camera-bed.wav', kind: 'music', volume: .62, fadeIn: .12, fadeOut: .85 }] });
 }
 
 function motionLab() {
   const bg = '#07070a', white = '#f4f2eb', neon = '#caff4a', magenta = '#ff4e9e';
   const layers = [text('label', 'TEMPORAL STUDY', 96, 82, 900, 52, 26, neon, { letterSpacing: 6 }), text('title', 'SPEED\nLEAVES\nA TRACE.', 92, 180, 980, 510, 145, white, { lineHeight: .83, tracks: enter('title', .2, 80) }), shape('runner', 'spark', 1120, 410, 180, 180, neon, { tracks: [track('runner-x', 'transform.x', [[0,-500],[.65,-500],[1.65,450],[2.35,220],[3.1,500],[4.05,-280],[5.15,360],[7,360]]), track('runner-rotation', 'transform.rotation', [[0,0],[1.65,260],[3.1,520],[5.15,900],[7,900]])], motionBlur: { shutterAngle: 160, samples: 4 }, effects: [{ id: 'glow', type: 'glow', amount: .85, radius: 24 }, { id: 'aberration', type: 'chromatic-aberration', amount: .18 }] }), shape('trail-dot', 'ellipse', 1170, 650, 72, 72, magenta, { tracks: [track('trail-x', 'transform.x', [[0,-420],[.8,-420],[2.5,420],[3.5,420],[4.8,-180],[7,-180]])], motionTrail: { duration: .16, samples: 4, opacity: .3 } }), shape('gate-a', 'rect', 1080, 210, 10, 620, magenta, { transform: { opacity: .5 } }), shape('gate-b', 'rect', 1570, 210, 10, 620, neon, { transform: { opacity: .5 } }), text('copy', 'Temporal samples. Directional trails.\nOne deterministic frame.', 1090, 790, 670, 100, 34, '#9e9dad', { fontWeight: 500, lineHeight: 1.25, tracks: enter('copy', 4.55, 25) }), footer('MOTION LAB / 11', '#777783')];
-  return base('motion-lab', 'Motion Lab', 7, bg, white, neon, [scene('trace', 'Make temporal sampling, blur and trails visually legible', 7, bg, layers)]);
+  return base('motion-lab', 'Motion Lab', 7, bg, white, neon, [scene('trace', 'Make temporal sampling, blur and trails visually legible', 7, bg, layers)], { audio: [{ id: 'motion-bed', src: 'assets/motion-bed.wav', kind: 'music', volume: .66, fadeIn: .08, fadeOut: .8 }] });
 }
 
-function writeAudio(file, seconds, pulse = false) {
+function writeAudio(file, seconds, profile = 'ambient') {
   const rate = 48000, frames = rate * seconds, wav = Buffer.alloc(44 + frames * 4);
   wav.write('RIFF'); wav.writeUInt32LE(wav.length - 8, 4); wav.write('WAVEfmt ', 8); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(2, 22); wav.writeUInt32LE(rate, 24); wav.writeUInt32LE(rate * 4, 28); wav.writeUInt16LE(4, 32); wav.writeUInt16LE(16, 34); wav.write('data', 36); wav.writeUInt32LE(frames * 4, 40);
-  for (let n = 0; n < frames; n++) { const t = n / rate; let v = .025 * Math.sin(2 * Math.PI * 55 * t) + .018 * Math.sin(2 * Math.PI * 82.41 * t); if (pulse) for (let b = 0; b < seconds * 2; b++) { const d = t - (.2 + b * .5); if (d >= 0 && d < .32) v += .32 * Math.sin(2 * Math.PI * (62 + b % 3 * 18) * d) * Math.exp(-d * 18); } v *= Math.min(1, t * 8, (seconds - t) * 5); const sample = Math.round(Math.max(-.85, Math.min(.85, v)) * 32767); wav.writeInt16LE(sample, 44 + n * 4); wav.writeInt16LE(sample, 46 + n * 4); }
+  const settings = { ambient: [104, .35, 0], arc: [108, .32, 1], orbit: [112, .3, 2], camera: [104, .34, 3], motion: [124, .28, 4], beat: [120, .25, 5] }[profile];
+  const [bpm, offset, color] = settings, step = 60 / bpm, note = [55, 65.41, 73.42, 82.41][color % 4];
+  const noise = sample => { const x = Math.sin((sample + 1) * (12.9898 + color * 4.17)) * 43758.5453; return (x - Math.floor(x)) * 2 - 1; };
+  const hit = (d, length, decay) => d >= 0 && d < length ? Math.exp(-d * decay) : 0;
+  for (let n = 0; n < frames; n++) {
+    const t = n / rate, section = Math.min(3, Math.floor(Math.max(0, t - offset) / (step * 4))), root = note * [1, 1.1892, 1.3348, 1.1225][section];
+    let left = .018 * Math.sin(2 * Math.PI * root * t) + .012 * Math.sin(2 * Math.PI * root * 1.5 * t + .4);
+    let right = .018 * Math.sin(2 * Math.PI * root * t + .08) + .012 * Math.sin(2 * Math.PI * root * 1.5 * t + .7);
+    const beatIndex = Math.floor((t - offset) / step);
+    for (let b = Math.max(0, beatIndex - 1); b <= beatIndex + 1; b++) {
+      const at = offset + b * step, d = t - at, kickEnv = hit(d, .34, 15), phase = 2 * Math.PI * (48 * d + 36 * (1 - Math.exp(-d * 22)) / 22);
+      const kick = kickEnv * Math.sin(phase) * (b % 4 === 0 ? .42 : .27);
+      const click = hit(d, .035, 70) * noise(n) * .075;
+      const clapD = t - (at + step), clap = b % 4 === 0 ? hit(clapD, .13, 24) * (noise(n) - noise(n - 1)) * .08 : 0;
+      const pluck = hit(d, .22, 12) * Math.sin(2 * Math.PI * root * [2, 2.3784, 2.6696, 3][b % 4] * d) * (profile === 'beat' || profile === 'orbit' ? .13 : .075);
+      left += kick + click + clap + pluck * .82; right += kick + click - clap * .65 + pluck;
+    }
+    const eighth = step / 2, hatIndex = Math.floor((t - offset) / eighth), hatD = t - (offset + hatIndex * eighth), hat = hit(hatD, .045, 65) * (noise(n) - noise(n - 1)) * (hatIndex % 2 ? .042 : .026);
+    const progress = Math.max(0, Math.min(1, (t - (seconds - 1.55)) / 1.25)), riser = progress * progress * (noise(n) - noise(n - 1)) * .028;
+    left += hat + riser; right -= hat * .8 + riser;
+    const envelope = Math.min(1, t * 10, Math.max(0, (seconds - t) * 3.5)), drive = value => Math.tanh(value * 1.7) * .62 * envelope;
+    wav.writeInt16LE(Math.round(drive(left) * 32767), 44 + n * 4); wav.writeInt16LE(Math.round(drive(right) * 32767), 46 + n * 4);
+  }
   writeFileSync(file, wav);
 }
 
@@ -121,8 +144,12 @@ for (const project of projects) {
   mkdirSync(join(dir, 'assets'), { recursive: true }); mkdirSync(join(dir, '.genmotion'), { recursive: true });
   if (!existsSync(join(dir, 'assets', 'Inter.ttf'))) copyFileSync(join(fontSource, 'Inter.ttf'), join(dir, 'assets', 'Inter.ttf'));
   if (!existsSync(join(dir, 'assets', 'OFL.txt'))) copyFileSync(join(fontSource, 'OFL.txt'), join(dir, 'assets', 'OFL.txt'));
-  if (project.id === 'arc-one') writeAudio(join(dir, 'assets', 'original-bed.wav'), 9);
-  if (project.id === 'type-beat') writeAudio(join(dir, 'assets', 'original-pulse.wav'), 7, true);
+  if (project.id === 'arc-one') writeAudio(join(dir, 'assets', 'original-bed.wav'), 9, 'arc');
+  if (project.id === 'type-beat') writeAudio(join(dir, 'assets', 'original-pulse.wav'), 7, 'beat');
+  if (project.id === 'kinetic-type') writeAudio(join(dir, 'assets', 'kinetic-bed.wav'), 8, 'ambient');
+  if (project.id === 'chromatic-orbit') writeAudio(join(dir, 'assets', 'orbit-bed.wav'), 7, 'orbit');
+  if (project.id === 'camera-flight') writeAudio(join(dir, 'assets', 'camera-bed.wav'), 7, 'camera');
+  if (project.id === 'motion-lab') writeAudio(join(dir, 'assets', 'motion-bed.wav'), 7, 'motion');
   writeFileSync(join(dir, 'genmotion.json'), `${JSON.stringify(project, null, 2)}\n`);
   writeFileSync(join(dir, 'brief.json'), `${JSON.stringify({ title: project.title, audience: 'Motion designers and creative technologists', promise: project.scenes[0].purpose, proof: 'The editable Creative IR, native master, inspected frames, and reproducible build script.', desiredAction: 'Open the project in Studio and remix it.', duration: Number(project.metadata.duration), sources: ['Original local vector artwork and authored motion.', 'Bundled Inter font under the SIL Open Font License.'], audio: project.audio.length ? 'Original synthesized audio generated locally by the suite builder.' : 'Intentionally silent.' }, null, 2)}\n`);
   writeFileSync(join(dir, '.genmotion', 'concepts.json'), `${JSON.stringify({ selected: `${project.id}-direction`, concepts: [{ id: `${project.id}-direction`, referenceFamily: 'Editorial graphic systems', borrow: ['clear hierarchy', 'decisive pacing'], avoid: ['generic cards', 'decorative noise', 'interface imitation'], transform: ['native geometry', 'one dominant move', 'readable final hold'], hierarchy: project.scenes[0].purpose, rhythm: 'Build, breathe, resolve, hold', feasibility: 'Local native vectors, type and deterministic tracks only' }, { id: `${project.id}-alternate`, referenceFamily: 'Physical signage and wayfinding', borrow: ['spatial clarity', 'material restraint'], avoid: ['literal signage recreation', 'brand imitation'], transform: ['motion establishes reading order'], hierarchy: 'One focal message supported by geometry', rhythm: 'Establish, travel, settle', feasibility: 'No remote assets or browser rendering' }] }, null, 2)}\n`);

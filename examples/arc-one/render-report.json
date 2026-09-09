@@ -15,14 +15,14 @@
     "finalSecondMeanDelta": 0.0008819444444444444
   },
   "audioChecks": {
-    "peak": 0.031120263040065765,
-    "initial5msPeak": 0.000013703262993658427,
-    "final5msPeak": 3.444629896875995e-7,
+    "peak": 0.3141093850135803,
+    "initial5msPeak": 0.000018747032299870625,
+    "final5msPeak": 1.8135601465019136e-7,
     "clipping": false
   },
   "sha256": {
     "source": "a619291279edb7638c5dfa9218e215f4aca417ed42883b94556039b3173e60a5",
-    "master": "cec9698d70475e65391952629cdb14273fee93e0793e2d60d7f6cb150e9b7453",
+    "master": "6504ed4d3fa74e9ffe244d86a72caf52b86c6ac5ff55755014a8815e71f748d0",
     "contactSheet": "fe85d9976413764663a863aa08092c39b4061cd6290e96058e12d9e0ea3b7354"
   }
 }

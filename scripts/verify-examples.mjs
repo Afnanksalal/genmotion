@@ -60,5 +60,15 @@ const camera = (await loadProject(join(root, 'examples', 'camera-flight'))).proj
 if (!camera.scenes[0].layers.some(layer => layer.motionBlur && layer.tracks.some(item => item.target === 'transform.scaleX'))) throw new Error('Camera Flight does not exercise camera scaling with temporal sampling.');
 const temporal = (await loadProject(join(root, 'examples', 'motion-lab'))).project;
 if (!temporal.scenes[0].layers.some(layer => layer.motionBlur) || !temporal.scenes[0].layers.some(layer => layer.motionTrail)) throw new Error('Motion Lab must exercise blur and trails independently.');
+const typeBeat = (await loadProject(join(root, 'examples', 'type-beat'))).project;
+const beatTimes = Array.from({ length: 13 }, (_, index) => .25 + index * .5);
+for (const layer of typeBeat.scenes[0].layers.filter(layer => layer.id.startsWith('meter-'))) {
+  const peaks = layer.tracks[0].keyframes.filter(keyframe => beatTimes.some(beat => Math.abs(beat - keyframe.at) < 1e-6));
+  if (peaks.length !== beatTimes.length || peaks.some(keyframe => Number(keyframe.value) <= .18)) throw new Error(`${layer.id} is not keyed on the Type Beat audio grid.`);
+}
+const pulseWav = await readFile(join(root, 'examples', 'type-beat', 'assets', 'original-pulse.wav'));
+const sampleRate = pulseWav.readUInt32LE(24), channels = pulseWav.readUInt16LE(22), dataOffset = pulseWav.indexOf(Buffer.from('data')) + 8;
+const rms = (start, end) => { let sum = 0, count = 0; for (let sample = Math.floor(start * sampleRate); sample < Math.floor(end * sampleRate); sample++) { const value = pulseWav.readInt16LE(dataOffset + sample * channels * 2) / 32768; sum += value * value; count++; } return Math.sqrt(sum / count); };
+for (const beat of beatTimes) if (rms(beat, beat + .07) < rms(beat - .18, beat - .11) * 4) throw new Error(`Type Beat lacks a strong audio transient at ${beat}s.`);
 
 await import('./verify-gallery-examples.mjs');
