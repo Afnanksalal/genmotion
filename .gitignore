@@ -15,6 +15,7 @@ renders/
 output/
 .playwright-cli/
 examples/**/review/
+examples/**/.genmotion-render-*/
 !examples/**/*.mp4
 !examples/**/.genmotion/
 !examples/**/.genmotion/concepts.json
