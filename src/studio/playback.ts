@@ -149,17 +149,19 @@ const studioPlayback = (() => {
         windowStart = now;
         presented = 0;
         lastQualityChange = now;
-    } if (nextPlaying && playing && latency > 0 && now - lastQualityChange > 5000) {
+    } if (nextPlaying && playing && latency > 0 && now - lastQualityChange > 1000) {
         const target = 1000 / projectMetric('fps') * parallel;
-        if (latency > target * 1.2 && quality > .35) {
-            quality = Math.max(.35, quality * .8);
+        const behind = last >= 0 && frame >= last && frame - last > 2;
+        if ((latency > target * 1.05 || behind) && quality > .35) {
+            quality = Math.max(.35, quality * Math.min(.75, Math.sqrt(target / latency) * .9));
             nextEdge = dimensions();
+            lastQualityChange = now;
         }
-        else if (latency < target * .5 && quality < 1) {
+        else if (latency < target * .5 && quality < 1 && now - lastQualityChange > 5000) {
             quality = Math.min(1, quality * 1.1);
             nextEdge = dimensions();
+            lastQualityChange = now;
         }
-        lastQualityChange = now;
     } if (nextRevision !== revision || nextPlaying !== playing || nextEdge !== edge || (!nextPlaying && frame !== wanted))
         clear(); if (nextPlaying && frame < wanted)
         last = -1; revision = nextRevision; playing = nextPlaying; edge = nextEdge; wanted = frame; pump(); }

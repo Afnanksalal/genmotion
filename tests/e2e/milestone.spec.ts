@@ -368,7 +368,10 @@ test('custom Studio controls support keyboard choices, escape, bounds and disabl
 test('playback presents delayed native frames without flooding requests or starving the image', async ({ page }) => {
   studio = await startStudio(await loadProject(directory), { port: 0 });
   let active = 0, peak = 0;
+  const edges: number[] = [];
   await page.route('**/frame/*', async route => {
+    const edge = new URL(route.request().url()).searchParams.get('maxEdge');
+    if (edge) edges.push(Number(edge));
     active++; peak = Math.max(peak, active);
     try { await new Promise(resolve => setTimeout(resolve, 100)); await route.continue(); }
     finally { active--; }
@@ -384,7 +387,8 @@ test('playback presents delayed native frames without flooding requests or starv
   });
   await page.locator('#playButton').click();
   await expect.poll(() => page.evaluate(() => new Set((window as unknown as { playbackFrames: string[] }).playbackFrames).size), { timeout: 10000 }).toBeGreaterThan(12);
-  expect(peak).toBeLessThanOrEqual(3); // Two current requests plus an aborted request being released by the test route.
+  await expect.poll(() => Math.min(...edges), { timeout: 2500 }).toBeLessThan(edges[0]!);
+  expect(peak).toBeLessThanOrEqual(4); // Two current requests plus two aborted requests during a resolution change.
   await page.locator('#playButton').click();
   await page.locator('#scrubber').fill('20');
   await expect(page.locator('#previewImage')).toHaveAttribute('data-presented-frame', '20');

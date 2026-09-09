@@ -6,6 +6,8 @@ The browser keeps at most two fetches active and a 64 MiB decoded playback cache
 
 Preview resolution follows viewport dimensions and device pixel ratio, bounded to 2048 pixels on the long edge. Sustained slow requests reduce resolution; sustained headroom can restore it. The preview badge reports presented FPS and dimensions. Full-resolution inspection and master exports remain available. This is a native CPU-rendering and browser-canvas pipeline; it does not claim a new WGPU rendering backend or universal real-time performance for arbitrary effects, hardware or remote connections.
 
+The controller checks overload every second using request latency and displayed-frame lag. Quality recovery requires five seconds of headroom. This asymmetric timing lets slower machines recover promptly without repeatedly changing resolution.
+
 Server preview queues are bounded independently of exports. Identical in-flight frames are shared. Cache identity includes project revision, dimensions, transport format and exact frame time. Stale revision requests are refused, while unversioned responses cannot be cached immutably. Studio closes its workers and settles queued requests when shutting down.
 
 ## Validation
