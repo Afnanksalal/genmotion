@@ -41,12 +41,12 @@ export class NativeFramePool {
       this.slots.push(slot);
     }
   }
-  render(frame: number): Promise<Buffer> {
+  render(frame: number, dimensions?: RenderDimensions): Promise<Buffer> {
     const slot = this.slots.find((candidate) => !candidate.pending && !candidate.failure);
     if (this.closing || !slot) return Promise.reject(new GenmotionError('FRAME_POOL_UNAVAILABLE', 'No healthy frame worker is available.'));
     return new Promise<Buffer>((resolve, reject) => {
       slot.pending = { frame, resolve, reject };
-      try { slot.worker.postMessage({ frame }); }
+      try { slot.worker.postMessage({ frame, dimensions }); }
       catch (error) { slot.pending = undefined; reject(error instanceof Error ? error : new Error(String(error))); }
     });
   }

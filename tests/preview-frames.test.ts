@@ -24,6 +24,9 @@ describe('bounded native preview rendering', () => {
       expect(await loadImage(png)).toMatchObject(dimensions);
       const rgba = await renderer.render('two', loaded.project, loaded.projectDir, 10, dimensions, 'rgba');
       expect(rgba).toEqual(await renderFrame(loaded.project, loaded.projectDir, 10, dimensions));
+      const sizes = [{ width: 128, height: 72 }, { width: 256, height: 144 }];
+      const resized = await Promise.all(sizes.map(size => renderer.render('two', loaded.project, loaded.projectDir, 10, size, 'rgba')));
+      for (const [index, size] of sizes.entries()) expect(resized[index]).toEqual(await renderFrame(loaded.project, loaded.projectDir, 10, size));
     } finally { await renderer.close(); }
     await expect(renderer.render('two', loaded.project, loaded.projectDir, 10, dimensions)).rejects.toMatchObject({ code: 'PREVIEW_CLOSED' });
   });

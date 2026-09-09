@@ -11,14 +11,14 @@ interface RenderWorkerData {
   format?: 'rgba' | 'png';
 }
 
-interface RenderRequest { frame: number }
+interface RenderRequest { frame: number; dimensions?: RenderDimensions }
 
 const data = workerData as RenderWorkerData;
 
 if (!parentPort) throw new Error('The frame worker must run inside a worker thread.');
 
 parentPort.on('message', (message: RenderRequest) => {
-  void (data.format === 'png' ? renderFramePng : renderFrame)(data.project, data.projectDir, message.frame, data.dimensions, data.view)
+  void (data.format === 'png' ? renderFramePng : renderFrame)(data.project, data.projectDir, message.frame, message.dimensions ?? data.dimensions, data.view)
     .then((buffer) => {
       const array = Uint8Array.from(buffer).buffer;
       parentPort?.postMessage({ frame: message.frame, buffer: array }, [array]);

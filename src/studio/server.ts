@@ -1137,7 +1137,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
         let pending = pendingPreviewFrames.get(key);
         if (!pending) {
           if (pendingPreviewFrames.size >= 16) { response.status(429).set('Retry-After', '1').end(); return; }
-          pending = preview ? previewFrames.render(`${currentRevision}:${dimensions.width}x${dimensions.height}:${raw ? 'rgba' : 'png'}`, compiledProject, loaded.projectDir, frame, dimensions, raw ? 'rgba' : 'png') : stillFrames.render(currentRevision, compiledProject, loaded.projectDir, frame, dimensions, 'png');
+          pending = preview ? previewFrames.render(currentRevision, compiledProject, loaded.projectDir, frame, dimensions, raw ? 'rgba' : 'png') : stillFrames.render(currentRevision, compiledProject, loaded.projectDir, frame, dimensions, 'png');
           pendingPreviewFrames.set(key, pending);
         }
         try { png = await pending; if (currentRevision === revision(sourceProject)) frameCache.set(key, png); }

@@ -3,7 +3,7 @@ import type { RenderDimensions } from './draw.js';
 import type { GenmotionProject } from '../ir/schema.js';
 import { GenmotionError } from '../errors.js';
 
-interface Task { frame: number; resolve: (value: Buffer) => void; reject: (error: unknown) => void }
+interface Task { frame: number; dimensions: RenderDimensions; resolve: (value: Buffer) => void; reject: (error: unknown) => void }
 interface Context { key: string; pool: NativeFramePool; active: number; queue: Task[] }
 
 /** A bounded, revision-scoped preview queue, separate from export workers and the HTTP event loop. */
@@ -29,15 +29,15 @@ export class PreviewFrameRenderer {
     return this.context;
   }
   async render(key: string, project: GenmotionProject, directory: string, frame: number, dimensions: RenderDimensions, format: 'rgba' | 'png' = 'png'): Promise<Buffer> {
-    const context = await this.acquire(`${key}:${dimensions.width}x${dimensions.height}:${format}`, project, directory, dimensions, format);
+    const context = await this.acquire(`${key}:${format}`, project, directory, dimensions, format);
     if (this.closed || this.context !== context) throw new GenmotionError('PREVIEW_SUPERSEDED', 'Preview revision changed.');
     if (context.active + context.queue.length >= this.maxPending) throw new GenmotionError('PREVIEW_BUSY', 'Preview queue is full.');
-    return await new Promise<Buffer>((resolve, reject) => { context.queue.push({ frame, resolve, reject }); this.pump(context); });
+    return await new Promise<Buffer>((resolve, reject) => { context.queue.push({ frame, dimensions, resolve, reject }); this.pump(context); });
   }
   private pump(context: Context): void {
     while (!this.closed && this.context === context && context.active < this.workers && context.queue.length) {
       const task = context.queue.shift()!; context.active++;
-      void context.pool.render(task.frame).then(task.resolve, task.reject).finally(() => { context.active--; this.pump(context); });
+      void context.pool.render(task.frame, task.dimensions).then(task.resolve, task.reject).finally(() => { context.active--; this.pump(context); });
     }
   }
   async close(): Promise<void> {

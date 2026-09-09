@@ -8,6 +8,8 @@ Preview resolution follows viewport dimensions and device pixel ratio, bounded t
 
 The controller checks overload every second using request latency and displayed-frame lag. Quality recovery requires five seconds of headroom. This asymmetric timing lets slower machines recover promptly without repeatedly changing resolution.
 
+Resolution changes reuse the existing native workers and carry dimensions with each request, avoiding worker startup pauses during playback. Project revisions and transport formats still replace the worker context.
+
 Server preview queues are bounded independently of exports. Identical in-flight frames are shared. Cache identity includes project revision, dimensions, transport format and exact frame time. Stale revision requests are refused, while unversioned responses cannot be cached immutably. Studio closes its workers and settles queued requests when shutting down.
 
 ## Validation
