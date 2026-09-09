@@ -18,6 +18,7 @@ import { compositionCycles } from './compositions.js';
 import { effectiveLayerStart, layerDependencyCycles, resolveLayerGraph } from '../engine/constraints.js';
 import { measureTextLayer } from '../engine/text-layout.js';
 import { registerProjectFonts } from '../engine/assets.js';
+import { inspectReferenceAdaptation } from './reference-adaptation.js';
 
 export type Severity = 'error' | 'warning';
 
@@ -163,6 +164,7 @@ function layerIsAlwaysOutsideFrame(layer: Layer, sceneDuration: number, project:
 export async function validateProject(loaded: LoadedProject): Promise<Finding[]> {
   const findings: Finding[] = [];
   const { project, projectDir } = loaded;
+  for (const issue of inspectReferenceAdaptation(project).findings) findings.push({ code: issue.code, severity: 'error', message: `Invalid reference adaptation target ${issue.target ?? issue.entryId}.`, location: `referenceAdaptationMap.${issue.entryId}` });
   if (project.productionBrief?.duration && Math.abs(project.productionBrief.duration.value - projectDuration(project)) > 1 / project.fps) findings.push({ code: 'BRIEF_DURATION_MISMATCH', severity: 'warning', message: 'The composition duration differs from the persisted production brief.', location: 'productionBrief.duration' });
   if (project.productionBrief?.aspect) {
     const [width, height] = project.productionBrief.aspect.value;

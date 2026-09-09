@@ -1,5 +1,7 @@
 import { PreviewFrameRenderer } from '../engine/preview-frames.js';
 import { alphaModeSchema, resolveAlphaOutput } from '../engine/alpha-output.js';
+import { deliveryPurposeSchema } from '../ir/reference-rights.js';
+import { inspectReferenceAdaptation } from '../ir/reference-adaptation.js';
 import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from '../engine/media-conform.js';
 import { inspectMedia } from '../engine/media-probe.js';
 import { parseCaptions, serializeCaptions } from '../captions.js';
@@ -135,6 +137,7 @@ const renderRequestSchema = z.object({
   quality: z.enum(['draft', 'standard', 'high']).default('high'),
   codec: z.enum(['h264', 'h265', 'vp9', 'prores']).default('h264'),
   alphaMode: alphaModeSchema.default('auto'), alphaBackground: z.string().optional(),
+  deliveryPurpose: deliveryPurposeSchema.default('internal-review'),
   overwrite: z.boolean().default(false),
   sceneId: z.string().min(1).optional(), compositionId: z.string().min(1).optional(), group: renderGroupSchema.optional(), range: renderFrameRangeSchema.optional(),
   workers: z.number().int().min(1).max(16).optional(),
@@ -1374,7 +1377,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     try {
       const body = renderRequestSchema.omit({ overwrite: true, workers: true, maxBufferedFrames: true, maxBufferedBytes: true, timeoutMs: true }).parse(request.body);
       const current = await loadProject(loaded.projectFile);
-      response.json(await createRenderPlan(current, { quality: body.quality, codec: body.codec, filename: body.filename, resolution: body.resolution, range: body.range, sceneId: body.sceneId, compositionId: body.compositionId, group: body.group, alphaMode: body.alphaMode, alphaBackground: body.alphaBackground }));
+      response.json(await createRenderPlan(current, { quality: body.quality, codec: body.codec, filename: body.filename, resolution: body.resolution, range: body.range, sceneId: body.sceneId, compositionId: body.compositionId, group: body.group, alphaMode: body.alphaMode, alphaBackground: body.alphaBackground, deliveryPurpose: body.deliveryPurpose }));
     } catch (error) { next(error); }
   });
   app.post('/api/check-report', async (request, response, next) => {
@@ -1386,6 +1389,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     catch (error) { next(error); }
   });
   app.get('/api/design-spec', async (_request, response, next) => { try { response.json(await auditDesignSpec(await loadProject(loaded.projectFile))); } catch (error) { next(error); } });
+  app.get('/api/reference-adaptation', (_request, response) => { response.json({ report: inspectReferenceAdaptation(compiledProject), map: compiledProject.referenceAdaptationMap, observations: compiledProject.referenceObservations, preparations: compiledProject.referencePreparations, sources: compiledProject.referenceSources }); });
   app.put('/api/design-spec', async (request, response, next) => {
     try { const spec = designSpecSchema.parse(request.body), receipt = await commitProject(loaded.projectFile, { expectedRevision: revision(sourceProject), revisionKind: 'document', origin: 'studio-design-spec', update: project => ({ ...project, designSpec: spec }) }); sourceProject = receipt.loaded.sourceProject; compiledProject = receipt.loaded.project; frameCache.clear(); response.json({ revision: receipt.documentRevision, report: await auditDesignSpec(receipt.loaded) }); } catch (error) { next(error); }
   });
@@ -1426,7 +1430,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
           if (controller.signal.aborted) return;
           job.status = 'rendering';
           await renderProject(submittedProject, {
-            output, quality: body.quality, codec: body.codec, alphaMode: body.alphaMode, alphaBackground: body.alphaBackground, sceneId: body.sceneId, compositionId: body.compositionId, group: body.group, range: body.range, ...(body.resolution ? { resolution: body.resolution } : {}),
+            output, quality: body.quality, codec: body.codec, alphaMode: body.alphaMode, alphaBackground: body.alphaBackground, deliveryPurpose: body.deliveryPurpose, sceneId: body.sceneId, compositionId: body.compositionId, group: body.group, range: body.range, ...(body.resolution ? { resolution: body.resolution } : {}),
             ...(body.workers !== undefined ? { workers: body.workers } : {}),
             ...(body.maxBufferedFrames !== undefined ? { maxBufferedFrames: body.maxBufferedFrames } : {}),
             ...(body.maxBufferedBytes !== undefined ? { maxBufferedBytes: body.maxBufferedBytes } : {}),

@@ -18,7 +18,9 @@ import { projectForRenderComposition } from './render-projection.js';
 import { resolveRenderView } from './render-view.js';
 import { resolveAlphaOutput, flattenRgbaInPlace, type AlphaMode, type AlphaOutput } from './alpha-output.js';
 import { resolveOutputCompatibility, validateCompatibilityContainer } from './output-compatibility.js';
-import { assertReferenceExportAllowed, deliveryPurposeSchema } from '../ir/reference-rights.js';
+import { assertReferenceExportAllowed, deliveryPurposeSchema, verifyFrozenReferenceSources } from '../ir/reference-rights.js';
+import { attestRenderOutput, createRenderInputAttestation, type RenderInputAttestation, type RenderOutputAttestation } from '../ir/render-attestation.js';
+import { assertReferenceAdaptation } from '../ir/reference-adaptation.js';
 
 export type RenderQuality = 'draft' | 'standard' | 'high';
 export type VideoCodec = 'h264' | 'h265' | 'vp9' | 'prores';
@@ -86,7 +88,7 @@ export interface RenderResult {
   sourceCompositionId?: string;
   sourceGroup?: { sceneId: string; layerId: string };
   alphaOutput: AlphaOutput;
-  manifest: { version: 1; inputSha256: string; artifactSha256: string };
+  manifest: { version: 1; inputSha256: string; artifactSha256: string; inputs: RenderInputAttestation; output: RenderOutputAttestation; adaptation: ReturnType<typeof assertReferenceAdaptation> };
 }
 
 async function fileSha256(file: string): Promise<string> {
@@ -198,6 +200,8 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   const quality = options.quality ?? 'high';
   const codec = options.codec ?? 'h264';
   assertReferenceExportAllowed(project, deliveryPurposeSchema.parse(options.deliveryPurpose ?? 'internal-review'));
+  await verifyFrozenReferenceSources(project, projectDir);
+  const adaptation = assertReferenceAdaptation(project);
   if (!['draft', 'standard', 'high'].includes(quality) || !['h264', 'h265', 'vp9', 'prores'].includes(codec)) throw new GenmotionError('INVALID_RENDER_OPTIONS', 'Unknown output quality or codec.');
   if (options.hardwareAcceleration && codec !== 'h264') throw new GenmotionError('HARDWARE_CODEC_UNSUPPORTED', `Hardware acceleration is unavailable for ${codec}; choose software explicitly.`);
   if (project.motionBlur) project = { ...project, motionBlur: { ...project.motionBlur, samples: temporalSamplesForQuality(project.motionBlur.samples, quality) } };
@@ -212,6 +216,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   if (!Number.isSafeInteger(totalFrames) || totalFrames < 1) throw new GenmotionError('INVALID_RENDER_DURATION', 'A render must contain a finite positive frame count.');
   const selectionSuffix = (options.compositionId !== undefined ? `-composition-${options.compositionId}` : '') + (options.group ? `-group-${options.group.sceneId}-${options.group.layerId}` : '') + (options.sceneId !== undefined ? `-scene-${options.sceneId}` : options.range ? `-frames-${sourceRange.startFrame}-${sourceRange.endFrame}` : '');
   const output = path.resolve(options.output ?? path.join(projectDir, 'renders', `${project.outputName ?? project.id}${selectionSuffix}${defaultVideoExtension(codec)}`));
+  const inputAttestation = await createRenderInputAttestation(loaded, [output]);
   resolveOutputCompatibility({ codec, filename: output, alphaMode: options.alphaMode ?? 'auto', alphaBackground: options.alphaBackground, width: dimensions.width, height: dimensions.height, hardwareAcceleration: options.hardwareAcceleration ?? false });
   const outputKey = process.platform === 'win32' ? output.toLowerCase() : output;
   if (activeOutputs.has(outputKey)) throw new GenmotionError('OUTPUT_BUSY', 'An active render already owns this output path.');
@@ -231,6 +236,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   let encoder: ManagedProcess | undefined;
   let pool: NativeFramePool | undefined;
   let acceptedProbe: VideoProbe;
+  let outputAttestation: RenderOutputAttestation;
   const report = (): void => {
     const elapsedMs = performance.now() - started;
     peakBufferedBytes = Math.max(peakBufferedBytes, state.bufferedBytes);
@@ -281,6 +287,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
     if (probe.width !== dimensions.width || probe.height !== dimensions.height || !Number.isFinite(probe.frameRate) || Math.abs(probe.frameRate - project.fps) > 0.01 || !Number.isFinite(probe.duration) || Math.abs(probe.duration - duration) > Math.max(0.12, 2 / project.fps)) {
       throw new GenmotionError('OUTPUT_VERIFICATION_FAILED', 'Encoded output does not match the render contract.', { expected: { ...dimensions, frameRate: project.fps, duration }, actual: probe });
     }
+    outputAttestation = await attestRenderOutput(candidate, Boolean(probe.audioCodec), { signal, ...(options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs }) });
     throwIfAborted(signal);
     // The only write to the destination happens after a successful verification.
     await replaceFile(candidate, output, { signal });
@@ -300,5 +307,5 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   }
   const elapsedMs = performance.now() - started;
   const artifactSha256 = await fileSha256(output);
-  return { output, duration, frames: totalFrames, elapsedMs, averageFps: totalFrames / (elapsedMs / 1000), renderId, ...dimensions, quality, codec, alphaOutput, sourceRange, ...(options.compositionId !== undefined ? { sourceCompositionId: options.compositionId } : {}), ...(view ? { sourceGroup: { sceneId: view.sceneId, layerId: view.layerIds[0]! } } : {}), peakBufferedBytes, workers: Math.min(limits.workers, totalFrames), probe: acceptedProbe, manifest: { version: 1, inputSha256, artifactSha256 } };
+  return { output, duration, frames: totalFrames, elapsedMs, averageFps: totalFrames / (elapsedMs / 1000), renderId, ...dimensions, quality, codec, alphaOutput, sourceRange, ...(options.compositionId !== undefined ? { sourceCompositionId: options.compositionId } : {}), ...(view ? { sourceGroup: { sceneId: view.sceneId, layerId: view.layerIds[0]! } } : {}), peakBufferedBytes, workers: Math.min(limits.workers, totalFrames), probe: acceptedProbe, manifest: { version: 1, inputSha256, artifactSha256, inputs: inputAttestation, output: outputAttestation, adaptation } };
 }

@@ -15,6 +15,8 @@ import { creativePreferencesSchema } from './creative-preferences.js';
 import { mediaLedgerSchema } from './media-ledger.js';
 import { restrictedAssetAcceptancesSchema } from './restricted-assets.js';
 import { referenceSourcesSchema } from './reference-rights.js';
+import { referenceAdaptationMapSchema, referenceObservationsSchema } from './reference-adaptation.js';
+import { referencePreparationGraphSchema } from './reference-preparation.js';
 import { productionWorkflowSchema } from './production.js';
 
 const finite = z.number().finite();
@@ -693,6 +695,9 @@ export const projectSchema = z.object({
   mediaLedger: mediaLedgerSchema.default({ version: 1, records: [] }),
   restrictedAssetAcceptances: restrictedAssetAcceptancesSchema.default([]),
   referenceSources: referenceSourcesSchema.default([]),
+  referenceAdaptationMap: referenceAdaptationMapSchema.default({ version: 1, entries: [] }),
+  referenceObservations: referenceObservationsSchema.default([]),
+  referencePreparations: z.array(referencePreparationGraphSchema).max(1000).default([]).refine(items => new Set(items.map(item => item.referenceId)).size === items.length, 'Reference preparation graph IDs must be unique'),
   brand: z.object({
     background: color,
     foreground: color,

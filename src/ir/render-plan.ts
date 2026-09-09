@@ -10,6 +10,7 @@ import { renderFrameRangeSchema, renderGroupSchema } from './render-selection.js
 import { projectAssetReferences } from './asset-references.js';
 import { resolveProjectAsset, type LoadedProject } from './loader.js';
 import { projectPreflight } from './preflight.js';
+import { assertReferenceExportAllowed, deliveryPurposeSchema } from './reference-rights.js';
 
 const digest = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 
@@ -40,6 +41,7 @@ export const renderPlanOptionsSchema = z.object({
   filename: z.string().min(1).max(240).optional(), resolution: z.object({ width: z.number().int().positive(), height: z.number().int().positive() }).strict().optional(),
   range: renderFrameRangeSchema.optional(), sceneId: z.string().min(1).optional(), compositionId: z.string().min(1).optional(), group: renderGroupSchema.optional(),
   alphaMode: z.enum(['auto', 'preserve', 'flatten']).default('auto'), alphaBackground: z.string().optional(), hardwareAcceleration: z.boolean().default(false),
+  deliveryPurpose: deliveryPurposeSchema.default('internal-review'),
 }).strict();
 export type RenderPlanOptions = z.input<typeof renderPlanOptionsSchema>;
 
@@ -55,6 +57,7 @@ export async function createRenderPlan(loaded: LoadedProject, input: RenderPlanO
   const options = renderPlanOptionsSchema.parse(input);
   if (options.compositionId && (options.sceneId || options.group)) throw new Error('Choose a scene, group or composition.');
   const project = projectForRenderComposition(loaded.project, options.compositionId);
+  assertReferenceExportAllowed(project, options.deliveryPurpose);
   resolveRenderView(project, options.group);
   const range = resolveRenderRange(project, options), dimensions = resolveRenderResolution(project, options.quality, options.resolution);
   const filename = options.filename ?? `${project.outputName ?? project.id}${defaultVideoExtension(options.codec)}`;

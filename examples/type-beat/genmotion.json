@@ -20,6 +20,12 @@
   },
   "restrictedAssetAcceptances": [],
   "referenceSources": [],
+  "referenceAdaptationMap": {
+    "version": 1,
+    "entries": []
+  },
+  "referenceObservations": [],
+  "referencePreparations": [],
   "brand": {
     "background": "#ef653d",
     "foreground": "#f5f0e8",

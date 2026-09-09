@@ -103,6 +103,9 @@ describe('native renderer', () => {
     const output = path.join(directory, 'result.mp4');
     const result = await renderProject(loaded, { output, quality: 'draft', workers: 2 });
     expect(result.frames).toBe(30);
+    expect(result.manifest.output).toMatchObject({ encodedSha256: result.manifest.artifactSha256, decodedVideoSha256: expect.stringMatching(/^[a-f0-9]{64}$/), fullyDecoded: true });
+    expect(result.manifest.inputs).toMatchObject({ version: 1, dependencyHash: expect.stringMatching(/^[a-f0-9]{64}$/), excludedOutputs: [path.resolve(output)] });
+    expect(result.manifest.adaptation).toMatchObject({ version: 1, ok: true, entries: 0, observations: 0 });
     const probe = await runProcess('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_name,width,height', '-of', 'json', output]);
     const parsed = JSON.parse(probe.stdout) as { streams: Array<{ codec_name: string; width: number; height: number }> };
     expect(parsed.streams[0]).toMatchObject({ codec_name: 'h264', width: 320, height: 180 });

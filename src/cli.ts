@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { alphaModeSchema } from './engine/alpha-output.js';
+import { deliveryPurposeSchema } from './ir/reference-rights.js';
 import { importFrozenData } from './ir/data-sources.js';
 import { resolveRenderView } from './engine/render-view.js';
 import { projectForRenderComposition } from './engine/render-projection.js';
@@ -304,6 +305,7 @@ program.command('render')
   .option('--codec <codec>', 'h264, h265, vp9, or prores', 'h264')
   .option('--alpha-mode <mode>', 'auto, preserve, or flatten', 'auto')
   .option('--alpha-background <color>', 'Opaque background used when flattening transparency')
+  .option('--delivery-purpose <purpose>', 'internal-review, reference-comparison, editorial, commercial, or public', 'internal-review')
   .option('--workers <count>', 'Frame workers')
   .option('--max-buffered-frames <count>', 'Maximum reserved frames, including in-flight work')
   .option('--max-buffered-bytes <bytes>', 'Maximum reserved RGBA frame bytes')
@@ -316,7 +318,7 @@ program.command('render')
   .option('--hardware', 'Require a platform hardware encoder')
   .option('--params <json>', 'Typed parameter overrides as a JSON object')
   .option('--variant <id>', 'Named project variant')
-  .action(async (input: string, options: { output?: string; quality: RenderQuality; codec: VideoCodec; alphaMode?: string; alphaBackground?: string; workers?: string; maxBufferedFrames?: string; maxBufferedBytes?: string; timeoutMs?: string; resolution?: string; hardware?: boolean; params?: string; variant?: string; scene?: string; composition?: string; group?: string; frames?: string }) => {
+  .action(async (input: string, options: { output?: string; quality: RenderQuality; codec: VideoCodec; alphaMode?: string; alphaBackground?: string; deliveryPurpose?: string; workers?: string; maxBufferedFrames?: string; maxBufferedBytes?: string; timeoutMs?: string; resolution?: string; hardware?: boolean; params?: string; variant?: string; scene?: string; composition?: string; group?: string; frames?: string }) => {
     let range: { startFrame: number; endFrame: number } | undefined;
     if (options.frames) { const match = /^(\d+):(\d+)$/.exec(options.frames); if (!match) throw new GenmotionError('INVALID_RENDER_RANGE', 'Frames must use start:end with an exclusive end.'); range = { startFrame: Number(match[1]), endFrame: Number(match[2]) }; }
     const loaded = await loadConfiguredProject(input, options);
@@ -329,7 +331,7 @@ program.command('render')
     let lastReport = 0;
     try {
       const result = await renderProject(loaded, {
-        output: options.output, sceneId: options.scene, compositionId: options.composition, group: parseRenderGroup(options.group), range, quality: options.quality, codec: options.codec, alphaMode: alphaModeSchema.parse(options.alphaMode ?? "auto"), alphaBackground: options.alphaBackground,
+        output: options.output, sceneId: options.scene, compositionId: options.composition, group: parseRenderGroup(options.group), range, quality: options.quality, codec: options.codec, alphaMode: alphaModeSchema.parse(options.alphaMode ?? "auto"), alphaBackground: options.alphaBackground, deliveryPurpose: deliveryPurposeSchema.parse(options.deliveryPurpose),
         ...(options.workers ? { workers: Number(options.workers) } : {}),
         ...(options.maxBufferedFrames !== undefined ? { maxBufferedFrames: Number(options.maxBufferedFrames) } : {}),
         ...(options.maxBufferedBytes !== undefined ? { maxBufferedBytes: Number(options.maxBufferedBytes) } : {}),

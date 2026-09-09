@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.9.0
+
+- Added render input/output attestations with role-tagged frozen dependency hashes, self-input rejection and full decoded video/audio stream identities.
+- Added aligned reference/output comparisons with regional metrics, intentional-change masks, retained frame evidence, boundary indexes and difference contact sheets.
+- Added Creative IR reference adaptation maps and reviewable observation records with correction provenance and deterministic native-track compilation.
+- Added bounded timing, motion, camera, cursor and visual-region analysis over frozen measurements with confidence, limitations and manual correction history.
+- Exposed reference delivery purpose consistently through CLI, MCP, Studio, render plans and native rendering.
+
 ## 2.8.0
 
 - Added deterministic JSON/JSONL/CSV batch execution with bounded concurrency, durable row receipts, failure isolation and selective retry.

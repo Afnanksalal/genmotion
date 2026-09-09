@@ -308,6 +308,7 @@ describe('Genmotion Studio', () => {
       const planResponse = await fetch(`${studio.url}/api/render-plan`, { method: 'POST', headers, body: JSON.stringify({ filename: 'studio-test.mp4', quality: 'draft', codec: 'h264', alphaMode: 'auto' }) });
       expect(planResponse.status).toBe(200);
       expect(await planResponse.json()).toMatchObject({ version: 1, delivery: { quality: 'draft', codec: 'h264', dimensions: { width: 320, height: 180 }, output: { filename: 'studio-test.mp4', identity: expect.stringMatching(/^[a-f0-9]{64}$/) } } });
+      expect(await fetch(`${studio.url}/api/reference-adaptation`).then((response) => response.json())).toMatchObject({ report: { version: 1, ok: true, entries: 0, observations: 0 }, map: { version: 1, entries: [] }, sources: [] });
       const checkResponse = await fetch(`${studio.url}/api/check-report`, { method: 'POST', headers, body: JSON.stringify({ maxSamples: 20 }) });
       expect(checkResponse.status).toBe(200);
       expect(await checkResponse.json()).toMatchObject({ version: 1, incompleteChecks: [], sampling: { coverage: 'complete' } });

@@ -42,5 +42,7 @@ export function projectAssetReferences(project: GenmotionProject): string[] {
   }
   for (const shot of project.productionWorkflow?.shots ?? []) for (const reference of shot.references) add(reference.path);
   for (const stage of project.productionWorkflow?.stages ?? []) for (const evidence of stage.evidence) add(evidence.path);
+  for (const source of project.referenceSources) add(source.path);
+  for (const graph of project.referencePreparations) for (const node of graph.nodes) add(node.path);
   return [...new Set(files)];
 }

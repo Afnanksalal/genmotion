@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { alphaModeSchema } from './engine/alpha-output.js';
+import { deliveryPurposeSchema } from './ir/reference-rights.js';
 import { renderFrameRangeSchema, renderGroupSchema } from './ir/render-selection.js';
 import { frozenDataImportSchema, importFrozenData } from './ir/data-sources.js';
 import { resolveRenderView } from './engine/render-view.js';
@@ -386,13 +387,13 @@ function serverFactory(): McpServer {
 
   server.registerTool('genmotion_render', {
     title: 'Render Genmotion master', description: 'Validate and render a reproducible high-resolution video master. High quality guarantees at least a 1920-pixel long edge. Optional sceneId or an exclusive-end frame range exports an interval while preserving global timing and audio processing.',
-    inputSchema: compactSchema(z.object({ project: z.string().min(1), output: z.string().min(1), quality: qualitySchema.default('high'), codec: codecSchema.default('h264'), alphaMode: alphaModeSchema.default('auto'), alphaBackground: z.string().optional(), resolution: resolutionSchema.optional(), sceneId: z.string().min(1).optional(), compositionId: z.string().min(1).optional(), group: renderGroupSchema.optional(), range: renderFrameRangeSchema.optional(), workers: z.number().int().min(1).max(16).optional(), maxBufferedFrames: z.number().int().positive().optional(), maxBufferedBytes: z.number().int().positive().optional(), timeoutMs: z.number().int().min(1).max(2_147_483_647).optional(), hardwareAcceleration: z.boolean().default(false), strict: z.boolean().default(true), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict()),
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), output: z.string().min(1), quality: qualitySchema.default('high'), codec: codecSchema.default('h264'), alphaMode: alphaModeSchema.default('auto'), alphaBackground: z.string().optional(), deliveryPurpose: deliveryPurposeSchema.default('internal-review'), resolution: resolutionSchema.optional(), sceneId: z.string().min(1).optional(), compositionId: z.string().min(1).optional(), group: renderGroupSchema.optional(), range: renderFrameRangeSchema.optional(), workers: z.number().int().min(1).max(16).optional(), maxBufferedFrames: z.number().int().positive().optional(), maxBufferedBytes: z.number().int().positive().optional(), timeoutMs: z.number().int().min(1).max(2_147_483_647).optional(), hardwareAcceleration: z.boolean().default(false), strict: z.boolean().default(true), parameters: parameterValuesSchema.default({}), variant: z.string().optional() }).strict()),
   }, async (input, context) => {
     const loaded = await loadConfiguredProject(await allowedPath(input.project, 'Project'), input.parameters, input.variant);
     const findings = await validateProject(loaded);
     if (hasErrors(findings) || (input.strict && findings.length > 0)) throw new GenmotionError('VALIDATION_FAILED', 'Render blocked by validation findings.', findings);
     const output = await allowedPath(input.output, 'Render output');
-    const result = await renderProject(loaded, { output, sceneId: input.sceneId, compositionId: input.compositionId, group: input.group, range: input.range, quality: input.quality, codec: input.codec, alphaMode: input.alphaMode, alphaBackground: input.alphaBackground, ...(input.resolution ? { resolution: input.resolution } : {}), workers: input.workers, maxBufferedFrames: input.maxBufferedFrames, maxBufferedBytes: input.maxBufferedBytes, timeoutMs: input.timeoutMs, hardwareAcceleration: input.hardwareAcceleration, signal: context.mcpReq.signal });
+    const result = await renderProject(loaded, { output, sceneId: input.sceneId, compositionId: input.compositionId, group: input.group, range: input.range, quality: input.quality, codec: input.codec, alphaMode: input.alphaMode, alphaBackground: input.alphaBackground, deliveryPurpose: input.deliveryPurpose, ...(input.resolution ? { resolution: input.resolution } : {}), workers: input.workers, maxBufferedFrames: input.maxBufferedFrames, maxBufferedBytes: input.maxBufferedBytes, timeoutMs: input.timeoutMs, hardwareAcceleration: input.hardwareAcceleration, signal: context.mcpReq.signal });
     return toolResult({ ...result });
   });
 
