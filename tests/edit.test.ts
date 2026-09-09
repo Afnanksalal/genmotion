@@ -33,6 +33,7 @@ describe('stable semantic editing', () => {
     expect(canApplySemanticEdit(project, { op: 'text', target: { ...target, layerId: 'gone' }, text: 'bad' })).toMatchObject({ allowed: false, code: 'EDIT_TARGET_MISSING' });
     expect(canApplySemanticEdit(project, { op: 'property', target, path: ['id'], value: 'new-id' })).toMatchObject({ allowed: false, code: 'EDIT_ID_IMMUTABLE' });
     expect(canApplySemanticEdit(project, { op: 'property', target, path: ['fontSzie'], value: 24 })).toMatchObject({ allowed: false });
+    expect(canApplySemanticEdit(project, { op: 'text', target, text: 'Capability' })).toMatchObject({ allowed: true, target: { resolved: true, locked: false, inherited: false, materializationRequired: false }, controls: expect.arrayContaining([{ id: 'text', enabled: true }, { id: 'asset', enabled: false, reason: expect.any(String) }]) });
     project.scenes[0]!.layers.push(structuredClone(inspectEditTarget(project, target).layer));
     expect(() => inspectEditTarget(project, target)).toThrow(/2 targets/);
   });

@@ -20,6 +20,7 @@ function base(id, duration, z = 0, options = {}) {
     transform: { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, opacity: 1, blur: 0, anchorX: 0.5, anchorY: 0.5, ...(options.transform ?? {}) },
     blendMode: options.blendMode ?? 'source-over', tags: options.tags ?? [], motion: options.motion ?? [], tracks: options.tracks ?? [],
     ...(options.clip ? { clip: options.clip } : {}),
+    ...(options.motionBlur ? { motionBlur: options.motionBlur } : {}), ...(options.motionTrail ? { motionTrail: options.motionTrail } : {}),
   };
 }
 
@@ -35,6 +36,7 @@ function text(id, duration, z, copy, box, options = {}) {
     letterSpacing: options.letterSpacing ?? -2, fit: 'shrink', reveal: options.reveal ?? 'none', revealProgress: 1, countProgress: 1,
     ...(options.countFrom !== undefined ? { countFrom: options.countFrom } : {}),
     ...(options.numberFormat ? { numberFormat: options.numberFormat } : {}),
+    ...(options.runs ? { runs: options.runs } : {}), ...(options.timedWords ? { timedWords: options.timedWords } : {}), ...(options.currentWordStyle ? { currentWordStyle: options.currentWordStyle } : {}), ...(options.textPath ? { textPath: options.textPath } : {}), ...(options.notations ? { notations: options.notations } : {}),
     ...box,
   };
 }
@@ -62,7 +64,7 @@ function project(id, title, background, foreground, accent, scenes, metadata = {
 const kinetic = project('kinetic-type', 'Kinetic Type', '#09090b', '#f5f3ea', '#ff5c35', [
   scene('make-space', 'Establish typography as the primary physical object.', 4, '#09090b', [
     shape('orange-rail', 4, 0, { shape: 'round-rect', x: 122, y: 154, width: 18, height: 772, fill: '#ff5c35', radius: 9 }, { tracks: [track('rail-draw', 'height', [[0, 1], [0.8, 772], [4, 772]])] }),
-    text('move', 4, 2, 'MOVE', { x: 190, y: 190, width: 1530, height: 480 }, { fontSize: 330, fontWeight: 850, letterSpacing: -16, clip: { x: 170, y: 190, width: 1580, height: 490, radius: 0 }, tracks: [track('move-rise', 'transform.y', [[0, 350], [1.05, 0, spring], [4, 0]]), track('move-open', 'letterSpacing', [[0, -48], [1.3, -16], [4, -16]])] }),
+    text('move', 4, 2, 'MOVE', { x: 190, y: 190, width: 1530, height: 480 }, { fontSize: 330, fontWeight: 850, letterSpacing: -16, clip: { x: 170, y: 190, width: 1580, height: 490, radius: 0 }, runs: [{ start: 0, end: 1, style: { color: '#ff5c35' } }], notations: [{ id: 'move-mark', type: 'rough-underline', start: 0, end: 4, color: '#ff5c35', width: 10, padding: 8, seed: 17, progress: { keyframes: [{ at: .7, value: 0 }, { at: 1.4, value: 1, ease }] } }], motionBlur: { shutterAngle: 150, samples: 4 }, tracks: [track('move-rise', 'transform.y', [[0, 350], [1.05, 0, spring], [4, 0]]), track('move-open', 'letterSpacing', [[0, -48], [1.3, -16], [4, -16]])] }),
     text('sub', 3.2, 3, 'Motion starts with hierarchy.', { x: 205, y: 730, width: 1120, height: 120 }, { start: 0.8, fontSize: 54, fontWeight: 450, letterSpacing: 0, color: '#b3b1aa', tracks: [track('sub-in', 'transform.opacity', [[0, 0], [0.5, 1], [3.2, 1]])] }),
   ], cut, cut, ['The headline settles by 1.3 seconds and holds for comprehension.']),
   scene('build-rhythm', 'Turn type into a paced sequence rather than a static title.', 4, '#ff5c35', [

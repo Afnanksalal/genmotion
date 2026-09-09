@@ -62,6 +62,8 @@
   "parameterValues": {},
   "variants": [],
   "compositions": [],
+  "captionStylePresets": [],
+  "captionPreviewLanguages": [],
   "brand": {
     "background": "#05070a",
     "foreground": "#f5f1e8",
@@ -1591,7 +1593,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "raw-count",
@@ -1732,7 +1737,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {
@@ -2987,7 +2995,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "the",
@@ -3079,7 +3090,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "pulse",
@@ -3171,7 +3185,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "coherence-note",
@@ -3263,7 +3280,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {
@@ -3484,7 +3504,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "becomes-word",
@@ -3576,7 +3599,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "direction-word",
@@ -3710,7 +3736,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "closing-dot",

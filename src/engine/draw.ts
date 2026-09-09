@@ -4,7 +4,7 @@ import { mediaSourceCrop, mediaRoundedPath } from './media-geometry.js';
 import { imageSourceFrame, spriteFrameRect } from './image-animation.js';
 import { warpCanvasQuad, perspectiveQuad, cubeTransitionQuads, type Quad } from './projective.js';
 import { applyLayerMasks } from './masks.js';
-import { canvasFontWeight, fontString, resolveTextLayout } from './text-layout.js';
+import { canvasFontWeight, fontString, resolveTextLayout, textGraphemes } from './text-layout.js';
 import { revealUnicodeText } from './text-unicode.js';
 export { canvasFontWeight };
 import { createCanvas, Path2D, type SKRSContext2D, type Canvas } from '@napi-rs/canvas';
@@ -24,6 +24,7 @@ import { compositionTime } from './composition-time.js';
 import { nativePrimitivePath } from './primitives.js';
 import { createGradient } from './paint.js';
 import { applyVisualEffects } from './effects.js';
+import { captionLayerEnabled, captionLayerStyle } from '../ir/caption-delivery.js';
 
 export interface RenderDimensions { width: number; height: number }
 
@@ -97,8 +98,9 @@ function drawText(ctx: SKRSContext2D, original: TextLayer, time: number): void {
     }
     ctx.fillStyle = layer.gradientFill ? createGradient(ctx, layer.gradientFill, layer) : layer.color;
   }
+  drawTextNotations(ctx, layer, layout, time);
   applyShadow(ctx, layer.shadow);
-  if (layer.outlineColor && layer.outlineWidth > 0) {
+  if (layer.outlineColor && layer.outlineWidth > 0 && !layer.runs.length && !layer.timedWords.length && !layer.textPath) {
     ctx.strokeStyle = layer.outlineColor;
     ctx.lineWidth = layer.outlineWidth * 2;
     ctx.lineJoin = 'round';
@@ -107,25 +109,39 @@ function drawText(ctx: SKRSContext2D, original: TextLayer, time: number): void {
       ctx.strokeText(line, layer.x + layout.xOffsets[index]!, layer.y + layout.yOffsets[index]!);
     }
   }
-  for (const [index, line] of lines.entries()) {
-    ctx.direction = layout.directions[index]!;
-    ctx.fillText(line, layer.x + layout.xOffsets[index]!, layer.y + layout.yOffsets[index]!);
-  }
+  if (!drawStyledText(ctx, layer, layout, time)) for (const [index, line] of lines.entries()) { ctx.direction = layout.directions[index]!; ctx.fillText(line, layer.x + layout.xOffsets[index]!, layer.y + layout.yOffsets[index]!); }
   applyShadow(ctx, undefined);
   } finally { ctx.restore(); }
 }
 
-function drawCaption(ctx: SKRSContext2D, layer: CaptionLayer, time: number): void {
+function drawCaption(ctx: SKRSContext2D, layer: CaptionLayer, time: number, project: GenmotionProject): void {
   const cue = layer.cues.find((candidate) => time >= candidate.start && time < candidate.end);
   if (!cue) return;
-  layer = Object.assign({}, layer, Object.fromEntries(Object.entries({ ...(cue.speaker ? layer.speakerStyles?.[cue.speaker] : {}), ...cue.style }).filter(([, value]) => value !== undefined)));
+  layer = Object.assign({}, layer, Object.fromEntries(Object.entries(captionLayerStyle(project, layer, cue)).filter(([, value]) => value !== undefined)));
   ctx.save(); ctx.direction = layer.direction;
+  const animate = (configuration: CaptionLayer['enter'], raw: number, entering: boolean): void => {
+    if (!configuration || configuration.type === 'none') return;
+    const progress = ease(configuration.ease, Math.max(0, Math.min(1, raw)));
+    const visible = entering ? progress : 1 - progress;
+    if (configuration.type === 'fade') ctx.globalAlpha *= visible;
+    else if (configuration.type === 'scale' || configuration.type === 'pop') {
+      const scale = (configuration.type === 'pop' ? .72 : .9) + visible * (configuration.type === 'pop' ? .28 : .1);
+      ctx.translate(layer.x + layer.width / 2, layer.y + layer.height / 2); ctx.scale(scale, scale); ctx.translate(-(layer.x + layer.width / 2), -(layer.y + layer.height / 2)); ctx.globalAlpha *= visible;
+    } else {
+      const distance = configuration.distance * (1 - visible);
+      const direction = configuration.type.slice(6);
+      ctx.translate(direction === 'left' ? -distance : direction === 'right' ? distance : 0, direction === 'up' ? -distance : direction === 'down' ? distance : 0); ctx.globalAlpha *= visible;
+    }
+  };
+  if (layer.enter && time < cue.start + layer.enter.duration) animate(layer.enter, (time - cue.start) / layer.enter.duration, true);
+  if (layer.exit && time >= cue.end - layer.exit.duration) animate(layer.exit, (time - (cue.end - layer.exit.duration)) / layer.exit.duration, false);
   const speakerPrefix = layer.showSpeaker && cue.speaker ? cue.speaker + ': ' : '';
   const textLayer: TextLayer = {
     ...layer, type: 'text', text: speakerPrefix + cue.text,
     fit: 'shrink', reveal: 'none', revealProgress: 1, countProgress: 1,
     verticalAlign: 'middle', lineHeight: layer.lineHeight, letterSpacing: layer.letterSpacing, fontStyle: 'normal',
     blockPadding: 0, blockRadius: 0, linePadding: 0, lineRadius: 0,
+    runs: [], timedWords: [], notations: [],
   };
   if (layer.background) {
     ctx.fillStyle = layer.background;
@@ -304,10 +320,30 @@ async function drawVideoLayer(ctx: SKRSContext2D, layer: VideoLayer, projectDir:
   drawFittedImage(ctx, image, layer, localLayerTime);
 }
 
-async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project: GenmotionProject, projectDir: string, sceneTime: number, compositionStack: string[] = [], evaluated = false): Promise<void> {
+async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project: GenmotionProject, projectDir: string, sceneTime: number, compositionStack: string[] = [], evaluated = false, sampled = false): Promise<void> {
   const effectiveStart = effectiveLayerStart(layer);
   if (!layer.visible || !layerIsActive(effectiveStart, layer.duration, scene.duration, sceneTime)) return;
   const localTime = sceneTime - effectiveStart;
+  if (!sampled) {
+    const effectSampling = layer.effects?.filter((effect) => effect.enabled && effect.temporalSampling).map((effect) => effect.temporalSampling!).sort((a, b) => b.samples - a.samples || b.shutterAngle - a.shutterAngle)[0];
+    const sampling = layer.motionBlur ?? effectSampling, trail = layer.motionTrail;
+    if ((sampling && sampling.samples > 1 && sampling.shutterAngle > 0) || trail) {
+      const entries: Array<{ time: number; opacity: number; blend: GlobalCompositeOperation }> = [];
+      if (sampling && sampling.samples > 1 && sampling.shutterAngle > 0) {
+        const span = sampling.shutterAngle / 360 / project.fps;
+        for (let index = 0; index < sampling.samples; index += 1) entries.push({ time: sceneTime - span / 2 + span * (index + .5) / sampling.samples, opacity: 1 / sampling.samples, blend: 'source-over' });
+      } else entries.push({ time: sceneTime, opacity: 1, blend: 'source-over' });
+      if (trail) for (let index = trail.samples - 1; index >= 1; index -= 1) entries.unshift({ time: sceneTime - trail.duration * index / (trail.samples - 1), opacity: trail.opacity * (1 - index / trail.samples) / trail.samples, blend: trail.mode === 'directional-light' ? 'screen' : 'source-over' });
+      if (entries.length > 64) throw new Error(`Layer ${layer.id} temporal plan exceeds 64 bounded samples`);
+      for (const [index, entry] of entries.entries()) {
+        const surface = createCanvas(ctx.canvas.width, ctx.canvas.height), surfaceContext = surface.getContext('2d'); surfaceContext.setTransform(ctx.getTransform());
+        const sampleLayer = trail?.mode === 'directional-light' && index < entries.length - 1 ? { ...layer, motionBlur: undefined, motionTrail: undefined, transform: { ...layer.transform, x: typeof layer.transform.x === 'number' ? layer.transform.x + trail.offsetX * (1 - index / entries.length) : layer.transform.x, y: typeof layer.transform.y === 'number' ? layer.transform.y + trail.offsetY * (1 - index / entries.length) : layer.transform.y } } : { ...layer, motionBlur: undefined, motionTrail: undefined };
+        await drawLayer(surfaceContext, sampleLayer, scene, project, projectDir, entry.time, compositionStack, false, true);
+        ctx.save(); ctx.resetTransform(); ctx.globalAlpha *= entry.opacity; ctx.globalCompositeOperation = entry.blend; ctx.drawImage(surface, 0, 0); ctx.restore();
+      }
+      return;
+    }
+  }
   if (!evaluated) layer = evaluateLayerTracks(layer, localTime, project.seed);
   if (layer.type === 'shape') layer = resolveAnchoredShape(layer, project);
   const box = layerBox(layer);
@@ -378,7 +414,7 @@ async function drawLayer(ctx: SKRSContext2D, layer: Layer, scene: Scene, project
     ctx.clip();
   }
   if (layer.type === 'text') drawText(ctx, layer, localTime);
-  else if (layer.type === 'caption') drawCaption(ctx, layer, localTime);
+  else if (layer.type === 'caption') { if (captionLayerEnabled(project, layer)) drawCaption(ctx, layer, localTime, project); }
   else if (layer.type === 'shape') drawShape(ctx, layer, localTime);
   else if (layer.type === 'image') await drawImageLayer(ctx, layer, projectDir, localTime);
   else if (layer.type === 'video') await drawVideoLayer(ctx, layer, projectDir, localTime, project.fps, scene.duration);
@@ -567,6 +603,53 @@ async function renderFrameCanvasAtTime(project: GenmotionProject, projectDir: st
   }
 
   return canvas;
+}
+
+type TextPaintStyle = { color?: string | undefined; fontFamily?: string | undefined; fontSize?: number | undefined; fontWeight?: TextLayer['fontWeight'] | undefined; fontStyle?: TextLayer['fontStyle'] | undefined; outlineColor?: string | undefined; outlineWidth?: number | undefined; letterSpacing?: number | undefined; background?: string | undefined; scale?: number | undefined };
+function textStyleAt(layer: TextLayer, offset: number, time: number): TextPaintStyle {
+  const run = layer.runs.find((candidate) => offset >= candidate.start && offset < candidate.end)?.style ?? {};
+  const active = layer.timedWords.some((word) => time >= word.start && time < word.end && offset >= word.startOffset && offset < word.endOffset);
+  return active ? { ...run, ...layer.currentWordStyle } : run;
+}
+
+function paintGlyph(ctx: SKRSContext2D, layer: TextLayer, glyph: string, x: number, y: number, style: ReturnType<typeof textStyleAt>): number {
+  const styled = Object.assign({}, layer, Object.fromEntries(Object.entries(style).filter(([, value]) => value !== undefined))) as TextLayer, scale = style.scale ?? 1; ctx.font = fontString(styled, style.fontSize ?? layer.fontSize); const advance = ctx.measureText(glyph).width + (style.letterSpacing ?? layer.letterSpacing);
+  ctx.save(); if (scale !== 1) { ctx.translate(x + advance / 2, y); ctx.scale(scale, scale); ctx.translate(-(x + advance / 2), -y); }
+  if (style.background) { ctx.fillStyle = style.background; roundedPath(ctx, x - 2, y - layer.fontSize * .2, advance + 4, layer.fontSize * layer.lineHeight, 3); ctx.fill(); }
+  if ((style.outlineWidth ?? layer.outlineWidth) > 0) { ctx.strokeStyle = style.outlineColor ?? layer.outlineColor ?? layer.color; ctx.lineWidth = (style.outlineWidth ?? layer.outlineWidth) * 2; ctx.lineJoin = 'round'; ctx.strokeText(glyph, x, y); }
+  ctx.fillStyle = style.color ?? layer.color; ctx.fillText(glyph, x, y); ctx.restore(); return advance;
+}
+
+function drawTextNotations(ctx: SKRSContext2D, layer: TextLayer, layout: ReturnType<typeof resolveTextLayout>, time: number): void {
+  let sourceOffset = 0;
+  for (const [lineIndex, line] of layout.lines.entries()) {
+    const found = layer.text.indexOf(line, sourceOffset); if (found < 0) continue; sourceOffset = found + line.length;
+    for (const notation of layer.notations) {
+      const start = Math.max(notation.start, found), end = Math.min(notation.end, found + line.length); if (end <= start) continue;
+      const progress = Math.max(0, Math.min(1, evaluateNumber(notation.progress, time))); if (!progress) continue;
+      ctx.save(); ctx.font = fontString(layer, layout.fontSize); ctx.strokeStyle = notation.color; ctx.fillStyle = notation.color; ctx.lineWidth = notation.width; ctx.lineCap = 'round';
+      const left = layer.x + layout.xOffsets[lineIndex]! + ctx.measureText(line.slice(0, start - found)).width, width = ctx.measureText(line.slice(start - found, end - found)).width * progress, top = layer.y + layout.yOffsets[lineIndex]!, height = layout.lineHeight;
+      if (notation.type === 'highlight') { ctx.globalAlpha *= .28; roundedPath(ctx, left - notation.padding, top - layout.fontSize * .15, width + notation.padding * 2, height, notation.padding); ctx.fill(); }
+      else if (notation.type === 'circle') { ctx.beginPath(); ctx.ellipse(left + width / 2, top + height * .35, width / 2 + notation.padding, height / 2 + notation.padding, -.04 + (notation.seed % 7) * .01, 0, Math.PI * 2 * progress); ctx.stroke(); }
+      else { const y = notation.type === 'rough-underline' ? top + height * .82 : top + height * .38; ctx.beginPath(); ctx.moveTo(left, y); ctx.quadraticCurveTo(left + width * .35, y + ((notation.seed % 5) - 2), left + width, y); ctx.stroke(); }
+      ctx.restore();
+    }
+  }
+}
+
+function drawStyledText(ctx: SKRSContext2D, layer: TextLayer, layout: ReturnType<typeof resolveTextLayout>, time: number): boolean {
+  if (!layer.runs.length && !layer.timedWords.length && !layer.textPath) return false;
+  ctx.textBaseline = layout.textBaseline; ctx.textAlign = 'left';
+  if (layer.textPath) {
+    const metrics = pathMetrics(layer.textPath.path), graphemes = textGraphemes(layer.text), visible = Math.ceil(graphemes.length * Math.max(0, Math.min(1, evaluateNumber(layer.textPath.progress, time)))); let offset = 0;
+    const widths = graphemes.map((glyph) => { const style = textStyleAt(layer, offset, time), styled = Object.assign({}, layer, Object.fromEntries(Object.entries(style).filter(([, value]) => value !== undefined))) as TextLayer; ctx.font = fontString(styled, style.fontSize ?? layer.fontSize); const width = ctx.measureText(glyph).width + (style.letterSpacing ?? layer.letterSpacing); offset += glyph.length; return width; });
+    let distance = layer.textPath.startOffset * metrics.length; offset = 0;
+    for (let index = 0; index < visible; index += 1) { const glyph = graphemes[index]!, width = widths[index]!, ratio = Math.max(0, Math.min(1, (distance + width / 2) / Math.max(1e-9, metrics.length))), pose = samplePath(layer.textPath.path, layer.textPath.reverse ? 1 - ratio : ratio), style = textStyleAt(layer, offset, time); ctx.save(); ctx.translate(pose.x, pose.y); if (layer.textPath.orient) ctx.rotate(pose.angle * Math.PI / 180 + (layer.textPath.reverse ? Math.PI : 0)); paintGlyph(ctx, layer, glyph, -width / 2, 0, style); ctx.restore(); distance += width; offset += glyph.length; }
+    return true;
+  }
+  let search = 0;
+  for (const [lineIndex, line] of layout.lines.entries()) { const found = layer.text.indexOf(line, search); if (found < 0) continue; search = found + line.length; let x = layer.x + layout.xOffsets[lineIndex]!, offset = found; for (const glyph of textGraphemes(line)) { const style = textStyleAt(layer, offset, time); x += paintGlyph(ctx, layer, glyph, x, layer.y + layout.yOffsets[lineIndex]!, style); offset += glyph.length; } }
+  return true;
 }
 
 function temporalSampleTimes(project: GenmotionProject, globalTime: number): number[] {

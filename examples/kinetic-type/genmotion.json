@@ -11,6 +11,8 @@
   "parameterValues": {},
   "variants": [],
   "compositions": [],
+  "captionStylePresets": [],
+  "captionPreviewLanguages": [],
   "brand": {
     "background": "#09090b",
     "foreground": "#f5f3ea",
@@ -226,6 +228,10 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 150,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "text",
@@ -252,7 +258,49 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [
+            {
+              "start": 0,
+              "end": 1,
+              "style": {
+                "color": "#ff5c35"
+              }
+            }
+          ],
+          "timedWords": [],
+          "notations": [
+            {
+              "id": "move-mark",
+              "type": "rough-underline",
+              "start": 0,
+              "end": 4,
+              "color": "#ff5c35",
+              "width": 10,
+              "padding": 8,
+              "seed": 17,
+              "progress": {
+                "keyframes": [
+                  {
+                    "at": 0.7,
+                    "value": 0,
+                    "ease": "linear"
+                  },
+                  {
+                    "at": 1.4,
+                    "value": 1,
+                    "ease": {
+                      "type": "cubic-bezier",
+                      "x1": 0.22,
+                      "y1": 1,
+                      "x2": 0.36,
+                      "y2": 1
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         },
         {
           "id": "sub",
@@ -344,7 +392,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {
@@ -478,7 +529,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "becomes",
@@ -570,7 +624,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "rhythm",
@@ -662,7 +719,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {
@@ -879,7 +939,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "signature",
@@ -971,7 +1034,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {

@@ -11,6 +11,8 @@
   "parameterValues": {},
   "variants": [],
   "compositions": [],
+  "captionStylePresets": [],
+  "captionPreviewLanguages": [],
   "brand": {
     "background": "#141020",
     "foreground": "#f5f0e8",
@@ -78,7 +80,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "title-a",
@@ -213,7 +218,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "title-b",
@@ -348,7 +356,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "description",
@@ -481,7 +492,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "orbit-0",
@@ -2365,7 +2379,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "folio",
@@ -2413,7 +2430,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {

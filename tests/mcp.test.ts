@@ -38,7 +38,7 @@ describe('Genmotion MCP server', () => {
       expect(names).toEqual(expect.arrayContaining([
         'genmotion_doctor', 'genmotion_init', 'genmotion_catalog', 'genmotion_project_read', 'genmotion_project_save',
         'genmotion_schema', 'genmotion_project_patch', 'genmotion_timeline_inspect', 'genmotion_validate', 'genmotion_frame',
-        'genmotion_render', 'genmotion_render_plan', 'genmotion_check_report', 'genmotion_output_compatibility', 'genmotion_probe', 'genmotion_contact_sheet', 'genmotion_studio_start', 'genmotion_animation_inspect',
+        'genmotion_render', 'genmotion_render_plan', 'genmotion_check_report', 'genmotion_output_compatibility', 'genmotion_probe', 'genmotion_contact_sheet', 'genmotion_studio_start', 'genmotion_animation_inspect', 'genmotion_captions_delivery', 'genmotion_music_plan', 'genmotion_presentation',
       ]));
       expect(new Set(names).size).toBe(names.length);
       const textLayout = await client.callTool({ name: 'genmotion_text_measure', arguments: { project, address: { containerId: 'intro', layerId: 'title' } } });

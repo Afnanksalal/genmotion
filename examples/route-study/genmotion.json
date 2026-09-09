@@ -32,6 +32,8 @@
   "parameterValues": {},
   "variants": [],
   "compositions": [],
+  "captionStylePresets": [],
+  "captionPreviewLanguages": [],
   "brand": {
     "background": "#f3efe3",
     "foreground": "#f5f0e8",
@@ -99,7 +101,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "headline",
@@ -234,7 +239,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "river-key",
@@ -315,7 +323,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "pier-key",
@@ -396,7 +407,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "river",
@@ -1015,7 +1029,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "station-1",
@@ -1268,7 +1285,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "station-2",
@@ -1521,7 +1541,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "station-3",
@@ -1774,7 +1797,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "edition",
@@ -1822,7 +1848,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "folio",
@@ -1870,7 +1899,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {

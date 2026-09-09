@@ -8,6 +8,10 @@ import { authoringSchemaKindSchema, describeAuthoringSchema } from './ir/authori
 import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from './engine/media-conform.js';
 import { inspectMedia } from './engine/media-probe.js';
 import { editCaptions, captionEditSchema } from './ir/caption-editing.js';
+import { createCaptionDeliveryPlan } from './ir/caption-delivery.js';
+import { planMusicWorkflow, musicWorkflowOptionsSchema, lyricCueSchema } from './ir/music-workflow.js';
+import { frozenAudioFeaturesSchema } from './engine/audio-intelligence.js';
+import { planPresentationExport, presentationExportPolicySchema, presentationManifestSchema, validatePresentationManifest } from './ir/presentation.js';
 import { analyzeAudioFile, audioAnalysisOptionsSchema } from './engine/audio-analysis.js';
 import { globalMarkerTime, timelineMarkersSchema, timelineRangesSchema } from './ir/markers.js';
 import { stat } from 'node:fs/promises';
@@ -783,6 +787,27 @@ program.command('captions-export')
     await writeFile(destination, serializeCaptions(layer.cues, options.format));
     output({ output: destination, cues: layer.cues.length, format: options.format });
   });
+
+program.command('captions-delivery <project>')
+  .description('Plan burned-in, sidecar, or embedded multilingual caption delivery.')
+  .requiredOption('--mode <mode>', 'burned-in, sidecar, or embedded')
+  .option('--languages <tags>', 'Comma-separated BCP 47 language tags')
+  .option('--format <format>', 'srt or vtt', 'vtt')
+  .option('--container <container>', 'mp4, mov, mkv, or webm')
+  .action(async (input: string, options: { mode: 'burned-in' | 'sidecar' | 'embedded'; languages?: string; format: 'srt' | 'vtt'; container?: 'mp4' | 'mov' | 'mkv' | 'webm' }) => {
+    output(createCaptionDeliveryPlan((await loadProject(input)).project, { mode: options.mode, format: options.format, ...(options.languages ? { languages: options.languages.split(',').map((item) => item.trim()) } : {}), ...(options.container ? { container: options.container } : {}) }));
+  });
+
+program.command('music-plan <features>')
+  .description('Plan a source-bound music and lyric edit from frozen audio features.')
+  .option('--lyrics <file>', 'Reviewed lyric cue JSON')
+  .requiredOption('--options <json>', 'Music workflow options JSON')
+  .action(async (features: string, options: { lyrics?: string; options: string }) => output(planMusicWorkflow(frozenAudioFeaturesSchema.parse(JSON.parse(await readFile(features, 'utf8'))), options.lyrics ? z.array(lyricCueSchema).parse(JSON.parse(await readFile(options.lyrics, 'utf8'))) : [], musicWorkflowOptionsSchema.parse(JSON.parse(options.options)))));
+
+program.command('presentation-check <project> <manifest>')
+  .description('Validate a native presentation manifest against stable project identities.')
+  .option('--export-policy <json>', 'Also produce a deterministic video export plan')
+  .action(async (input: string, manifestFile: string, options: { exportPolicy?: string }) => { const project = (await loadProject(input)).project, manifest = presentationManifestSchema.parse(JSON.parse(await readFile(manifestFile, 'utf8'))); output(options.exportPolicy ? planPresentationExport(project, manifest, presentationExportPolicySchema.parse(JSON.parse(options.exportPolicy))) : validatePresentationManifest(project, manifest)); });
 
 async function main(): Promise<void> {
   try { await program.parseAsync(process.argv); }

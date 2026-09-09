@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import type { AudioAnalysis } from './audio-analysis.js';
 import type { LoudnessMeasurement } from './loudness.js';
 import { audioEffectSchema, type AudioEffect } from '../ir/audio-effects.js';
+import { z } from 'zod';
 
 const hash = (value: unknown): string => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const db = (value: number): number => 20 * Math.log10(Math.max(1e-9, value));
@@ -28,7 +29,10 @@ export function diagnoseAudio(analysis: AudioAnalysis, loudness?: LoudnessMeasur
   return { version: 1, sourceSha256: analysis.sourceSha256, findings, proposal: { gainDb, reviewRequired: true }, limitations: ['Sample peaks are not inter-sample true peaks.', 'Noise detection estimates the quiet-bin floor and cannot identify every noise type.', 'Short or gated material may not yield representative integrated loudness.'] };
 }
 
-export interface FrozenAudioFeatures { version: 1; sourceSha256: string; timeMap: { sourceStart: number; timelineStart: number; rate: number }; beats: { time: number; strength: number; confidence: number }[]; onsets: { time: number; strength: number; confidence: number }[]; phrases: { start: number; end: number; energy: number; confidence: number }[]; silence: { start: number; end: number; confidence: number }[]; corrections: { id: string; action: 'add' | 'remove' | 'move'; feature: 'beat' | 'onset' | 'phrase' | 'silence'; from?: number; to?: number; note?: string }[]; analysisHash: string }
+const featureEventSchema = z.object({ time: z.number().finite().nonnegative(), strength: z.number().finite().min(0), confidence: z.number().finite().min(0).max(1) }).strict();
+const featureRangeSchema = z.object({ start: z.number().finite().nonnegative(), end: z.number().finite().positive(), confidence: z.number().finite().min(0).max(1) }).strict().refine((item) => item.end > item.start, 'Audio feature range must increase');
+export const frozenAudioFeaturesSchema = z.object({ version: z.literal(1), sourceSha256: z.string().regex(/^[a-f0-9]{64}$/), timeMap: z.object({ sourceStart: z.number().finite().nonnegative(), timelineStart: z.number().finite().nonnegative(), rate: z.number().finite().positive() }).strict(), beats: z.array(featureEventSchema).max(1_000_000), onsets: z.array(featureEventSchema).max(1_000_000), phrases: z.array(featureRangeSchema.extend({ energy: z.number().finite().min(0).max(1) })).max(100_000), silence: z.array(featureRangeSchema).max(100_000), corrections: z.array(z.object({ id: z.string().min(1), action: z.enum(['add', 'remove', 'move']), feature: z.enum(['beat', 'onset', 'phrase', 'silence']), from: z.number().finite().nonnegative().optional(), to: z.number().finite().nonnegative().optional(), note: z.string().max(1000).optional() }).strict()).max(100_000), analysisHash: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
+export type FrozenAudioFeatures = z.infer<typeof frozenAudioFeaturesSchema>;
 export function freezeAudioFeatures(analysis: AudioAnalysis, timeMap = { sourceStart: analysis.start, timelineStart: 0, rate: 1 }, corrections: FrozenAudioFeatures['corrections'] = []): FrozenAudioFeatures {
   if (!(timeMap.rate > 0)) throw new Error('Audio feature time-map rate must be positive.');
   const values = analysis.waveform[0]?.values ?? [], binSeconds = (analysis.waveform[0]?.samplesPerBin ?? 1) / analysis.sampleRate, phrases: FrozenAudioFeatures['phrases'] = [];

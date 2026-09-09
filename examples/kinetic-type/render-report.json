@@ -30,31 +30,8 @@
       0
     ]
   },
-  "renderId": "354b8c576f028dcb",
-  "encodedBoundaryFrames": [
-    {
-      "frame": 119,
-      "sha256": "41822154f21e4bf356cf7bed8c256d5a8f0879dde4a819ace18a215884856e3e"
-    },
-    {
-      "frame": 120,
-      "sha256": "21766d5a8b4518b0af6775d304cdc6d86ceb04ae04b820831b8da2c643f2e628"
-    },
-    {
-      "frame": 121,
-      "sha256": "21766d5a8b4518b0af6775d304cdc6d86ceb04ae04b820831b8da2c643f2e628"
-    },
-    {
-      "frame": 239,
-      "sha256": "e790ecab07a741ed9edfe2bd0d8d49e7f7398493b872c319aed66171e9e8edbb"
-    },
-    {
-      "frame": 240,
-      "sha256": "bba900ef5ecd8b98ca5e5eff7c8817433adbf8dc30d966aee79dc04c870c4204"
-    },
-    {
-      "frame": 241,
-      "sha256": "fde0352cd4070a17eca2db30b6ec20ed846efc4d682ede9eae6a7f3824c5fdcc"
-    }
-  ]
+  "renderId": "c456cfab2f4e6906",
+  "artifactSha256": "6baea4cad9cfaa07dbf41d8015b740d96445a41c4c49fa0784a8986a63fd8533",
+  "frames": 360,
+  "averageFps": 42.57727381949806
 }

@@ -10,6 +10,10 @@ import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from './eng
 import { inspectMedia } from './engine/media-probe.js';
 import { captionCueSchema } from './ir/schema.js';
 import { editCaptions, captionEditSchema } from './ir/caption-editing.js';
+import { createCaptionDeliveryPlan, captionDeliveryOptionsSchema } from './ir/caption-delivery.js';
+import { planMusicWorkflow, musicWorkflowOptionsSchema, lyricCueSchema } from './ir/music-workflow.js';
+import { frozenAudioFeaturesSchema } from './engine/audio-intelligence.js';
+import { planPresentationExport, presentationExportPolicySchema, presentationManifestSchema, validatePresentationManifest } from './ir/presentation.js';
 import { analyzeAudioFile, audioAnalysisOptionsSchema } from './engine/audio-analysis.js';
 import { globalMarkerTime, timelineMarkersSchema, timelineRangesSchema } from './ir/markers.js';
 import { importCubeLut } from './ir/lut-import.js';
@@ -514,6 +518,15 @@ function serverFactory(): McpServer {
     const cues = parseCaptions(input.content, input.inputFormat);
     return Promise.resolve(toolResult({ cues, output: serializeCaptions(cues, input.outputFormat), format: input.outputFormat }));
   });
+
+  server.registerTool('genmotion_captions_delivery', {
+    title: 'Plan caption delivery', description: 'Resolve multilingual caption tracks and return deterministic burned-in, sidecar, or embedded subtitle artifacts and mux metadata.',
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), options: captionDeliveryOptionsSchema }).strict()), annotations: { readOnlyHint: true },
+  }, async (input) => toolResult(createCaptionDeliveryPlan((await loadProject(await allowedPath(input.project, 'Project'))).project, input.options)));
+
+  server.registerTool('genmotion_music_plan', { title: 'Plan music and lyrics', description: 'Select a real analyzed source range, map beats, retain verified lyrics and report readable holds.', inputSchema: compactSchema(z.object({ features: frozenAudioFeaturesSchema, lyrics: z.array(lyricCueSchema).max(100000).default([]), options: musicWorkflowOptionsSchema }).strict()), annotations: { readOnlyHint: true } }, (input) => toolResult(planMusicWorkflow(input.features, input.lyrics, input.options)));
+
+  server.registerTool('genmotion_presentation', { title: 'Validate or export a presentation', description: 'Validate stable presentation identities or produce an explicit deterministic video route.', inputSchema: compactSchema(z.object({ project: z.string().min(1), manifest: presentationManifestSchema, exportPolicy: presentationExportPolicySchema.optional() }).strict()), annotations: { readOnlyHint: true } }, async (input) => { const project = (await loadProject(await allowedPath(input.project, 'Project'))).project; return toolResult(input.exportPolicy ? planPresentationExport(project, input.manifest, input.exportPolicy) : validatePresentationManifest(project, input.manifest)); });
 
   server.registerTool('genmotion_media_conform', {
     title: 'Conform source media', description: 'Create a new verified CFR SDR BT.709 derivative with explicit input color assumptions, optional HDR tone mapping and source/output hashes. Refuses existing destinations. Dry run returns the conversion plan.',

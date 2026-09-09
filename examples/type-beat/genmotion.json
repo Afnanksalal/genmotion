@@ -11,6 +11,8 @@
   "parameterValues": {},
   "variants": [],
   "compositions": [],
+  "captionStylePresets": [],
+  "captionPreviewLanguages": [],
   "brand": {
     "background": "#ef653d",
     "foreground": "#f5f0e8",
@@ -78,7 +80,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "word-one",
@@ -213,7 +218,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "word-two",
@@ -348,7 +356,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "word-three",
@@ -483,7 +494,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "meter-0",
@@ -2758,6 +2772,7 @@
           "constraints": [],
           "bindings": {},
           "type": "caption",
+          "defaultTrack": true,
           "direction": "ltr",
           "highlightMode": "karaoke",
           "showSpeaker": false,
@@ -2854,7 +2869,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "folio",
@@ -2902,7 +2920,10 @@
           "blockPadding": 0,
           "blockRadius": 0,
           "linePadding": 0,
-          "lineRadius": 0
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {

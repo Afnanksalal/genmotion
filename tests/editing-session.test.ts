@@ -10,10 +10,12 @@ describe('shared editing session persistence', () => {
   it('coalesces a gesture, verifies readback, and restores both ends through undo and redo', async () => {
     const session = new EditingSession(memoryEditingAdapter(source()));
     try {
+      const events: string[] = []; session.subscribe((event) => events.push(event.type));
       const before = await session.read();
       const first = await session.apply([{ op: 'property', target, path: ['x'], value: 20 }], { expectedRevision: before.revision, origin: 'human', coalesce: 'drag' });
       const second = await session.apply([{ op: 'property', target, path: ['x'], value: 30 }], { expectedRevision: first.revision, origin: 'human', coalesce: 'drag' });
       expect(second).toMatchObject({ state: 'verified', persisted: true, undoDepth: 1, evidence: { verificationScope: 'source-document', readback: { status: 'matched' } } });
+      expect(second.afterRevision).toBe(second.revision); expect(events.slice(0, 4)).toEqual(['dispatch', 'commit', 'dispatch', 'commit']);
       await session.undo({ expectedRevision: second.revision });
       expect((await session.read()).project).toEqual(before.project);
       await session.redo();

@@ -220,9 +220,21 @@ export function applySemanticEdits(project: GenmotionProject, input: SemanticEdi
 
 /** Pure structural capability query. Asset existence and evaluated semantic
  * checks run during the transaction's validation, never claimed here. */
-export function canApplySemanticEdit(project: GenmotionProject, edit: SemanticEdit): { allowed: boolean; code?: string; reason?: string; requiresValidation: true } {
-  try { applySemanticEdits(project, [edit]); return { allowed: true, requiresValidation: true }; }
-  catch (error) { return { allowed: false, code: error instanceof GenmotionError ? error.code : 'EDIT_INVALID', reason: error instanceof Error ? error.message : String(error), requiresValidation: true }; }
+export interface SemanticEditCapability {
+  allowed: boolean; code?: string; reason?: string; requiresValidation: true;
+  target: { resolved: boolean; locked: boolean; inherited: boolean; imported: boolean; materializationRequired: boolean; bindings: string[]; dependants: string[] };
+  controls: Array<{ id: string; enabled: boolean; reason?: string }>;
+}
+export function canApplySemanticEdit(project: GenmotionProject, edit: SemanticEdit): SemanticEditCapability {
+  let inspected: ReturnType<typeof inspectEditTarget> | undefined;
+  if (edit.op !== 'layer-add') try { inspected = inspectEditTarget(project, edit.target); } catch { /* The refusal below owns the precise resolution error. */ }
+  const layer = inspected?.layer, locked = Boolean(layer?.tracks.some((track) => track.locked) || layer?.trackGroups?.some((group) => group.locked));
+  const materializationRequired = Boolean(edit.op !== 'layer-add' && edit.target.instancePath && (edit.op === 'layer-duplicate' || edit.op === 'layer-reorder'));
+  const target = { resolved: Boolean(inspected) || edit.op === 'layer-add', locked, inherited: Boolean(edit.op !== 'layer-add' && edit.target.instancePath), imported: Boolean(layer?.tags.includes('imported:frozen')), materializationRequired, bindings: layer ? Object.keys(layer.bindings).sort() : [], dependants: inspected?.dependants ?? [] };
+  const operations = ['text', 'style', 'property', 'timing', 'asset', 'track-put', 'track-remove', 'layer-remove', 'layer-duplicate', 'layer-reorder', 'instance-materialize'] as const;
+  const controls = operations.map((id) => { const typeAllowed = !layer || id === 'property' || id === 'timing' || id === 'layer-remove' || id === 'layer-duplicate' || id === 'layer-reorder' || id === 'instance-materialize' || id === 'style' && (layer.type === 'text' || layer.type === 'caption' || layer.type === 'shape') || id === 'text' && layer.type === 'text' || id === 'asset' && (layer.type === 'image' || layer.type === 'video') || (id === 'track-put' || id === 'track-remove'); const enabled = typeAllowed && !locked && !(target.imported && id !== 'instance-materialize') && !(target.inherited && (id === 'layer-duplicate' || id === 'layer-reorder')); return { id, enabled, ...(!enabled ? { reason: locked ? 'Target is locked.' : target.imported ? 'Frozen imported content must be materialized.' : target.inherited && (id === 'layer-duplicate' || id === 'layer-reorder') ? 'Structural edits require materialization.' : 'Operation is not valid for this layer type.' } : {}) }; });
+  try { applySemanticEdits(project, [edit]); return { allowed: true, requiresValidation: true, target, controls }; }
+  catch (error) { return { allowed: false, code: error instanceof GenmotionError ? error.code : 'EDIT_INVALID', reason: error instanceof Error ? error.message : String(error), requiresValidation: true, target, controls }; }
 }
 
 export interface SemanticCommitReceipt extends ProjectCommitReceipt { affectedTargets: EditTarget[]; inverse: PatchOperation[] }

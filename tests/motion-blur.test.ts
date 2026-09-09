@@ -32,4 +32,18 @@ describe('native temporal motion blur', () => {
     expect(temporalSamplesForQuality(12, 'standard')).toBe(4);
     expect(temporalSamplesForQuality(12, 'high')).toBe(8);
   });
+
+  it('scopes shutter sampling to one layer or effect and renders bounded motion trails', async () => {
+    const base = movingProject(), moving = base.scenes[0]!.layers[0]!;
+    moving.motionBlur = { shutterAngle: 360, samples: 5 };
+    const layerBlur = await renderFrame(base, process.cwd(), 5), repeat = await renderFrame(base, process.cwd(), 5);
+    expect(layerBlur.equals(repeat)).toBe(true);
+    delete moving.motionBlur; moving.effects = [{ id: 'contrast', type: 'contrast', enabled: true, amount: 1, temporalSampling: { shutterAngle: 360, samples: 5 } }];
+    const effectBlur = await renderFrame(base, process.cwd(), 5); expect(effectBlur.equals(layerBlur)).toBe(true);
+    moving.effects = []; moving.motionTrail = { duration: .4, samples: 5, opacity: .8, mode: 'directional-light', offsetX: -3, offsetY: 0 };
+    const trail = await renderFrame(base, process.cwd(), 5);
+    const pixel = (frame: Buffer, x: number) => frame[(32 * 64 + x) * 4]!;
+    expect(pixel(trail, 4)).toBeGreaterThan(0); expect(pixel(trail, 4)).toBeLessThan(255);
+    expect(await renderFrame(base, process.cwd(), 5)).toEqual(trail);
+  });
 });

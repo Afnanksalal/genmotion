@@ -62,6 +62,7 @@ interface HistoryEntry { before: GenmotionProject; after: GenmotionProject; orig
 export interface EditingCheckpoint { version: 1; revision: string; undo: HistoryEntry[]; redo: HistoryEntry[] }
 export interface EditingReceipt {
   id: string; state: 'saved' | 'validated' | 'verified'; changed: boolean; persisted: boolean; beforeRevision: string; revision: string;
+  afterRevision: string;
   origin: string; affectedTargets: EditTarget[]; validation: EditingWriteResult['validation']; findings: Finding[];
   undoDepth: number; redoDepth: number;
   inverse: PatchOperation[];
@@ -73,17 +74,18 @@ export interface EditingReceipt {
 }
 export interface EditingFailureReceipt {
   id: string; state: 'refused' | 'failed'; changed: false; persisted: false;
-  beforeRevision: string; origin: string; stage: 'proposal' | 'persistence'; code: string; message: string;
+  beforeRevision: string; afterRevision: null; origin: string; stage: 'proposal' | 'persistence'; code: string; message: string; affectedTargets: EditTarget[]; evidence: { readback: { status: 'not-applicable' }; frames: [] };
 }
+export interface EditingDispatchReceipt { id: string; state: 'dispatched'; changed: true; persisted: false; beforeRevision: string; afterRevision: null; origin: string; affectedTargets: EditTarget[] }
 
 function editingFailure(error: unknown, beforeRevision: string, origin: string, stage: EditingFailureReceipt['stage']): GenmotionError {
   const code = error instanceof GenmotionError ? error.code : error instanceof z.ZodError ? 'EDIT_SCHEMA_INVALID' : stage === 'proposal' ? 'EDIT_PROPOSAL_FAILED' : 'EDIT_PERSISTENCE_FAILED';
   const message = error instanceof Error ? error.message : String(error);
   const refused = stage === 'proposal' || /REVISION|VALIDATION|LOCKED|LOCK_CONFLICT/.test(code);
-  const failureReceipt: EditingFailureReceipt = { id: randomUUID(), state: refused ? 'refused' : 'failed', changed: false, persisted: false, beforeRevision, origin, stage, code, message };
+  const failureReceipt: EditingFailureReceipt = { id: randomUUID(), state: refused ? 'refused' : 'failed', changed: false, persisted: false, beforeRevision, afterRevision: null, origin, stage, code, message, affectedTargets: [], evidence: { readback: { status: 'not-applicable' }, frames: [] } };
   return new GenmotionError(code, message, { failureReceipt, cause: error instanceof GenmotionError ? error.details : error instanceof z.ZodError ? error.issues : undefined });
 }
-export type EditingEvent = { type: 'commit' | 'undo' | 'redo'; receipt: EditingReceipt } | { type: 'context'; context: EditingContextView } | { type: 'failed'; code: string; message: string } | { type: 'disposed' };
+export type EditingEvent = { type: 'dispatch'; receipt: EditingDispatchReceipt } | { type: 'commit' | 'undo' | 'redo'; receipt: EditingReceipt } | { type: 'context'; context: EditingContextView } | { type: 'failed'; code: string; message: string } | { type: 'disposed' };
 export interface SessionApplyOptions { expectedRevision?: string | undefined; origin?: string | undefined; dryRun?: boolean | undefined; strict?: boolean | undefined; coalesce?: string | undefined }
 export interface EditingSessionOptions { maxHistory?: number; maxHistoryBytes?: number; coalesceWindowMs?: number; ownsAdapter?: boolean }
 const commandOptions = { expectedRevision: z.string().min(1).optional(), origin: z.string().min(1).max(200).optional(), dryRun: z.boolean().optional(), strict: z.boolean().optional() };
@@ -249,6 +251,7 @@ export class EditingSession {
         applied = build(before.project);
       } catch (error) { throw editingFailure(error, before.revision, origin, 'proposal'); }
       let result: EditingWriteResult;
+      this.emit({ type: 'dispatch', receipt: { id: randomUUID(), state: 'dispatched', changed: true, persisted: false, beforeRevision: before.revision, afterRevision: null, origin, affectedTargets: applied.affectedTargets } });
       try { result = await this.adapter.write(applied.project, { expectedRevision: before.revision, origin, dryRun: options.dryRun ?? false, strict: options.strict ?? false, signal: this.abort.signal }); }
       catch (error) { throw editingFailure(error, before.revision, origin, 'persistence'); }
       const changed = !isDeepStrictEqual(before.project, result.snapshot.project);
@@ -273,7 +276,7 @@ export class EditingSession {
       } catch (error) { readback = { status: 'unavailable', reason: error instanceof Error ? error.message : String(error) }; }
     }
     const verified = readback.status === 'matched';
-    return { id: randomUUID(), state: verified ? 'verified' : result.persisted ? 'saved' : 'validated', changed, persisted: result.persisted, beforeRevision: before.revision, revision: result.snapshot.revision, origin, affectedTargets, validation: result.validation, findings: result.findings, undoDepth: this.undoEntries.length, redoDepth: this.redoEntries.length, inverse: documentDiff(result.snapshot.project, before.project), evidence: { readback, verificationScope: verified ? 'source-document' : 'none', frames: [] } };
+    return { id: randomUUID(), state: verified ? 'verified' : result.persisted ? 'saved' : 'validated', changed, persisted: result.persisted, beforeRevision: before.revision, revision: result.snapshot.revision, afterRevision: result.snapshot.revision, origin, affectedTargets, validation: result.validation, findings: result.findings, undoDepth: this.undoEntries.length, redoDepth: this.redoEntries.length, inverse: documentDiff(result.snapshot.project, before.project), evidence: { readback, verificationScope: verified ? 'source-document' : 'none', frames: [] } };
   }
   private history(direction: 'undo' | 'redo', options: SessionApplyOptions): Promise<EditingReceipt> {
     return this.enqueue(async () => {

@@ -100,8 +100,9 @@ export const visualEffectSchema = z.object({
   gradient: gradientSchema.optional(), lut: lookupTableSchema.optional(),
   quad: z.tuple([pointSchema, pointSchema, pointSchema, pointSchema]).optional(),
   center: pointSchema.optional(), color: color.optional(), secondaryColor: color.optional(), seed: z.number().int().optional(),
+  temporalSampling: z.object({ shutterAngle: finite.min(0).max(360).default(180), samples: z.number().int().min(1).max(16).default(4) }).strict().optional(),
 }).strict().superRefine((effect, context) => {
-  const allowed = new Set(['id', 'type', 'enabled', ...visualEffectParameters(effect.type)]);
+  const allowed = new Set(['id', 'type', 'enabled', 'temporalSampling', ...visualEffectParameters(effect.type)]);
   if (effect.type === 'custom') {
     if (!effect.kernel) context.addIssue({ code: 'custom', path: ['kernel'], message: 'Custom effects require a validated native kernel' });
     for (const name of Object.keys(effect.kernelUniforms ?? {})) if (!effect.kernel || !Object.hasOwn(effect.kernel.uniforms, name)) context.addIssue({ code: 'custom', path: ['kernelUniforms', name], message: 'Uniform is not declared by the kernel' });
@@ -139,6 +140,10 @@ export const transformSchema = z.object({
 export const temporalSamplingSchema = z.object({
   shutterAngle: finite.min(0).max(360).default(180),
   samples: z.number().int().min(1).max(16).default(4),
+}).strict();
+export const motionTrailSchema = z.object({
+  duration: positive.max(10), samples: z.number().int().min(2).max(32).default(8), opacity: finite.min(0).max(1).default(.5),
+  mode: z.enum(['motion', 'directional-light']).default('motion'), offsetX: finite.default(0), offsetY: finite.default(0),
 }).strict();
 
 export const motionDirectiveSchema = z.object({
@@ -251,6 +256,7 @@ const baseLayerSchema = z.object({
   trackGroups: z.array(trackGroupSchema).max(256).optional(),
   propertyLinks: z.array(propertyLinkSchema).max(256).optional(),
   effects: visualEffectsSchema.optional(),
+  motionBlur: temporalSamplingSchema.optional(), motionTrail: motionTrailSchema.optional(),
   masks: layerMasksSchema.optional(),
   parentId: identifier.optional(),
   constraints: z.array(layerConstraintSchema).default([]),
@@ -315,6 +321,18 @@ export const textLayerSchema = baseLayerSchema.extend({
   lineBackground: color.optional(),
   linePadding: nonNegative.default(0),
   lineRadius: nonNegative.default(0),
+  runs: z.array(z.object({ start: z.number().int().nonnegative(), end: z.number().int().positive(), style: z.object({ color: color.optional(), fontFamily: z.string().min(1).optional(), fontSize: positive.optional(), fontWeight: z.union([z.number().int().min(100).max(900), z.enum(['normal', 'bold'])]).optional(), fontStyle: z.enum(['normal', 'italic']).optional(), outlineColor: color.optional(), outlineWidth: nonNegative.optional(), letterSpacing: finite.optional(), background: color.optional() }).strict() }).strict().refine((run) => run.end > run.start, 'Text run end must follow start')).max(10_000).default([]),
+  timedWords: z.array(z.object({ start: nonNegative, end: positive, startOffset: z.number().int().nonnegative(), endOffset: z.number().int().positive() }).strict().refine((word) => word.end > word.start && word.endOffset > word.startOffset, 'Timed word ranges must increase')).max(10_000).default([]),
+  currentWordStyle: z.object({ color: color.optional(), outlineColor: color.optional(), outlineWidth: nonNegative.optional(), background: color.optional(), scale: positive.max(10).optional() }).strict().optional(),
+  textPath: z.object({ path: z.string().min(1).max(10_000_000), startOffset: finite.min(0).max(1).default(0), progress: animatedNumberSchema.default(1), orient: z.boolean().default(true), reverse: z.boolean().default(false) }).strict().optional(),
+  notations: z.array(z.object({ id: identifier, type: z.enum(['rough-underline', 'circle', 'highlight', 'strike-through']), start: z.number().int().nonnegative(), end: z.number().int().positive(), color, width: positive.max(100).default(3), padding: nonNegative.max(1000).default(4), seed: z.number().int().default(0), progress: animatedNumberSchema.default(1) }).strict().refine((item) => item.end > item.start, 'Notation range must increase')).max(1000).default([]),
+}).superRefine((layer, context) => {
+  for (const [name, ranges] of [['runs', layer.runs], ['notations', layer.notations]] as const) for (const [index, range] of ranges.entries()) {
+    if (range.end > layer.text.length) context.addIssue({ code: 'custom', path: [name, index], message: `${name} range exceeds text length` });
+    const previous = ranges[index - 1]; if (previous && range.start < previous.end) context.addIssue({ code: 'custom', path: [name, index], message: `${name} ranges must be ordered and non-overlapping` });
+  }
+  for (const [index, word] of layer.timedWords.entries()) { if (word.endOffset > layer.text.length) context.addIssue({ code: 'custom', path: ['timedWords', index], message: 'Timed word range exceeds text length' }); const previous = layer.timedWords[index - 1]; if (previous && (word.start < previous.end || word.startOffset < previous.endOffset)) context.addIssue({ code: 'custom', path: ['timedWords', index], message: 'Timed words must be ordered and non-overlapping' }); }
+  if (layer.textPath && layer.wrap !== 'none') context.addIssue({ code: 'custom', path: ['wrap'], message: 'Text on a path requires wrap none' });
 });
 
 export const shapeLayerSchema = baseLayerSchema.extend({
@@ -426,6 +444,17 @@ export const captionStyleSchema = z.object({
   align: z.enum(['left', 'center', 'right']).optional(), lineHeight: positive.optional(), letterSpacing: finite.optional(),
   padding: nonNegative.optional(), radius: nonNegative.optional(), highlightPadding: nonNegative.optional(), highlightRadius: nonNegative.optional(), maxLines: z.number().int().positive().optional(),
 }).strict();
+export const captionAnimationSchema = z.object({
+  type: z.enum(['none', 'fade', 'slide-up', 'slide-down', 'slide-left', 'slide-right', 'scale', 'pop']).default('fade'),
+  duration: positive.max(10).default(.18),
+  distance: nonNegative.max(4096).default(24),
+  ease: easingSchema.default('cubic-out'),
+}).strict();
+export const captionStylePresetSchema = z.object({
+  id: identifier,
+  name: z.string().min(1).max(120),
+  style: captionStyleSchema,
+}).strict();
 export const captionCueSchema = z.object({
   id: identifier,
   start: nonNegative,
@@ -438,6 +467,10 @@ export const captionCueSchema = z.object({
 
 export const captionLayerSchema = baseLayerSchema.extend({
   type: z.literal('caption'),
+  language: z.string().min(2).max(64).regex(/^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/, 'Caption language must be a BCP 47 language tag').optional(),
+  trackName: z.string().min(1).max(120).optional(), defaultTrack: z.boolean().default(true),
+  stylePresetId: identifier.optional(),
+  enter: captionAnimationSchema.optional(), exit: captionAnimationSchema.optional(),
   direction: z.enum(['ltr', 'rtl']).default('ltr'), highlightMode: z.enum(['current-word', 'karaoke', 'none']).default('current-word'),
   showSpeaker: z.boolean().default(true), speakerStyles: z.record(z.string().min(1), captionStyleSchema).optional(),
   shadow: z.object({ color, blur: nonNegative, offsetX: finite.default(0), offsetY: finite.default(0) }).optional(),
@@ -646,6 +679,8 @@ export const projectSchema = z.object({
   parameterValues: z.record(z.string(), parameterValueSchema).default({}),
   variants: z.array(variantSchema).default([]),
   compositions: z.array(compositionSchema).default([]),
+  captionStylePresets: z.array(captionStylePresetSchema).max(128).default([]).refine((items) => new Set(items.map((item) => item.id)).size === items.length, 'Caption style preset IDs must be unique'),
+  captionPreviewLanguages: z.array(z.string().min(2).max(64)).max(16).default([]),
   brand: z.object({
     background: color,
     foreground: color,
@@ -689,6 +724,8 @@ export type VideoLayer = z.infer<typeof videoLayerSchema>;
 export type CompositionLayer = z.infer<typeof compositionLayerSchema>;
 export type CaptionLayer = z.infer<typeof captionLayerSchema>;
 export type CaptionCue = z.infer<typeof captionCueSchema>;
+export type CaptionStyle = z.infer<typeof captionStyleSchema>;
+export type CaptionStylePreset = z.infer<typeof captionStylePresetSchema>;
 export type Composition = z.infer<typeof compositionSchema>;
 export type Parameter = z.infer<typeof parameterSchema>;
 export type Scene = z.infer<typeof sceneSchema>;

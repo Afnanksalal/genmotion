@@ -4,6 +4,10 @@ import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from '../en
 import { inspectMedia } from '../engine/media-probe.js';
 import { parseCaptions, serializeCaptions } from '../captions.js';
 import { editCaptions, captionEditSchema } from '../ir/caption-editing.js';
+import { createCaptionDeliveryPlan, captionDeliveryOptionsSchema } from '../ir/caption-delivery.js';
+import { planMusicWorkflow, musicWorkflowOptionsSchema, lyricCueSchema } from '../ir/music-workflow.js';
+import { frozenAudioFeaturesSchema } from '../engine/audio-intelligence.js';
+import { planPresentationExport, presentationExportPolicySchema, presentationManifestSchema, validatePresentationManifest } from '../ir/presentation.js';
 import { captionCueSchema } from '../ir/schema.js';
 import { projectAssetReferences } from '../ir/asset-references.js';
 import { createRenderPlan } from '../ir/render-plan.js';
@@ -1010,6 +1014,13 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       response.set('Cache-Control', 'no-store').json({ studio: studioState });
     } catch (error) { next(error); }
   });
+
+  app.post('/api/captions-delivery', (request, response, next) => {
+    try { response.json(createCaptionDeliveryPlan(loaded.project, captionDeliveryOptionsSchema.parse(request.body))); }
+    catch (error) { next(error); }
+  });
+  app.post('/api/music-plan', (request, response, next) => { try { const input = z.object({ features: frozenAudioFeaturesSchema, lyrics: z.array(lyricCueSchema).max(100000).default([]), options: musicWorkflowOptionsSchema }).strict().parse(request.body); response.json(planMusicWorkflow(input.features, input.lyrics, input.options)); } catch (error) { next(error); } });
+  app.post('/api/presentation', (request, response, next) => { try { const input = z.object({ manifest: presentationManifestSchema, exportPolicy: presentationExportPolicySchema.optional() }).strict().parse(request.body); response.json(input.exportPolicy ? planPresentationExport(loaded.project, input.manifest, input.exportPolicy) : validatePresentationManifest(loaded.project, input.manifest)); } catch (error) { next(error); } });
   app.put('/api/studio', async (request, response, next) => {
     try {
       const submitted = studioStateSchema.parse({ ...request.body, shortcuts: studioState.shortcuts, editorContext: studioState.editorContext, updatedAt: new Date().toISOString() });

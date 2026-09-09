@@ -204,6 +204,7 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
   const anchorIds = new Set<string>();
   const referenceIds = new Set(tasteReferences.map((reference) => reference.id));
   const parameterIds = new Set(project.parameters.map((parameter) => parameter.id));
+  const captionPresetIds = new Set(project.captionStylePresets.map((preset) => preset.id));
   const compositionIds = new Set(project.compositions.map((composition) => composition.id));
   const totalDuration = projectDuration(project);
   for (const marker of project.markers ?? []) {
@@ -353,6 +354,7 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
       }
 
       if (layer.type === 'text' || layer.type === 'caption') {
+        if (layer.type === 'text' && layer.textPath) try { pathMetrics(layer.textPath.path); } catch { findings.push({ code: 'TEXT_PATH_INVALID', severity: 'error', message: `${layer.id} has invalid text-path geometry.`, location: `${location}.textPath.path` }); }
         if (layer.fontSize < project.height * 0.015) findings.push({ code: 'TEXT_TOO_SMALL', severity: 'warning', message: `${layer.id} may be unreadable at delivery size.`, location });
         let positioned: Layer = layer;
         const hasDependency = Boolean(layer.parentId || layer.constraints.length);
@@ -368,6 +370,7 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
         if (ratio !== undefined && ratio < 3) findings.push({ code: 'TEXT_CONTRAST', severity: 'warning', message: `${layer.id} has only ${ratio.toFixed(2)}:1 contrast against the scene background. Verify its actual backing surface.`, location });
         if (positionedX < project.width * 0.02 || positionedY < project.height * 0.02 || positionedX + box.width > project.width * 0.98 || positionedY + box.height > project.height * 0.98) findings.push({ code: 'TEXT_SAFE_AREA', severity: 'warning', message: `${layer.id} approaches the delivery safe edge.`, location });
         if (layer.type === 'caption') {
+          if (layer.stylePresetId && !captionPresetIds.has(layer.stylePresetId)) findings.push({ code: 'CAPTION_PRESET_UNKNOWN', severity: 'error', message: `${layer.id} references unknown caption style preset ${layer.stylePresetId}.`, location: `${location}.stylePresetId` });
           for (let cueIndex = 0; cueIndex < layer.cues.length; cueIndex += 1) {
             const cue = layer.cues[cueIndex]!;
             if (cue.end > (layer.duration ?? scene.duration - layer.start) + 0.001) findings.push({ code: 'CAPTION_CUE_OVERRUN', severity: 'warning', message: `${cue.id} extends beyond the caption layer.`, location: `${location}.cues.${cueIndex}` });

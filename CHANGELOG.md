@@ -2,6 +2,14 @@
 
 Genmotion follows semantic versioning. GitHub releases contain the verified package archive and its `SHA256SUMS` manifest.
 
+## 2.6.0 - 2026-09-09
+
+- Raised the audited native capability count from 125 to **138/324** with complete caption, typography, temporal-rendering, music authoring, semantic-editing, review, and presentation contracts.
+- Added named caption presets, BCP 47 language routing, deterministic entrance/exit animation, absolute-time SRT/WebVTT generation, and embedded subtitle mux plans.
+- Added per-layer/effect shutter sampling, bounded motion and directional-light trails, run-level/per-character text styling, timed emphasis, text-on-path, and semantic animated notation.
+- Added source-bound music/lyric workflow plans, capability-derived editing controls, dispatched/final/failure receipts, integrity-checked offline review bundles, and deterministic interactive-presentation export routes.
+- Regenerated the public examples with native expressive-type and scoped motion-blur coverage. See [milestone QA](docs/MILESTONE-QA-2026-09-09-2.6.md).
+
 ## 2.5.0 - 2026-09-09
 
 - Raised the audited native capability count to **125/324**, completing 50 additional contracts across typography, captions, timing, composition, audio, rendering, review and agent editing.
