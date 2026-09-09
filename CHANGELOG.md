@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.8.0
+
+- Added deterministic JSON/JSONL/CSV batch execution with bounded concurrency, durable row receipts, failure isolation and selective retry.
+- Added a quota-bound content-addressed project/provider store with verified deduplication and deterministic local materialization.
+- Added offline semantic catalog indexing, skew diagnostics, atomic refresh and inspectable local search/quality feedback without background telemetry.
+- Added explicit restricted-asset acceptance, supplied-reference rights enforcement in native rendering, and reversible content-addressed reference-preparation graphs.
+
 ## 2.7.0
 
 - Added versioned brand/design specifications with exact binding, font, immutable-asset, variant and delivery-medium drift audits across SDK, CLI, MCP and Studio.

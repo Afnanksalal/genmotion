@@ -13,6 +13,8 @@ import { productionBriefSchema } from './brief.js';
 import { designSpecSchema } from './design-spec.js';
 import { creativePreferencesSchema } from './creative-preferences.js';
 import { mediaLedgerSchema } from './media-ledger.js';
+import { restrictedAssetAcceptancesSchema } from './restricted-assets.js';
+import { referenceSourcesSchema } from './reference-rights.js';
 import { productionWorkflowSchema } from './production.js';
 
 const finite = z.number().finite();
@@ -689,6 +691,8 @@ export const projectSchema = z.object({
   designSpec: designSpecSchema.optional(),
   creativePreferences: creativePreferencesSchema.default([]),
   mediaLedger: mediaLedgerSchema.default({ version: 1, records: [] }),
+  restrictedAssetAcceptances: restrictedAssetAcceptancesSchema.default([]),
+  referenceSources: referenceSourcesSchema.default([]),
   brand: z.object({
     background: color,
     foreground: color,

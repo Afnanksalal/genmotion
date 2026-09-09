@@ -69,6 +69,8 @@
     "version": 1,
     "records": []
   },
+  "restrictedAssetAcceptances": [],
+  "referenceSources": [],
   "brand": {
     "background": "#05070a",
     "foreground": "#f5f1e8",

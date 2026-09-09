@@ -1,0 +1,10 @@
+import { createHash } from 'node:crypto';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os'; import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { auditSemanticIndex, buildSemanticIndex, refreshSemanticIndex, searchSemanticIndex } from '../src/catalog/semantic-search.js';
+
+describe('offline semantic catalog search', () => {
+  it('ranks related local text with explicit tier/model/scores and no query retention', async () => { const index = await buildSemanticIndex([{ id: 'camera-push', text: 'Smooth cinematic zoom toward a product detail', tags: ['camera'] }, { id: 'caption-pop', text: 'Word emphasis captions', tags: ['text'] }]); const result = searchSemanticIndex(index, 'cinematic product zoom'); expect(result).toMatchObject({ answeringTier: 'local-semantic', offline: true, queryRetention: 'none', results: [{ id: 'camera-push', score: expect.any(Number) }] }); });
+  it('reports skew both ways, unavailable results and pins optional local model bytes', async () => { const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-index-')); try { const model = path.join(directory, 'model.bin'); await writeFile(model, 'model'); const sha256 = createHash('sha256').update('model').digest('hex'), sources = [{ id: 'indexed', text: 'motion', available: false }, { id: 'orphan', text: 'orphan' }]; const index = await refreshSemanticIndex(path.join(directory, 'index.json'), sources, { model: { id: 'embed', version: '1', localPath: model, sha256 } }); expect(auditSemanticIndex(index, ['indexed', 'new'])).toEqual({ missingFromIndex: ['new'], missingFromRegistry: ['orphan'], unavailable: ['indexed'], inSync: false }); const saved: unknown = JSON.parse(await readFile(path.join(directory, 'index.json'), 'utf8')); expect(saved).toMatchObject({ id: index.id }); await expect(buildSemanticIndex(sources, { model: { id: 'embed', version: '1', localPath: model, sha256: '0'.repeat(64) } })).rejects.toThrow(/Pinned/); } finally { await rm(directory, { recursive: true, force: true }); } });
+});

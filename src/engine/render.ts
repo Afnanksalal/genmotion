@@ -18,6 +18,7 @@ import { projectForRenderComposition } from './render-projection.js';
 import { resolveRenderView } from './render-view.js';
 import { resolveAlphaOutput, flattenRgbaInPlace, type AlphaMode, type AlphaOutput } from './alpha-output.js';
 import { resolveOutputCompatibility, validateCompatibilityContainer } from './output-compatibility.js';
+import { assertReferenceExportAllowed, deliveryPurposeSchema } from '../ir/reference-rights.js';
 
 export type RenderQuality = 'draft' | 'standard' | 'high';
 export type VideoCodec = 'h264' | 'h265' | 'vp9' | 'prores';
@@ -53,6 +54,7 @@ export interface RenderOptions {
   maxBufferedFrames?: number | undefined;
   maxBufferedBytes?: number | undefined;
   onProgress?: (progress: RenderProgress) => void;
+  deliveryPurpose?: 'internal-review' | 'reference-comparison' | 'editorial' | 'commercial' | 'public';
 }
 
 export type RenderStage = 'preparing' | 'rendering' | 'encoding' | 'mixing' | 'verifying' | 'complete';
@@ -195,6 +197,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   let project = projectForRenderComposition(loaded.project, options.compositionId);
   const quality = options.quality ?? 'high';
   const codec = options.codec ?? 'h264';
+  assertReferenceExportAllowed(project, deliveryPurposeSchema.parse(options.deliveryPurpose ?? 'internal-review'));
   if (!['draft', 'standard', 'high'].includes(quality) || !['h264', 'h265', 'vp9', 'prores'].includes(codec)) throw new GenmotionError('INVALID_RENDER_OPTIONS', 'Unknown output quality or codec.');
   if (options.hardwareAcceleration && codec !== 'h264') throw new GenmotionError('HARDWARE_CODEC_UNSUPPORTED', `Hardware acceleration is unavailable for ${codec}; choose software explicitly.`);
   if (project.motionBlur) project = { ...project, motionBlur: { ...project.motionBlur, samples: temporalSamplesForQuality(project.motionBlur.samples, quality) } };

@@ -1,0 +1,7 @@
+import { describe, expect, it } from 'vitest';
+import { assertReferenceExportAllowed, referenceSourcesSchema } from '../src/ir/reference-rights.js';
+import { loadProject } from '../src/ir/loader.js';
+
+describe('reference rights export boundary', () => {
+  it('retains unknown rights and blocks conflicting export purposes', async () => { const project = (await loadProject('tests/fixtures/basic')).project; project.referenceSources = referenceSourcesSchema.parse([{ id: 'study', contentHash: 'a'.repeat(64), originalLocation: 'supplied/reference.mp4', rights: 'unknown', permittedUses: ['reference-comparison'], redistribution: 'prohibited', unresolvedRightsWarning: 'Owner permission has not been established.' }]); expect(() => assertReferenceExportAllowed(project, 'reference-comparison')).toThrow(/unresolved rights/); project.referenceSources = referenceSourcesSchema.parse([{ id: 'study', contentHash: 'a'.repeat(64), originalLocation: 'supplied/reference.mp4', rights: 'licensed', permittedUses: ['reference-comparison'], redistribution: 'prohibited', authorization: { actor: 'user', at: '2026-09-09T00:00:00.000Z', basis: 'Licensed for internal comparison' } }]); expect(() => assertReferenceExportAllowed(project, 'reference-comparison')).not.toThrow(); expect(() => assertReferenceExportAllowed(project, 'commercial')).toThrow(/does not permit/); });
+});

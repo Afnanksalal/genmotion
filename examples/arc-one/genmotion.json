@@ -18,6 +18,8 @@
     "version": 1,
     "records": []
   },
+  "restrictedAssetAcceptances": [],
+  "referenceSources": [],
   "brand": {
     "background": "#07090d",
     "foreground": "#f4f6f8",
