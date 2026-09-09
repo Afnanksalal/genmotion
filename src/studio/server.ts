@@ -1025,6 +1025,21 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     try {
       const submitted = studioStateSchema.parse({ ...request.body, shortcuts: studioState.shortcuts, editorContext: studioState.editorContext, updatedAt: new Date().toISOString() });
       studioState = reconcileStudioState(sourceProject, submitted);
+      // Canvas navigation is represented both in the durable Studio document and
+      // in the live editing context. Keep them in lockstep so a newly loaded
+      // client cannot consume an older live viewport and undo a just-finished
+      // Studio save during its first context synchronization.
+      if (studioState.viewport) {
+        const context = await editingSession.context();
+        const viewport = {
+          ...context.viewport,
+          zoom: studioState.viewport.zoom,
+          panX: studioState.viewport.panX,
+          panY: studioState.viewport.panY,
+        };
+        const updated = await editingSession.updateContext({ viewport }, { expectedSequence: context.sequence, expectedRevision: context.revision, origin: 'studio-viewport' });
+        studioState = { ...studioState, editorContext: { ...(studioState.editorContext ?? {}), viewport: updated.viewport } };
+      }
       await persistStudioState();
       response.json({ ok: true, studio: studioState });
     } catch (error) { next(error); }
