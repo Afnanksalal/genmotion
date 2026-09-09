@@ -36,6 +36,7 @@ jobs:
       - name: Verify FFmpeg capabilities
         run: node scripts/verify-ffmpeg.mjs
       - run: npm ci
+      - run: npx playwright install chromium
       - run: npm run check
       - run: npm run benchmark
       - run: npm run examples:verify
@@ -74,4 +75,5 @@ jobs:
       - name: Verify FFmpeg capabilities
         run: node scripts/verify-ffmpeg.mjs
       - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm run test:coverage

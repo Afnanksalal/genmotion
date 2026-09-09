@@ -19,10 +19,10 @@ jobs:
       - name: Install FFmpeg
         run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y ffmpeg; }
       - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm run check
       - run: npm run examples:verify
       - run: npm run package:verify
-      - run: npx playwright install --with-deps chromium
       - run: npm run test:studio-e2e
       - name: Verify sustained Studio playback
         run: node scripts/benchmark-studio-playback.mjs
