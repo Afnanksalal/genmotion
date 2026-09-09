@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "actor": {
+      "type": "string"
+    },
+    "dryRun": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "project",
+    "actor"
+  ],
+  "additionalProperties": false
+}

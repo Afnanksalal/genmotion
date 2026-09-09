@@ -4,7 +4,7 @@ description: Create, edit, preview, validate, and render designed motion graphic
 license: MIT
 metadata:
   author: afnanksalal
-  version: "1.9.2"
+  version: "2.10.0"
 ---
 
 # Genmotion
@@ -52,7 +52,13 @@ When working in Codex, start it with `--no-open`, read the printed local URL, an
 9. Render the accepted timeline with `genmotion render <project> --output <file> --quality high`. High quality renders vector and type layers at a minimum 1920-pixel long edge instead of merely changing compression. Use `--resolution 3840x2160` or the matching project aspect ratio when a specific delivery size is required.
 10. Run `genmotion probe <file>` and `genmotion contact-sheet <file> --output <sheet>`; inspect the actual sheet before delivery.
 
+Use `genmotion render-plan <project>` when a frozen render plan and dependency identity are required before execution.
+
 For reference selection and concept review, read [references/taste.md](references/taste.md). For production rendering, media, and troubleshooting, read [references/operations.md](references/operations.md).
+
+For supplied-media adaptation, inspect the reference adaptation report before rendering. Preserve frozen source and measurement hashes, review low-confidence observations, record intentional regional differences, and compile accepted motion observations into native declarative tracks.
+
+Before changing project or motion-library versions, inspect compatibility and preserve pins. Use the upgrade report, require representative native-frame validation, retain its immutable backup, and use the recorded rollback path if acceptance fails.
 
 ## Studio collaboration
 

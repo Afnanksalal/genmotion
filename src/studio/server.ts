@@ -2,6 +2,7 @@ import { PreviewFrameRenderer } from '../engine/preview-frames.js';
 import { alphaModeSchema, resolveAlphaOutput } from '../engine/alpha-output.js';
 import { deliveryPurposeSchema } from '../ir/reference-rights.js';
 import { inspectReferenceAdaptation } from '../ir/reference-adaptation.js';
+import { inspectProjectCompatibility, rollbackProjectUpgrade, upgradeProject } from '../ir/upgrade.js';
 import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from '../engine/media-conform.js';
 import { inspectMedia } from '../engine/media-probe.js';
 import { parseCaptions, serializeCaptions } from '../captions.js';
@@ -1390,6 +1391,9 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   });
   app.get('/api/design-spec', async (_request, response, next) => { try { response.json(await auditDesignSpec(await loadProject(loaded.projectFile))); } catch (error) { next(error); } });
   app.get('/api/reference-adaptation', (_request, response) => { response.json({ report: inspectReferenceAdaptation(compiledProject), map: compiledProject.referenceAdaptationMap, observations: compiledProject.referenceObservations, preparations: compiledProject.referencePreparations, sources: compiledProject.referenceSources }); });
+  app.get('/api/upgrade', async (_request, response, next) => { try { response.json(await inspectProjectCompatibility(loaded.projectFile)); } catch (error) { next(error); } });
+  app.post('/api/upgrade', async (request, response, next) => { try { const body = z.object({ actor: z.string().min(1), dryRun: z.boolean().default(false) }).strict().parse(request.body), report = await upgradeProject(loaded.projectFile, body); if (report.changed) { const accepted = await loadProject(loaded.projectFile); sourceProject = accepted.sourceProject; compiledProject = accepted.project; frameCache.clear(); } response.json(report); } catch (error) { next(error); } });
+  app.post('/api/upgrade/rollback', async (request, response, next) => { try { const body = z.object({ actor: z.string().min(1), backup: z.string().min(1) }).strict().parse(request.body), report = await rollbackProjectUpgrade(loaded.projectFile, body.backup, body.actor), accepted = await loadProject(loaded.projectFile); sourceProject = accepted.sourceProject; compiledProject = accepted.project; frameCache.clear(); response.json(report); } catch (error) { next(error); } });
   app.put('/api/design-spec', async (request, response, next) => {
     try { const spec = designSpecSchema.parse(request.body), receipt = await commitProject(loaded.projectFile, { expectedRevision: revision(sourceProject), revisionKind: 'document', origin: 'studio-design-spec', update: project => ({ ...project, designSpec: spec }) }); sourceProject = receipt.loaded.sourceProject; compiledProject = receipt.loaded.project; frameCache.clear(); response.json({ revision: receipt.documentRevision, report: await auditDesignSpec(receipt.loaded) }); } catch (error) { next(error); }
   });

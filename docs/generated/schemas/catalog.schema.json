@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string"
+    },
+    "limit": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

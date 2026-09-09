@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { alphaModeSchema } from './engine/alpha-output.js';
 import { deliveryPurposeSchema } from './ir/reference-rights.js';
+import { inspectReferenceAdaptation } from './ir/reference-adaptation.js';
+import { inspectProjectCompatibility, rollbackProjectUpgrade, upgradeProject } from './ir/upgrade.js';
 import { renderFrameRangeSchema, renderGroupSchema } from './ir/render-selection.js';
 import { frozenDataImportSchema, importFrozenData } from './ir/data-sources.js';
 import { resolveRenderView } from './engine/render-view.js';
@@ -339,6 +341,16 @@ function serverFactory(): McpServer {
     title: 'Import or audit a design specification', description: 'Bind an optional versioned brand/design contract with provenance and immutable identities, then report palette, font, asset, variant and medium drift.',
     inputSchema: compactSchema(z.object({ project: z.string(), spec: designSpecSchema.optional(), expectedRevision: z.string().optional() }).strict()),
   }, async input => { const project = await allowedPath(input.project, 'Project'); if (input.spec) { const expectedRevision = input.expectedRevision ?? (await readProjectSnapshot(project)).revision; await commitProject(project, { expectedRevision, origin: 'mcp-design-spec', update: document => ({ ...document, designSpec: input.spec }) }); } return toolResult(await auditDesignSpec(await loadProject(project))); });
+
+  server.registerTool('genmotion_reference_adaptation', {
+    title: 'Inspect reference adaptation', description: 'Validate supplied sources, frozen measurements, reviewed observations, pixel origins and native scene/layer targets.',
+    inputSchema: compactSchema(z.object({ project: z.string().min(1) }).strict()), annotations: { readOnlyHint: true },
+  }, async input => toolResult(inspectReferenceAdaptation((await loadProject(await allowedPath(input.project, 'Project'))).project)));
+
+  server.registerTool('genmotion_upgrade', {
+    title: 'Inspect, apply or roll back a project upgrade', description: 'Check runtime and library compatibility, preserve pins, run bounded migrations and native-frame validation, or restore an immutable project backup.',
+    inputSchema: compactSchema(z.object({ project: z.string().min(1), actor: z.string().min(1), action: z.enum(['inspect', 'apply', 'rollback']).default('inspect'), dryRun: z.boolean().default(false), backup: z.string().optional() }).strict()),
+  }, async input => { const project = await allowedPath(input.project, 'Project'); if (input.action === 'inspect') return toolResult(await inspectProjectCompatibility(project)); if (input.action === 'rollback') { if (!input.backup) throw new Error('Rollback requires a backup path'); return toolResult(await rollbackProjectUpgrade(project, await allowedPath(input.backup, 'Upgrade backup'), input.actor)); } return toolResult(await upgradeProject(project, { actor: input.actor, dryRun: input.dryRun })); });
 
   server.registerTool('genmotion_render_plan', {
     title: 'Create deterministic render plan', description: 'Resolve delivery metadata and hash every frozen local dependency without rendering or mutating the project.',

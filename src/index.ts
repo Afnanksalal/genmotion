@@ -73,6 +73,18 @@ export * from './ir/reference-preparation.js';
 export * from './ir/reference-adaptation.js';
 export * from './ir/render-attestation.js';
 export * from './ir/reference-comparison.js';
+export * from './capabilities/contracts.js';
+export * from './agent/skill-packages.js';
+export * from './ir/upgrade.js';
+// Explicit capability exports make the generated cross-surface contract auditable.
+export { validateProject } from './ir/validate.js';
+export { renderFramePng } from './engine/draw.js';
+export { createRenderPlan } from './ir/render-plan.js';
+export { renderProject } from './engine/render.js';
+export { searchCatalog } from './commands/catalog.js';
+export { applySemanticEdits } from './ir/edit.js';
+export { inspectReferenceAdaptation } from './ir/reference-adaptation.js';
+export { upgradeProject } from './ir/upgrade.js';
 export * from './engine/audio-effects.js';
 export * from './engine/audio.js';
 export * from './engine/loudness.js';

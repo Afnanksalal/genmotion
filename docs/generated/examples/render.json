@@ -1,0 +1,6 @@
+{
+  "project": "./project",
+  "output": "./master.mp4",
+  "quality": "high",
+  "deliveryPurpose": "commercial"
+}

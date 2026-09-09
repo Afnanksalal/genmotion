@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "output": {
+      "type": "string"
+    },
+    "quality": {
+      "enum": [
+        "draft",
+        "standard",
+        "high"
+      ]
+    },
+    "deliveryPurpose": {
+      "enum": [
+        "internal-review",
+        "reference-comparison",
+        "editorial",
+        "commercial",
+        "public"
+      ]
+    }
+  },
+  "required": [
+    "project",
+    "output"
+  ],
+  "additionalProperties": false
+}

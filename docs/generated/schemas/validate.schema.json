@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "strict": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "project"
+  ],
+  "additionalProperties": false
+}

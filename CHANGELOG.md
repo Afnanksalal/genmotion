@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.10.0
+
+- Added a canonical typed capability registry that generates focused documentation, schemas and executable examples and fails the repository gate on SDK/CLI/MCP/Studio/skill drift.
+- Added focused caption, audio, reference-adaptation and delivery skill packages with explicit contracts, lazy host loading, durable resumable step state and executable examples.
+- Added version-safe project upgrades with runtime/library pin checks, bounded migration, representative native-frame validation, immutable backup and atomic rollback across every product surface.
+
 ## 2.9.0
 
 - Added render input/output attestations with role-tagged frozen dependency hashes, self-input rejection and full decoded video/audio stream identities.

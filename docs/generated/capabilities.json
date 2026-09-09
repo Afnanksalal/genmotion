@@ -1,0 +1,423 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "id": "validate",
+      "title": "Validate project",
+      "summary": "Validate Creative IR, assets, layout, timing and delivery constraints.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "strict": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "project"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array"
+          }
+        },
+        "required": [
+          "findings"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "project": "./project",
+        "strict": true
+      },
+      "surfaces": {
+        "sdk": "validateProject",
+        "cli": "command('validate')",
+        "mcp": "'genmotion_validate'",
+        "studio": "'/api/check-report'",
+        "skill": "genmotion validate"
+      }
+    },
+    {
+      "id": "frame",
+      "title": "Render native frame",
+      "summary": "Evaluate one exact native frame without browser composition.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "at": {
+            "type": "number",
+            "minimum": 0
+          },
+          "output": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project",
+          "at",
+          "output"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "output": {
+            "type": "string"
+          },
+          "frame": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "output",
+          "frame"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "project": "./project",
+        "at": 1.5,
+        "output": "./frame.png"
+      },
+      "surfaces": {
+        "sdk": "renderFramePng",
+        "cli": "command('frame')",
+        "mcp": "'genmotion_frame'",
+        "studio": "'/frame/:frame.png'",
+        "skill": "representative native PNG frames"
+      }
+    },
+    {
+      "id": "render-plan",
+      "title": "Plan deterministic render",
+      "summary": "Freeze delivery options and dependency identities before work begins.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "quality": {
+            "enum": [
+              "draft",
+              "standard",
+              "high"
+            ]
+          },
+          "codec": {
+            "enum": [
+              "h264",
+              "h265",
+              "vp9",
+              "prores"
+            ]
+          }
+        },
+        "required": [
+          "project"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "sourceHash": {
+            "type": "string"
+          },
+          "dependencyHash": {
+            "type": "string"
+          },
+          "delivery": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "sourceHash",
+          "dependencyHash",
+          "delivery"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "project": "./project",
+        "quality": "high",
+        "codec": "h264"
+      },
+      "surfaces": {
+        "sdk": "createRenderPlan",
+        "cli": "command('render-plan')",
+        "mcp": "'genmotion_render_plan'",
+        "studio": "'/api/render-plan'",
+        "skill": "render plan"
+      }
+    },
+    {
+      "id": "render",
+      "title": "Render verified master",
+      "summary": "Render, mix, encode, fully decode and attest a native master.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "output": {
+            "type": "string"
+          },
+          "quality": {
+            "enum": [
+              "draft",
+              "standard",
+              "high"
+            ]
+          },
+          "deliveryPurpose": {
+            "enum": [
+              "internal-review",
+              "reference-comparison",
+              "editorial",
+              "commercial",
+              "public"
+            ]
+          }
+        },
+        "required": [
+          "project",
+          "output"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "output": {
+            "type": "string"
+          },
+          "manifest": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "output",
+          "manifest"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "project": "./project",
+        "output": "./master.mp4",
+        "quality": "high",
+        "deliveryPurpose": "commercial"
+      },
+      "surfaces": {
+        "sdk": "renderProject",
+        "cli": "command('render')",
+        "mcp": "'genmotion_render'",
+        "studio": "'/api/render'",
+        "skill": "genmotion render"
+      }
+    },
+    {
+      "id": "catalog",
+      "title": "Inspect catalog",
+      "summary": "Search and describe native motion capabilities before applying them.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "query": "editorial title",
+        "limit": 8
+      },
+      "surfaces": {
+        "sdk": "searchCatalog",
+        "cli": "command('catalog')",
+        "mcp": "'genmotion_catalog'",
+        "studio": "catalog: { motions",
+        "skill": "catalog"
+      }
+    },
+    {
+      "id": "project-edit",
+      "title": "Commit semantic edit",
+      "summary": "Apply one revision-safe validated Creative IR transaction.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "expectedRevision": {
+            "type": "string"
+          },
+          "edits": {
+            "type": "array"
+          }
+        },
+        "required": [
+          "project",
+          "expectedRevision",
+          "edits"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "project": "./project",
+        "expectedRevision": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "edits": []
+      },
+      "surfaces": {
+        "sdk": "applySemanticEdits",
+        "cli": "command('edit')",
+        "mcp": "'genmotion_edit'",
+        "studio": "'/api/edit'",
+        "skill": "transactional patches"
+      }
+    },
+    {
+      "id": "reference-adaptation",
+      "title": "Inspect reference adaptation",
+      "summary": "Inspect source, measurement, pixel-origin and native-target provenance.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "report": {
+            "type": "object"
+          },
+          "map": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "report",
+          "map"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "project": "./project"
+      },
+      "surfaces": {
+        "sdk": "inspectReferenceAdaptation",
+        "cli": "reference-adaptation",
+        "mcp": "reference_adaptation",
+        "studio": "'/api/reference-adaptation'",
+        "skill": "reference adaptation"
+      }
+    },
+    {
+      "id": "upgrade",
+      "title": "Upgrade project safely",
+      "summary": "Inspect compatibility, preserve pins, migrate, validate native frames and retain rollback.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "project",
+          "actor"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "migrations": {
+            "type": "array"
+          },
+          "representativeFrames": {
+            "type": "array"
+          },
+          "backup": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "migrations"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "project": "./project",
+        "actor": "release-manager",
+        "dryRun": true
+      },
+      "surfaces": {
+        "sdk": "upgradeProject",
+        "cli": "command('upgrade')",
+        "mcp": "'genmotion_upgrade'",
+        "studio": "'/api/upgrade'",
+        "skill": "upgrade report"
+      }
+    }
+  ]
+}

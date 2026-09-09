@@ -62,12 +62,14 @@ export async function verifyBundleIfPresent(projectFile: string): Promise<boolea
 /** Compile an in-memory document using the same catalog and parameter rules as disk loading. */
 export async function loadProjectDocument(raw: unknown, projectFile: string, parameterOverrides: Record<string, ParameterValue> = {}): Promise<LoadedProject> {
   projectFile = path.resolve(projectFile);
-  const parsed = projectSchema.safeParse(raw);
+  const candidate = raw && typeof raw === 'object' && !Array.isArray(raw) && (raw as { schemaVersion?: unknown }).schemaVersion === 0 ? { ...(raw as Record<string, unknown>), schemaVersion: 1 } : raw;
+  const parsed = projectSchema.safeParse(candidate);
   if (!parsed.success) {
     throw new GenmotionError('PROJECT_INVALID', `Invalid Genmotion project: ${projectFile}`, parsed.error.issues);
   }
   const projectDir = path.dirname(projectFile);
   const catalog = await loadMotionLibraries(projectDir);
+  for (const [libraryId, expectedVersion] of Object.entries(parsed.data.motionLibraryPins)) { const installed = catalog.libraries.find(library => library.id === libraryId); if (!installed) throw new GenmotionError('MOTION_LIBRARY_PIN_MISSING', `Pinned motion library ${libraryId}@${expectedVersion} is not installed.`); if (installed.version !== expectedVersion) throw new GenmotionError('MOTION_LIBRARY_PIN_DRIFT', `Pinned motion library ${libraryId} requires ${expectedVersion}; installed ${installed.version}.`); }
   const resolved = resolveParameters(parsed.data, parameterOverrides);
   const references = new Set<string>();
   const collect = (definition: Parameter, value: ParameterValue): void => {

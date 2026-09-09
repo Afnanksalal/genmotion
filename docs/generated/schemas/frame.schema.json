@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "at": {
+      "type": "number",
+      "minimum": 0
+    },
+    "output": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "project",
+    "at",
+    "output"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,5 @@
+{
+  "project": "./project",
+  "actor": "release-manager",
+  "dryRun": true
+}

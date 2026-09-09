@@ -8,6 +8,7 @@ import * as acp from '@agentclientprotocol/sdk';
 import { GENMOTION_VERSION } from '../version.js';
 import { resumeProductionBrief, type ProductionBrief } from '../ir/brief.js';
 import type { inspectProduction } from '../ir/production-service.js';
+import { selectDomainSkills, type LoadedDomainSkill } from './skill-packages.js';
 
 export type AgentHostId = 'codex' | 'claude' | 'hermes';
 
@@ -395,6 +396,9 @@ export class LocalAgentRuntime implements AgentRuntime {
   private sessions: StoredSessions = { version: 1 };
   private sessionsLoaded = false;
 
+  private async domainSkills(prompt: string): Promise<LoadedDomainSkill[]> { try { return await selectDomainSkills(path.join(path.dirname(this.skillFile), 'domains'), prompt); } catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []; throw error; } }
+  private domainPrompt(skills: LoadedDomainSkill[]): string { return skills.length ? `\n\nRelevant domain contracts loaded for this request:\n\n${skills.map(skill => `## ${skill.manifest.title}\n${skill.instructions}`).join('\n\n')}` : ''; }
+
   constructor(projectDir: string, skillFile?: string) {
     this.projectDir = projectDir;
     this.sessionsFile = path.join(projectDir, '.genmotion', 'agent-sessions.json');
@@ -516,8 +520,10 @@ export class LocalAgentRuntime implements AgentRuntime {
       await this.saveSessions();
       await onProgress({ activity: 'Thinking', sessionId: threadId });
       const skillExists = await readFile(this.skillFile, 'utf8').then(() => true, () => false);
+      const domainSkills = await this.domainSkills(input.prompt);
       const turnInput: unknown[] = [{ type: 'text', text: `$genmotion\n\n${buildPrompt(input)}` }];
       if (skillExists) turnInput.push({ type: 'skill', name: 'genmotion', path: this.skillFile });
+      for (const skill of domainSkills) turnInput.push({ type: 'skill', name: `genmotion-${skill.manifest.id}`, path: skill.skillFile });
       await client.request('turn/start', { threadId, input: turnInput, cwd: input.projectDir, approvalPolicy: 'never', sandboxPolicy: { type: 'workspaceWrite', writableRoots: [input.projectDir], networkAccess: false } });
       const result = await Promise.race([
         completed,
@@ -541,7 +547,8 @@ export class LocalAgentRuntime implements AgentRuntime {
   private async runHermes(input: AgentRunInput, onProgress: (progress: AgentRunProgress) => Promise<void> | void): Promise<AgentRunResult> {
     this.hermesClient ??= new HermesAcpClient(this.projectDir, this.sessions.hermes);
     try {
-      let result = await this.hermesClient.run(`$genmotion\n\n${buildPrompt(input)}`, onProgress, input.signal);
+      const domainSkills = await this.domainSkills(input.prompt);
+      let result = await this.hermesClient.run(`$genmotion\n\n${buildPrompt(input)}${this.domainPrompt(domainSkills)}`, onProgress, input.signal);
       if (requestRequiresProjectChange(input.prompt) && isNonExecutionResponse(result.response)) {
         await onProgress({ activity: 'Continuing authoring', sessionId: result.sessionId });
         result = await this.hermesClient.run([
@@ -562,6 +569,7 @@ export class LocalAgentRuntime implements AgentRuntime {
   }
 
   private async runClaude(input: AgentRunInput, onProgress: (progress: AgentRunProgress) => Promise<void> | void): Promise<AgentRunResult> {
+    const domainSkills = await this.domainSkills(input.prompt);
     const mcpConfig = path.join(input.projectDir, '.genmotion', 'agent-mcp.json');
     const mcpEntry = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../mcp.js');
     await mkdir(path.dirname(mcpConfig), { recursive: true });
@@ -613,7 +621,7 @@ export class LocalAgentRuntime implements AgentRuntime {
       }
     });
     child.stderr.on('data', (chunk: Buffer) => { stderr = appendLimited(stderr, chunk.toString()); });
-    child.stdin.end(buildPrompt(input));
+    child.stdin.end(`${buildPrompt(input)}${this.domainPrompt(domainSkills)}`);
     const code = await new Promise<number>((resolve, reject) => {
       child.once('error', reject);
       child.once('close', (value) => resolve(value ?? -1));

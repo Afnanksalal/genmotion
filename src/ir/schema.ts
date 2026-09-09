@@ -687,6 +687,7 @@ export const projectSchema = z.object({
   dataSources: z.array(frozenDataSourceSchema).max(64).optional(),
   parameterValues: z.record(z.string(), parameterValueSchema).default({}),
   variants: z.array(variantSchema).default([]),
+  motionLibraryPins: z.record(z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/), z.string().regex(/^\d+\.\d+\.\d+$/)).default({}),
   compositions: z.array(compositionSchema).default([]),
   captionStylePresets: z.array(captionStylePresetSchema).max(128).default([]).refine((items) => new Set(items.map((item) => item.id)).size === items.length, 'Caption style preset IDs must be unique'),
   captionPreviewLanguages: z.array(z.string().min(2).max(64)).max(16).default([]),

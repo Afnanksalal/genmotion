@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { alphaModeSchema } from './engine/alpha-output.js';
 import { deliveryPurposeSchema } from './ir/reference-rights.js';
+import { inspectReferenceAdaptation } from './ir/reference-adaptation.js';
+import { inspectProjectCompatibility, rollbackProjectUpgrade, upgradeProject } from './ir/upgrade.js';
 import { importFrozenData } from './ir/data-sources.js';
 import { resolveRenderView } from './engine/render-view.js';
 import { projectForRenderComposition } from './engine/render-projection.js';
@@ -241,6 +243,20 @@ program.command('review-samples')
     const loaded = await loadProject(input);
     output(reviewSamplePlan(loaded.project, Number.parseInt(options.maxSamples, 10)));
   });
+
+program.command('reference-adaptation')
+  .argument('<project>')
+  .description('Inspect supplied-reference sources, measurements, observations and native adaptation targets.')
+  .action(async (input: string) => { output(inspectReferenceAdaptation((await loadProject(input)).project)); });
+
+program.command('upgrade')
+  .argument('<project>')
+  .requiredOption('--actor <name>', 'Human or service authorizing the upgrade')
+  .option('--dry-run', 'Inspect, migrate and render representative frames without changing the project')
+  .action(async (input: string, options: { actor: string; dryRun?: boolean }) => { output(await upgradeProject(input, { actor: options.actor, ...(options.dryRun === undefined ? {} : { dryRun: options.dryRun }) })); });
+
+program.command('upgrade-inspect').argument('<project>').action(async (input: string) => { output(await inspectProjectCompatibility(input)); });
+program.command('upgrade-rollback').argument('<project>').requiredOption('--backup <file>').requiredOption('--actor <name>').action(async (input: string, options: { backup: string; actor: string }) => { output(await rollbackProjectUpgrade(input, options.backup, options.actor)); });
 
 program.command('render-plan')
   .argument('<project>')
