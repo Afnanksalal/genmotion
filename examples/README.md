@@ -70,7 +70,7 @@ npm run examples:build
 npm run examples:verify
 ```
 
-`examples:build` recreates all eleven authored JSON projects, concept records, briefs and deterministic synthesized audio without network access. Checked-in masters are rendered with `genmotion render --quality high`; `examples:verify` validates every project, probes every master, checks every review artifact, asserts the three new feature contracts, decodes the motion studies, checks deterministic seeking, and measures audio edges.
+`examples:build` recreates all eleven authored JSON projects, concept records, briefs and deterministic synthesized audio without network access. Checked-in masters are rendered with `genmotion render --quality high`; `examples:verify` validates every project, evaluates the transformed bounds of every visible text and caption layer at every timeline frame, probes every master, checks every review artifact, asserts the three new feature contracts, decodes the motion studies, checks deterministic seeking, and measures audio edges.
 
 The native boundary frames for Native Milestones are stored in `native-milestones/review/`. The frame before the 3-second cut shows the complete outgoing composition; the boundary and following frame show the incoming composition advancing without a blank or backward jump.
 

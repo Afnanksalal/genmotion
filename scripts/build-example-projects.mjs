@@ -19,8 +19,8 @@ function kineticType() {
   return base('kinetic-type', 'Kinetic Type', 8, bg, ink, red, [scene('statement', 'Show typography behaving as composition and rhythm', 8, bg, [
     shape('rule', 'rect', 96, 90, 1728, 8, red, { tracks: [track('rule-width', 'transform.scaleX', [[0, .02], [.55, 1], [8, 1]])], transform: { anchorX: 0, anchorY: .5 } }),
     text('small', 'WORDS ARE PHYSICAL', 100, 120, 900, 60, 28, red, { letterSpacing: 5, tracks: enter('small', .25, 20) }),
-    text('kinetic', 'KINETIC', 88, 230, 1600, 240, 222, ink, { tracks: [...enter('kinetic', .25, 90), track('kinetic-x', 'transform.x', [[0, -70], [1.05, 0], [2.5, 0], [3.15, 210], [4.45, 210], [5.15, 0], [8, 0]])] }),
-    text('type', 'TYPE', 90, 455, 1080, 260, 250, red, { tracks: [...enter('type', .45, 120), track('type-scale', 'transform.scaleX', [[0, .4], [1.25, 1], [2.5, 1], [3.15, 1.45], [4.45, 1.45], [5.15, 1], [8, 1]])] }),
+    text('kinetic', 'KINETIC', 88, 230, 1600, 240, 222, ink, { tracks: [...enter('kinetic', .25, 90), track('kinetic-x', 'transform.x', [[0, -70], [1.05, 0], [2.5, 0], [3.15, 100], [4.45, 100], [5.15, 0], [8, 0]])] }),
+    text('type', 'TYPE', 90, 455, 1080, 260, 250, red, { tracks: [...enter('type', .45, 120), track('type-scale', 'transform.scaleX', [[0, .4], [1.25, 1], [2.5, 1], [3.15, 1.1], [4.45, 1.1], [5.15, 1], [8, 1]])] }),
     text('phrase', 'Scale changes meaning.\nTiming changes the sentence.', 106, 785, 1060, 115, 38, ink, { fontWeight: 500, lineHeight: 1.25, tracks: enter('phrase', 1.05, 28) }), footer('KINETIC TYPE / 01', ink),
   ])]);
 }

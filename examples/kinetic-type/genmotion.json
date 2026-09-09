@@ -407,7 +407,7 @@
                 },
                 {
                   "at": 3.15,
-                  "value": 210,
+                  "value": 100,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -418,7 +418,7 @@
                 },
                 {
                   "at": 4.45,
-                  "value": 210,
+                  "value": 100,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -631,7 +631,7 @@
                 },
                 {
                   "at": 3.15,
-                  "value": 1.45,
+                  "value": 1.1,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -642,7 +642,7 @@
                 },
                 {
                   "at": 4.45,
-                  "value": 1.45,
+                  "value": 1.1,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,

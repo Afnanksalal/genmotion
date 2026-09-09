@@ -6,18 +6,18 @@
   "strictValidation": "passed",
   "fullDecode": "passed",
   "decodedFrames": 240,
-  "distinctDownsampledFrames": 112,
+  "distinctDownsampledFrames": 117,
   "minimumLumaRange": 85,
   "randomSeekPixelEquality": true,
   "timingChecks": {
-    "peakFrameDelta": 11.76923611111111,
-    "meanFrameDelta": 0.758734890748489,
-    "finalSecondMeanDelta": 0
+    "peakFrameDelta": 7.969722222222222,
+    "meanFrameDelta": 0.46730619479311974,
+    "finalSecondMeanDelta": 0.000037037037037037037
   },
   "audioChecks": null,
   "sha256": {
-    "source": "03f30b1015b31f86dd8d8984e99069ed91ded2b62c1d629af474ccf5555a64e4",
-    "master": "cc10795daa821eeaa1214a8dfd03a11c9ac3e865d5ed1bd24bef14393db30532",
-    "contactSheet": "53a333048a469871e20a9ebc7b257f8159c3d3c0cc1cd12b92e6ee1b54b3db07"
+    "source": "105413e7fdb5419042084cb660e8dd3b8d917c4f7f785d8842c54aec1b1b2b25",
+    "master": "4eeab0d518f8987aafb52a59c0074d62a696fbe25c7c7f3c227b654a8f43b01e",
+    "contactSheet": "cd9a50853740de5cdc3daa842887f88a71058c0db89d6ccced9c04663e72eae2"
   }
 }
