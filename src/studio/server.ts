@@ -6,6 +6,9 @@ import { parseCaptions, serializeCaptions } from '../captions.js';
 import { editCaptions, captionEditSchema } from '../ir/caption-editing.js';
 import { captionCueSchema } from '../ir/schema.js';
 import { projectAssetReferences } from '../ir/asset-references.js';
+import { createRenderPlan } from '../ir/render-plan.js';
+import { checkReportOptionsSchema, createCheckReport } from '../ir/check-report.js';
+import { outputCompatibilityMatrix } from '../engine/output-compatibility.js';
 import { analyzeAudioFile, audioAnalysisOptionsSchema } from '../engine/audio-analysis.js';
 import { parseTimelineTime } from '../engine/time.js';
 import { resolveParameters } from '../ir/parameters.js';
@@ -663,6 +666,10 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   app.get('/api/session', (_request, response) => { response.json({ token }); });
   app.get('/api/bootstrap', async (_request, response, next) => {
     try {
+      // A navigation may arrive immediately after the final viewport PUT. Wait
+      // for its atomic write and reload the durable state before bootstrapping.
+      await studioWriteQueue;
+      studioState = reconcileStudioState(sourceProject, studioStateSchema.parse(await readJson(stateFile, studioState)));
       if (!agentBusy) {
         const refreshed = await loadProject(loaded.projectFile);
         motionCatalog = await loadMotionLibraries(loaded.projectDir);
@@ -674,7 +681,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
         }
       }
       const currentLoaded = { ...loaded, project: compiledProject, sourceProject };
-      response.json({
+      response.set('Cache-Control', 'no-store').json({
         project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState, revision: revision(sourceProject),
         commands: studioCommands, shortcuts: resolvedShortcuts(studioState.shortcuts ?? {}),
         contextRecoveryError,
@@ -996,6 +1003,13 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       response.json({ ok: true, revision: projectRevision(sourceProject), project: sourceProject, renderSpec: projectPreflight(sourceProject), studio: studioState, findings: receipt.findings, checkpointError, receipt: { ...receipt, beforeRevision: before.documentRevision, revision: projectRevision(sourceProject) } });
     } catch (error) { next(error); }
   });
+  app.get('/api/studio', async (_request, response, next) => {
+    try {
+      await studioWriteQueue;
+      studioState = reconcileStudioState(sourceProject, studioStateSchema.parse(await readJson(stateFile, studioState)));
+      response.set('Cache-Control', 'no-store').json({ studio: studioState });
+    } catch (error) { next(error); }
+  });
   app.put('/api/studio', async (request, response, next) => {
     try {
       const submitted = studioStateSchema.parse({ ...request.body, shortcuts: studioState.shortcuts, editorContext: studioState.editorContext, updatedAt: new Date().toISOString() });
@@ -1308,6 +1322,7 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     } catch (error) { next(error); }
   });
   app.get('/api/agents', (_request, response) => { response.json(agentHosts); });
+  app.get('/api/output-compatibility', (_request, response) => { response.json(outputCompatibilityMatrix); });
   app.post('/api/agents/refresh', async (_request, response, next) => {
     try { agentHosts = await agentRuntime.hosts(); response.json(agentHosts); } catch (error) { next(error); }
   });
@@ -1327,6 +1342,17 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
     } catch (error) { next(error); }
   });
   app.get('/api/requests', async (_request, response) => { response.json(await listRequests(requestsDir)); });
+  app.post('/api/render-plan', async (request, response, next) => {
+    try {
+      const body = renderRequestSchema.omit({ overwrite: true, workers: true, maxBufferedFrames: true, maxBufferedBytes: true, timeoutMs: true }).parse(request.body);
+      const current = await loadProject(loaded.projectFile);
+      response.json(await createRenderPlan(current, { quality: body.quality, codec: body.codec, filename: body.filename, resolution: body.resolution, range: body.range, sceneId: body.sceneId, compositionId: body.compositionId, group: body.group, alphaMode: body.alphaMode, alphaBackground: body.alphaBackground }));
+    } catch (error) { next(error); }
+  });
+  app.post('/api/check-report', async (request, response, next) => {
+    try { response.json(await createCheckReport(await loadProject(loaded.projectFile), checkReportOptionsSchema.parse(request.body))); }
+    catch (error) { next(error); }
+  });
   app.post('/api/render', async (request, response, next) => {
     try {
       if ([...jobs.values()].filter((job) => job.status === 'queued' || job.status === 'rendering').length >= 8) { response.status(429).json({ error: 'The render queue is full. Wait for an export to finish.' }); return; }

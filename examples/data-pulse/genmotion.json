@@ -1579,6 +1579,7 @@
           "fontWeight": 650,
           "fontStyle": "normal",
           "color": "#b8b5ae",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1,
@@ -1586,7 +1587,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "raw-count",
@@ -1708,6 +1713,7 @@
           "fontWeight": 780,
           "fontStyle": "normal",
           "color": "#f7f5ef",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1,
@@ -1722,7 +1728,11 @@
             "prefix": "",
             "suffix": "",
             "grouping": true
-          }
+          },
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         }
       ],
       "transitionIn": {
@@ -2965,6 +2975,7 @@
           "fontWeight": 820,
           "fontStyle": "normal",
           "color": "#f7f5ef",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1,
@@ -2972,7 +2983,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "the",
@@ -3052,6 +3067,7 @@
           "fontWeight": 820,
           "fontStyle": "normal",
           "color": "#8886a2",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1,
@@ -3059,7 +3075,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "pulse",
@@ -3139,6 +3159,7 @@
           "fontWeight": 820,
           "fontStyle": "normal",
           "color": "#d7ff3f",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1,
@@ -3146,7 +3167,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "coherence-note",
@@ -3226,6 +3251,7 @@
           "fontWeight": 620,
           "fontStyle": "normal",
           "color": "#aaa8b6",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1,
@@ -3233,7 +3259,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         }
       ],
       "transitionIn": {
@@ -3442,6 +3472,7 @@
           "fontWeight": 850,
           "fontStyle": "normal",
           "color": "#0a0b0d",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1,
@@ -3449,7 +3480,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "becomes-word",
@@ -3529,6 +3564,7 @@
           "fontWeight": 620,
           "fontStyle": "normal",
           "color": "#656258",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1,
@@ -3536,7 +3572,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "direction-word",
@@ -3658,6 +3698,7 @@
           "fontWeight": 850,
           "fontStyle": "normal",
           "color": "#0a0b0d",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1,
@@ -3665,7 +3706,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "closing-dot",

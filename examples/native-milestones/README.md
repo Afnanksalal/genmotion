@@ -1,6 +1,6 @@
 # Native milestones example
 
-This four-second, asset-free project exercises five interoperable native systems in one render: reusable compositions, typed parameters and variants, measured SVG path drawing and following, first-class captions, and independently timed transition presentation.
+This four-second project exercises five interoperable native systems in one render: reusable compositions, typed parameters and variants, measured SVG path drawing and following, editorial captions, and independently timed transition presentation. Its captions use the bundled project-local Inter font, a kinetic active-word plate, and an editorial shadow treatment rather than a generic platform-subtitle appearance.
 
 ```bash
 genmotion validate examples/native-milestones --strict

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadProjectDocument } from '../src/ir/loader.js';
 import { parseParameterAssignments, resolveParameters, validateParameterValue } from '../src/ir/parameters.js';
-import { parameterSchema, projectSchema, type Parameter } from '../src/ir/schema.js';
+import { compositionSchema, layerSchema, parameterSchema, projectSchema, transitionSchema, type Parameter } from '../src/ir/schema.js';
 
 function definition(type: Parameter['type'], value: Parameter['default'], extra: Partial<Parameter> = {}): Parameter {
   return parameterSchema.parse({ id: 'value', label: 'Value', type, default: value, ...extra });
@@ -58,6 +58,28 @@ describe('structured native parameters', () => {
   it('parses structured CLI assignments and preserves quoted numeric strings', () => {
     expect(parseParameterAssignments(['count=3', 'enabled=false', 'title="007"', 'rows=[{"x":1}]', 'optional=null', 'text=hello=world'])).toEqual({ count: 3, enabled: false, title: '007', rows: [{ x: 1 }], optional: null, text: 'hello=world' });
     for (const values of [['x=[broken'], ['x=1', 'x=2'], ['__proto__=true'], ['x={"__proto__":{}}']]) expect(() => parseParameterAssignments(values)).toThrow();
+  });
+
+  it('binds declarative values through text, paint, assets, tracks, effects, transitions and instances', async () => {
+    const project = await source();
+    project.compositions = [compositionSchema.parse({ id: 'card', width: 20, height: 20, duration: 1, parameters: [{ id: 'label', label: 'Label', type: 'string', default: 'A' }], layers: [{ id: 'label', type: 'text', text: 'A', x: 0, y: 0, width: 20, height: 20, fontFamily: 'Arial', fontSize: 10, color: '#fff', bindings: { text: 'label' } }] })];
+    project.parameters = [
+      definition('string', 'Bound text', { id: 'copy' }), definition('color', '#00ff00', { id: 'tint' }), definition('asset', 'asset.png', { id: 'asset' }),
+      definition('number', 42, { id: 'position' }), definition('number', .6, { id: 'amount' }), definition('duration', .2, { id: 'transitionDuration' }), definition('string', 'Nested', { id: 'nestedLabel' }),
+    ];
+    project.scenes[0]!.transitionIn = transitionSchema.parse({ type: 'crossfade', duration: .1 });
+    project.scenes[0]!.parameterBindings = { 'transitionIn.duration': 'transitionDuration' };
+    project.scenes[0]!.layers = [
+      { id: 'text', type: 'text', text: 'old', x: 0, y: 0, width: 100, height: 30, fontFamily: 'Arial', fontSize: 20, color: '#fff', effects: [{ id: 'fade', type: 'brightness', amount: 0 }], tracks: [{ id: 'move', target: 'transform.x', keyframes: [{ at: 0, value: 0 }, { at: 1, value: 1 }] }], bindings: { text: 'copy', color: 'tint', 'tracks.0.keyframes.1.value': 'position', 'effects.0.amount': 'amount' } },
+      { id: 'image', type: 'image', src: 'old.png', x: 0, y: 0, width: 10, height: 10, bindings: { src: 'asset' } },
+      { id: 'instance', type: 'composition', compositionId: 'card', x: 0, y: 0, width: 20, height: 20, parameterValues: { label: 'A' }, bindings: { 'parameterValues.label': 'nestedLabel' } },
+    ].map(item => layerSchema.parse(item));
+    const resolved = resolveParameters(projectSchema.parse(project));
+    expect(resolved.scenes[0]!.transitionIn.duration).toBe(.2);
+    expect(resolved.scenes[0]!.layers[0]).toMatchObject({ text: 'Bound text', color: '#00ff00', tracks: [{ keyframes: [{ value: 0 }, { value: 42 }] }], effects: [{ amount: .6 }] });
+    expect(resolved.scenes[0]!.layers[1]).toMatchObject({ src: 'asset.png' });
+    const instance = resolved.scenes[0]!.layers[2]!; if (instance.type !== 'composition') throw new Error('Expected instance');
+    expect(resolved.compositions.find(item => item.id === instance.compositionId)!.layers[0]).toMatchObject({ text: 'Nested' });
   });
 
   it('hashes local parameter dependencies and refuses missing sources', async () => {

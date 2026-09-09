@@ -10,7 +10,7 @@ import { describeAuthoringSchema, authoringSchemaKindSchema } from '../src/ir/au
 import { compileGestureRecording } from '../src/engine/gesture-recording.js';
 import { gestureRecordingSchema } from '../src/ir/gesture-recording.js';
 import { inspectPathNodes, editPathNodes } from '../src/engine/path-nodes.js';
-import { revealUnicodeText, textDirection } from '../src/engine/text-unicode.js';
+import { revealUnicodeText, textDirection, textWrapUnits } from '../src/engine/text-unicode.js';
 import { resolveRenderRange } from '../src/engine/render.js';
 import { resolveRenderView } from '../src/engine/render-view.js';
 import { locateScene } from '../src/engine/timeline.js';
@@ -107,9 +107,19 @@ describe('native authoring milestone', () => {
     expect(split.contours[0]!.nodes).toHaveLength(3);
     expect(() => editPathNodes(split.path, inspected.revision, [{ op: 'move-node', contour: 0, node: 0, point: [5, 5] }])).toThrow();
   });
-  it('reveals whole graphemes and resolves the first strong bidi character', () => {
+  it('reveals whole graphemes and resolves the first strong bidi character', async () => {
     expect(revealUnicodeText('👨‍👩‍👧‍👦A', 'characters', .5)).toBe('👨‍👩‍👧‍👦');
     expect(textDirection('123 العربية', 'auto')).toBe('rtl'); expect(textDirection('123 English', 'auto')).toBe('ltr');
+    expect(textDirection('\u2067العربية\u2069 English', 'auto')).toBe('ltr');
+    expect(textWrapUnits('ภาษาไทยทดสอบ', 'th', 'word').length).toBeGreaterThan(1);
+    const mixed = projectSchema.parse({ schemaVersion: 1, id: 'bidi', title: 'Bidi', width: 240, height: 80, fps: 30, brand: { background: '#000', foreground: '#fff', accent: '#0f0', muted: '#777' }, scenes: [{ id: 'main', duration: 1, purpose: 'Bidi', background: '#000', layers: [{ id: 'mixed', type: 'text', text: 'العربية Genmotion 2026', locale: 'ar', direction: 'auto', x: 10, y: 10, width: 220, height: 60, fontFamily: 'Arial', fontSize: 24, color: '#fff' }] }] });
+    const layer = mixed.scenes[0]!.layers[0]!;
+    expect(layer.type === 'text' && layer.direction).toBe('auto');
+    const pixels = await renderFrame(mixed, process.cwd(), 0);
+    expect(pixels.some((value, index) => index % 4 === 3 && value > 0)).toBe(true);
+    expect(revealUnicodeText('ONE TWO THREE', 'words', .33)).toBe('ONE ');
+    expect(revealUnicodeText('A\nB\nC', 'lines', .34)).toBe('A\nB');
+    expect(revealUnicodeText('e\u0301X', 'glyphs', .5)).toBe('e\u0301');
   });
   it('isolates a group on transparent native pixels and rejects invalid frame intervals', async () => {
     const project = source();

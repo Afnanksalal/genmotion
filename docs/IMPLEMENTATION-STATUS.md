@@ -6,7 +6,7 @@ The full checklist is **not complete**. Genmotion is **not production-ready agai
 
 The editing tranche has passed native tests and Studio browser QA. It adds shared editing sessions, atomic batches, bounded history, reopenable checkpoints, nested sparse overrides, conflict reconciliation, live agent permissions and context, timestamped canvas recording, Unicode text controls, direct path nodes, derived preflight metadata and frozen JSON/CSV inputs. Export controls include scenes, frame intervals, standalone compositions, parented groups and explicit alpha preservation or flattening.
 
-The [2.4.0 milestone QA report](MILESTONE-QA-2026-09-07.md) records acceptance evidence and limits. Nine additional complete requirements are checked, bringing the canonical count to **75/317**. Broader requirements stay open where they include unimplemented behavior, such as full receipt dispatch/frame verification, imported-content capability controls, host-owned external history, language-server support, distributed rendering and advanced compositing.
+The [2.4.0 milestone QA report](MILESTONE-QA-2026-09-07.md) records acceptance evidence and limits. Nine additional complete requirements brought the recorded milestone count to **75/317**. A later provenance audit expanded the canonical program to 324 requirements; the current implementation and acceptance audit now records **125/324** complete requirements. This includes stronger typography/captions, composition/media timing, editing history/context, audio analysis and repair, reproducible render manifests, review artifacts, motion diagnostics, native variant comparison, capability diagnostics and typed delivery variants. Broader requirements stay open where their complete contracts remain unimplemented.
 
 Studio now uses [shared custom controls](STUDIO-CONTROLS.md) throughout its inspectors and dialogs, with anchored dropdowns, numeric steppers, themed toggles/sliders, file selection, color editing and audio transport.
 
@@ -35,6 +35,8 @@ The implementation accumulated after the earlier checkpoint has now undergone na
 | Audio processing | Typed effect racks, gain/rate/reverse controls, configurable voice ducking, source-audio fixes, verified audio-only exports and processed Studio preview | Decoded PCM measurements, four audio/video containers, browser rack and ducking controls |
 | Animation controls | Native gradients, spatial stagger, derivative plots, exact subframes, group mute/solo, edit locks and typed property links | Native pixels/math, CLI/MCP and Studio persistence/visual QA |
 | Text layout | Shared native fitting, full-content line limits, grapheme wrapping, explicit overflow and automatic dimensions | Measurement and native contact-sheet QA, CLI/MCP/Studio checks |
+| Text readability treatments | Rounded whole-block and resolved-line backgrounds with independent padding/radius | Native pixel assertions for block and multiline backgrounds |
+| Temporal sampling | Deterministic project shutter sampling with premultiplied-alpha accumulation and delivery-quality sample caps | Native moving-edge blur and repeated-render equivalence tests |
 | Path confinement | Existing and not-yet-created asset/cache/history paths check canonical ancestors; dangling links are refused | Loader confinement tests and native pipeline tests |
 
 GM-083 and the verified frame-hold, SVG parser, easing clipboard, boolean/stroke geometry, ducking and audio-effect requirements are checked in the canonical backlog. GM-084 and the broader editing, media, export and production requirements remain unchecked where their full acceptance contract exceeds the behavior verified here.
@@ -57,7 +59,7 @@ Verification was performed on this Windows host. It does not establish Linux/mac
 
 The [canonical checklist](NATIVE-CAPABILITY-BACKLOG.md) remains authoritative. Major open systems include full nested timing/group semantics, derived parameters and advanced data variants, complete visual-effect coverage and audio bus routing, broader color management, professional compositing/3D, media acquisition and provenance, complete reproducibility and production-workflow acceptance, editing sessions and persistent gesture history, time-aware visual assertions, distributed rendering and the AE tracking/roto/cleanup/deformation/interchange requirements.
 
-The checklist currently contains **66 checked items and 251 unchecked items**, including its architectural guardrails. The [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md) records the 24 newly closed requirements and final verification; the remaining requirements stay open.
+The checklist currently contains **110 checked items and 214 unchecked items** across **324 requirements**, including its architectural guardrails. The [acceptance reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md) records the earlier 24 newly closed requirements and final verification; the remaining requirements stay open.
 
 Specific limits of the changes above remain explicit:
 

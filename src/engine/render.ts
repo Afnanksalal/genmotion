@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { replaceFile } from '../ir/atomic.js';
@@ -16,18 +17,22 @@ import { probeVideo, type VideoProbe } from './probe.js';
 import { projectForRenderComposition } from './render-projection.js';
 import { resolveRenderView } from './render-view.js';
 import { resolveAlphaOutput, flattenRgbaInPlace, type AlphaMode, type AlphaOutput } from './alpha-output.js';
+import { resolveOutputCompatibility, validateCompatibilityContainer } from './output-compatibility.js';
 
 export type RenderQuality = 'draft' | 'standard' | 'high';
 export type VideoCodec = 'h264' | 'h265' | 'vp9' | 'prores';
+
+export function temporalSamplesForQuality(samples: number, quality: RenderQuality): number {
+  const limit = quality === 'draft' ? 2 : quality === 'standard' ? 4 : 8;
+  return Math.max(1, Math.min(samples, limit));
+}
 
 export function defaultVideoExtension(codec: VideoCodec): string {
   return codec === 'vp9' ? '.webm' : codec === 'prores' ? '.mov' : '.mp4';
 }
 
 export function validateOutputContainer(output: string, codec: VideoCodec): void {
-  const extension = path.extname(output).toLowerCase();
-  const supported = codec === 'vp9' ? ['.webm'] : codec === 'prores' ? ['.mov'] : ['.mp4', '.mov'];
-  if (!supported.includes(extension)) throw new GenmotionError('INVALID_OUTPUT_CONTAINER', `${codec} output requires ${supported.join(' or ')}.`, { output, codec });
+  validateCompatibilityContainer(output, codec);
 }
 
 export interface RenderOptions {
@@ -79,6 +84,13 @@ export interface RenderResult {
   sourceCompositionId?: string;
   sourceGroup?: { sceneId: string; layerId: string };
   alphaOutput: AlphaOutput;
+  manifest: { version: 1; inputSha256: string; artifactSha256: string };
+}
+
+async function fileSha256(file: string): Promise<string> {
+  const hash = createHash('sha256');
+  for await (const chunk of createReadStream(file)) hash.update(chunk as Buffer);
+  return hash.digest('hex');
 }
 
 export function resolveRenderRange(project: GenmotionProject, options: Pick<RenderOptions, 'range' | 'sceneId' | 'group'>): { startFrame: number; endFrame: number } {
@@ -180,11 +192,13 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   const started = performance.now();
   const { projectDir } = loaded;
   if (options.compositionId !== undefined && (options.sceneId !== undefined || options.group)) throw new GenmotionError('RENDER_SELECTION_CONFLICT', 'Choose a scene, group or standalone composition.');
-  const project = projectForRenderComposition(loaded.project, options.compositionId);
-  const view = resolveRenderView(project, options.group);
+  let project = projectForRenderComposition(loaded.project, options.compositionId);
   const quality = options.quality ?? 'high';
   const codec = options.codec ?? 'h264';
   if (!['draft', 'standard', 'high'].includes(quality) || !['h264', 'h265', 'vp9', 'prores'].includes(codec)) throw new GenmotionError('INVALID_RENDER_OPTIONS', 'Unknown output quality or codec.');
+  if (options.hardwareAcceleration && codec !== 'h264') throw new GenmotionError('HARDWARE_CODEC_UNSUPPORTED', `Hardware acceleration is unavailable for ${codec}; choose software explicitly.`);
+  if (project.motionBlur) project = { ...project, motionBlur: { ...project.motionBlur, samples: temporalSamplesForQuality(project.motionBlur.samples, quality) } };
+  const view = resolveRenderView(project, options.group);
   const alphaOutput = resolveAlphaOutput(codec, options.alphaMode, options.alphaBackground);
   const dimensions = resolveRenderResolution(project, quality, options.resolution);
   const limits = resolveRenderLimits(dimensions, options);
@@ -195,7 +209,7 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
   if (!Number.isSafeInteger(totalFrames) || totalFrames < 1) throw new GenmotionError('INVALID_RENDER_DURATION', 'A render must contain a finite positive frame count.');
   const selectionSuffix = (options.compositionId !== undefined ? `-composition-${options.compositionId}` : '') + (options.group ? `-group-${options.group.sceneId}-${options.group.layerId}` : '') + (options.sceneId !== undefined ? `-scene-${options.sceneId}` : options.range ? `-frames-${sourceRange.startFrame}-${sourceRange.endFrame}` : '');
   const output = path.resolve(options.output ?? path.join(projectDir, 'renders', `${project.outputName ?? project.id}${selectionSuffix}${defaultVideoExtension(codec)}`));
-  validateOutputContainer(output, codec);
+  resolveOutputCompatibility({ codec, filename: output, alphaMode: options.alphaMode ?? 'auto', alphaBackground: options.alphaBackground, width: dimensions.width, height: dimensions.height, hardwareAcceleration: options.hardwareAcceleration ?? false });
   const outputKey = process.platform === 'win32' ? output.toLowerCase() : output;
   if (activeOutputs.has(outputKey)) throw new GenmotionError('OUTPUT_BUSY', 'An active render already owns this output path.');
   activeOutputs.add(outputKey);
@@ -205,7 +219,8 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
     controller.abort(new GenmotionError('RENDER_TIMEOUT', 'Render exceeded its deadline.', { timeoutMs: options.timeoutMs }));
   }, options.timeoutMs);
   deadline?.unref();
-  const renderId = createHash('sha256').update(JSON.stringify({ project, dimensions, quality, codec, alphaOutput, ...(selected ? { sourceRange } : {}), ...(view ? { view } : {}) })).digest('hex').slice(0, 16);
+  const inputSha256 = createHash('sha256').update(JSON.stringify({ project, dimensions, quality, codec, alphaOutput, ...(selected ? { sourceRange } : {}), ...(view ? { view } : {}) })).digest('hex');
+  const renderId = inputSha256.slice(0, 16);
   let stage: RenderStage = 'preparing';
   let peakBufferedBytes = 0;
   let state: FrameStreamState = { renderedFrames: 0, encodedFrames: 0, inFlightFrames: 0, bufferedFrames: 0, bufferedBytes: 0, maxBufferedFrames: Math.min(limits.capacity, totalFrames), maxBufferedBytes: Math.min(limits.capacity, totalFrames) * limits.frameBytes };
@@ -281,5 +296,6 @@ export async function renderProject(loaded: LoadedProject, options: RenderOption
     } finally { activeOutputs.delete(outputKey); }
   }
   const elapsedMs = performance.now() - started;
-  return { output, duration, frames: totalFrames, elapsedMs, averageFps: totalFrames / (elapsedMs / 1000), renderId, ...dimensions, quality, codec, alphaOutput, sourceRange, ...(options.compositionId !== undefined ? { sourceCompositionId: options.compositionId } : {}), ...(view ? { sourceGroup: { sceneId: view.sceneId, layerId: view.layerIds[0]! } } : {}), peakBufferedBytes, workers: Math.min(limits.workers, totalFrames), probe: acceptedProbe };
+  const artifactSha256 = await fileSha256(output);
+  return { output, duration, frames: totalFrames, elapsedMs, averageFps: totalFrames / (elapsedMs / 1000), renderId, ...dimensions, quality, codec, alphaOutput, sourceRange, ...(options.compositionId !== undefined ? { sourceCompositionId: options.compositionId } : {}), ...(view ? { sourceGroup: { sceneId: view.sceneId, layerId: view.layerIds[0]! } } : {}), peakBufferedBytes, workers: Math.min(limits.workers, totalFrames), probe: acceptedProbe, manifest: { version: 1, inputSha256, artifactSha256 } };
 }

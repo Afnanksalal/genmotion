@@ -62,7 +62,22 @@ function drawText(ctx: SKRSContext2D, original: TextLayer, time: number): void {
       content = `${format.prefix}${value.toLocaleString(original.locale ?? 'en-US', { useGrouping: format.grouping, minimumFractionDigits: format.decimals, maximumFractionDigits: format.decimals })}${format.suffix}`;
     }
   }
-  let layer = { ...original, text: revealUnicodeText(content, original.reveal, evaluateNumber(original.revealProgress, time), original.locale) };
+  const padding = original.blockPadding;
+  if (original.blockBackground) {
+    ctx.fillStyle = original.blockBackground;
+    roundedPath(ctx, original.x, original.y, original.width, original.height, original.blockRadius);
+    ctx.fill();
+  }
+  let layer: TextLayer = {
+    ...original,
+    x: original.x + padding,
+    y: original.y + padding,
+    width: Math.max(1, original.width - padding * 2),
+    height: Math.max(1, original.height - padding * 2),
+    blockPadding: original.blockPadding,
+    blockRadius: original.blockRadius,
+    text: revealUnicodeText(content, original.reveal, evaluateNumber(original.revealProgress, time), original.locale),
+  };
   const layout = resolveTextLayout(ctx, layer);
   const { lines, fontSize } = layout;
   layer = { ...layer, width: layout.boxWidth, height: layout.boxHeight };
@@ -71,7 +86,27 @@ function drawText(ctx: SKRSContext2D, original: TextLayer, time: number): void {
   ctx.textBaseline = layout.textBaseline;
   ctx.textAlign = 'left';
   ctx.letterSpacing = `${layer.letterSpacing}px`;
+  if (layer.lineBackground) {
+    ctx.fillStyle = layer.lineBackground;
+    for (const [index] of lines.entries()) {
+      const lineWidth = layout.widths[index]!;
+      const x = layer.x + layout.xOffsets[index]! - layer.linePadding;
+      const y = layer.y + layout.yOffsets[index]! - layer.linePadding;
+      roundedPath(ctx, x, y, lineWidth + layer.linePadding * 2, layout.lineHeight + layer.linePadding * 2, layer.lineRadius);
+      ctx.fill();
+    }
+    ctx.fillStyle = layer.gradientFill ? createGradient(ctx, layer.gradientFill, layer) : layer.color;
+  }
   applyShadow(ctx, layer.shadow);
+  if (layer.outlineColor && layer.outlineWidth > 0) {
+    ctx.strokeStyle = layer.outlineColor;
+    ctx.lineWidth = layer.outlineWidth * 2;
+    ctx.lineJoin = 'round';
+    for (const [index, line] of lines.entries()) {
+      ctx.direction = layout.directions[index]!;
+      ctx.strokeText(line, layer.x + layout.xOffsets[index]!, layer.y + layout.yOffsets[index]!);
+    }
+  }
   for (const [index, line] of lines.entries()) {
     ctx.direction = layout.directions[index]!;
     ctx.fillText(line, layer.x + layout.xOffsets[index]!, layer.y + layout.yOffsets[index]!);
@@ -89,7 +124,8 @@ function drawCaption(ctx: SKRSContext2D, layer: CaptionLayer, time: number): voi
   const textLayer: TextLayer = {
     ...layer, type: 'text', text: speakerPrefix + cue.text,
     fit: 'shrink', reveal: 'none', revealProgress: 1, countProgress: 1,
-    verticalAlign: 'middle', lineHeight: 1.12, letterSpacing: 0, fontStyle: 'normal',
+    verticalAlign: 'middle', lineHeight: layer.lineHeight, letterSpacing: layer.letterSpacing, fontStyle: 'normal',
+    blockPadding: 0, blockRadius: 0, linePadding: 0, lineRadius: 0,
   };
   if (layer.background) {
     ctx.fillStyle = layer.background;
@@ -99,19 +135,17 @@ function drawCaption(ctx: SKRSContext2D, layer: CaptionLayer, time: number): voi
   const inset = { ...textLayer, x: layer.x + layer.padding, y: layer.y + layer.padding, width: Math.max(1, layer.width - layer.padding * 2), height: Math.max(1, layer.height - layer.padding * 2) };
   if (layer.outlineColor && layer.outlineWidth > 0) {
     const layout = resolveTextLayout(ctx, inset);
-    ctx.save(); ctx.font = fontString(inset, layout.fontSize); ctx.textBaseline = 'top'; ctx.textAlign = 'left'; ctx.strokeStyle = layer.outlineColor; ctx.lineWidth = layer.outlineWidth * 2; ctx.lineJoin = 'round';
-    const blockHeight = layout.lines.length * layout.lineHeight;
+    ctx.save(); ctx.font = fontString(inset, layout.fontSize); ctx.textBaseline = layout.textBaseline; ctx.textAlign = 'left'; ctx.letterSpacing = `${inset.letterSpacing}px`; ctx.strokeStyle = layer.outlineColor; ctx.lineWidth = layer.outlineWidth * 2; ctx.lineJoin = 'round';
     for (const [index, line] of layout.lines.entries()) {
-      const measured = ctx.measureText(line).width;
-      const x = inset.x + (inset.align === 'center' ? (inset.width - measured) / 2 : inset.align === 'right' ? inset.width - measured : 0);
-      ctx.strokeText(line, x, inset.y + (inset.height - blockHeight) / 2 + index * layout.lineHeight);
+      ctx.direction = layout.directions[index]!;
+      ctx.strokeText(line, inset.x + layout.xOffsets[index]!, inset.y + layout.yOffsets[index]!);
     }
     ctx.restore();
   }
-  drawText(ctx, inset, time);
-  if (layer.highlightColor && layer.highlightMode !== 'none') {
+  const highlightPlate = layer.highlightBackground ?? (layer.identity === 'kinetic' ? layer.highlightColor : undefined);
+  if (highlightPlate && layer.highlightMode !== 'none') {
     const layout = resolveTextLayout(ctx, inset), lineRanges = captionLineRanges(inset.text, layout.lines), words = captionWordRanges(cue);
-    ctx.save(); ctx.font = fontString(inset, layout.fontSize); ctx.textBaseline = 'top'; ctx.textAlign = 'left'; ctx.fillStyle = layer.highlightColor;
+    ctx.save(); ctx.font = fontString(inset, layout.fontSize); ctx.textBaseline = layout.textBaseline; ctx.textAlign = 'left'; ctx.letterSpacing = `${inset.letterSpacing}px`; ctx.fillStyle = highlightPlate;
     for (const wordRange of words) {
       const word = cue.words[wordRange.index]!;
       const progress = layer.highlightMode === 'karaoke' ? Math.max(0, Math.min(1, (time - word.start) / (word.end - word.start))) : time >= word.start && time < word.end ? 1 : 0;
@@ -121,11 +155,33 @@ function drawCaption(ctx: SKRSContext2D, layer: CaptionLayer, time: number): voi
         const mapping = lineRanges[lineIndex]!, first = mapping.indices.findIndex((offset) => offset >= start && offset < end);
         if (first < 0) continue;
         let last = first + 1; while (last < mapping.indices.length && mapping.indices[last]! < end) last += 1;
-        const measured = ctx.measureText(line).width, prefixWidth = ctx.measureText(line.slice(0, first)).width, throughWidth = ctx.measureText(line.slice(0, last)).width;
-        const left = inset.x + (inset.align === 'center' ? (inset.width - measured) / 2 : inset.align === 'right' ? inset.width - measured : 0), top = inset.y + (inset.height - layout.lines.length * layout.lineHeight) / 2 + lineIndex * layout.lineHeight;
+        const measured = layout.widths[lineIndex]!, prefixWidth = ctx.measureText(line.slice(0, first)).width, throughWidth = ctx.measureText(line.slice(0, last)).width;
+        const width = Math.max(0, throughWidth - prefixWidth) * progress;
+        const left = inset.x + layout.xOffsets[lineIndex]!, x = layer.direction === 'rtl' ? left + measured - prefixWidth - width : left + prefixWidth;
+        roundedPath(ctx, x - layer.highlightPadding, inset.y + layout.yOffsets[lineIndex]! - layout.fontSize * .25 - layer.highlightPadding, width + layer.highlightPadding * 2, layout.lineHeight + layer.highlightPadding * 2, layer.highlightRadius);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+  drawText(ctx, inset, time);
+  if (layer.highlightColor && layer.highlightMode !== 'none') {
+    const layout = resolveTextLayout(ctx, inset), lineRanges = captionLineRanges(inset.text, layout.lines), words = captionWordRanges(cue);
+    ctx.save(); ctx.font = fontString(inset, layout.fontSize); ctx.textBaseline = layout.textBaseline; ctx.textAlign = 'left'; ctx.letterSpacing = `${inset.letterSpacing}px`; ctx.fillStyle = layer.highlightColor;
+    for (const wordRange of words) {
+      const word = cue.words[wordRange.index]!;
+      const progress = layer.highlightMode === 'karaoke' ? Math.max(0, Math.min(1, (time - word.start) / (word.end - word.start))) : time >= word.start && time < word.end ? 1 : 0;
+      if (progress <= 0) continue;
+      const start = speakerPrefix.length + wordRange.start, end = speakerPrefix.length + wordRange.end;
+      for (const [lineIndex, line] of layout.lines.entries()) {
+        const mapping = lineRanges[lineIndex]!, first = mapping.indices.findIndex((offset) => offset >= start && offset < end);
+        if (first < 0) continue;
+        let last = first + 1; while (last < mapping.indices.length && mapping.indices[last]! < end) last += 1;
+        const measured = layout.widths[lineIndex]!, prefixWidth = ctx.measureText(line.slice(0, first)).width, throughWidth = ctx.measureText(line.slice(0, last)).width;
+        const left = inset.x + layout.xOffsets[lineIndex]!, top = inset.y + layout.yOffsets[lineIndex]!;
         const width = Math.max(0, throughWidth - prefixWidth), highlightedWidth = width * progress;
         const x = layer.direction === 'rtl' ? left + measured - prefixWidth - highlightedWidth : left + prefixWidth;
-        ctx.save(); ctx.beginPath(); ctx.rect(x, top - layout.fontSize * .3, highlightedWidth, layout.lineHeight + layout.fontSize * .6); ctx.clip(); ctx.fillText(line, left, top); ctx.restore();
+        ctx.save(); ctx.direction = layout.directions[lineIndex]!; ctx.beginPath(); ctx.rect(x, top - layout.fontSize * .3, highlightedWidth, layout.lineHeight + layout.fontSize * .6); ctx.clip(); ctx.fillText(line, left, top); ctx.restore();
       }
     }
     ctx.restore();
@@ -483,14 +539,13 @@ function checkedDimensions(project: GenmotionProject, dimensions?: RenderDimensi
   return { width, height };
 }
 
-async function renderFrameCanvas(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Canvas> {
-  if (!Number.isFinite(frame) || frame < 0 || !Number.isFinite(project.fps) || project.fps <= 0 || !Number.isFinite(frame / project.fps)) throw new Error('Rendering requires a finite nonnegative frame and positive FPS.');
+async function renderFrameCanvasAtTime(project: GenmotionProject, projectDir: string, globalTime: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Canvas> {
+  if (!Number.isFinite(globalTime) || globalTime < 0 || !Number.isFinite(project.fps) || project.fps <= 0) throw new Error('Rendering requires a finite nonnegative time and positive FPS.');
   registerProjectFonts(project, projectDir);
   const output = checkedDimensions(project, dimensions);
   const canvas = createCanvas(output.width, output.height);
   const ctx = canvas.getContext('2d');
   ctx.scale(output.width / project.width, output.height / project.height);
-  const globalTime = frame / project.fps;
   const active = locateScene(project, globalTime);
   const identity: ScenePose = { alpha: 1, x: 0, y: 0, scale: 1, blur: 0 };
 
@@ -512,6 +567,50 @@ async function renderFrameCanvas(project: GenmotionProject, projectDir: string, 
   }
 
   return canvas;
+}
+
+function temporalSampleTimes(project: GenmotionProject, globalTime: number): number[] {
+  const settings = project.motionBlur;
+  if (!settings || settings.shutterAngle <= 0 || settings.samples < 2) return [globalTime];
+  const duration = project.scenes.reduce((sum, scene) => sum + scene.duration, 0);
+  const shutterDuration = settings.shutterAngle / 360 / project.fps;
+  const start = globalTime - shutterDuration / 2;
+  const finalTime = Math.max(0, duration - 1e-9);
+  return Array.from({ length: settings.samples }, (_, index) => Math.max(0, Math.min(finalTime, start + shutterDuration * (index + .5) / settings.samples)));
+}
+
+function averageTemporalCanvases(samples: Canvas[]): Canvas {
+  const first = samples[0];
+  if (!first) throw new Error('Temporal sampling requires at least one frame.');
+  if (samples.length === 1) return first;
+  const output = createCanvas(first.width, first.height), context = output.getContext('2d');
+  const sums = new Float64Array(first.width * first.height * 4);
+  for (const sample of samples) {
+    const pixels = sample.getContext('2d').getImageData(0, 0, sample.width, sample.height).data;
+    for (let offset = 0; offset < pixels.length; offset += 4) {
+      const alpha = pixels[offset + 3]! / 255;
+      sums[offset] = sums[offset]! + pixels[offset]! * alpha;
+      sums[offset + 1] = sums[offset + 1]! + pixels[offset + 1]! * alpha;
+      sums[offset + 2] = sums[offset + 2]! + pixels[offset + 2]! * alpha;
+      sums[offset + 3] = sums[offset + 3]! + alpha;
+    }
+  }
+  const result = context.createImageData(first.width, first.height), divisor = samples.length;
+  for (let offset = 0; offset < result.data.length; offset += 4) {
+    const alpha = sums[offset + 3]! / divisor;
+    result.data[offset] = alpha ? Math.round(Math.max(0, Math.min(255, sums[offset]! / divisor / alpha))) : 0;
+    result.data[offset + 1] = alpha ? Math.round(Math.max(0, Math.min(255, sums[offset + 1]! / divisor / alpha))) : 0;
+    result.data[offset + 2] = alpha ? Math.round(Math.max(0, Math.min(255, sums[offset + 2]! / divisor / alpha))) : 0;
+    result.data[offset + 3] = Math.round(Math.max(0, Math.min(255, alpha * 255)));
+  }
+  context.putImageData(result, 0, 0);
+  return output;
+}
+
+async function renderFrameCanvas(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Canvas> {
+  if (!Number.isFinite(frame) || frame < 0 || !Number.isFinite(project.fps) || project.fps <= 0 || !Number.isFinite(frame / project.fps)) throw new Error('Rendering requires a finite nonnegative frame and positive FPS.');
+  const sampleTimes = temporalSampleTimes(project, frame / project.fps);
+  return averageTemporalCanvases(await Promise.all(sampleTimes.map((time) => renderFrameCanvasAtTime(project, projectDir, time, dimensions, view))));
 }
 
 export async function renderFrame(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Buffer> {

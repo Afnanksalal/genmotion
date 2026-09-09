@@ -253,13 +253,17 @@ describe('Genmotion Studio', () => {
       };
       expect(bootstrap.catalog.motions.length).toBe(25);
       expect(bootstrap.catalog.references.length).toBe(16);
+      expect(await fetch(`${studio.url}/api/output-compatibility`).then((response) => response.json())).toMatchObject({ h264: { containers: ['mp4', 'mov'] }, vp9: { alpha: true } });
 
-      const project = structuredClone(bootstrap.project) as { title: string };
+      const project = structuredClone(bootstrap.project) as { title: string; scenes: Array<{ layers: Array<Record<string, unknown>> }> };
       project.title = 'Edited in Studio';
+      Object.assign(project.scenes[0]!.layers.find((layer) => layer.id === 'title')!, { blockBackground: '#112233', blockPadding: 6, blockRadius: 10, lineBackground: '#334455', linePadding: 3, lineRadius: 5 });
       const saved = await fetch(`${studio.url}/api/project`, { method: 'PUT', headers, body: JSON.stringify({ revision: bootstrap.revision, project }) });
       expect(saved.status).toBe(200);
       const savedBody = await saved.json() as { revision: string };
-      expect(JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8'))).toMatchObject({ title: 'Edited in Studio' });
+      const persistedProject = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as GenmotionProject;
+      expect(persistedProject.title).toBe('Edited in Studio');
+      expect(persistedProject.scenes[0]!.layers.find((layer) => layer.id === 'title')).toMatchObject({ blockBackground: '#112233', blockPadding: 6, blockRadius: 10, lineBackground: '#334455', linePadding: 3, lineRadius: 5 });
 
       const conflict = await fetch(`${studio.url}/api/project`, { method: 'PUT', headers, body: JSON.stringify({ revision: bootstrap.revision, project }) });
       expect(conflict.status).toBe(409);
@@ -300,6 +304,13 @@ describe('Genmotion Studio', () => {
       expect((await getStudioRequests(directory))[0]).toMatchObject({ id: request.id, status: 'pending' });
       expect(await resolveStudioRequest(directory, request.id, 'Extended the hold and revalidated the timeline.')).toMatchObject({ status: 'resolved' });
       expect(await fetch(`${studio.url}/api/requests`).then((response) => response.json())).toContainEqual(expect.objectContaining({ id: request.id, status: 'resolved' }));
+
+      const planResponse = await fetch(`${studio.url}/api/render-plan`, { method: 'POST', headers, body: JSON.stringify({ filename: 'studio-test.mp4', quality: 'draft', codec: 'h264', alphaMode: 'auto' }) });
+      expect(planResponse.status).toBe(200);
+      expect(await planResponse.json()).toMatchObject({ version: 1, delivery: { quality: 'draft', codec: 'h264', dimensions: { width: 320, height: 180 }, output: { filename: 'studio-test.mp4', identity: expect.stringMatching(/^[a-f0-9]{64}$/) } } });
+      const checkResponse = await fetch(`${studio.url}/api/check-report`, { method: 'POST', headers, body: JSON.stringify({ maxSamples: 20 }) });
+      expect(checkResponse.status).toBe(200);
+      expect(await checkResponse.json()).toMatchObject({ version: 1, incompleteChecks: [], sampling: { coverage: 'complete' } });
 
       const history = await fetch(`${studio.url}/api/history`).then((response) => response.json()) as Array<{ revision: string }>;
       expect(history.length).toBeGreaterThan(0);
@@ -366,6 +377,8 @@ describe('Genmotion Studio', () => {
         { method: 'POST', path: '/api/agents/refresh', body: {} },
         { method: 'POST', path: '/api/requests/00000000-0000-0000-0000-000000000000/cancel', body: {} },
         { method: 'POST', path: '/api/render', body: {} },
+        { method: 'POST', path: '/api/render-plan', body: {} },
+        { method: 'POST', path: '/api/check-report', body: {} },
         { method: 'POST', path: '/api/jobs/00000000-0000-0000-0000-000000000000/cancel', body: {} },
         { method: 'POST', path: '/api/projects/open', body: {} },
         { method: 'POST', path: '/api/projects', body: {} },

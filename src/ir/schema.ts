@@ -135,6 +135,12 @@ export const transformSchema = z.object({
   anchorY: finite.min(0).max(1).default(0.5),
 });
 
+/** Native temporal sampling around the output frame timestamp. */
+export const temporalSamplingSchema = z.object({
+  shutterAngle: finite.min(0).max(360).default(180),
+  samples: z.number().int().min(1).max(16).default(4),
+}).strict();
+
 export const motionDirectiveSchema = z.object({
   recipe: z.string().min(1),
   start: nonNegative.default(0),
@@ -275,6 +281,8 @@ export const textLayerSchema = baseLayerSchema.extend({
   fontWeight: z.union([z.number().int().min(100).max(900), z.enum(['normal', 'bold'])]).default(400),
   fontStyle: z.enum(['normal', 'italic']).default('normal'),
   color: color,
+  outlineColor: color.optional(),
+  outlineWidth: nonNegative.default(0),
   gradientFill: gradientSchema.optional(),
   align: z.enum(['left', 'center', 'right']).default('left'),
   verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
@@ -289,7 +297,7 @@ export const textLayerSchema = baseLayerSchema.extend({
   maxFontSize: positive.optional(),
   autoSize: z.enum(['none', 'height', 'both']).optional(),
   breakWords: z.boolean().optional(),
-  reveal: z.enum(['none', 'words', 'characters', 'lines']).default('none'),
+  reveal: z.enum(['none', 'words', 'characters', 'glyphs', 'lines']).default('none'),
   revealProgress: animatedNumberSchema.default(1),
   countFrom: finite.optional(),
   countProgress: animatedNumberSchema.default(1),
@@ -300,6 +308,13 @@ export const textLayerSchema = baseLayerSchema.extend({
     grouping: z.boolean().default(true),
   }).optional(),
   shadow: z.object({ color, blur: nonNegative, offsetX: finite.default(0), offsetY: finite.default(0) }).optional(),
+  /** A native rounded color block behind the complete authored text box. */
+  blockBackground: color.optional(),
+  blockPadding: nonNegative.default(0),
+  blockRadius: nonNegative.default(0),
+  lineBackground: color.optional(),
+  linePadding: nonNegative.default(0),
+  lineRadius: nonNegative.default(0),
 });
 
 export const shapeLayerSchema = baseLayerSchema.extend({
@@ -405,7 +420,12 @@ export const compositionLayerSchema = baseLayerSchema.extend({
   clipToBounds: z.boolean().optional(),
 });
 
-export const captionStyleSchema = z.object({ color: color.optional(), highlightColor: color.optional(), background: color.optional(), outlineColor: color.optional(), outlineWidth: nonNegative.optional(), fontSize: positive.optional(), fontWeight: z.union([z.number().int().min(100).max(900), z.enum(['normal', 'bold'])]).optional(), direction: z.enum(['ltr', 'rtl']).optional() }).strict();
+export const captionStyleSchema = z.object({
+  color: color.optional(), highlightColor: color.optional(), highlightBackground: color.optional(), background: color.optional(), outlineColor: color.optional(), outlineWidth: nonNegative.optional(),
+  fontSize: positive.optional(), fontWeight: z.union([z.number().int().min(100).max(900), z.enum(['normal', 'bold'])]).optional(), direction: z.enum(['ltr', 'rtl']).optional(),
+  align: z.enum(['left', 'center', 'right']).optional(), lineHeight: positive.optional(), letterSpacing: finite.optional(),
+  padding: nonNegative.optional(), radius: nonNegative.optional(), highlightPadding: nonNegative.optional(), highlightRadius: nonNegative.optional(), maxLines: z.number().int().positive().optional(),
+}).strict();
 export const captionCueSchema = z.object({
   id: identifier,
   start: nonNegative,
@@ -432,12 +452,19 @@ export const captionLayerSchema = baseLayerSchema.extend({
   fontWeight: z.union([z.number().int().min(100).max(900), z.enum(['normal', 'bold'])]).default(700),
   color,
   highlightColor: color.optional(),
+  /** Editorial caption treatment. It changes native emphasis behavior, never substitutes a font. */
+  identity: z.enum(['editorial', 'kinetic', 'lyric', 'minimal']).default('editorial'),
+  highlightBackground: color.optional(),
+  highlightPadding: nonNegative.default(8),
+  highlightRadius: nonNegative.default(8),
   background: color.optional(),
   outlineColor: color.optional(),
   outlineWidth: nonNegative.default(0),
   radius: nonNegative.default(16),
   padding: nonNegative.default(18),
   align: z.enum(['left', 'center', 'right']).default('center'),
+  lineHeight: positive.default(1.12),
+  letterSpacing: finite.default(0),
   maxLines: z.number().int().positive().default(2),
   safeArea: z.boolean().default(true),
 });
@@ -555,7 +582,12 @@ export const sceneSchema = z.object({
   purpose: z.string().min(1),
   duration: positive,
   durationMode: z.enum(['explicit', 'content']).optional(), durationPadding: nonNegative.optional(),
-  parameterBindings: z.object({ duration: identifier.optional() }).strict().optional(),
+  parameterBindings: z.object({
+    duration: identifier.optional(),
+    'transitionIn.duration': identifier.optional(), 'transitionOut.duration': identifier.optional(),
+    'transitionIn.presentation': identifier.optional(), 'transitionOut.presentation': identifier.optional(),
+    'transitionIn.overlayCompositionId': identifier.optional(), 'transitionOut.overlayCompositionId': identifier.optional(),
+  }).strict().optional(),
   background: color,
   layers: z.array(layerSchema).min(1),
   effects: visualEffectsSchema.optional(),
@@ -603,7 +635,10 @@ export const projectSchema = z.object({
   width: z.number().int().min(64).max(8192),
   height: z.number().int().min(64).max(8192),
   fps: z.number().int().min(1).max(120),
-  parameterBindings: z.object({ width: identifier.optional(), height: identifier.optional(), fps: identifier.optional(), title: identifier.optional(), outputName: identifier.optional() }).strict().optional(),
+  parameterBindings: z.object({
+    width: identifier.optional(), height: identifier.optional(), fps: identifier.optional(), title: identifier.optional(), outputName: identifier.optional(),
+    'brand.background': identifier.optional(), 'brand.foreground': identifier.optional(), 'brand.accent': identifier.optional(), 'brand.muted': identifier.optional(),
+  }).strict().optional(),
   seed: z.number().int().default(1),
   anchors: z.array(geometryAnchorSchema).default([]),
   parameters: z.array(parameterSchema).default([]),
@@ -629,6 +664,7 @@ export const projectSchema = z.object({
     attackMs: finite.min(0.01).max(2_000).default(20),
     releaseMs: finite.min(0.01).max(9_000).default(350),
   }).strict().optional(),
+  motionBlur: temporalSamplingSchema.optional(),
   metadata: z.record(z.string(), z.string()).default({}),
 });
 
@@ -644,6 +680,7 @@ export type AnimatedNumber = z.infer<typeof animatedNumberSchema>;
 export type AnimationTrack = z.infer<typeof animationTrackSchema>;
 export type VisualEffect = z.infer<typeof visualEffectSchema>;
 export type Transform = z.infer<typeof transformSchema>;
+export type TemporalSampling = z.infer<typeof temporalSamplingSchema>;
 export type Layer = z.infer<typeof layerSchema>;
 export type TextLayer = z.infer<typeof textLayerSchema>;
 export type ShapeLayer = z.infer<typeof shapeLayerSchema>;

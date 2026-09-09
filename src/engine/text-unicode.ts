@@ -27,13 +27,13 @@ export function textDirection(text: string, direction: 'ltr' | 'rtl' | 'auto' = 
   }
   return 'ltr';
 }
-export function revealUnicodeText(text: string, mode: 'none' | 'characters' | 'words' | 'lines', progress: number, locale = 'en'): string {
+export function revealUnicodeText(text: string, mode: 'none' | 'characters' | 'glyphs' | 'words' | 'lines', progress: number, locale = 'en'): string {
   if (!Number.isFinite(progress)) throw new Error('Text reveal progress must be finite.');
   const amount = Math.max(0, Math.min(1, progress));
   if (mode === 'none' || amount >= 1) return text;
   if (amount <= 0) return '';
   if (mode === 'lines') { const lines = text.split(/\r\n|[\n\r\u2028\u2029]/u); return lines.slice(0, Math.ceil(lines.length * amount)).join('\n'); }
-  const segments = [...textSegmenter(locale, mode === 'characters' ? 'grapheme' : 'word').segment(text)];
+  const segments = [...textSegmenter(locale, mode === 'characters' || mode === 'glyphs' ? 'grapheme' : 'word').segment(text)];
   const units = mode === 'words' ? segments.filter(segment => segment.isWordLike) : segments;
   if (!units.length) return mode === 'words' ? revealUnicodeText(text, 'characters', amount, locale) : '';
   const count = Math.ceil(units.length * amount), next = units[count];

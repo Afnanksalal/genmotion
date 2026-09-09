@@ -1,11 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { captionCueSchema } from '../src/ir/schema.js';
+import { captionCueSchema, captionLayerSchema, projectSchema } from '../src/ir/schema.js';
 import { captionLineRanges, captionWordRanges } from '../src/engine/caption-layout.js';
 import { editCaptions, paginateCaptions } from '../src/ir/caption-editing.js';
 import { parseCaptions, serializeCaptions } from '../src/captions.js';
+import { renderFrame } from '../src/engine/draw.js';
+import { validateProject } from '../src/ir/validate.js';
 
 const fixture = () => captionCueSchema.parse({ id: 'cue', start: 0, end: 3, text: 'Go go, then go.', words: [{ text: 'Go', start: 0, end: .5 }, { text: 'go', start: .5, end: 1 }, { text: 'then', start: 1, end: 2 }, { text: 'go', start: 2, end: 3 }] });
 describe('caption editing and text alignment', () => {
+  it('accepts readable global and per-cue layout overrides', () => {
+    const layer = captionLayerSchema.parse({
+      id: 'caption', type: 'caption', x: 0, y: 0, width: 640, height: 180, fontFamily: 'Arial', fontSize: 42, color: '#fff',
+      identity: 'kinetic', lineHeight: 1.3, letterSpacing: .5, padding: 28, radius: 20, highlightBackground: '#ff0055', highlightPadding: 12, highlightRadius: 10, align: 'left', maxLines: 3,
+      cues: [{ id: 'cue', start: 0, end: 2, text: 'Readable caption', style: { align: 'right', lineHeight: 1.1, letterSpacing: 1, padding: 12, radius: 8, highlightBackground: '#000000', highlightPadding: 4, highlightRadius: 4, maxLines: 2 } }],
+    });
+    expect(layer.lineHeight).toBe(1.3);
+    expect(layer).toMatchObject({ identity: 'kinetic', highlightBackground: '#ff0055', highlightPadding: 12 });
+    expect(layer.cues[0]!.style).toMatchObject({ align: 'right', padding: 12, highlightRadius: 4, maxLines: 2 });
+  });
   it('disambiguates repeated tokens and maps collapsed multiline whitespace', () => {
     expect(captionWordRanges(fixture()).map((range) => range.start)).toEqual([0, 3, 7, 12]);
     expect(captionLineRanges('Go  go,\nthen go.', ['Go go,', 'then go.']).map((range) => range.indices)).toEqual([[0, 1, 2, 4, 5, 6], [8, 9, 10, 11, 12, 13, 14, 15]]);
@@ -44,5 +56,21 @@ describe('caption editing and text alignment', () => {
     expect(parseCaptions(serializeCaptions(cues, 'vtt'), 'vtt')[0]!.speaker).toBe('Ada');
     expect(serializeCaptions(cues, 'srt')).not.toContain('<v ');
     expect(() => parseCaptions('1\n00:61:00,000 --> 00:62:00,000\nInvalid', 'srt')).toThrow(/timestamp/);
+  });
+  it('combines timed emphasis, character and line limits, and safe-area diagnostics', async () => {
+    const layer = captionLayerSchema.parse({
+      id: 'caption', type: 'caption', x: 2, y: 55, width: 156, height: 32, fontFamily: 'Arial', fontSize: 18,
+      color: '#ffffff', highlightColor: '#ff0000', highlightBackground: '#0000ff', highlightMode: 'current-word',
+      maxLines: 1, safeArea: true, cues: [{ id: 'cue', start: 0, end: 1, text: 'ONE TWO', words: [{ text: 'ONE', start: 0, end: .5 }, { text: 'TWO', start: .5, end: 1 }] }],
+    });
+    const project = projectSchema.parse({ schemaVersion: 1, id: 'caption-acceptance', title: 'Caption acceptance', width: 160, height: 90, fps: 30, brand: { background: '#000', foreground: '#fff', accent: '#f00', muted: '#777' }, scenes: [{ id: 'main', purpose: 'Caption', duration: 1, background: '#000', layers: [layer] }] });
+    expect((await validateProject({ project, sourceProject: project, projectDir: process.cwd(), projectFile: 'memory://caption-acceptance' })).some(finding => finding.code === 'CAPTION_SAFE_AREA')).toBe(true);
+    const current = await renderFrame(project, process.cwd(), .25);
+    project.scenes[0]!.layers[0] = captionLayerSchema.parse({ ...layer, x: 8, width: 144, highlightMode: 'karaoke' });
+    const karaoke = await renderFrame(project, process.cwd(), .25);
+    expect(Buffer.compare(Buffer.from(current), Buffer.from(karaoke))).not.toBe(0);
+    const pages = paginateCaptions([fixture()], { maxCharacters: 6, maxWords: 99, maxDuration: 60 });
+    expect(pages.cues.every(cue => [...cue.text].length <= 6)).toBe(true);
+    expect(layer.maxLines).toBe(1);
   });
 });

@@ -2,6 +2,15 @@
 
 Genmotion follows semantic versioning. GitHub releases contain the verified package archive and its `SHA256SUMS` manifest.
 
+## 2.5.0 - 2026-09-09
+
+- Raised the audited native capability count to **125/324**, completing 50 additional contracts across typography, captions, timing, composition, audio, rendering, review and agent editing.
+- Added strict acceptance assertions, representative temporal sampling, reproducible render plans, output compatibility reports, review artifacts and native parameter-variant comparison.
+- Added source audio diagnostics and repair jobs, spectral-carve proposals with generated-edit ownership, frozen audio feature tracks and deterministic feature-to-animation mappings.
+- Added representative-frame color analysis with conservative reversible patches and explicit unsupported HDR/log handling.
+- Expanded native Unicode text behavior, caption validation, composition timing, render selection, cancellation cleanup, operation diagnostics, editing checkpoints and capability discovery.
+- Regenerated and verified all eight public examples. Final QA passed 275 unit/integration tests, 53 browser tests, package verification and deterministic rendered-example checks; see [milestone QA](docs/MILESTONE-QA-2026-09-09.md).
+
 ## 2.4.1 - 2026-09-09
 
 - Fixed Studio playback starvation when native frames arrive after the playhead advances.

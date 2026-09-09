@@ -68,7 +68,7 @@ function bindContainer<T extends object>(container: T & { parameterBindings?: Re
   for (const [field, id] of Object.entries(container.parameterBindings ?? {})) {
     if (id === undefined) continue;
     if (!Object.hasOwn(values, id)) throw new Error(`Unknown preflight parameter ${id} for ${field}.`);
-    (result as Record<string, unknown>)[field] = structuredClone(values[id]);
+    writePath(result, field, values[id]!);
   }
   return result;
 }

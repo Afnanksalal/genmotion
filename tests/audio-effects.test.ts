@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { audioEffectFilters, audioTempoFilters, decibelsToGain } from '../src/engine/audio-effects.js';
 import { runProcess } from '../src/engine/process.js';
 import { audioEffectsSchema } from '../src/ir/audio-effects.js';
+import { audioRackCapabilities, audioRackPreset, copyAudioRack, duplicateAudioEffect, pasteAudioRack } from '../src/ir/audio-rack.js';
 import { audioTrackSchema } from '../src/ir/schema.js';
 import { loadProject } from '../src/ir/loader.js';
 import { renderAudio } from '../src/engine/audio.js';
@@ -82,6 +83,17 @@ describe('native audio effect racks', () => {
     expect(audioEffectFilters(audioEffectsSchema.parse([{ id: 'eq', type: 'equalizer', frequency: 1000, gainDb: 3, bypass: true }]))).toEqual([]);
     expect(() => audioEffectsSchema.parse([{ id: 'x', type: 'limiter' }, { id: 'x', type: 'gate' }])).toThrow('unique');
     expect(() => audioEffectsSchema.parse([{ id: 'eq', type: 'equalizer', frequency: '1000;evil', gainDb: 3 }])).toThrow();
+  });
+
+  it('versions rack copy, duplication and presets while declaring automation limits', () => {
+    const rack = audioEffectsSchema.parse([{ id: 'eq', type: 'equalizer', frequency: 1000, gainDb: 3 }]);
+    const duplicated = duplicateAudioEffect(rack, 'eq', 'eq-copy');
+    expect(duplicated.map(effect => effect.id)).toEqual(['eq', 'eq-copy']);
+    const pasted = pasteAudioRack(copyAudioRack(rack), duplicated);
+    expect(pasted.map(effect => effect.id)).toEqual(['eq', 'eq-copy', 'eq-2']);
+    expect(audioRackPreset('voice-clean').map(effect => effect.type)).toEqual(['highpass', 'compressor']);
+    expect(audioRackCapabilities).toMatchObject({ version: 1, ordered: true, maximumEffects: 32, automation: { supported: false, reason: expect.any(String) } });
+    expect(() => duplicateAudioEffect(rack, 'missing', 'copy')).toThrow('not found');
   });
 
   it('measures frequency rejection, gain reduction, limiting and gate attenuation in decoded PCM', async () => {

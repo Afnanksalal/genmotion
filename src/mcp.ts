@@ -29,7 +29,7 @@ import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
 import { auditCatalog } from './catalog/audit.js';
-import { searchCatalog } from './commands/catalog.js';
+import { describeCatalogItem, searchCatalog } from './commands/catalog.js';
 import { doctor } from './commands/doctor.js';
 import { initializeProject } from './commands/init.js';
 import { renderFramePng } from './engine/draw.js';
@@ -45,6 +45,9 @@ import { canApplySemanticEdit, commitSemanticEdits, editTargetSchema, inspectEdi
 import { EditingSession, filesystemEditingAdapter, editingCommandSchema, editingCheckpointSchema, executeEditingCommand } from './ir/session.js';
 import { executeStudioCommand, studioBridgeCommandSchema } from './studio/bridge.js';
 import { hasErrors, summarizeProject, validateProject } from './ir/validate.js';
+import { createRenderPlan, renderPlanOptionsSchema } from './ir/render-plan.js';
+import { checkReportOptionsSchema, createCheckReport } from './ir/check-report.js';
+import { outputCompatibilityInputSchema, outputCompatibilityMatrix, resolveOutputCompatibility } from './engine/output-compatibility.js';
 import { evaluateTrack } from './engine/animation.js';
 import { layerIsActive, locateScene } from './engine/timeline.js';
 import { getStudioRequests, resolveStudioRequest, startStudio, type StudioServer } from './studio/server.js';
@@ -146,9 +149,9 @@ function serverFactory(): McpServer {
   }, async (input) => toolResult(await initializeProject(await allowedPath(input.directory, 'Project directory'), { title: input.title, promise: input.promise, proof: input.proof, desiredAction: input.action, audience: input.audience, mode: input.mode, duration: input.duration })));
 
   server.registerTool('genmotion_catalog', {
-    title: 'Search motion catalog', description: 'Search Genmotion motions, scene blueprints, and taste references by creative intent.',
-    inputSchema: compactSchema(z.object({ query: z.string().default(''), limit: z.number().int().min(1).max(50).default(12) }).strict()), annotations: { readOnlyHint: true },
-  }, (input) => Promise.resolve(toolResult({ results: searchCatalog(input.query, input.limit) })));
+    title: 'Search or describe motion catalog', description: 'Search by creative intent, or describe one item with native payload, ranges, cost and refusal conditions before applying it.',
+    inputSchema: compactSchema(z.object({ query: z.string().default(''), limit: z.number().int().min(1).max(50).default(12), type: z.enum(['motion', 'blueprint', 'reference']).optional(), id: z.string().optional() }).strict().refine(value => Boolean(value.type) === Boolean(value.id), 'type and id must be supplied together')), annotations: { readOnlyHint: true },
+  }, (input) => Promise.resolve(toolResult(input.type && input.id ? { item: describeCatalogItem(input.type, input.id) } : { results: searchCatalog(input.query, input.limit) })));
 
   server.registerTool('genmotion_catalog_audit', {
     title: 'Audit motion catalog', description: 'Validate catalog implementations, references, and licenses.', inputSchema: compactSchema(z.object({}).strict()), annotations: { readOnlyHint: true },
@@ -319,6 +322,21 @@ function serverFactory(): McpServer {
     const findings = await validateProject(loaded);
     return toolResult({ ok: !hasErrors(findings) && (!input.strict || findings.length === 0), summary: summarizeProject(loaded.project), findings });
   });
+
+  server.registerTool('genmotion_render_plan', {
+    title: 'Create deterministic render plan', description: 'Resolve delivery metadata and hash every frozen local dependency without rendering or mutating the project.',
+    inputSchema: compactSchema(renderPlanOptionsSchema.extend({ project: z.string().min(1) }).strict()), annotations: { readOnlyHint: true },
+  }, async (input) => { const { project, ...options } = input; return toolResult({ ...(await createRenderPlan(await loadProject(await allowedPath(project, 'Project')), options)) }); });
+
+  server.registerTool('genmotion_check_report', {
+    title: 'Create native check report', description: 'Return one bounded report over schema, assets, layout, media, contrast, motion coverage and output contract.',
+    inputSchema: compactSchema(checkReportOptionsSchema.extend({ project: z.string().min(1) }).strict()), annotations: { readOnlyHint: true },
+  }, async (input) => { const { project, ...options } = input; return toolResult({ ...(await createCheckReport(await loadProject(await allowedPath(project, 'Project')), options)) }); });
+
+  server.registerTool('genmotion_output_compatibility', {
+    title: 'Inspect output compatibility', description: 'Return the complete native output matrix or validate one codec/container/pixel/alpha/backend combination without fallback.',
+    inputSchema: compactSchema(z.object({ contract: outputCompatibilityInputSchema.optional() }).strict()), annotations: { readOnlyHint: true },
+  }, (input) => Promise.resolve(toolResult(input.contract ? { ...resolveOutputCompatibility(input.contract) } : { matrix: outputCompatibilityMatrix })));
 
   server.registerTool('genmotion_frame', {
     title: 'Render Genmotion frame', description: 'Render an exact native PNG frame at a requested timestamp and optional delivery resolution.',

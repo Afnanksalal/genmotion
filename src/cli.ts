@@ -30,12 +30,17 @@ import { commitSemanticEdits, semanticEditSchema } from './ir/edit.js';
 import { EditingSession, filesystemEditingAdapter, editingCommandSchema, editingCheckpointSchema, executeEditingCommand } from './ir/session.js';
 import { executeStudioCommand, studioBridgeCommandSchema } from './studio/bridge.js';
 import { hasErrors, summarizeProject, validateProject } from './ir/validate.js';
+import { reviewSamplePlan } from './ir/review-sampling.js';
+import { createRenderPlan } from './ir/render-plan.js';
+import { createCheckReport } from './ir/check-report.js';
+import { renderFrameRangeSchema } from './ir/render-selection.js';
+import { outputCompatibilityMatrix, resolveOutputCompatibility } from './engine/output-compatibility.js';
 import { renderFramePng } from './engine/draw.js';
 import { defaultVideoExtension, renderProject, type RenderQuality, type VideoCodec } from './engine/render.js';
 import { startPreview } from './engine/preview.js';
 import { doctor } from './commands/doctor.js';
 import { initializeProject } from './commands/init.js';
-import { searchCatalog } from './commands/catalog.js';
+import { describeCatalogItem, searchCatalog } from './commands/catalog.js';
 import { GenmotionError } from './errors.js';
 import { makeContactSheet, probeVideo } from './engine/probe.js';
 import { auditCatalog } from './catalog/audit.js';
@@ -74,6 +79,12 @@ function parseResolution(value: string): { width: number; height: number } {
   const match = /^(\d{2,5})x(\d{2,5})$/i.exec(value.trim());
   if (!match) throw new GenmotionError('INVALID_RENDER_RESOLUTION', 'Resolution must use WIDTHxHEIGHT, for example 1920x1080.');
   return { width: Number(match[1]), height: Number(match[2]) };
+}
+
+function parseFrameRange(value: string): { startFrame: number; endFrame: number } {
+  const match = /^(\d+):(\d+)$/.exec(value.trim());
+  if (!match) throw new GenmotionError('INVALID_RENDER_RANGE', 'Frame range must use START:END with an exclusive end.');
+  return renderFrameRangeSchema.parse({ startFrame: Number(match[1]), endFrame: Number(match[2]) });
 }
 
 function parseRenderGroup(value?: string): { sceneId: string; layerId: string } | undefined {
@@ -214,6 +225,48 @@ program.command('validate').alias('check')
     const findings = await validateProject(loaded);
     output({ ok: !hasErrors(findings) && (!options.strict || findings.length === 0), summary: summarizeProject(loaded.project), findings });
     if (hasErrors(findings) || (options.strict && findings.length > 0)) process.exitCode = 1;
+  });
+
+program.command('review-samples')
+  .argument('<project>')
+  .option('--max-samples <count>', 'Maximum deterministic review samples', '240')
+  .action(async (input: string, options: { maxSamples: string }) => {
+    const loaded = await loadProject(input);
+    output(reviewSamplePlan(loaded.project, Number.parseInt(options.maxSamples, 10)));
+  });
+
+program.command('render-plan')
+  .argument('<project>')
+  .option('--quality <quality>', 'draft, standard or high', 'high')
+  .option('--codec <codec>', 'h264, h265, vp9 or prores', 'h264')
+  .option('--filename <name>', 'Planned output filename')
+  .option('--resolution <size>', 'Even WIDTHxHEIGHT preserving project aspect')
+  .option('--scene <id>', 'Plan one scene')
+  .option('--composition <id>', 'Plan one standalone composition')
+  .option('--range <start:end>', 'Exclusive frame range')
+  .option('--alpha <mode>', 'auto, preserve or flatten', 'auto')
+  .option('--alpha-background <color>', 'Opaque flattening color')
+  .option('--hardware-acceleration', 'Declare hardware encoder requirement')
+  .action(async (input: string, options: { quality: RenderQuality; codec: VideoCodec; filename?: string; resolution?: string; scene?: string; composition?: string; range?: string; alpha: 'auto' | 'preserve' | 'flatten'; alphaBackground?: string; hardwareAcceleration?: boolean }) => {
+    const range = options.range ? parseFrameRange(options.range) : undefined;
+    output(await createRenderPlan(await loadProject(input), { quality: options.quality, codec: options.codec, filename: options.filename, resolution: options.resolution ? parseResolution(options.resolution) : undefined, sceneId: options.scene, compositionId: options.composition, range, alphaMode: options.alpha, alphaBackground: options.alphaBackground, hardwareAcceleration: options.hardwareAcceleration ?? false }));
+  });
+
+program.command('check-report')
+  .argument('<project>')
+  .option('--max-samples <count>', 'Maximum deterministic review samples', '240')
+  .action(async (input: string, options: { maxSamples: string }) => output(await createCheckReport(await loadProject(input), { maxSamples: Number.parseInt(options.maxSamples, 10) })));
+
+program.command('output-compatibility')
+  .option('--codec <codec>')
+  .option('--filename <name>')
+  .option('--resolution <size>')
+  .option('--alpha <mode>', 'auto, preserve or flatten', 'auto')
+  .option('--hardware-acceleration')
+  .action((options: { codec?: VideoCodec; filename?: string; resolution?: string; alpha: 'auto' | 'preserve' | 'flatten'; hardwareAcceleration?: boolean }) => {
+    if (!options.codec) { output(outputCompatibilityMatrix); return; }
+    if (!options.filename || !options.resolution) throw new GenmotionError('COMPATIBILITY_INPUT_REQUIRED', 'A codec check requires filename and resolution.');
+    output(resolveOutputCompatibility({ codec: options.codec, filename: options.filename, ...parseResolution(options.resolution), alphaMode: options.alpha, hardwareAcceleration: options.hardwareAcceleration ?? false }));
   });
 
 program.command('frame')
@@ -490,6 +543,10 @@ program.command('catalog')
   .argument('[query]', 'Describe the creative move, role, or mood', '')
   .option('--limit <count>', 'Maximum results', '12')
   .action((query: string, options: { limit: string }) => { output(searchCatalog(query, Number(options.limit))); });
+
+program.command('catalog-describe <type> <id>')
+  .description('Inspect one catalog item before applying it')
+  .action((type: 'motion' | 'blueprint' | 'reference', id: string) => { output(describeCatalogItem(type, id)); });
 
 program.command('doctor').action(async () => {
   const checks = await doctor();

@@ -38,7 +38,7 @@ describe('Genmotion MCP server', () => {
       expect(names).toEqual(expect.arrayContaining([
         'genmotion_doctor', 'genmotion_init', 'genmotion_catalog', 'genmotion_project_read', 'genmotion_project_save',
         'genmotion_schema', 'genmotion_project_patch', 'genmotion_timeline_inspect', 'genmotion_validate', 'genmotion_frame',
-        'genmotion_render', 'genmotion_probe', 'genmotion_contact_sheet', 'genmotion_studio_start', 'genmotion_animation_inspect',
+        'genmotion_render', 'genmotion_render_plan', 'genmotion_check_report', 'genmotion_output_compatibility', 'genmotion_probe', 'genmotion_contact_sheet', 'genmotion_studio_start', 'genmotion_animation_inspect',
       ]));
       expect(new Set(names).size).toBe(names.length);
       const textLayout = await client.callTool({ name: 'genmotion_text_measure', arguments: { project, address: { containerId: 'intro', layerId: 'title' } } });
@@ -137,6 +137,12 @@ describe('Genmotion MCP server', () => {
 
       const validation = await client.callTool({ name: 'genmotion_validate', arguments: { project, strict: false } });
       expect(validation.structuredContent).toMatchObject({ ok: true });
+      const renderPlan = await client.callTool({ name: 'genmotion_render_plan', arguments: { project, quality: 'draft', codec: 'h264', filename: 'planned.mp4' } });
+      expect(renderPlan.structuredContent).toMatchObject({ version: 1, delivery: { quality: 'draft', codec: 'h264', output: { filename: 'planned.mp4' } } });
+      const checkReport = await client.callTool({ name: 'genmotion_check_report', arguments: { project, maxSamples: 20 } });
+      expect(checkReport.structuredContent).toMatchObject({ version: 1, incompleteChecks: [], sampling: { coverage: 'complete' } });
+      const compatibility = await client.callTool({ name: 'genmotion_output_compatibility', arguments: { contract: { codec: 'vp9', filename: 'alpha.webm', width: 640, height: 360, alphaMode: 'preserve' } } });
+      expect(compatibility.structuredContent).toMatchObject({ compatible: true, pixelFormat: 'yuva420p', fallback: null });
 
       const frame = path.join(directory, 'review.png');
       const frameResult = await client.callTool({ name: 'genmotion_frame', arguments: { project, at: 0.5, output: frame, resolution: { width: 640, height: 360 } } });

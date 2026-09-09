@@ -14,6 +14,8 @@ Video export, standalone audio export, and Studio's processed-mix preview share 
 - `reverse`: reverses the selected source interval before tempo and effects. Native reversal buffers the selected interval; long intervals can require substantial FFmpeg memory.
 - `effects`: an ordered rack of up to 32 effects with unique `id` values. Each effect can be bypassed without removing its settings.
 
+The SDK exposes a versioned rack clipboard, deterministic duplicate/paste ID handling and validated `voice-clean` and `delivery-safe` presets. `audioRackCapabilities` lists supported effect types, limits and automation support. Rack version 1 explicitly reports effect-parameter automation as unsupported instead of accepting values the signal graph would ignore.
+
 | Effect type | Controls |
 | --- | --- |
 | `highpass`, `lowpass` | `frequency` in Hz and `q`. |

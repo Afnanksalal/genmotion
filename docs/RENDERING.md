@@ -2,6 +2,8 @@
 
 `renderProject` is the shared render service used by the SDK, CLI, MCP and Studio. It prepares local video assets, evaluates native frames, encodes, mixes audio, and verifies the output before replacing the destination. A failed or cancelled job preserves an existing master. Intermediates live in a unique directory beside the destination and are removed after workers and processes close.
 
+Every accepted result includes a versioned manifest with a deterministic SHA-256 identity for the resolved project/delivery inputs and a streaming SHA-256 of the final accepted artifact. The short render ID is the first 16 hexadecimal characters of the full input identity. Consumers can retain the manifest beside an artifact and verify the bytes without loading the complete file into memory.
+
 ## Resource controls
 
 ```sh

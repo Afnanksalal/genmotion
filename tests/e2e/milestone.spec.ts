@@ -54,9 +54,17 @@ test('persists canvas guides and grid preferences across reload', async ({ page 
   await page.locator('#canvasZoom').fill('150'); await page.locator('#canvasZoom').press('Tab');
   await expect.poll(async () => {
     const { readFile } = await import('node:fs/promises');
-    return await readFile(path.join(directory, '.genmotion/studio.json'), 'utf8');
-  }).toContain('1.5');
-  await page.reload(); await page.getByRole('tab', { name: 'Editor', exact: true }).click(); await page.locator('#viewportSettings').click();
+    const stored = JSON.parse(await readFile(path.join(directory, '.genmotion/studio.json'), 'utf8')) as { viewport?: { grid?: boolean; safeZone?: string; zoom?: number; guides?: unknown[] } };
+    return stored.viewport;
+  }).toMatchObject({ grid: true, safeZone: 'title', zoom: 1.5, guides: [{}] });
+  await expect(page.locator('#saveState')).toHaveText('Saved');
+  // Playwright evaluates this callback in the browser, where Response.json is untyped.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+  await expect.poll(() => page.evaluate(async () => (await (await fetch('/api/studio', { cache: 'no-store' })).json()).studio.viewport.zoom)).toBe(1.5);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-studio-ready', 'true');
+  await expect.poll(() => page.evaluate<number>('S.studio.viewport.zoom')).toBe(1.5);
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click(); await page.locator('#viewportSettings').click();
   await expect(page.locator('#canvasGrid')).toBeChecked();
   await expect(page.locator('#canvasSafeZone')).toHaveValue('title');
   await expect(page.locator('#canvasZoom')).toHaveValue('150');

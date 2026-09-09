@@ -17,5 +17,13 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-imports': 'error',
     },
   },
+  {
+    files: ['tests/**/*.ts'],
+    rules: {
+      // Vitest asymmetric matchers (`expect.any`, `arrayContaining`, etc.) are
+      // intentionally typed as `any` when embedded in otherwise typed objects.
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+    },
+  },
   { ignores: ['dist/**', 'coverage/**'] },
 );

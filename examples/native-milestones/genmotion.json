@@ -118,13 +118,18 @@
           "y": 280,
           "width": 480,
           "height": 54,
-          "fontFamily": "Arial",
-          "fontSize": 23,
+          "fontFamily": "Inter",
+          "fontFile": "Inter.ttf",
+          "fontSize": 26,
+          "fontWeight": 800,
           "color": "#f8fafc",
+          "identity": "kinetic",
           "highlightColor": "#86efac",
-          "background": "#111827dd",
-          "outlineColor": "#000000",
-          "outlineWidth": 2,
+          "highlightBackground": "#173b2c",
+          "highlightPadding": 7,
+          "highlightRadius": 5,
+          "outlineColor": "#020617",
+          "outlineWidth": 1,
           "cues": [{ "id": "native", "start": 0, "end": 2, "text": "Reusable geometry follows one measured path.", "words": [{ "text": "geometry", "start": 0.55, "end": 1.15 }] }]
         }
       ]
@@ -160,10 +165,13 @@
           "y": 250,
           "width": 420,
           "height": 54,
-          "fontFamily": "Arial",
-          "fontSize": 22,
+          "fontFamily": "Inter",
+          "fontFile": "Inter.ttf",
+          "fontSize": 24,
+          "fontWeight": 700,
           "color": "#f8fafc",
-          "background": "#111827dd",
+          "identity": "editorial",
+          "shadow": { "color": "#020617cc", "blur": 8, "offsetX": 0, "offsetY": 3 },
           "cues": [{ "id": "delivery", "start": 0, "end": 2, "text": "One IR, from Studio to final pixels." }]
         }
       ]

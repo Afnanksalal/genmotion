@@ -29,6 +29,8 @@ describe('native renderer', () => {
     ]) });
     const result = await renderProject(loaded, { output: path.join(directory, 'master' + defaultVideoExtension(codec)), quality: 'draft', codec, workers: 1 });
     expect(result.probe).toMatchObject({ videoCodec: codec === 'h265' ? 'hevc' : codec, audioCodec: codec === 'vp9' ? 'opus' : 'aac', width: 320, height: 180, frameRate: 4 });
+    expect(result.manifest).toMatchObject({ version: 1, inputSha256: expect.stringMatching(/^[a-f0-9]{64}$/), artifactSha256: expect.stringMatching(/^[a-f0-9]{64}$/) });
+    expect(result.manifest.artifactSha256).toBe(createHash('sha256').update(await readFile(result.output)).digest('hex'));
     await runProcess('ffmpeg', ['-v', 'error', '-xerror', '-i', result.output, '-f', 'null', '-']);
   }, 30_000);
 

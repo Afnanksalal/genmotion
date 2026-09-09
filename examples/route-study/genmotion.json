@@ -87,6 +87,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#157e69",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1.15,
@@ -94,7 +95,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "headline",
@@ -215,6 +220,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#202c2b",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "horizontalMetrics": "ink",
@@ -224,7 +230,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "river-key",
@@ -293,6 +303,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#202c2b",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1.15,
@@ -300,7 +311,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "pier-key",
@@ -369,6 +384,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#202c2b",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1.15,
@@ -376,7 +392,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "river",
@@ -983,6 +1003,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#202c2b",
+          "outlineWidth": 0,
           "align": "center",
           "verticalAlign": "middle",
           "lineHeight": 1.15,
@@ -990,7 +1011,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "station-1",
@@ -1231,6 +1256,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#202c2b",
+          "outlineWidth": 0,
           "align": "center",
           "verticalAlign": "middle",
           "lineHeight": 1.15,
@@ -1238,7 +1264,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "station-2",
@@ -1479,6 +1509,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#202c2b",
+          "outlineWidth": 0,
           "align": "center",
           "verticalAlign": "middle",
           "lineHeight": 1.15,
@@ -1486,7 +1517,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "station-3",
@@ -1727,6 +1762,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#202c2b",
+          "outlineWidth": 0,
           "align": "center",
           "verticalAlign": "middle",
           "lineHeight": 1.15,
@@ -1734,7 +1770,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "edition",
@@ -1770,6 +1810,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#202c2b",
+          "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "lineHeight": 1.15,
@@ -1777,7 +1818,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         },
         {
           "id": "folio",
@@ -1813,6 +1858,7 @@
           "fontWeight": 700,
           "fontStyle": "normal",
           "color": "#202c2b",
+          "outlineWidth": 0,
           "align": "right",
           "verticalAlign": "middle",
           "lineHeight": 1.15,
@@ -1820,7 +1866,11 @@
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0
         }
       ],
       "transitionIn": {
