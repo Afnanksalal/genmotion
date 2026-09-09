@@ -24,7 +24,12 @@ jobs:
           cache: npm
       - name: Install FFmpeg on Linux
         if: runner.os == 'Linux'
-        run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y ffmpeg; }
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+            sudo apt-get -o Acquire::Retries=3 update
+            sudo apt-get -o Acquire::Retries=3 install -y ffmpeg
+          fi
       - name: Install FFmpeg on Windows
         if: runner.os == 'Windows'
         run: choco install ffmpeg --no-progress -y
@@ -52,7 +57,12 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install FFmpeg
-        run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y ffmpeg; }
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+            sudo apt-get -o Acquire::Retries=3 update
+            sudo apt-get -o Acquire::Retries=3 install -y ffmpeg
+          fi
       - name: Verify FFmpeg capabilities
         run: node scripts/verify-ffmpeg.mjs
       - run: npm ci
@@ -71,7 +81,12 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install FFmpeg
-        run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y ffmpeg; }
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+            sudo apt-get -o Acquire::Retries=3 update
+            sudo apt-get -o Acquire::Retries=3 install -y ffmpeg
+          fi
       - name: Verify FFmpeg capabilities
         run: node scripts/verify-ffmpeg.mjs
       - run: npm ci
