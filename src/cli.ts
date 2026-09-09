@@ -66,6 +66,8 @@ import { commitEasing, copyEasing, easingAddressSchema } from './ir/easing-edits
 import { applyPathOperations } from './engine/path-operations.js';
 import { pathOperationsSchema } from './ir/path-operations.js';
 import { renderAudio, measureProjectAudio } from './engine/audio.js';
+import { inspectProjectAudioTiming } from './ir/audio-timing.js';
+import { auditDesignSpec, designSpecSchema } from './ir/design-spec.js';
 import { measureAudioFile } from './engine/loudness.js';
 import { analyzeSpring, easingPresets } from './engine/easing.js';
 import { fractalNoise, noiseND, seededRandom, staggerSchedule, staggerWindows } from './engine/procedural.js';
@@ -373,6 +375,20 @@ program.command('audio-measure')
         output(await measureProjectAudio(loaded.project, loaded.projectDir, { signal: controller.signal }));
       }
     } finally { process.removeListener('SIGINT', abort); process.removeListener('SIGTERM', abort); }
+  });
+
+program.command('audio-timing')
+  .argument('<project>', 'Project directory or document')
+  .option('--floor-db <number>', 'Tail audibility floor in dB', '-60')
+  .action(async (input: string, options: { floorDb: string }) => output(inspectProjectAudioTiming((await loadProject(input)).project, { floorDb: Number(options.floorDb) })));
+
+program.command('design-spec')
+  .argument('<project>', 'Project directory or document')
+  .option('--file <json>', 'Import and bind a versioned design specification before auditing')
+  .option('--expected-revision <hash>', 'Required source revision for import')
+  .action(async (input: string, options: { file?: string; expectedRevision?: string }) => {
+    if (options.file) { const spec = designSpecSchema.parse(JSON.parse(await readFile(options.file, 'utf8'))), expectedRevision = options.expectedRevision ?? (await readProjectSnapshot(input)).revision; await commitProject(input, { expectedRevision, origin: 'cli-design-spec', update: project => ({ ...project, designSpec: spec }) }); }
+    output(await auditDesignSpec(await loadProject(input)));
   });
 
 program.command('audio-render')

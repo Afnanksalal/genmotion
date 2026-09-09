@@ -21,7 +21,7 @@ describe('native renderer', () => {
     const loaded = await loadProject(fixture);
     loaded.projectDir = directory;
     loaded.project.fps = 4;
-    loaded.project.audio = [{ id: 'tone', src: 'tone.wav', start: 0, trimStart: 0, volume: 0.2, pan: 0, fadeIn: 0, fadeOut: 0, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' }];
+    loaded.project.audio = [{ id: 'tone', src: 'tone.wav', start: 0, trimStart: 0, volume: 0.2, pan: 0, balance: 0, locked: false, fadeIn: 0, fadeOut: 0, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' }];
     Object.assign(loaded.project.audio[0]!, { gainDb: -3, reverse: true, effects: audioEffectsSchema.parse([
       { id: 'hp', type: 'highpass', frequency: 80 }, { id: 'lp', type: 'lowpass', frequency: 8000 },
       { id: 'eq', type: 'equalizer', frequency: 440, gainDb: -3 }, { id: 'gate', type: 'gate', thresholdDb: -50 },
@@ -74,7 +74,7 @@ describe('native renderer', () => {
       expect(await readFile(output, 'utf8')).toBe('accepted master');
       expect(await readdir(directory)).toEqual(['master.mp4']);
     }
-    loaded.project = { ...loaded.project, audio: [{ id: 'missing', src: 'missing.wav', start: 0, trimStart: 0, volume: 1, pan: 0, fadeIn: 0, fadeOut: 0, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' }] };
+    loaded.project = { ...loaded.project, audio: [{ id: 'missing', src: 'missing.wav', start: 0, trimStart: 0, volume: 1, pan: 0, balance: 0, locked: false, fadeIn: 0, fadeOut: 0, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' }] };
     await expect(renderProject(loaded, { output, quality: 'draft', workers: 1 })).rejects.toThrow();
     expect(await readFile(output, 'utf8')).toBe('accepted master');
     expect(await readdir(directory)).toEqual(['master.mp4']);

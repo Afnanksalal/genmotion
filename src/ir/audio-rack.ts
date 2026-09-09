@@ -6,7 +6,7 @@ export const audioRackCapabilities = {
   ordered: true,
   maximumEffects: 32,
   automation: { supported: false, reason: 'Effect parameters are static in audio-rack version 1.' },
-  types: ['highpass', 'lowpass', 'equalizer', 'compressor', 'gate', 'limiter'] as const,
+  types: ['highpass', 'lowpass', 'equalizer', 'compressor', 'gate', 'limiter', 'low-shelf', 'high-shelf', 'saturation', 'delay', 'reverb', 'chorus', 'phaser', 'bitcrush'] as const,
 };
 
 export const audioRackPresets = {

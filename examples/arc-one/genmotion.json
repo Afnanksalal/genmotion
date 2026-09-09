@@ -13,6 +13,11 @@
   "compositions": [],
   "captionStylePresets": [],
   "captionPreviewLanguages": [],
+  "creativePreferences": [],
+  "mediaLedger": {
+    "version": 1,
+    "records": []
+  },
   "brand": {
     "background": "#07090d",
     "foreground": "#f4f6f8",
@@ -1522,6 +1527,8 @@
       "muted": false,
       "solo": false,
       "pan": 0,
+      "balance": 0,
+      "locked": false,
       "kind": "music"
     }
   ],

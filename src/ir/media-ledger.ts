@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import { createHash, randomUUID } from 'node:crypto';
+import { copyFile, mkdir, readFile, rename, rm, stat } from 'node:fs/promises';
+import path from 'node:path';
+import type { GenmotionProject } from './schema.js';
+import type { LoadedProject } from './loader.js';
 const hash = z.string().regex(/^[a-f0-9]{64}$/), id = z.string().min(1).max(128).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/);
 const primitive = z.union([z.string().max(4096), z.number().finite(), z.boolean(), z.null()]);
 export const mediaMetadataSchema = z.object({
@@ -41,3 +46,40 @@ export const mediaLedgerSchema = z.object({ version: z.literal(1), records: z.ar
 });
 export type MediaRecord = z.infer<typeof mediaRecordSchema>;
 export type MediaMetadata = z.input<typeof mediaMetadataSchema>;
+
+async function digest(file: string): Promise<string> { return createHash('sha256').update(await readFile(file)).digest('hex'); }
+function localAsset(directory: string, reference: string): string { const root = path.resolve(directory), target = path.resolve(root, reference); if (target !== root && !target.startsWith(root + path.sep)) throw new Error('Media path must stay inside its declared root'); return target; }
+export async function inspectMediaLedger(loaded: LoadedProject) {
+  const { projectAssetReferences } = await import('./asset-references.js');
+  const usage = new Map<string, number>(); for (const reference of projectAssetReferences({ ...loaded.sourceProject, mediaLedger: { version: 1, records: [] } })) usage.set(reference, (usage.get(reference) ?? 0) + 1);
+  const records = await Promise.all(loaded.sourceProject.mediaLedger.records.map(async record => {
+    try { const file = localAsset(loaded.projectDir, record.path), metadata = await stat(file), actual = await digest(file); return { id: record.id, path: record.path, sha256: record.sha256, bytes: record.bytes, usage: usage.get(record.path) ?? 0, status: actual === record.sha256 && metadata.size === record.bytes ? 'valid' as const : 'changed' as const, actualHash: actual }; }
+    catch { return { id: record.id, path: record.path, sha256: record.sha256, bytes: record.bytes, usage: usage.get(record.path) ?? 0, status: 'missing' as const }; }
+  }));
+  return { version: 1 as const, ok: records.every(record => record.status === 'valid'), records, unused: records.filter(record => record.usage === 0).map(record => record.id), invalidated: records.filter(record => record.status !== 'valid').map(record => record.id) };
+}
+
+export async function importMediaRecord(loaded: LoadedProject, input: { id: string; sourceFile: string; path: string; metadata: MediaMetadata; cacheDirectory?: string }): Promise<{ project: GenmotionProject; record: MediaRecord; deduplicatedFrom?: string }> {
+  const source = path.resolve(input.sourceFile), sha256 = await digest(source), bytes = (await stat(source)).size, existing = loaded.sourceProject.mediaLedger.records.find(record => record.sha256 === sha256);
+  if (existing) return { project: loaded.sourceProject, record: existing, deduplicatedFrom: existing.id };
+  const destination = localAsset(loaded.projectDir, input.path); await mkdir(path.dirname(destination), { recursive: true }); const temporary = `${destination}.${randomUUID()}.tmp`; await copyFile(source, temporary); await rename(temporary, destination);
+  if (input.cacheDirectory) { const cached = localAsset(path.resolve(input.cacheDirectory), sha256); await mkdir(path.dirname(cached), { recursive: true }); try { await copyFile(source, cached, (await import('node:fs')).constants.COPYFILE_EXCL); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error; } }
+  const record = mediaRecordSchema.parse({ id: input.id, path: input.path.replaceAll('\\', '/'), sha256, bytes, importedAt: new Date().toISOString(), metadata: input.metadata });
+  const { projectSchema } = await import('./schema.js'); return { project: projectSchema.parse({ ...loaded.sourceProject, mediaLedger: { version: 1, records: [...loaded.sourceProject.mediaLedger.records, record] } }), record };
+}
+
+function replacePath(value: unknown, previous: string, next: string): unknown {
+  if (value === previous) return next; if (Array.isArray(value)) return value.map(item => replacePath(item, previous, next));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, key === 'path' || key === 'src' || key === 'file' || typeof item !== 'string' ? replacePath(item, previous, next) : item === previous ? next : item])); return value;
+}
+export async function relocateMediaRecord(loaded: LoadedProject, id: string, nextPath: string): Promise<GenmotionProject> {
+  const record = loaded.sourceProject.mediaLedger.records.find(item => item.id === id); if (!record) throw new Error(`Unknown media record: ${id}`);
+  const source = localAsset(loaded.projectDir, record.path), destination = localAsset(loaded.projectDir, nextPath); await mkdir(path.dirname(destination), { recursive: true }); await rename(source, destination);
+  try { const replaced = replacePath(loaded.sourceProject, record.path, nextPath.replaceAll('\\', '/')) as GenmotionProject; const { projectSchema } = await import('./schema.js'); return projectSchema.parse(replaced); }
+  catch (error) { await rename(destination, source); throw error; }
+}
+
+export async function removeUnusedMediaRecord(loaded: LoadedProject, id: string): Promise<GenmotionProject> {
+  const report = await inspectMediaLedger(loaded), current = report.records.find(record => record.id === id); if (!current) throw new Error(`Unknown media record: ${id}`); if (current.usage) throw new Error('Media record is still in use');
+  await rm(localAsset(loaded.projectDir, current.path), { force: true }); const { projectSchema } = await import('./schema.js'); return projectSchema.parse({ ...loaded.sourceProject, mediaLedger: { version: 1, records: loaded.sourceProject.mediaLedger.records.filter(record => record.id !== id) } });
+}

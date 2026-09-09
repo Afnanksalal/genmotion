@@ -13,6 +13,7 @@ export function projectAssetReferences(project: GenmotionProject): string[] {
   const defaults = (definition: Parameter): void => { parameter(definition, definition.default); for (const child of Object.values(definition.properties ?? {})) defaults(child); if (definition.items) defaults(definition.items); };
   for (const font of project.brand.fonts) add(font.file);
   for (const audio of project.audio) add(audio.src);
+  for (const record of project.mediaLedger.records) add(record.path);
   for (const definition of project.parameters) {
     defaults(definition); parameter(definition, project.parameterValues[definition.id]);
     for (const variant of project.variants) parameter(definition, variant.values[definition.id]);

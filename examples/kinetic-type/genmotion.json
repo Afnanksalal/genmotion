@@ -13,6 +13,11 @@
   "compositions": [],
   "captionStylePresets": [],
   "captionPreviewLanguages": [],
+  "creativePreferences": [],
+  "mediaLedger": {
+    "version": 1,
+    "records": []
+  },
   "brand": {
     "background": "#09090b",
     "foreground": "#f5f3ea",

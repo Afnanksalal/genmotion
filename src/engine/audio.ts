@@ -55,7 +55,7 @@ async function collectTracks(project: GenmotionProject, projectDir: string, opti
           id: 'video-' + [scene.id, ...chain.map((entry) => entry.layer.id), layer.id].join('-'), src: layer.src, source,
           start: sceneStart + start, trimStart: layer.trimStart, duration: Math.min(layer.duration ?? containerDuration - start, containerDuration - start),
           volume: layer.volume, playbackRate: layer.playbackRate, fadeIn: 0, fadeOut: 0, loop: layer.loop,
-          duckUnderVoice: false, muted: false, solo: false, pan: 0, kind: 'source',
+          duckUnderVoice: false, muted: false, solo: false, pan: 0, balance: 0, locked: false, kind: 'source',
           ...(chain.length || dynamic ? { timeMap: { sceneStart, sceneDuration: scene.duration, chain, video: layer, layers, containerDuration, seed: project.seed, fps: project.fps, sourceDuration: probe.duration }, sourceDuration: probe.duration } : {}),
         });
       }
@@ -64,6 +64,15 @@ async function collectTracks(project: GenmotionProject, projectDir: string, opti
     sceneStart += scene.duration;
   }
   return tracks;
+}
+
+export function stereoPositionGains(pan: number, balance = 0): { left: number; right: number } {
+  const clampedPan = Math.max(-1, Math.min(1, pan));
+  const clampedBalance = Math.max(-1, Math.min(1, balance));
+  return {
+    left: Math.cos((clampedPan + 1) * Math.PI / 4) * (clampedBalance > 0 ? 1 - clampedBalance : 1),
+    right: Math.sin((clampedPan + 1) * Math.PI / 4) * (clampedBalance < 0 ? 1 + clampedBalance : 1),
+  };
 }
 
 function trackFilter(track: PositionedTrack, index: number, totalDuration: number, inputOffset: number): string {
@@ -81,8 +90,7 @@ function trackFilter(track: PositionedTrack, index: number, totalDuration: numbe
   filters.push(...audioTempoFilters(rate, track.preservePitch ?? true));
   filters.push(...audioEffectFilters(track.effects ?? []));
   filters.push(`volume=${String(track.volume * decibelsToGain(track.gainDb ?? 0))}`);
-  const left = Math.cos((track.pan + 1) * Math.PI / 4);
-  const right = Math.sin((track.pan + 1) * Math.PI / 4);
+  const { left, right } = stereoPositionGains(track.pan, track.balance);
   filters.push(`aformat=channel_layouts=stereo,pan=stereo|c0=${left.toFixed(6)}*c0|c1=${right.toFixed(6)}*c1`);
   if (track.fadeIn > 0) filters.push(`afade=t=in:st=0:d=${String(track.fadeIn)}`);
   if (track.fadeOut > 0) filters.push(`afade=t=out:st=${String(Math.max(0, playable - track.fadeOut))}:d=${String(track.fadeOut)}`);

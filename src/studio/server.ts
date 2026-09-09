@@ -12,6 +12,8 @@ import { captionCueSchema } from '../ir/schema.js';
 import { projectAssetReferences } from '../ir/asset-references.js';
 import { createRenderPlan } from '../ir/render-plan.js';
 import { checkReportOptionsSchema, createCheckReport } from '../ir/check-report.js';
+import { audioTimingOptionsSchema, inspectProjectAudioTiming } from '../ir/audio-timing.js';
+import { auditDesignSpec, designSpecSchema } from '../ir/design-spec.js';
 import { outputCompatibilityMatrix } from '../engine/output-compatibility.js';
 import { analyzeAudioFile, audioAnalysisOptionsSchema } from '../engine/audio-analysis.js';
 import { parseTimelineTime } from '../engine/time.js';
@@ -1378,6 +1380,14 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   app.post('/api/check-report', async (request, response, next) => {
     try { response.json(await createCheckReport(await loadProject(loaded.projectFile), checkReportOptionsSchema.parse(request.body))); }
     catch (error) { next(error); }
+  });
+  app.post('/api/audio-timing', (request, response, next) => {
+    try { response.json(inspectProjectAudioTiming(compiledProject, audioTimingOptionsSchema.parse(request.body))); }
+    catch (error) { next(error); }
+  });
+  app.get('/api/design-spec', async (_request, response, next) => { try { response.json(await auditDesignSpec(await loadProject(loaded.projectFile))); } catch (error) { next(error); } });
+  app.put('/api/design-spec', async (request, response, next) => {
+    try { const spec = designSpecSchema.parse(request.body), receipt = await commitProject(loaded.projectFile, { expectedRevision: revision(sourceProject), revisionKind: 'document', origin: 'studio-design-spec', update: project => ({ ...project, designSpec: spec }) }); sourceProject = receipt.loaded.sourceProject; compiledProject = receipt.loaded.project; frameCache.clear(); response.json({ revision: receipt.documentRevision, report: await auditDesignSpec(receipt.loaded) }); } catch (error) { next(error); }
   });
   app.post('/api/render', async (request, response, next) => {
     try {

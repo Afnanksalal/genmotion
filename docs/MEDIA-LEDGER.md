@@ -1,0 +1,5 @@
+# Project media ledger and cache
+
+Every accepted media item can be recorded in the portable `mediaLedger` with its project-local path, content hash, byte size, origin and source/tool/model/settings, rights evidence, tags, derivation parents and optional source-to-output time map. Schema validation rejects broken parent identities, derivation cycles, undocumented claimed rights, generated media without model identity, captured evidence without a source URL and derived media without parents.
+
+`importMediaRecord` copies into the project atomically, deduplicates by content hash and can populate an optional cross-project content-addressed cache. Project rendering and verified bundles continue to reference and include the project-local copy. `inspectMediaLedger` reports usage, changed/missing bytes and unused records. `relocateMediaRecord` moves the file and rewrites exact project references as one reversible operation; deletion is limited to unused records. The cache is an optimization and never a portable-project dependency.

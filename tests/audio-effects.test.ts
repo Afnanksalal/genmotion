@@ -9,9 +9,16 @@ import { audioEffectsSchema } from '../src/ir/audio-effects.js';
 import { audioRackCapabilities, audioRackPreset, copyAudioRack, duplicateAudioEffect, pasteAudioRack } from '../src/ir/audio-rack.js';
 import { audioTrackSchema } from '../src/ir/schema.js';
 import { loadProject } from '../src/ir/loader.js';
-import { renderAudio } from '../src/engine/audio.js';
+import { renderAudio, stereoPositionGains } from '../src/engine/audio.js';
 
 describe('native audio effect racks', () => {
+  it('combines constant-power pan with independent stereo balance', () => {
+    expect(stereoPositionGains(0)).toEqual({ left: expect.closeTo(Math.SQRT1_2, 6), right: expect.closeTo(Math.SQRT1_2, 6) });
+    expect(stereoPositionGains(-1, 1)).toEqual({ left: 0, right: expect.closeTo(0, 12) });
+    expect(stereoPositionGains(1, -1)).toEqual({ left: expect.closeTo(0, 12), right: 0 });
+    expect(stereoPositionGains(0, .5)).toEqual({ left: expect.closeTo(Math.SQRT1_2 * .5, 6), right: expect.closeTo(Math.SQRT1_2, 6) });
+    expect(audioTrackSchema.parse({ id: 'locked', src: 'tone.wav', locked: true, balance: -.4 })).toMatchObject({ locked: true, balance: -.4, pan: 0 });
+  });
   it('ducks music during voice activity and restores its tail after the voice ends', async () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), 'genmotion-ducking-'));
     try {
@@ -93,6 +100,7 @@ describe('native audio effect racks', () => {
     expect(pasted.map(effect => effect.id)).toEqual(['eq', 'eq-copy', 'eq-2']);
     expect(audioRackPreset('voice-clean').map(effect => effect.type)).toEqual(['highpass', 'compressor']);
     expect(audioRackCapabilities).toMatchObject({ version: 1, ordered: true, maximumEffects: 32, automation: { supported: false, reason: expect.any(String) } });
+    expect(audioRackCapabilities.types).toEqual(expect.arrayContaining(['low-shelf', 'high-shelf', 'saturation', 'delay', 'reverb', 'chorus', 'phaser', 'bitcrush']));
     expect(() => duplicateAudioEffect(rack, 'missing', 'copy')).toThrow('not found');
   });
 
@@ -124,6 +132,15 @@ describe('native audio effect racks', () => {
       expect(limited.samples).toBe(reference.samples);
       const gated = await signal(4000, ['volume=0.001', ...effects([{ id: 'g', type: 'gate', thresholdDb: -30, ratio: 10, attackMs: 1, releaseMs: 1 }])]);
       expect(gated.rms).toBeLessThan(reference.rms * 0.00001);
+      for (const effect of [
+        { id: 'ls', type: 'low-shelf', frequency: 120, gainDb: 3 }, { id: 'hs', type: 'high-shelf', frequency: 8000, gainDb: -3 },
+        { id: 'sat', type: 'saturation', drive: 2 }, { id: 'delay', type: 'delay', delayMs: 40 }, { id: 'room', type: 'reverb', roomSize: .3 },
+        { id: 'chorus', type: 'chorus', delayMs: 20 }, { id: 'phaser', type: 'phaser' }, { id: 'crusher', type: 'bitcrush', bits: 6 },
+      ]) {
+        const processed = await signal(440, effects([effect]));
+        expect(processed.rms).toBeGreaterThan(0);
+        expect(Number.isFinite(processed.peak)).toBe(true);
+      }
       const fast = await signal(4000, audioTempoFilters(2));
       expect(fast.samples).toBeLessThan(reference.samples * 0.55);
     } finally { await rm(directory, { recursive: true, force: true }); }

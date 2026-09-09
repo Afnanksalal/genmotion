@@ -1,12 +1,12 @@
 {
   "name": "genmotion",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "genmotion",
-      "version": "2.6.0",
+      "version": "2.7.0",
       "license": "MIT",
       "dependencies": {
         "@agentclientprotocol/sdk": "1.4.0",
@@ -19,6 +19,7 @@
         "express": "5.2.1",
         "lucide": "1.35.0",
         "pino": "9.14.0",
+        "playwright-core": "^1.62.1",
         "svg-path-properties": "2.1.0",
         "yaml": "2.9.0",
         "zod": "4.4.3"
@@ -4052,7 +4053,6 @@
       "version": "1.62.1",
       "resolved": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.62.1.tgz",
       "integrity": "sha512-wPYSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDhntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGqHewDZ68nYZVw==",
-      "dev": true,
       "license": "Apache-2.0",
       "bin": {
         "playwright-core": "cli.js"

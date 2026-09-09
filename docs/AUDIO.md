@@ -4,7 +4,7 @@ Nested video source audio follows composition instance clocks during preparation
 
 Mapped streams use a sixteen-page decoded PCM cache (1 MiB), bounded 4 GiB source/output streams, cancellation and deadline checks. They feed the same prepared-track mix, stem, loudness and export path. Validation results and limits are recorded in the [milestone QA report](MILESTONE-QA-2026-09-06.md) and [checklist reconciliation](CHECKLIST-RECONCILIATION-2026-09-06.md).
 
-Video export, standalone audio export, and Studio's processed-mix preview share one native FFmpeg graph. Project audio tracks retain source trimming, timeline placement, looping, linear volume, stereo pan, fades, mute/solo and voice ducking. Additional fields are optional for compatibility with existing documents.
+Video export, standalone audio export, and Studio's processed-mix preview share one native FFmpeg graph. Project audio tracks retain source trimming, timeline placement, looping, linear volume, constant-power pan, independent stereo balance, fades, mute/solo, locking and voice ducking. Additional fields are optional for compatibility with existing documents.
 
 ## Track controls
 
@@ -12,6 +12,8 @@ Video export, standalone audio export, and Studio's processed-mix preview share 
 - `playbackRate`: 0.0625–16. Output duration controls how much source audio is consumed.
 - `preservePitch`: true by default; tempo is decomposed into supported native stages. False changes source sample rate and resamples to 48 kHz.
 - `reverse`: reverses the selected source interval before tempo and effects. Native reversal buffers the selected interval; long intervals can require substantial FFmpeg memory.
+- `pan`: −1…1 constant-power left/right placement. `balance`: −1…1 independently attenuates the opposite existing stereo channel after panning.
+- `locked`: prevents Studio property edits, reordering and deletion until explicitly unlocked. It does not alter rendered samples.
 - `effects`: an ordered rack of up to 32 effects with unique `id` values. Each effect can be bypassed without removing its settings.
 
 The SDK exposes a versioned rack clipboard, deterministic duplicate/paste ID handling and validated `voice-clean` and `delivery-safe` presets. `audioRackCapabilities` lists supported effect types, limits and automation support. Rack version 1 explicitly reports effect-parameter automation as unsupported instead of accepting values the signal graph would ignore.
@@ -23,8 +25,16 @@ The SDK exposes a versioned rack clipboard, deterministic duplicate/paste ID han
 | `compressor` | `thresholdDb`, `ratio`, `attackMs`, `releaseMs`, `knee`, `makeupDb`. |
 | `gate` | `thresholdDb`, `rangeDb`, `ratio`, `attackMs`, `releaseMs`. |
 | `limiter` | `ceilingDb`, `attackMs`, `releaseMs`; automatic makeup gain is disabled and lookahead latency is compensated. |
+| `low-shelf`, `high-shelf` | `frequency`, `q`, and signed `gainDb`. |
+| `saturation` | `drive`, output compensation, curve family, and bounded oversampling. |
+| `delay` | Delay time, feedback, and wet level. |
+| `reverb` | Deterministic multi-tap room size, damping, and wet level. |
+| `chorus`, `phaser` | Explicit delay/depth/rate/feedback or decay/waveform modulation controls. |
+| `bitcrush` | Bit depth, sample reduction, wet mix, and anti-aliasing. |
 
 All controls are validated against the supported filter ranges. Projects provide typed values rather than executable filter strings. The SDK exports `audioEffectFilters`, `audioTempoFilters`, and `decibelsToGain` for inspection and composition.
+
+`audioRackTiming` and `inspectProjectAudioTiming` report envelope preroll, uncompensated latency, compensated limiter lookahead and deterministic effect-tail estimates. Delay, room, chorus and phaser tails are evaluated to a configurable audibility floor and capped by a declared budget. Reports state how much tail fits before the project boundary and how much would be truncated. `genmotion audio-timing`, MCP `genmotion_audio_timing`, and Studio **Inspect rack timing** expose the same result. The processed preview and every export use the same graph and duration boundary.
 
 Voice tracks form the sidechain bus. Non-voice tracks with `duckUnderVoice: true` form the ducked bus. Voice tracks cannot feed themselves into both buses. Optional project `audioDucking` configures `thresholdDb`, `ratio`, `attackMs`, and `releaseMs`; omitted settings preserve the prior defaults. Studio exposes these shared controls in the project inspector. The final mix has a latency-compensated 0.95 linear limiter without automatic makeup gain, and pads/trims to the project duration.
 
@@ -41,7 +51,7 @@ genmotion audio-render ./project --variant english --output ./exports/mix.flac
 
 Standalone output supports WAV (24-bit PCM), FLAC, M4A/AAC, and Opus at 48 kHz stereo. SDK `renderAudio` and MCP `genmotion_audio_render` use the same implementation. CLI/MCP project transactions author all rack settings in the shared schema. Audio export stages output beside the destination, verifies a complete decode, and atomically replaces the accepted file. Failure or cancellation preserves the previous output and removes staging. A project without audible tracks produces silence for explicit audio-only export; video export keeps its existing no-audio behavior.
 
-Tests measure high/low-pass rejection, EQ attenuation, compressor reduction, limiter peaks and latency, gate attenuation, and tempo duration from decoded float PCM. All four video codecs encode/decode with the rack enabled. Additional tests cover video-source pitch preservation, silent-video muxing, all four standalone audio containers, failed-output preservation, Studio rack edits, and browser playback metadata for the processed mix.
+Tests measure high/low-pass rejection, EQ attenuation, compressor reduction, limiter peaks and latency, gate attenuation, every creative DSP primitive, and tempo duration from decoded float PCM. All four video codecs encode/decode with the rack enabled. Additional tests cover video-source pitch preservation, silent-video muxing, all four standalone audio containers, failed-output preservation, Studio rack edits, and browser playback metadata for the processed mix.
 
 Tracks are prepared sequentially as full-duration 48 kHz stereo float PCM before mixing. This isolates source trim/delay completion from the sidechain and mix graph: the original combined graph intermittently lost tails on the supported FFmpeg 7.1 Windows runtime. Concurrent rendered PCM hashes and tail-amplitude tests cover that regression. Preparation estimates and bounds retained PCM at 8 GiB, and owned staging is removed on success, failure, or cancellation. This adds preparation time and temporary disk use; the audio graph runs with one filter thread per export.
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.7.0
+
+- Added versioned brand/design specifications with exact binding, font, immutable-asset, variant and delivery-medium drift audits across SDK, CLI, MCP and Studio.
+- Expanded native audio racks with shelf filters, saturation, delay, reverb, chorus, phaser and bitcrush; added constant-power pan, stereo balance, track locks and explicit latency/preroll/tail inspection.
+- Added inspectable creative preferences and immutable reusable workflow bundles with approval gates, dependency hashes, migration diagnostics and clean re-instantiation.
+- Added bounded real-product evidence capture, brand candidate extraction, provider-neutral media resolution, a portable content-addressed media ledger, reviewed transcription and reversible segmentation/matting preparation.
+
 Genmotion follows semantic versioning. GitHub releases contain the verified package archive and its `SHA256SUMS` manifest.
 
 ## 2.6.0 - 2026-09-09

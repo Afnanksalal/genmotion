@@ -64,6 +64,8 @@ import { commitEasing, copyEasing, easingAddressSchema } from './ir/easing-edits
 import { applyPathOperations } from './engine/path-operations.js';
 import { pathOperationsSchema } from './ir/path-operations.js';
 import { renderAudio, measureProjectAudio } from './engine/audio.js';
+import { audioTimingOptionsSchema, inspectProjectAudioTiming } from './ir/audio-timing.js';
+import { auditDesignSpec, designSpecSchema } from './ir/design-spec.js';
 import { measureAudioFile } from './engine/loudness.js';
 import { compositionDependencyGraph, compositionUses } from './ir/compositions.js';
 import { analyzeSpring, easingPresets } from './engine/easing.js';
@@ -326,6 +328,16 @@ function serverFactory(): McpServer {
     const findings = await validateProject(loaded);
     return toolResult({ ok: !hasErrors(findings) && (!input.strict || findings.length === 0), summary: summarizeProject(loaded.project), findings });
   });
+
+  server.registerTool('genmotion_audio_timing', {
+    title: 'Inspect audio rack timing', description: 'Report effect latency, compensated lookahead, preroll, decay tails and project-boundary truncation before rendering.',
+    inputSchema: compactSchema(z.object({ project: z.string(), options: audioTimingOptionsSchema.optional() }).strict()), annotations: { readOnlyHint: true },
+  }, async (input) => toolResult(inspectProjectAudioTiming((await loadProject(await allowedPath(input.project, 'Project'))).project, input.options)));
+
+  server.registerTool('genmotion_design_spec', {
+    title: 'Import or audit a design specification', description: 'Bind an optional versioned brand/design contract with provenance and immutable identities, then report palette, font, asset, variant and medium drift.',
+    inputSchema: compactSchema(z.object({ project: z.string(), spec: designSpecSchema.optional(), expectedRevision: z.string().optional() }).strict()),
+  }, async input => { const project = await allowedPath(input.project, 'Project'); if (input.spec) { const expectedRevision = input.expectedRevision ?? (await readProjectSnapshot(project)).revision; await commitProject(project, { expectedRevision, origin: 'mcp-design-spec', update: document => ({ ...document, designSpec: input.spec }) }); } return toolResult(await auditDesignSpec(await loadProject(project))); });
 
   server.registerTool('genmotion_render_plan', {
     title: 'Create deterministic render plan', description: 'Resolve delivery metadata and hash every frozen local dependency without rendering or mutating the project.',

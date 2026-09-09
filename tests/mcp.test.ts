@@ -44,6 +44,8 @@ describe('Genmotion MCP server', () => {
       const textLayout = await client.callTool({ name: 'genmotion_text_measure', arguments: { project, address: { containerId: 'intro', layerId: 'title' } } });
       expect(textLayout.structuredContent).toMatchObject({ fits: true, overflowX: false, overflowY: false });
       const measuredAudio = await client.callTool({ name: 'genmotion_audio_measure', arguments: { input: project } });
+      const audioTiming = await client.callTool({ name: 'genmotion_audio_timing', arguments: { project } });
+      expect(audioTiming.content[0]).toMatchObject({ type: 'text', text: expect.stringContaining('"version": 1') });
       expect(measuredAudio.structuredContent).toMatchObject({ silence: true, integratedLufs: null, truePeakDbtp: null });
       const saveTool = listed.tools.find((tool) => tool.name === 'genmotion_project_save');
       const saveProperties = saveTool?.inputSchema.properties as Record<string, { properties?: Record<string, unknown> }> | undefined;

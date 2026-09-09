@@ -242,6 +242,29 @@ test('authors shared voice-ducking dynamics in the project inspector', async ({ 
   await expect.poll(async () => (await loadProject(directory)).sourceProject.audioDucking).toBeUndefined();
 });
 
+test('locks audio timeline edits and authors independent stereo balance', async ({ page }) => {
+  await studio?.close();
+  await writeFile(path.join(directory, 'tone.wav'), toneWav());
+  const source = JSON.parse(await readFile(path.join(directory, 'genmotion.json'), 'utf8')) as { audio: unknown[] };
+  source.audio = [{ id: 'locked-music', src: 'tone.wav', start: 0, trimStart: 0, duration: .25, volume: 1, fadeIn: 0, fadeOut: 0, loop: false, duckUnderVoice: false, muted: false, solo: false, pan: 0, balance: 0, locked: true, kind: 'music' }];
+  await writeFile(path.join(directory, 'genmotion.json'), `${JSON.stringify(source, null, 2)}\n`);
+  studio = await startStudio(await loadProject(directory), { port: 0, agentRuntime, agentRuntimeFactory: () => agentRuntime, workspaceRoot: path.join(directory, 'workspace') });
+  await page.goto(studio.url);
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
+  await page.locator('[data-audioclip="locked-music"]').click();
+  await page.locator('[data-field="volume"]').fill('.2'); await page.locator('[data-field="volume"]').press('Tab');
+  await expect(page.getByText('Unlock the audio track before editing it.')).toBeVisible();
+  expect((await loadProject(directory)).sourceProject.audio[0]?.volume).toBe(1);
+  await page.locator('[data-bool-field="locked"]').uncheck();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.audio[0]?.locked).toBe(false);
+  await page.locator('[data-field="balance"]').fill('0.4'); await page.locator('[data-field="balance"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.audio[0]?.balance).toBe(.4);
+  await page.locator('#addAudioEffect').click(); await page.locator('[data-audio-fx-choice="reverb"]').click();
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.audio[0]?.effects?.[0]?.type).toBe('reverb');
+  await page.locator('[data-field="effects.0.roomSize"]').fill('.7'); await page.locator('[data-field="effects.0.roomSize"]').press('Tab');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.audio[0]?.effects?.[0]).toMatchObject({ type: 'reverb', roomSize: .7, damping: .35, wet: .3 });
+});
+
 test('persists loudness targets and measures the saved processed mix', async ({ page }) => {
   await page.goto(studio?.url ?? '');
   await page.locator('[data-select="project"]').click();
@@ -1006,6 +1029,29 @@ test('persists text inspector changes through stable semantic transactions', asy
     return project.scenes[0]?.layers.find((layer) => layer.id === 'title')?.text;
   }).toBe('Native text edit');
   await expect(page.locator('#previewImage')).toHaveJSProperty('naturalWidth', 320);
+});
+
+test('imports and audits a versioned design specification from Studio', async ({ page }) => {
+  await page.goto(studio?.url ?? '');
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
+  await page.locator('[data-select="project"]').click();
+  await page.locator('#designSpecManager').click();
+  await page.locator('#designSpecJson').fill(JSON.stringify({
+    version: 1,
+    id: 'e2e-brand-system',
+    revision: '2026.09',
+    sourceHash: 'a'.repeat(64),
+    provenance: { source: 'approved browser fixture', importedAt: '2026-09-09T00:00:00.000Z', rights: 'owned' },
+    palette: { accent: '#59e3a6' },
+    exactBindings: { 'brand.accent': '#59e3a6' },
+  }));
+  await page.locator('#saveDesignSpec').click();
+  await expect(page.locator('#designSpecResult')).toHaveText('Design specification is in sync.');
+  await expect.poll(async () => (await loadProject(directory)).sourceProject.designSpec?.id).toBe('e2e-brand-system');
+  await page.reload();
+  await page.locator('[data-select="project"]').click();
+  await page.locator('#designSpecManager').click();
+  await expect(page.locator('#designSpecJson')).toContainText('e2e-brand-system');
 });
 
 test('queues one export and announces completion once', async ({ page }) => {

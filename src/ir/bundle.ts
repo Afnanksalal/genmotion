@@ -105,6 +105,7 @@ async function bundleSources(loaded: LoadedProject) {
   };
   for (const font of project.brand.fonts) font.file = asset(font.file);
   for (const track of project.audio) track.src = asset(track.src);
+  for (const record of project.mediaLedger.records) record.path = asset(record.path);
   for (const shot of project.productionWorkflow?.shots ?? []) for (const reference of shot.references) reference.path = asset(reference.path);
   for (const stage of project.productionWorkflow?.stages ?? []) for (const evidence of stage.evidence) evidence.path = asset(evidence.path);
   for (const definition of project.parameters) {

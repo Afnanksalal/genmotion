@@ -45,7 +45,7 @@ describe('content-addressed project bundles', () => {
       expect(await readdir(root)).toEqual([]);
       await expect(createProjectBundle(loaded, root, { signal: AbortSignal.abort() })).rejects.toThrow('aborted');
       const malformed = structuredClone(loaded.sourceProject);
-      malformed.audio = [{ id: 'missing', src: 'missing.wav', start: 0, trimStart: 0, volume: 1, fadeIn: 0, fadeOut: 0, loop: false, duckUnderVoice: false, muted: false, solo: false, pan: 0, kind: 'music' }];
+      malformed.audio = [{ id: 'missing', src: 'missing.wav', start: 0, trimStart: 0, volume: 1, fadeIn: 0, fadeOut: 0, loop: false, duckUnderVoice: false, muted: false, solo: false, pan: 0, balance: 0, locked: false, kind: 'music' }];
       const absent = await loadProjectDocument(malformed, loaded.projectFile);
       await expect(createProjectBundle(absent, root)).rejects.toThrow();
       expect(await readdir(root)).toEqual([]);

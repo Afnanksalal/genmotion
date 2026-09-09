@@ -10,6 +10,9 @@ import { parameterExpressionSchema, type ParameterExpression } from './expressio
 import { audioEffectsSchema, audioNormalizationSchema } from './audio-effects.js';
 import { gradientSchema } from './paint.js';
 import { productionBriefSchema } from './brief.js';
+import { designSpecSchema } from './design-spec.js';
+import { creativePreferencesSchema } from './creative-preferences.js';
+import { mediaLedgerSchema } from './media-ledger.js';
 import { productionWorkflowSchema } from './production.js';
 
 const finite = z.number().finite();
@@ -654,6 +657,8 @@ export const audioTrackSchema = z.object({
   muted: z.boolean().default(false),
   solo: z.boolean().default(false),
   pan: z.number().finite().min(-1).max(1).default(0),
+  balance: z.number().finite().min(-1).max(1).default(0),
+  locked: z.boolean().default(false),
   kind: z.enum(['music', 'voice', 'sfx', 'source']).default('music'),
 });
 
@@ -681,6 +686,9 @@ export const projectSchema = z.object({
   compositions: z.array(compositionSchema).default([]),
   captionStylePresets: z.array(captionStylePresetSchema).max(128).default([]).refine((items) => new Set(items.map((item) => item.id)).size === items.length, 'Caption style preset IDs must be unique'),
   captionPreviewLanguages: z.array(z.string().min(2).max(64)).max(16).default([]),
+  designSpec: designSpecSchema.optional(),
+  creativePreferences: creativePreferencesSchema.default([]),
+  mediaLedger: mediaLedgerSchema.default({ version: 1, records: [] }),
   brand: z.object({
     background: color,
     foreground: color,
