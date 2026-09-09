@@ -363,3 +363,50 @@ test('custom Studio controls support keyboard choices, escape, bounds and disabl
 
   expect(errors).toEqual([]);
 });
+
+
+test('playback presents delayed native frames without flooding requests or starving the image', async ({ page }) => {
+  studio = await startStudio(await loadProject(directory), { port: 0 });
+  let active = 0, peak = 0;
+  await page.route('**/frame/*', async route => {
+    active++; peak = Math.max(peak, active);
+    try { await new Promise(resolve => setTimeout(resolve, 100)); await route.continue(); }
+    finally { active--; }
+  });
+  await page.goto(studio.url);
+  await page.getByRole('tab', { name: 'Editor', exact: true }).click();
+  await expect(page.locator('#previewImage')).toHaveJSProperty('naturalWidth', 320);
+  await page.evaluate(() => {
+    const image = document.querySelector('#previewImage')!;
+    const frames: string[] = [];
+    Object.assign(window, { playbackFrames: frames });
+    new MutationObserver(() => frames.push(image.getAttribute('data-presented-frame')!)).observe(image, { attributes: true, attributeFilter: ['data-presented-frame'] });
+  });
+  await page.locator('#playButton').click();
+  await expect.poll(() => page.evaluate(() => new Set((window as unknown as { playbackFrames: string[] }).playbackFrames).size), { timeout: 10000 }).toBeGreaterThan(12);
+  expect(peak).toBeLessThanOrEqual(3); // Two current requests plus an aborted request being released by the test route.
+  await page.locator('#playButton').click();
+  await page.locator('#scrubber').fill('20');
+  await expect(page.locator('#previewImage')).toHaveAttribute('data-presented-frame', '20');
+  await page.waitForTimeout(250);
+  await expect(page.locator('#previewImage')).toHaveAttribute('data-presented-frame', '20');
+});
+
+test('preview endpoints preserve revision and resolution cache identity', async ({ page }) => {
+  studio = await startStudio(await loadProject(directory), { port: 0 });
+  const stale = await page.request.get(studio.url + '/frame/0.png?r=stale');
+  expect(stale.status()).toBe(409);
+  const interactiveStale = await page.request.get(studio.url + '/frame/0.png?r=stale', { headers: { 'x-genmotion-preview': '1' } });
+  expect(interactiveStale.status()).toBe(204);
+  expect(interactiveStale.headers()['x-preview-revision']).toBeTruthy();
+  const small = await page.request.get(studio.url + '/frame/0.png?preview=1&maxEdge=160');
+  expect(small.ok()).toBe(true);
+  expect(small.headers()['x-preview-width']).toBe('160');
+  expect(small.headers()['cache-control']).toBe('no-cache');
+  const raw = await page.request.get(studio.url + '/frame/0.rgba?maxEdge=160');
+  expect(raw.headers()['content-type']).toContain('application/octet-stream');
+  expect((await raw.body()).byteLength).toBe(160 * 90 * 4);
+  const full = await page.request.get(studio.url + '/frame/0.png');
+  expect(full.headers()['x-preview-width']).toBe('320');
+  expect((await page.request.get(studio.url + '/frame/0.png?preview=1&maxEdge=999999')).status()).toBe(400);
+});

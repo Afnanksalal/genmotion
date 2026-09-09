@@ -1,3 +1,4 @@
+import { PreviewFrameRenderer } from '../engine/preview-frames.js';
 import { alphaModeSchema, resolveAlphaOutput } from '../engine/alpha-output.js';
 import { conformMedia, mediaConformPlan, mediaConformOptionsSchema } from '../engine/media-conform.js';
 import { inspectMedia } from '../engine/media-probe.js';
@@ -601,6 +602,9 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
   };
   const jobs = new Map<string, RenderJob>();
   const renderControllers = new Map<string, AbortController>();
+  const previewFrames = new PreviewFrameRenderer(Math.min(2, os.availableParallelism()));
+  const stillFrames = new PreviewFrameRenderer(1, 8);
+  const pendingPreviewFrames = new Map<string, Promise<Buffer>>();
   const frameCache = new ByteLruCache(128 * 1024 * 1024, 120);
   let renderQueue = Promise.resolve();
   const agentRuntime = options.agentRuntime ?? options.agentRuntimeFactory?.(loaded.projectDir) ?? new LocalAgentRuntime(loaded.projectDir);
@@ -1109,18 +1113,40 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       response.sendFile(resolveProjectAsset(loaded.projectDir, assetPath));
     } catch (error) { next(error); }
   });
-  app.get('/frame/:frame.png', async (request, response, next) => {
+  app.get(['/frame/:frame.png', '/frame/:frame.rgba'], async (request, response, next) => {
     try {
       const frame = Number(request.params.frame);
       const frames = Math.ceil(projectDuration(compiledProject) * compiledProject.fps);
       if (!Number.isFinite(frame) || frame < 0 || frame >= frames) { response.status(400).json({ error: 'Frame is outside the composition.' }); return; }
-      const key = `${revision(sourceProject)}:${String(frame)}`;
-      let png = frameCache.get(key);
-      if (!png) {
-        png = await renderFramePng(compiledProject, loaded.projectDir, frame);
-        frameCache.set(key, png);
+      const currentRevision = revision(sourceProject);
+      if (request.query.r !== undefined && request.query.r !== currentRevision) {
+        if (request.header('x-genmotion-preview') === '1') response.status(204).set('Cache-Control', 'no-store').set('X-Preview-Revision', currentRevision).end();
+        else response.status(409).set('Cache-Control', 'no-store').json({ error: 'Preview revision changed.' });
+        return;
       }
-      response.type('png').set('Cache-Control', 'private, max-age=31536000, immutable').send(png);
+      const raw = request.path.endsWith('.rgba');
+      const preview = raw || request.query.preview === '1';
+      const edge = preview ? z.coerce.number().int().min(128).max(2048).parse(request.query.maxEdge) : Math.max(compiledProject.width, compiledProject.height);
+      const scale = Math.min(1, edge / Math.max(compiledProject.width, compiledProject.height));
+      const dimensions = { width: Math.max(2, Math.round(compiledProject.width * scale)), height: Math.max(2, Math.round(compiledProject.height * scale)) };
+      const key = `${currentRevision}:${dimensions.width}x${dimensions.height}:${raw ? 'rgba' : 'png'}:${String(frame)}`;
+      const start = performance.now();
+      let png = frameCache.get(key);
+      const cached = png !== undefined;
+      if (!png) {
+        let pending = pendingPreviewFrames.get(key);
+        if (!pending) {
+          if (pendingPreviewFrames.size >= 16) { response.status(429).set('Retry-After', '1').end(); return; }
+          pending = preview ? previewFrames.render(`${currentRevision}:${dimensions.width}x${dimensions.height}:${raw ? 'rgba' : 'png'}`, compiledProject, loaded.projectDir, frame, dimensions, raw ? 'rgba' : 'png') : stillFrames.render(currentRevision, compiledProject, loaded.projectDir, frame, dimensions, 'png');
+          pendingPreviewFrames.set(key, pending);
+        }
+        try { png = await pending; if (currentRevision === revision(sourceProject)) frameCache.set(key, png); }
+        finally { if (pendingPreviewFrames.get(key) === pending) pendingPreviewFrames.delete(key); }
+      }
+      if (currentRevision !== revision(sourceProject)) { response.status(204).set('Cache-Control', 'no-store').set('X-Preview-Revision', revision(sourceProject)).end(); return; }
+      response.type(raw ? 'application/octet-stream' : 'png').set('Cache-Control', request.query.r ? 'private, max-age=31536000, immutable' : 'no-cache')
+        .set('X-Preview-Width', String(dimensions.width)).set('X-Preview-Height', String(dimensions.height))
+        .set('Server-Timing', `native;dur=${(performance.now() - start).toFixed(1)};desc="${cached ? 'cached' : 'rendered'}"`).send(png);
     } catch (error) { next(error); }
   });
   app.post('/api/requests', async (request, response, next) => {
@@ -1529,6 +1555,8 @@ export async function startStudio(loaded: LoadedProject, options: StudioOptions 
       controller.abort();
     }
     await renderQueue;
+    await previewFrames.close();
+    await stillFrames.close();
     await agentRuntime.close();
     await new Promise<void>((resolve, reject) => {
       server.close((error) => error ? reject(error) : resolve());

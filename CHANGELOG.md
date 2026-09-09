@@ -2,6 +2,13 @@
 
 Genmotion follows semantic versioning. GitHub releases contain the verified package archive and its `SHA256SUMS` manifest.
 
+## 2.4.1 - 2026-09-09
+
+- Fixed Studio playback starvation when native frames arrive after the playhead advances.
+- Replaced live PNG delivery with viewport-sized RGBA frames, canvas presentation, bounded prefetch/cache and dedicated native workers. Paused inspection uses a separate worker and full-resolution PNGs.
+- Removed duplicate pixel copies from PNG encoding and made preview caches revision/resolution/format safe.
+- Added sustained playback performance checks to CI and releases. Three 1080p example projects measured approximately 30 presented FPS locally; see [playback evidence and limits](docs/STUDIO-PLAYBACK.md).
+
 ## 2.4.0 - 2026-09-07
 
 - Replaced Studio browser-default widgets with shared custom dropdowns, steppers, checkboxes, sliders, file controls, color selection, search clearing and audio playback controls. Added keyboard navigation and synchronized disabled states.

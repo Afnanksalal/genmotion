@@ -1,6 +1,6 @@
 {
   "name": "genmotion",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Agent-native motion design engine with visual tools, an open Creative IR, and a native renderer.",
   "keywords": [
     "agentic-video",
@@ -51,6 +51,7 @@
     "lint": "eslint src tests --max-warnings 0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "check": "npm run lint && npm run typecheck && npm test",
+    "benchmark:studio": "npm run build && node scripts/benchmark-studio-playback.mjs",
     "benchmark": "node dist/cli.js benchmark tests/fixtures/basic --frames 60",
     "examples:build": "npm run build && node scripts/build-example-projects.mjs",
     "examples:verify": "npm run build && node scripts/verify-examples.mjs",

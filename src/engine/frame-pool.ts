@@ -11,17 +11,17 @@ export class NativeFramePool {
   private readonly slots: Slot[] = [];
   private closing = false;
   private constructor() {}
-  static async create(project: GenmotionProject, projectDir: string, dimensions: RenderDimensions, count: number, view?: RenderView): Promise<NativeFramePool> {
+  static async create(project: GenmotionProject, projectDir: string, dimensions: RenderDimensions, count: number, view?: RenderView, format: 'rgba' | 'png' = 'rgba'): Promise<NativeFramePool> {
     const pool = new NativeFramePool();
-    try { pool.start(project, projectDir, dimensions, count, view); return pool; }
+    try { pool.start(project, projectDir, dimensions, count, view, format); return pool; }
     catch (error) { await pool.close(); throw error; }
   }
-  private start(project: GenmotionProject, projectDir: string, dimensions: RenderDimensions, count: number, view?: RenderView): void {
+  private start(project: GenmotionProject, projectDir: string, dimensions: RenderDimensions, count: number, view?: RenderView, format: 'rgba' | 'png' = 'rgba'): void {
     const url = import.meta.url.includes('/src/engine/frame-pool.')
       ? new URL('../../dist/engine/worker.js', import.meta.url)
       : new URL('./worker.js', import.meta.url);
     for (let index = 0; index < count; index++) {
-      const worker = new Worker(url, { workerData: { project, projectDir, dimensions, view } });
+      const worker = new Worker(url, { workerData: { project, projectDir, dimensions, view, format } });
       const slot: Slot = { worker, pending: undefined, failure: undefined };
       const fail = (error: Error): void => { slot.failure = error; slot.pending?.reject(error); slot.pending = undefined; };
       worker.on('message', (message: { frame: number; buffer?: ArrayBuffer; error?: string }) => {

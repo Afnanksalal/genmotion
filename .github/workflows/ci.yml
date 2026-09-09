@@ -57,6 +57,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:studio-e2e
+      - name: Verify sustained Studio playback
+        run: node scripts/benchmark-studio-playback.mjs
   coverage:
     # Pin a runner with FFmpeg 6.1+: Ubuntu 22.04 supplies 4.4, which lacks
     # the limiter latency compensation required by the native audio graph.

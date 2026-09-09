@@ -24,6 +24,8 @@ jobs:
       - run: npm run package:verify
       - run: npx playwright install --with-deps chromium
       - run: npm run test:studio-e2e
+      - name: Verify sustained Studio playback
+        run: node scripts/benchmark-studio-playback.mjs
       - name: Verify tag matches package version
         run: node -e 'const expected = `v${require("./package.json").version}`; if (process.env.GITHUB_REF_NAME !== expected) { console.error(`Tag ${process.env.GITHUB_REF_NAME} does not match ${expected}.`); process.exit(1); }'
       - name: Build distributable package

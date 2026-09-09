@@ -7,7 +7,7 @@ import { applyLayerMasks } from './masks.js';
 import { canvasFontWeight, fontString, resolveTextLayout } from './text-layout.js';
 import { revealUnicodeText } from './text-unicode.js';
 export { canvasFontWeight };
-import { createCanvas, Path2D, type SKRSContext2D } from '@napi-rs/canvas';
+import { createCanvas, Path2D, type SKRSContext2D, type Canvas } from '@napi-rs/canvas';
 import { access } from 'node:fs/promises';
 import type { CaptionLayer, GenmotionProject, ImageLayer, Layer, Scene, ShapeLayer, TextLayer, VideoLayer } from '../ir/schema.js';
 import { DEFAULT_TRANSFORM, shapeLayerSchema } from '../ir/schema.js';
@@ -483,7 +483,7 @@ function checkedDimensions(project: GenmotionProject, dimensions?: RenderDimensi
   return { width, height };
 }
 
-export async function renderFrame(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Buffer> {
+async function renderFrameCanvas(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Canvas> {
   if (!Number.isFinite(frame) || frame < 0 || !Number.isFinite(project.fps) || project.fps <= 0 || !Number.isFinite(frame / project.fps)) throw new Error('Rendering requires a finite nonnegative frame and positive FPS.');
   registerProjectFonts(project, projectDir);
   const output = checkedDimensions(project, dimensions);
@@ -511,17 +511,15 @@ export async function renderFrame(project: GenmotionProject, projectDir: string,
     await drawScene(ctx, active.scene, project, projectDir, active.localTime, identity, output, view);
   }
 
-  return Buffer.from(ctx.getImageData(0, 0, output.width, output.height).data.buffer);
+  return canvas;
+}
+
+export async function renderFrame(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Buffer> {
+  const canvas = await renderFrameCanvas(project, projectDir, frame, dimensions, view);
+  return Buffer.from(canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.buffer);
 }
 
 export async function renderFramePng(project: GenmotionProject, projectDir: string, frame: number, dimensions?: RenderDimensions, view?: RenderView): Promise<Buffer> {
-  registerProjectFonts(project, projectDir);
-  const output = checkedDimensions(project, dimensions);
-  const rgba = await renderFrame(project, projectDir, frame, output, view);
-  const canvas = createCanvas(output.width, output.height);
-  const ctx = canvas.getContext('2d');
-  const image = ctx.createImageData(output.width, output.height);
-  image.data.set(rgba);
-  ctx.putImageData(image, 0, 0);
-  return canvas.toBuffer('image/png');
+  const canvas = await renderFrameCanvas(project, projectDir, frame, dimensions, view);
+  return await canvas.encode('png');
 }

@@ -330,7 +330,7 @@ test('seeks fractional frames without rounding the requested timestamp', async (
   const frame = page.waitForResponse((response) => response.url().includes('/frame/10.5.png'));
   await page.locator('#seekApply').click();
   expect((await frame).status()).toBe(200);
-  await expect(page.locator('#previewImage')).toHaveAttribute('src', /\/frame\/10\.5\.png/);
+  await expect(page.locator('#previewImage')).toHaveAttribute('data-presented-frame', '10.5');
 });
 
 test('fits complete text and measures automatic native box dimensions', async ({ page }) => {
@@ -474,7 +474,7 @@ test('scales workflow navigation, asset discovery, easing inspection, and audio 
 test('edits, previews, references, and queues contextual agent work', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(`${message.text()} @ ${message.location().url}`); });
-  page.on('response', (response) => { if (response.status() >= 400) void response.text().then((body) => errors.push(`${response.status()} ${response.url()} ${body}`)); });
+  page.on('response', (response) => { if (response.status() >= 400) void response.text().then((body) => errors.push(`${response.status()} ${response.url()} ${body}`)).catch(() => errors.push(`${response.status()} ${response.url()} (body unavailable)`)); });
   await page.goto(studio?.url ?? '');
   await expect(page.getByText('Creative brief')).toBeVisible();
 
@@ -813,7 +813,7 @@ test('creates a blank project without invoking an agent', async ({ page }) => {
 test('operates workflow, library, reference, transport, and agent controls', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(`${message.text()} @ ${message.location().url}`); });
-  page.on('response', (response) => { if (response.status() >= 400) void response.text().then((body) => errors.push(`${response.status()} ${response.url()} ${body}`)); });
+  page.on('response', (response) => { if (response.status() >= 400) void response.text().then((body) => errors.push(`${response.status()} ${response.url()} ${body}`)).catch(() => errors.push(`${response.status()} ${response.url()} (body unavailable)`)); });
   await page.goto(studio?.url ?? '');
 
   await page.locator('#addScene').click();
@@ -824,7 +824,7 @@ test('operates workflow, library, reference, transport, and agent controls', asy
   await expect(page.locator('#saveState')).toHaveText('Saved');
   await page.locator('[data-select="scene"][data-id="proof-scene"]').click();
   await page.getByRole('tab', { name: 'Editor', exact: true }).click();
-  await expect(page.locator('#previewImage')).toHaveAttribute('src', /\/frame\/30\.png/);
+  await expect(page.locator('#previewImage')).toHaveAttribute('data-presented-frame', '30');
   await page.getByRole('tab', { name: 'Workflow', exact: true }).click();
 
   await page.locator('#addNote').click();
@@ -929,8 +929,8 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
   }).toBeCloseTo(1 / 30, 4);
 
   await expect(page.locator('[data-layerclip="accent"]')).toBeVisible();
-  const layerBox = await page.locator('[data-layerclip="accent"]').boundingBox();
-  expect(layerBox).not.toBeNull();
+  let layerBox = await page.locator('[data-layerclip="accent"]').boundingBox();
+  await expect.poll(async () => { layerBox = await page.locator('[data-layerclip="accent"]').boundingBox(); return layerBox; }).not.toBeNull();
   if (layerBox) {
     await page.mouse.move(layerBox.x + layerBox.width / 2, layerBox.y + layerBox.height / 2);
     await page.mouse.down();
@@ -951,8 +951,8 @@ test('moves, trims, snaps, resizes, and imports timeline media', async ({ page }
   }).toBeLessThan(0.7);
 
   await expect(page.locator('[data-stage-layer="accent"]')).toBeVisible();
-  const stageBox = await page.locator('[data-stage-layer="accent"]').boundingBox();
-  expect(stageBox).not.toBeNull();
+  let stageBox = await page.locator('[data-stage-layer="accent"]').boundingBox();
+  await expect.poll(async () => { stageBox = await page.locator('[data-stage-layer="accent"]').boundingBox(); return stageBox; }).not.toBeNull();
   if (stageBox) {
     await page.mouse.move(stageBox.x + stageBox.width / 2, stageBox.y + stageBox.height / 2);
     await page.mouse.down();
