@@ -1,0 +1,68 @@
+[
+  {
+    "id": "kinetic-type",
+    "title": "Kinetic Type",
+    "duration": 8,
+    "audio": false
+  },
+  {
+    "id": "data-pulse",
+    "title": "Data Pulse",
+    "duration": 8,
+    "audio": false
+  },
+  {
+    "id": "arc-one",
+    "title": "Arc One",
+    "duration": 9,
+    "audio": true
+  },
+  {
+    "id": "native-milestones",
+    "title": "Native Milestones",
+    "duration": 6,
+    "audio": false
+  },
+  {
+    "id": "animation-kernel",
+    "title": "Animation Kernel",
+    "duration": 6,
+    "audio": false
+  },
+  {
+    "id": "chromatic-orbit",
+    "title": "Chromatic Orbit",
+    "duration": 7,
+    "audio": false
+  },
+  {
+    "id": "route-study",
+    "title": "Route Study",
+    "duration": 7,
+    "audio": false
+  },
+  {
+    "id": "type-beat",
+    "title": "Type / Beat",
+    "duration": 7,
+    "audio": true
+  },
+  {
+    "id": "caption-cinema",
+    "title": "Caption Cinema",
+    "duration": 8,
+    "audio": false
+  },
+  {
+    "id": "camera-flight",
+    "title": "Camera Flight",
+    "duration": 7,
+    "audio": false
+  },
+  {
+    "id": "motion-lab",
+    "title": "Motion Lab",
+    "duration": 7,
+    "audio": false
+  }
+]

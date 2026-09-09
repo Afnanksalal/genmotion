@@ -5,27 +5,27 @@
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "seed": 31,
+  "seed": 47,
   "anchors": [
     {
       "id": "west",
       "x": 180,
-      "y": 690
+      "y": 700
     },
     {
-      "id": "junction",
-      "x": 980,
-      "y": 550
+      "id": "central",
+      "x": 960,
+      "y": 530
     },
     {
       "id": "east",
-      "x": 1720,
-      "y": 450
+      "x": 1710,
+      "y": 410
     },
     {
       "id": "south",
-      "x": 1360,
-      "y": 800
+      "x": 1370,
+      "y": 820
     }
   ],
   "parameters": [],
@@ -49,28 +49,32 @@
   "referenceObservations": [],
   "referencePreparations": [],
   "brand": {
-    "background": "#f3efe3",
-    "foreground": "#f5f0e8",
-    "accent": "#157e69",
-    "muted": "#999999",
+    "background": "#f1ecdf",
+    "foreground": "#17312c",
+    "accent": "#16826a",
+    "muted": "#8a8a92",
     "fonts": [
       {
         "family": "Inter",
         "file": "assets/Inter.ttf"
       }
     ],
-    "radius": 20,
-    "tone": []
+    "radius": 24,
+    "tone": [
+      "editorial",
+      "precise",
+      "cinematic"
+    ]
   },
   "scenes": [
     {
-      "id": "study",
-      "purpose": "Route Study",
-      "duration": 8,
-      "background": "#f3efe3",
+      "id": "network",
+      "purpose": "Draw a semantic network through shared geometry anchors",
+      "duration": 7,
+      "background": "#f1ecdf",
       "layers": [
         {
-          "id": "eyebrow",
+          "id": "label",
           "start": 0,
           "z": 0,
           "visible": true,
@@ -93,21 +97,21 @@
           "bindings": {},
           "type": "text",
           "text": "AN IMAGINARY CITY, CONNECTED.",
-          "x": 100,
-          "y": 80,
+          "x": 98,
+          "y": 82,
           "width": 1500,
-          "height": 58,
+          "height": 52,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
           "fontSize": 27,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#157e69",
+          "color": "#16826a",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
-          "lineHeight": 1.15,
-          "letterSpacing": 3,
+          "lineHeight": 1.02,
+          "letterSpacing": 4,
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
@@ -121,7 +125,7 @@
           "notations": []
         },
         {
-          "id": "headline",
+          "id": "title",
           "start": 0,
           "z": 1,
           "visible": true,
@@ -141,7 +145,7 @@
           "motion": [],
           "tracks": [
             {
-              "id": "headline-opacity",
+              "id": "title-opacity",
               "target": "transform.opacity",
               "keyframes": [
                 {
@@ -167,7 +171,7 @@
                   }
                 },
                 {
-                  "at": 0.8,
+                  "at": 0.65,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -183,12 +187,12 @@
               "enabled": true
             },
             {
-              "id": "headline-y",
+              "id": "title-y",
               "target": "transform.y",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 70,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -199,7 +203,7 @@
                 },
                 {
                   "at": 0.15,
-                  "value": 35,
+                  "value": 70,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -209,7 +213,7 @@
                   }
                 },
                 {
-                  "at": 0.9500000000000001,
+                  "at": 0.87,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -228,23 +232,23 @@
           "constraints": [],
           "bindings": {},
           "type": "text",
-          "text": "Every route finds a rhythm.",
-          "x": 95,
-          "y": 155,
-          "width": 1750,
-          "height": 150,
+          "text": "Every route\nfinds a rhythm.",
+          "x": 92,
+          "y": 170,
+          "width": 1080,
+          "height": 250,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 104,
+          "fontSize": 110,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#202c2b",
+          "color": "#17312c",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "horizontalMetrics": "ink",
           "verticalMetrics": "cap-height",
-          "lineHeight": 1.15,
+          "lineHeight": 0.95,
           "letterSpacing": -2,
           "fit": "shrink",
           "reveal": "none",
@@ -259,7 +263,7 @@
           "notations": []
         },
         {
-          "id": "river-key",
+          "id": "west-line",
           "start": 0,
           "z": 2,
           "visible": true,
@@ -281,18 +285,75 @@
           "constraints": [],
           "bindings": {},
           "type": "shape",
-          "shape": "ellipse",
-          "x": 105,
-          "y": 358,
-          "width": 18,
-          "height": 18,
-          "fill": "#157e69",
-          "strokeWidth": 0,
+          "shape": "bezier",
+          "x": 180,
+          "y": 700,
+          "width": 780,
+          "height": 170,
+          "stroke": "#16826a",
+          "strokeWidth": 18,
           "radius": 0,
-          "progress": 1
+          "startAnchor": "west",
+          "endAnchor": "central",
+          "control1": [
+            520,
+            700
+          ],
+          "control2": [
+            620,
+            530
+          ],
+          "progress": {
+            "keyframes": [
+              {
+                "at": 0,
+                "value": 0,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 0.55,
+                "value": 0,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 1.8,
+                "value": 1,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 7,
+                "value": 1,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              }
+            ]
+          }
         },
         {
-          "id": "river-legend",
+          "id": "east-line",
           "start": 0,
           "z": 3,
           "visible": true,
@@ -313,37 +374,76 @@
           "tracks": [],
           "constraints": [],
           "bindings": {},
-          "type": "text",
-          "text": "RIVER LINE",
-          "x": 142,
-          "y": 340,
-          "width": 260,
-          "height": 58,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 26,
-          "fontWeight": 700,
-          "fontStyle": "normal",
-          "color": "#202c2b",
-          "outlineWidth": 0,
-          "align": "left",
-          "verticalAlign": "middle",
-          "lineHeight": 1.15,
-          "letterSpacing": 0,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
+          "type": "shape",
+          "shape": "bezier",
+          "x": 960,
+          "y": 530,
+          "width": 750,
+          "height": 120,
+          "stroke": "#16826a",
+          "strokeWidth": 18,
+          "radius": 0,
+          "startAnchor": "central",
+          "endAnchor": "east",
+          "control1": [
+            1300,
+            530
+          ],
+          "control2": [
+            1380,
+            410
+          ],
+          "progress": {
+            "keyframes": [
+              {
+                "at": 0,
+                "value": 0,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 1.85,
+                "value": 0,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 3.1,
+                "value": 1,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 7,
+                "value": 1,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              }
+            ]
+          }
         },
         {
-          "id": "pier-key",
+          "id": "south-line",
           "start": 0,
           "z": 4,
           "visible": true,
@@ -365,394 +465,23 @@
           "constraints": [],
           "bindings": {},
           "type": "shape",
-          "shape": "ellipse",
-          "x": 445,
-          "y": 358,
-          "width": 18,
-          "height": 18,
-          "fill": "#ed653b",
-          "strokeWidth": 0,
-          "radius": 0,
-          "progress": 1
-        },
-        {
-          "id": "pier-legend",
-          "start": 0,
-          "z": 5,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [],
-          "constraints": [],
-          "bindings": {},
-          "type": "text",
-          "text": "PIER LINE",
-          "x": 482,
-          "y": 340,
-          "width": 300,
-          "height": 58,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 26,
-          "fontWeight": 700,
-          "fontStyle": "normal",
-          "color": "#202c2b",
-          "outlineWidth": 0,
-          "align": "left",
-          "verticalAlign": "middle",
-          "lineHeight": 1.15,
-          "letterSpacing": 0,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
-        },
-        {
-          "id": "river",
-          "start": 0,
-          "z": 6,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "river-visible",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.65,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.75,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
           "shape": "bezier",
-          "x": 180,
-          "y": 690,
-          "width": 800,
-          "height": 140,
-          "stroke": "#157e69",
-          "strokeWidth": 20,
+          "x": 960,
+          "y": 530,
+          "width": 410,
+          "height": 290,
+          "stroke": "#ef6844",
+          "strokeWidth": 18,
           "radius": 0,
-          "startAnchor": "west",
-          "endAnchor": "junction",
-          "control1": [
-            630,
-            690
-          ],
-          "control2": [
-            540,
-            550
-          ],
-          "progress": {
-            "keyframes": [
-              {
-                "at": 0,
-                "value": 0,
-                "ease": {
-                  "type": "cubic-bezier",
-                  "x1": 0.22,
-                  "y1": 1,
-                  "x2": 0.36,
-                  "y2": 1
-                }
-              },
-              {
-                "at": 0.65,
-                "value": 0,
-                "ease": {
-                  "type": "cubic-bezier",
-                  "x1": 0.22,
-                  "y1": 1,
-                  "x2": 0.36,
-                  "y2": 1
-                }
-              },
-              {
-                "at": 2.7,
-                "value": 1,
-                "ease": {
-                  "type": "cubic-bezier",
-                  "x1": 0.22,
-                  "y1": 1,
-                  "x2": 0.36,
-                  "y2": 1
-                }
-              }
-            ]
-          }
-        },
-        {
-          "id": "east-line",
-          "start": 0,
-          "z": 7,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "east-visible",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 2.6,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 2.7,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 980,
-          "y": 550,
-          "width": 740,
-          "height": 100,
-          "stroke": "#157e69",
-          "strokeWidth": 20,
-          "radius": 0,
-          "startAnchor": "junction",
-          "endAnchor": "east",
-          "control1": [
-            1400,
-            550
-          ],
-          "control2": [
-            1340,
-            450
-          ],
-          "progress": {
-            "keyframes": [
-              {
-                "at": 0,
-                "value": 0,
-                "ease": {
-                  "type": "cubic-bezier",
-                  "x1": 0.22,
-                  "y1": 1,
-                  "x2": 0.36,
-                  "y2": 1
-                }
-              },
-              {
-                "at": 2.6,
-                "value": 0,
-                "ease": {
-                  "type": "cubic-bezier",
-                  "x1": 0.22,
-                  "y1": 1,
-                  "x2": 0.36,
-                  "y2": 1
-                }
-              },
-              {
-                "at": 4.3,
-                "value": 1,
-                "ease": {
-                  "type": "cubic-bezier",
-                  "x1": 0.22,
-                  "y1": 1,
-                  "x2": 0.36,
-                  "y2": 1
-                }
-              }
-            ]
-          }
-        },
-        {
-          "id": "south-line",
-          "start": 0,
-          "z": 8,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "south-visible",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 2.8,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 2.9,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 980,
-          "y": 550,
-          "width": 380,
-          "height": 250,
-          "stroke": "#ed653b",
-          "strokeWidth": 20,
-          "radius": 0,
-          "startAnchor": "junction",
+          "startAnchor": "central",
           "endAnchor": "south",
           "control1": [
             1220,
-            550
+            530
           ],
           "control2": [
             1100,
-            800
+            820
           ],
           "progress": {
             "keyframes": [
@@ -768,7 +497,7 @@
                 }
               },
               {
-                "at": 2.8,
+                "at": 3.15,
                 "value": 0,
                 "ease": {
                   "type": "cubic-bezier",
@@ -779,7 +508,18 @@
                 }
               },
               {
-                "at": 4.8,
+                "at": 4.4,
+                "value": 1,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 7,
                 "value": 1,
                 "ease": {
                   "type": "cubic-bezier",
@@ -795,7 +535,7 @@
         {
           "id": "station-0",
           "start": 0,
-          "z": 9,
+          "z": 5,
           "visible": true,
           "transform": {
             "x": 0,
@@ -828,7 +568,7 @@
                   }
                 },
                 {
-                  "at": 0.65,
+                  "at": 0.55,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -839,7 +579,7 @@
                   }
                 },
                 {
-                  "at": 1.3,
+                  "at": 1.05,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -860,7 +600,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -870,8 +610,8 @@
                   }
                 },
                 {
-                  "at": 0.65,
-                  "value": 35,
+                  "at": 0.55,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -881,7 +621,7 @@
                   }
                 },
                 {
-                  "at": 1.4500000000000002,
+                  "at": 1.27,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -901,13 +641,13 @@
           "bindings": {},
           "type": "shape",
           "shape": "ellipse",
-          "x": 161,
-          "y": 671,
-          "width": 38,
-          "height": 38,
-          "fill": "#f3efe3",
-          "stroke": "#202c2b",
-          "strokeWidth": 8,
+          "x": 162,
+          "y": 682,
+          "width": 36,
+          "height": 36,
+          "fill": "#f1ecdf",
+          "stroke": "#17312c",
+          "strokeWidth": 7,
           "radius": 0,
           "centerAnchor": "west",
           "progress": 1
@@ -915,7 +655,7 @@
         {
           "id": "station-label-0",
           "start": 0,
-          "z": 10,
+          "z": 6,
           "visible": true,
           "transform": {
             "x": 0,
@@ -948,7 +688,7 @@
                   }
                 },
                 {
-                  "at": 0.75,
+                  "at": 0.73,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -959,7 +699,7 @@
                   }
                 },
                 {
-                  "at": 1.4,
+                  "at": 1.23,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -980,7 +720,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -990,8 +730,8 @@
                   }
                 },
                 {
-                  "at": 0.75,
-                  "value": 35,
+                  "at": 0.73,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1001,7 +741,7 @@
                   }
                 },
                 {
-                  "at": 1.55,
+                  "at": 1.45,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1021,20 +761,20 @@
           "bindings": {},
           "type": "text",
           "text": "WEST BANK",
-          "x": 100,
-          "y": 752,
-          "width": 160,
-          "height": 50,
+          "x": 80,
+          "y": 740,
+          "width": 200,
+          "height": 42,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 25,
+          "fontSize": 22,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#202c2b",
+          "color": "#17312c",
           "outlineWidth": 0,
           "align": "center",
           "verticalAlign": "middle",
-          "lineHeight": 1.15,
+          "lineHeight": 1.02,
           "letterSpacing": 1,
           "fit": "shrink",
           "reveal": "none",
@@ -1051,7 +791,7 @@
         {
           "id": "station-1",
           "start": 0,
-          "z": 11,
+          "z": 7,
           "visible": true,
           "transform": {
             "x": 0,
@@ -1084,7 +824,7 @@
                   }
                 },
                 {
-                  "at": 2.65,
+                  "at": 1.8,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1095,7 +835,7 @@
                   }
                 },
                 {
-                  "at": 3.3,
+                  "at": 2.3,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1116,7 +856,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1126,8 +866,8 @@
                   }
                 },
                 {
-                  "at": 2.65,
-                  "value": 35,
+                  "at": 1.8,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1137,7 +877,7 @@
                   }
                 },
                 {
-                  "at": 3.45,
+                  "at": 2.52,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1157,21 +897,21 @@
           "bindings": {},
           "type": "shape",
           "shape": "ellipse",
-          "x": 961,
-          "y": 531,
-          "width": 38,
-          "height": 38,
-          "fill": "#f3efe3",
-          "stroke": "#202c2b",
-          "strokeWidth": 8,
+          "x": 942,
+          "y": 512,
+          "width": 36,
+          "height": 36,
+          "fill": "#f1ecdf",
+          "stroke": "#17312c",
+          "strokeWidth": 7,
           "radius": 0,
-          "centerAnchor": "junction",
+          "centerAnchor": "central",
           "progress": 1
         },
         {
           "id": "station-label-1",
           "start": 0,
-          "z": 12,
+          "z": 8,
           "visible": true,
           "transform": {
             "x": 0,
@@ -1204,7 +944,7 @@
                   }
                 },
                 {
-                  "at": 2.75,
+                  "at": 1.98,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1215,7 +955,7 @@
                   }
                 },
                 {
-                  "at": 3.4,
+                  "at": 2.48,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1236,7 +976,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1246,8 +986,8 @@
                   }
                 },
                 {
-                  "at": 2.75,
-                  "value": 35,
+                  "at": 1.98,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1257,7 +997,7 @@
                   }
                 },
                 {
-                  "at": 3.55,
+                  "at": 2.7,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1277,20 +1017,20 @@
           "bindings": {},
           "type": "text",
           "text": "CENTRAL",
-          "x": 820,
-          "y": 430,
-          "width": 320,
-          "height": 50,
+          "x": 860,
+          "y": 440,
+          "width": 200,
+          "height": 42,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 25,
+          "fontSize": 22,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#202c2b",
+          "color": "#17312c",
           "outlineWidth": 0,
           "align": "center",
           "verticalAlign": "middle",
-          "lineHeight": 1.15,
+          "lineHeight": 1.02,
           "letterSpacing": 1,
           "fit": "shrink",
           "reveal": "none",
@@ -1307,7 +1047,7 @@
         {
           "id": "station-2",
           "start": 0,
-          "z": 13,
+          "z": 9,
           "visible": true,
           "transform": {
             "x": 0,
@@ -1340,7 +1080,7 @@
                   }
                 },
                 {
-                  "at": 4.1,
+                  "at": 3.1,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1351,7 +1091,7 @@
                   }
                 },
                 {
-                  "at": 4.75,
+                  "at": 3.6,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1372,7 +1112,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1382,8 +1122,8 @@
                   }
                 },
                 {
-                  "at": 4.1,
-                  "value": 35,
+                  "at": 3.1,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1393,7 +1133,7 @@
                   }
                 },
                 {
-                  "at": 4.8999999999999995,
+                  "at": 3.8200000000000003,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1413,13 +1153,13 @@
           "bindings": {},
           "type": "shape",
           "shape": "ellipse",
-          "x": 1701,
-          "y": 431,
-          "width": 38,
-          "height": 38,
-          "fill": "#f3efe3",
-          "stroke": "#202c2b",
-          "strokeWidth": 8,
+          "x": 1692,
+          "y": 392,
+          "width": 36,
+          "height": 36,
+          "fill": "#f1ecdf",
+          "stroke": "#17312c",
+          "strokeWidth": 7,
           "radius": 0,
           "centerAnchor": "east",
           "progress": 1
@@ -1427,7 +1167,7 @@
         {
           "id": "station-label-2",
           "start": 0,
-          "z": 14,
+          "z": 10,
           "visible": true,
           "transform": {
             "x": 0,
@@ -1460,7 +1200,7 @@
                   }
                 },
                 {
-                  "at": 4.199999999999999,
+                  "at": 3.2800000000000002,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1471,7 +1211,7 @@
                   }
                 },
                 {
-                  "at": 4.85,
+                  "at": 3.7800000000000002,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1492,7 +1232,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1502,8 +1242,8 @@
                   }
                 },
                 {
-                  "at": 4.199999999999999,
-                  "value": 35,
+                  "at": 3.2800000000000002,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1513,7 +1253,7 @@
                   }
                 },
                 {
-                  "at": 4.999999999999999,
+                  "at": 4,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1533,20 +1273,20 @@
           "bindings": {},
           "type": "text",
           "text": "EAST GARDEN",
-          "x": 1620,
-          "y": 510,
+          "x": 1610,
+          "y": 450,
           "width": 200,
-          "height": 50,
+          "height": 42,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 25,
+          "fontSize": 22,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#202c2b",
+          "color": "#17312c",
           "outlineWidth": 0,
           "align": "center",
           "verticalAlign": "middle",
-          "lineHeight": 1.15,
+          "lineHeight": 1.02,
           "letterSpacing": 1,
           "fit": "shrink",
           "reveal": "none",
@@ -1563,7 +1303,7 @@
         {
           "id": "station-3",
           "start": 0,
-          "z": 15,
+          "z": 11,
           "visible": true,
           "transform": {
             "x": 0,
@@ -1596,7 +1336,7 @@
                   }
                 },
                 {
-                  "at": 4.6,
+                  "at": 4.4,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1607,7 +1347,7 @@
                   }
                 },
                 {
-                  "at": 5.25,
+                  "at": 4.9,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1628,7 +1368,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1638,8 +1378,8 @@
                   }
                 },
                 {
-                  "at": 4.6,
-                  "value": 35,
+                  "at": 4.4,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1649,7 +1389,7 @@
                   }
                 },
                 {
-                  "at": 5.3999999999999995,
+                  "at": 5.12,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1669,13 +1409,13 @@
           "bindings": {},
           "type": "shape",
           "shape": "ellipse",
-          "x": 1341,
-          "y": 781,
-          "width": 38,
-          "height": 38,
-          "fill": "#f3efe3",
-          "stroke": "#202c2b",
-          "strokeWidth": 8,
+          "x": 1352,
+          "y": 802,
+          "width": 36,
+          "height": 36,
+          "fill": "#f1ecdf",
+          "stroke": "#17312c",
+          "strokeWidth": 7,
           "radius": 0,
           "centerAnchor": "south",
           "progress": 1
@@ -1683,7 +1423,7 @@
         {
           "id": "station-label-3",
           "start": 0,
-          "z": 16,
+          "z": 12,
           "visible": true,
           "transform": {
             "x": 0,
@@ -1716,7 +1456,7 @@
                   }
                 },
                 {
-                  "at": 4.699999999999999,
+                  "at": 4.58,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1727,7 +1467,7 @@
                   }
                 },
                 {
-                  "at": 5.35,
+                  "at": 5.08,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1748,7 +1488,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1758,8 +1498,8 @@
                   }
                 },
                 {
-                  "at": 4.699999999999999,
-                  "value": 35,
+                  "at": 4.58,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1769,7 +1509,7 @@
                   }
                 },
                 {
-                  "at": 5.499999999999999,
+                  "at": 5.3,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1789,20 +1529,20 @@
           "bindings": {},
           "type": "text",
           "text": "SOUTH PIER",
-          "x": 1200,
-          "y": 840,
-          "width": 320,
-          "height": 50,
+          "x": 1270,
+          "y": 860,
+          "width": 200,
+          "height": 42,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 25,
+          "fontSize": 22,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#202c2b",
+          "color": "#17312c",
           "outlineWidth": 0,
           "align": "center",
           "verticalAlign": "middle",
-          "lineHeight": 1.15,
+          "lineHeight": 1.02,
           "letterSpacing": 1,
           "fit": "shrink",
           "reveal": "none",
@@ -1817,9 +1557,9 @@
           "notations": []
         },
         {
-          "id": "edition",
+          "id": "footer",
           "start": 0,
-          "z": 17,
+          "z": 13,
           "visible": true,
           "transform": {
             "x": 0,
@@ -1839,73 +1579,22 @@
           "constraints": [],
           "bindings": {},
           "type": "text",
-          "text": "GENMOTION  /  MOTION STUDIES",
-          "x": 100,
-          "y": 950,
-          "width": 900,
-          "height": 48,
+          "text": "GENMOTION  /  ROUTE STUDY / 07",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 22,
+          "fontSize": 20,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#202c2b",
+          "color": "#17312c",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
-          "lineHeight": 1.15,
+          "lineHeight": 1.02,
           "letterSpacing": 3,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
-        },
-        {
-          "id": "folio",
-          "start": 0,
-          "z": 18,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [],
-          "constraints": [],
-          "bindings": {},
-          "type": "text",
-          "text": "02   /   ROUTE STUDY",
-          "x": 1170,
-          "y": 950,
-          "width": 650,
-          "height": 48,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 22,
-          "fontWeight": 700,
-          "fontStyle": "normal",
-          "color": "#202c2b",
-          "outlineWidth": 0,
-          "align": "right",
-          "verticalAlign": "middle",
-          "lineHeight": 1.15,
-          "letterSpacing": 2,
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
@@ -1936,7 +1625,7 @@
   "audio": [],
   "metadata": {
     "publicExample": "true",
-    "duration": "8",
-    "provenance": "Original native vector artwork and authored motion. No external media."
+    "duration": "7",
+    "provenance": "Original native vector artwork generated locally from this repository."
   }
 }

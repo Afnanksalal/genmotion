@@ -5,7 +5,7 @@
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "seed": 31,
+  "seed": 47,
   "anchors": [],
   "parameters": [],
   "parameterValues": {},
@@ -28,28 +28,32 @@
   "referenceObservations": [],
   "referencePreparations": [],
   "brand": {
-    "background": "#141020",
-    "foreground": "#f5f0e8",
-    "accent": "#d9f867",
-    "muted": "#999999",
+    "background": "#171024",
+    "foreground": "#f7f1ff",
+    "accent": "#dfff64",
+    "muted": "#8a8a92",
     "fonts": [
       {
         "family": "Inter",
         "file": "assets/Inter.ttf"
       }
     ],
-    "radius": 20,
-    "tone": []
+    "radius": 24,
+    "tone": [
+      "editorial",
+      "precise",
+      "cinematic"
+    ]
   },
   "scenes": [
     {
-      "id": "study",
-      "purpose": "Chromatic Orbit",
-      "duration": 8,
-      "background": "#141020",
+      "id": "orbit",
+      "purpose": "Build one luminous body from independent trajectories",
+      "duration": 7,
+      "background": "#171024",
       "layers": [
         {
-          "id": "eyebrow",
+          "id": "label",
           "start": 0,
           "z": 0,
           "visible": true,
@@ -72,20 +76,20 @@
           "bindings": {},
           "type": "text",
           "text": "FORM / LIGHT / COLOR",
-          "x": 100,
-          "y": 100,
-          "width": 850,
-          "height": 55,
+          "x": 96,
+          "y": 88,
+          "width": 900,
+          "height": 50,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 28,
+          "fontSize": 27,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#b9b1d4",
+          "color": "#bbb1d4",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
-          "lineHeight": 1.15,
+          "lineHeight": 1.02,
           "letterSpacing": 5,
           "fit": "shrink",
           "reveal": "none",
@@ -100,7 +104,7 @@
           "notations": []
         },
         {
-          "id": "title-a",
+          "id": "title",
           "start": 0,
           "z": 1,
           "visible": true,
@@ -120,7 +124,7 @@
           "motion": [],
           "tracks": [
             {
-              "id": "title-a-opacity",
+              "id": "title-opacity",
               "target": "transform.opacity",
               "keyframes": [
                 {
@@ -146,7 +150,7 @@
                   }
                 },
                 {
-                  "at": 0.8,
+                  "at": 0.65,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -162,12 +166,12 @@
               "enabled": true
             },
             {
-              "id": "title-a-y",
+              "id": "title-y",
               "target": "transform.y",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 80,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -178,7 +182,7 @@
                 },
                 {
                   "at": 0.15,
-                  "value": 35,
+                  "value": 80,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -188,7 +192,7 @@
                   }
                 },
                 {
-                  "at": 0.9500000000000001,
+                  "at": 0.87,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -207,23 +211,23 @@
           "constraints": [],
           "bindings": {},
           "type": "text",
-          "text": "CHROMATIC",
-          "x": 95,
-          "y": 285,
-          "width": 970,
-          "height": 150,
+          "text": "CHROMATIC\nORBIT",
+          "x": 90,
+          "y": 250,
+          "width": 900,
+          "height": 330,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 130,
+          "fontSize": 140,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#f6f1ff",
+          "color": "#f7f1ff",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
           "horizontalMetrics": "ink",
           "verticalMetrics": "cap-height",
-          "lineHeight": 1.15,
+          "lineHeight": 0.9,
           "letterSpacing": -2,
           "fit": "shrink",
           "reveal": "none",
@@ -238,7 +242,7 @@
           "notations": []
         },
         {
-          "id": "title-b",
+          "id": "copy",
           "start": 0,
           "z": 2,
           "visible": true,
@@ -258,7 +262,7 @@
           "motion": [],
           "tracks": [
             {
-              "id": "title-b-opacity",
+              "id": "copy-opacity",
               "target": "transform.opacity",
               "keyframes": [
                 {
@@ -273,7 +277,7 @@
                   }
                 },
                 {
-                  "at": 0.35,
+                  "at": 0.85,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -284,7 +288,7 @@
                   }
                 },
                 {
-                  "at": 1,
+                  "at": 1.35,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -300,12 +304,12 @@
               "enabled": true
             },
             {
-              "id": "title-b-y",
+              "id": "copy-y",
               "target": "transform.y",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 35,
+                  "value": 30,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -315,8 +319,8 @@
                   }
                 },
                 {
-                  "at": 0.35,
-                  "value": 35,
+                  "at": 0.85,
+                  "value": 30,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -326,7 +330,7 @@
                   }
                 },
                 {
-                  "at": 1.15,
+                  "at": 1.5699999999999998,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -345,159 +349,21 @@
           "constraints": [],
           "bindings": {},
           "type": "text",
-          "text": "ORBIT",
-          "x": 90,
-          "y": 420,
-          "width": 840,
-          "height": 190,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 190,
-          "fontWeight": 700,
-          "fontStyle": "normal",
-          "color": "#d9f867",
-          "outlineWidth": 0,
-          "align": "left",
-          "verticalAlign": "middle",
-          "horizontalMetrics": "ink",
-          "verticalMetrics": "cap-height",
-          "lineHeight": 1.15,
-          "letterSpacing": -2,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
-        },
-        {
-          "id": "description",
-          "start": 0,
-          "z": 3,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "description-opacity",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.1,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.75,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "description-y",
-              "target": "transform.y",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 35,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.1,
-                  "value": 35,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.9000000000000001,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "text",
-          "text": "A study in layered light.\nOne form. Twelve trajectories.",
-          "x": 100,
-          "y": 670,
-          "width": 660,
-          "height": 115,
+          "text": "Twelve paths resolve\ninto one luminous body.",
+          "x": 102,
+          "y": 680,
+          "width": 720,
+          "height": 120,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
           "fontSize": 36,
-          "fontWeight": 700,
+          "fontWeight": 500,
           "fontStyle": "normal",
-          "color": "#b9b1d4",
+          "color": "#bbb1d4",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
-          "lineHeight": 1.3,
+          "lineHeight": 1.25,
           "letterSpacing": 0,
           "fit": "shrink",
           "reveal": "none",
@@ -514,14 +380,14 @@
         {
           "id": "orbit-0",
           "start": 0,
-          "z": 4,
+          "z": 3,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -537,7 +403,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -90,
+                  "value": -125,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -547,8 +413,8 @@
                   }
                 },
                 {
-                  "at": 2.8,
-                  "value": -32,
+                  "at": 1.35,
+                  "value": -35,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -558,8 +424,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": -15,
+                  "at": 3.8,
+                  "value": -12,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -569,8 +435,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": -15,
+                  "at": 7,
+                  "value": -12,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -590,7 +456,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -600,7 +466,7 @@
                   }
                 },
                 {
-                  "at": 1.8,
+                  "at": 0.65,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -611,7 +477,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -627,15 +493,19 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1020,
-          "y": 165,
-          "width": 710,
-          "height": 710,
-          "fill": "#f584bc",
+          "x": 830,
+          "y": 150,
+          "width": 700,
+          "height": 700,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
             "angle": 0,
@@ -647,34 +517,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-1",
           "start": 0,
-          "z": 5,
+          "z": 4,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -690,7 +560,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -99,
+                  "value": -132,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -700,8 +570,8 @@
                   }
                 },
                 {
-                  "at": 2.9,
-                  "value": -27,
+                  "at": 1.405,
+                  "value": -31,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -711,8 +581,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": -10,
+                  "at": 3.8,
+                  "value": -8,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -722,8 +592,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": -10,
+                  "at": 7,
+                  "value": -8,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -743,7 +613,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -753,7 +623,7 @@
                   }
                 },
                 {
-                  "at": 1.8900000000000001,
+                  "at": 0.7050000000000001,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -764,7 +634,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -780,18 +650,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1041.5,
-          "y": 186.5,
-          "width": 667,
-          "height": 667,
-          "fill": "#f584bc",
+          "x": 851,
+          "y": 171,
+          "width": 658,
+          "height": 658,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 27,
+            "angle": 31,
             "center": [
               0.5,
               0.5
@@ -800,34 +674,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-2",
           "start": 0,
-          "z": 6,
+          "z": 5,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -843,7 +717,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -108,
+                  "value": -139,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -853,8 +727,8 @@
                   }
                 },
                 {
-                  "at": 3,
-                  "value": -22,
+                  "at": 1.4600000000000002,
+                  "value": -27,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -864,8 +738,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": -5,
+                  "at": 3.8,
+                  "value": -4,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -875,8 +749,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": -5,
+                  "at": 7,
+                  "value": -4,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -896,7 +770,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -906,7 +780,7 @@
                   }
                 },
                 {
-                  "at": 1.98,
+                  "at": 0.76,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -917,7 +791,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -933,18 +807,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1063,
-          "y": 208,
-          "width": 624,
-          "height": 624,
-          "fill": "#f584bc",
+          "x": 872,
+          "y": 192,
+          "width": 616,
+          "height": 616,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 54,
+            "angle": 62,
             "center": [
               0.5,
               0.5
@@ -953,34 +831,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-3",
           "start": 0,
-          "z": 7,
+          "z": 6,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -996,7 +874,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -117,
+                  "value": -146,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1006,8 +884,8 @@
                   }
                 },
                 {
-                  "at": 3.0999999999999996,
-                  "value": -17,
+                  "at": 1.5150000000000001,
+                  "value": -23,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1017,7 +895,7 @@
                   }
                 },
                 {
-                  "at": 6,
+                  "at": 3.8,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1028,7 +906,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1049,7 +927,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1059,7 +937,7 @@
                   }
                 },
                 {
-                  "at": 2.0700000000000003,
+                  "at": 0.8150000000000001,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1070,7 +948,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1086,18 +964,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1084.5,
-          "y": 229.5,
-          "width": 581,
-          "height": 581,
-          "fill": "#f584bc",
+          "x": 893,
+          "y": 213,
+          "width": 574,
+          "height": 574,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 81,
+            "angle": 93,
             "center": [
               0.5,
               0.5
@@ -1106,34 +988,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-4",
           "start": 0,
-          "z": 8,
+          "z": 7,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -1149,7 +1031,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -126,
+                  "value": -153,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1159,8 +1041,8 @@
                   }
                 },
                 {
-                  "at": 3.1999999999999997,
-                  "value": -12,
+                  "at": 1.57,
+                  "value": -19,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1170,8 +1052,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": 5,
+                  "at": 3.8,
+                  "value": 4,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1181,8 +1063,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": 5,
+                  "at": 7,
+                  "value": 4,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1202,7 +1084,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1212,7 +1094,7 @@
                   }
                 },
                 {
-                  "at": 2.16,
+                  "at": 0.87,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1223,7 +1105,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1239,18 +1121,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1106,
-          "y": 251,
-          "width": 538,
-          "height": 538,
-          "fill": "#f584bc",
+          "x": 914,
+          "y": 234,
+          "width": 532,
+          "height": 532,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 108,
+            "angle": 124,
             "center": [
               0.5,
               0.5
@@ -1259,34 +1145,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-5",
           "start": 0,
-          "z": 9,
+          "z": 8,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -1302,7 +1188,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -135,
+                  "value": -160,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1312,8 +1198,8 @@
                   }
                 },
                 {
-                  "at": 3.3,
-                  "value": -7,
+                  "at": 1.625,
+                  "value": -15,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1323,8 +1209,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": 10,
+                  "at": 3.8,
+                  "value": 8,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1334,8 +1220,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": 10,
+                  "at": 7,
+                  "value": 8,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1355,7 +1241,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1365,7 +1251,7 @@
                   }
                 },
                 {
-                  "at": 2.25,
+                  "at": 0.925,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1376,7 +1262,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1392,18 +1278,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1127.5,
-          "y": 272.5,
-          "width": 495,
-          "height": 495,
-          "fill": "#f584bc",
+          "x": 935,
+          "y": 255,
+          "width": 490,
+          "height": 490,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 135,
+            "angle": 155,
             "center": [
               0.5,
               0.5
@@ -1412,34 +1302,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-6",
           "start": 0,
-          "z": 10,
+          "z": 9,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -1455,7 +1345,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -144,
+                  "value": -167,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1465,8 +1355,8 @@
                   }
                 },
                 {
-                  "at": 3.4,
-                  "value": -2,
+                  "at": 1.6800000000000002,
+                  "value": -11,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1476,8 +1366,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": 15,
+                  "at": 3.8,
+                  "value": 12,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1487,8 +1377,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": 15,
+                  "at": 7,
+                  "value": 12,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1508,7 +1398,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1518,7 +1408,7 @@
                   }
                 },
                 {
-                  "at": 2.34,
+                  "at": 0.98,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1529,7 +1419,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1545,18 +1435,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1149,
-          "y": 294,
-          "width": 452,
-          "height": 452,
-          "fill": "#f584bc",
+          "x": 956,
+          "y": 276,
+          "width": 448,
+          "height": 448,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 162,
+            "angle": 186,
             "center": [
               0.5,
               0.5
@@ -1565,34 +1459,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-7",
           "start": 0,
-          "z": 11,
+          "z": 10,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -1608,7 +1502,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -153,
+                  "value": -174,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1618,8 +1512,8 @@
                   }
                 },
                 {
-                  "at": 3.5,
-                  "value": 3,
+                  "at": 1.735,
+                  "value": -7,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1629,8 +1523,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": 20,
+                  "at": 3.8,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1640,8 +1534,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": 20,
+                  "at": 7,
+                  "value": 16,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1661,7 +1555,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1671,7 +1565,7 @@
                   }
                 },
                 {
-                  "at": 2.43,
+                  "at": 1.0350000000000001,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1682,7 +1576,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1698,18 +1592,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1170.5,
-          "y": 315.5,
-          "width": 409,
-          "height": 409,
-          "fill": "#f584bc",
+          "x": 977,
+          "y": 297,
+          "width": 406,
+          "height": 406,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 189,
+            "angle": 217,
             "center": [
               0.5,
               0.5
@@ -1718,34 +1616,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-8",
           "start": 0,
-          "z": 12,
+          "z": 11,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -1761,7 +1659,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -162,
+                  "value": -181,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1771,8 +1669,8 @@
                   }
                 },
                 {
-                  "at": 3.5999999999999996,
-                  "value": 8,
+                  "at": 1.79,
+                  "value": -3,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1782,8 +1680,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": 25,
+                  "at": 3.8,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1793,8 +1691,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": 25,
+                  "at": 7,
+                  "value": 20,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1814,7 +1712,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1824,7 +1722,7 @@
                   }
                 },
                 {
-                  "at": 2.52,
+                  "at": 1.09,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1835,7 +1733,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1851,18 +1749,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1192,
-          "y": 337,
-          "width": 366,
-          "height": 366,
-          "fill": "#f584bc",
+          "x": 998,
+          "y": 318,
+          "width": 364,
+          "height": 364,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 216,
+            "angle": 248,
             "center": [
               0.5,
               0.5
@@ -1871,34 +1773,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-9",
           "start": 0,
-          "z": 13,
+          "z": 12,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -1914,7 +1816,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -171,
+                  "value": -188,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1924,8 +1826,8 @@
                   }
                 },
                 {
-                  "at": 3.6999999999999997,
-                  "value": 13,
+                  "at": 1.8450000000000002,
+                  "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1935,8 +1837,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": 30,
+                  "at": 3.8,
+                  "value": 24,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1946,8 +1848,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": 30,
+                  "at": 7,
+                  "value": 24,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1967,7 +1869,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1977,7 +1879,7 @@
                   }
                 },
                 {
-                  "at": 2.61,
+                  "at": 1.145,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1988,7 +1890,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2004,18 +1906,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1213.5,
-          "y": 358.5,
-          "width": 323,
-          "height": 323,
-          "fill": "#f584bc",
+          "x": 1019,
+          "y": 339,
+          "width": 322,
+          "height": 322,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 243,
+            "angle": 279,
             "center": [
               0.5,
               0.5
@@ -2024,34 +1930,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-10",
           "start": 0,
-          "z": 14,
+          "z": 13,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -2067,7 +1973,18 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -180,
+                  "value": -195,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.9000000000000001,
+                  "value": 5,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -2078,7 +1995,7 @@
                 },
                 {
                   "at": 3.8,
-                  "value": 18,
+                  "value": 28,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -2088,19 +2005,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": 35,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 8,
-                  "value": 35,
+                  "at": 7,
+                  "value": 28,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -2120,7 +2026,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -2130,7 +2036,7 @@
                   }
                 },
                 {
-                  "at": 2.7,
+                  "at": 1.2000000000000002,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2141,7 +2047,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2157,18 +2063,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1235,
-          "y": 380,
+          "x": 1040,
+          "y": 360,
           "width": 280,
           "height": 280,
-          "fill": "#f584bc",
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 270,
+            "angle": 310,
             "center": [
               0.5,
               0.5
@@ -2177,34 +2087,34 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
           "id": "orbit-11",
           "start": 0,
-          "z": 15,
+          "z": 14,
           "visible": true,
           "transform": {
             "x": 0,
             "y": 0,
             "scaleX": 1,
-            "scaleY": 0.66,
-            "rotation": -32,
+            "scaleY": 0.64,
+            "rotation": -35,
             "opacity": 1,
             "blur": 0,
             "anchorX": 0.5,
@@ -2220,7 +2130,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -189,
+                  "value": -202,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -2230,8 +2140,8 @@
                   }
                 },
                 {
-                  "at": 3.9,
-                  "value": 23,
+                  "at": 1.955,
+                  "value": 9,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -2241,8 +2151,8 @@
                   }
                 },
                 {
-                  "at": 6,
-                  "value": 40,
+                  "at": 3.8,
+                  "value": 32,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -2252,8 +2162,8 @@
                   }
                 },
                 {
-                  "at": 8,
-                  "value": 40,
+                  "at": 7,
+                  "value": 32,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -2273,7 +2183,7 @@
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.15,
+                  "value": 0.08,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -2283,7 +2193,7 @@
                   }
                 },
                 {
-                  "at": 2.79,
+                  "at": 1.255,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2294,7 +2204,7 @@
                   }
                 },
                 {
-                  "at": 8,
+                  "at": 7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -2310,18 +2220,22 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 140,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
           "type": "shape",
           "shape": "ring",
-          "x": 1256.5,
-          "y": 401.5,
-          "width": 237,
-          "height": 237,
-          "fill": "#f584bc",
+          "x": 1061,
+          "y": 381,
+          "width": 238,
+          "height": 238,
+          "fill": "#dfff64",
           "gradientFill": {
             "type": "linear",
-            "angle": 297,
+            "angle": 341,
             "center": [
               0.5,
               0.5
@@ -2330,27 +2244,27 @@
             "stops": [
               {
                 "offset": 0,
-                "color": "#e9fb84"
+                "color": "#dfff64"
               },
               {
-                "offset": 0.46,
-                "color": "#fd74ac"
+                "offset": 0.5,
+                "color": "#ff5cab"
               },
               {
                 "offset": 1,
-                "color": "#7975ed"
+                "color": "#736bff"
               }
             ]
           },
           "strokeWidth": 0,
           "radius": 0,
-          "innerRadius": 0.88,
+          "innerRadius": 0.91,
           "progress": 1
         },
         {
-          "id": "edition",
+          "id": "footer",
           "start": 0,
-          "z": 16,
+          "z": 15,
           "visible": true,
           "transform": {
             "x": 0,
@@ -2370,73 +2284,22 @@
           "constraints": [],
           "bindings": {},
           "type": "text",
-          "text": "GENMOTION  /  MOTION STUDIES",
-          "x": 100,
-          "y": 950,
-          "width": 900,
-          "height": 48,
+          "text": "GENMOTION  /  CHROMATIC ORBIT / 06",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 22,
+          "fontSize": 20,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#b9b1d4",
+          "color": "#bbb1d4",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
-          "lineHeight": 1.15,
+          "lineHeight": 1.02,
           "letterSpacing": 3,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
-        },
-        {
-          "id": "folio",
-          "start": 0,
-          "z": 17,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [],
-          "constraints": [],
-          "bindings": {},
-          "type": "text",
-          "text": "01   /   CHROMATIC ORBIT",
-          "x": 1170,
-          "y": 950,
-          "width": 650,
-          "height": 48,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 22,
-          "fontWeight": 700,
-          "fontStyle": "normal",
-          "color": "#b9b1d4",
-          "outlineWidth": 0,
-          "align": "right",
-          "verticalAlign": "middle",
-          "lineHeight": 1.15,
-          "letterSpacing": 2,
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
@@ -2467,7 +2330,7 @@
   "audio": [],
   "metadata": {
     "publicExample": "true",
-    "duration": "8",
-    "provenance": "Original native vector artwork and authored motion. No external media."
+    "duration": "7",
+    "provenance": "Original native vector artwork generated locally from this repository."
   }
 }

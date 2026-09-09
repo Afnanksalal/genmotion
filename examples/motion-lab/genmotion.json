@@ -1,0 +1,849 @@
+{
+  "schemaVersion": 1,
+  "id": "motion-lab",
+  "title": "Motion Lab",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "seed": 47,
+  "anchors": [],
+  "parameters": [],
+  "parameterValues": {},
+  "variants": [],
+  "motionLibraryPins": {},
+  "compositions": [],
+  "captionStylePresets": [],
+  "captionPreviewLanguages": [],
+  "creativePreferences": [],
+  "mediaLedger": {
+    "version": 1,
+    "records": []
+  },
+  "restrictedAssetAcceptances": [],
+  "referenceSources": [],
+  "referenceAdaptationMap": {
+    "version": 1,
+    "entries": []
+  },
+  "referenceObservations": [],
+  "referencePreparations": [],
+  "brand": {
+    "background": "#07070a",
+    "foreground": "#f4f2eb",
+    "accent": "#caff4a",
+    "muted": "#8a8a92",
+    "fonts": [
+      {
+        "family": "Inter",
+        "file": "assets/Inter.ttf"
+      }
+    ],
+    "radius": 24,
+    "tone": [
+      "editorial",
+      "precise",
+      "cinematic"
+    ]
+  },
+  "scenes": [
+    {
+      "id": "trace",
+      "purpose": "Make temporal sampling, blur and trails visually legible",
+      "duration": 7,
+      "background": "#07070a",
+      "layers": [
+        {
+          "id": "label",
+          "start": 0,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "TEMPORAL STUDY",
+          "x": 96,
+          "y": 82,
+          "width": 900,
+          "height": 52,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 26,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#caff4a",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 6,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "title",
+          "start": 0,
+          "z": 1,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "title-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.2,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.7,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "title-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.2,
+                  "value": 80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.9199999999999999,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "SPEED\nLEAVES\nA TRACE.",
+          "x": 92,
+          "y": 180,
+          "width": 980,
+          "height": 510,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 145,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f4f2eb",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "horizontalMetrics": "ink",
+          "verticalMetrics": "cap-height",
+          "lineHeight": 0.83,
+          "letterSpacing": -2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "runner",
+          "start": 0,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "runner-x",
+              "target": "transform.x",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -500,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.65,
+                  "value": -500,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.65,
+                  "value": 450,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.35,
+                  "value": 220,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.1,
+                  "value": 500,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.05,
+                  "value": -280,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.15,
+                  "value": 360,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 7,
+                  "value": 360,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "runner-rotation",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.65,
+                  "value": 260,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.1,
+                  "value": 520,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.15,
+                  "value": 900,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 7,
+                  "value": 900,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "effects": [
+            {
+              "id": "glow",
+              "type": "glow",
+              "enabled": true,
+              "amount": 0.85,
+              "radius": 24
+            },
+            {
+              "id": "aberration",
+              "type": "chromatic-aberration",
+              "enabled": true,
+              "amount": 0.18
+            }
+          ],
+          "motionBlur": {
+            "shutterAngle": 160,
+            "samples": 4
+          },
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "spark",
+          "x": 1120,
+          "y": 410,
+          "width": 180,
+          "height": 180,
+          "fill": "#caff4a",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "trail-dot",
+          "start": 0,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "trail-x",
+              "target": "transform.x",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -420,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8,
+                  "value": -420,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.5,
+                  "value": 420,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.5,
+                  "value": 420,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.8,
+                  "value": -180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 7,
+                  "value": -180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.3,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 1170,
+          "y": 650,
+          "width": 72,
+          "height": 72,
+          "fill": "#ff4e9e",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "gate-a",
+          "start": 0,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 0.5,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "rect",
+          "x": 1080,
+          "y": 210,
+          "width": 10,
+          "height": 620,
+          "fill": "#ff4e9e",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "gate-b",
+          "start": 0,
+          "z": 5,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 0.5,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "rect",
+          "x": 1570,
+          "y": 210,
+          "width": 10,
+          "height": 620,
+          "fill": "#caff4a",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "copy",
+          "start": 0,
+          "z": 6,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "copy-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.55,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.05,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "copy-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 25,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.55,
+                  "value": 25,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 5.27,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Temporal samples. Directional trails.\nOne deterministic frame.",
+          "x": 1090,
+          "y": 790,
+          "width": 670,
+          "height": 100,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 34,
+          "fontWeight": 500,
+          "fontStyle": "normal",
+          "color": "#9e9dad",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.25,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "footer",
+          "start": 0,
+          "z": 7,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "GENMOTION  /  MOTION LAB / 11",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#777783",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        }
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [],
+      "notes": []
+    }
+  ],
+  "audio": [],
+  "metadata": {
+    "publicExample": "true",
+    "duration": "7",
+    "provenance": "Original native vector artwork generated locally from this repository."
+  }
+}

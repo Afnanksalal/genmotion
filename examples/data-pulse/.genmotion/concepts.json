@@ -1,45 +1,44 @@
 {
-  "selected": "data-pulse-direction-a",
+  "selected": "data-pulse-direction",
   "concepts": [
     {
-      "id": "data-pulse-direction-a",
-      "referenceFamily": "Scientific signal art and oscilloscope photography",
+      "id": "data-pulse-direction",
+      "referenceFamily": "Editorial graphic systems",
       "borrow": [
-        "continuous luminous traces",
-        "phase convergence",
-        "light as evidence"
+        "clear hierarchy",
+        "decisive pacing"
       ],
       "avoid": [
-        "literal dashboard chrome",
-        "HUD decoration",
-        "generic bar charts"
+        "generic cards",
+        "decorative noise",
+        "interface imitation"
       ],
       "transform": [
-        "turn raw events into a cinematic field that physically converges on one pulse"
+        "native geometry",
+        "one dominant move",
+        "readable final hold"
       ],
-      "hierarchy": "One large typographic command is anchored by a full-frame signal sculpture",
-      "rhythm": "Accumulate, converge, resolve, hold",
-      "feasibility": "Native paths, blend modes, shadows, typography, and direct tracks only"
+      "hierarchy": "Transform raw signal into a legible conclusion",
+      "rhythm": "Build, breathe, resolve, hold",
+      "feasibility": "Local native vectors, type and deterministic tracks only"
     },
     {
-      "id": "data-pulse-direction-b",
-      "referenceFamily": "Swiss editorial posters and kinetic title design",
+      "id": "data-pulse-alternate",
+      "referenceFamily": "Physical signage and wayfinding",
       "borrow": [
-        "decisive scale contrast",
-        "asymmetric grid",
-        "hard color interruption"
+        "spatial clarity",
+        "material restraint"
       ],
       "avoid": [
-        "corporate presentation cards",
-        "template typography",
-        "decorative microcopy"
+        "literal signage recreation",
+        "brand imitation"
       ],
       "transform": [
-        "use an acid diagonal and monumental type as the final analytical conclusion"
+        "motion establishes reading order"
       ],
-      "hierarchy": "The final statement occupies the frame as an editorial object",
-      "rhythm": "Hard typographic arrival followed by a generous stable hold",
-      "feasibility": "Native vector geometry and text tracks only"
+      "hierarchy": "One focal message supported by geometry",
+      "rhythm": "Establish, travel, settle",
+      "feasibility": "No remote assets or browser rendering"
     }
   ]
 }

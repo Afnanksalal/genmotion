@@ -2,39 +2,59 @@
   "schemaVersion": 1,
   "id": "animation-kernel",
   "title": "Animation Kernel",
-  "width": 640,
-  "height": 360,
+  "width": 1920,
+  "height": 1080,
   "fps": 30,
-  "seed": 73,
+  "seed": 47,
   "anchors": [],
   "parameters": [],
   "parameterValues": {},
   "variants": [],
+  "motionLibraryPins": {},
   "compositions": [],
+  "captionStylePresets": [],
+  "captionPreviewLanguages": [],
+  "creativePreferences": [],
+  "mediaLedger": {
+    "version": 1,
+    "records": []
+  },
+  "restrictedAssetAcceptances": [],
+  "referenceSources": [],
+  "referenceAdaptationMap": {
+    "version": 1,
+    "entries": []
+  },
+  "referenceObservations": [],
+  "referencePreparations": [],
   "brand": {
-    "background": "#07080d",
-    "foreground": "#f8fafc",
-    "accent": "#65fbd2",
-    "muted": "#8b93a7",
-    "fonts": [],
-    "radius": 18,
+    "background": "#f5f5f2",
+    "foreground": "#121c22",
+    "accent": "#276ef1",
+    "muted": "#8a8a92",
+    "fonts": [
+      {
+        "family": "Inter",
+        "file": "assets/Inter.ttf"
+      }
+    ],
+    "radius": 24,
     "tone": [
+      "editorial",
       "precise",
-      "kinetic",
-      "native"
+      "cinematic"
     ]
   },
   "scenes": [
     {
       "id": "kernel",
-      "purpose": "Demonstrate deterministic typed animation, procedural motion, staggering, and constraints",
+      "purpose": "Expose the structure behind authored motion",
       "duration": 6,
-      "background": "#07080d",
+      "background": "#f5f5f2",
       "layers": [
         {
-          "id": "ambient",
+          "id": "label",
           "start": 0,
-          "duration": 6,
           "z": 0,
           "visible": true,
           "transform": {
@@ -43,8 +63,8 @@
             "scaleX": 1,
             "scaleY": 1,
             "rotation": 0,
-            "opacity": 0.72,
-            "blur": 22,
+            "opacity": 1,
+            "blur": 0,
             "anchorX": 0.5,
             "anchorY": 0.5
           },
@@ -54,22 +74,39 @@
           "tracks": [],
           "constraints": [],
           "bindings": {},
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 62,
-          "y": 80,
-          "width": 270,
-          "height": 270,
-          "fill": "#14283c88",
-          "strokeWidth": 0,
-          "radius": 0,
-          "progress": 1
+          "type": "text",
+          "text": "ANIMATION KERNEL",
+          "x": 96,
+          "y": 82,
+          "width": 1000,
+          "height": 50,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 25,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#276ef1",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 5,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
           "id": "title",
           "start": 0,
-          "duration": 6,
-          "z": 10,
+          "z": 1,
           "visible": true,
           "transform": {
             "x": 0,
@@ -87,24 +124,82 @@
           "motion": [],
           "tracks": [
             {
-              "id": "title-arrive",
+              "id": "title-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.2,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.7,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "title-y",
               "target": "transform.y",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 18,
-                  "ease": "linear"
+                  "value": 70,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 },
                 {
-                  "at": 0.8,
+                  "at": 0.2,
+                  "value": 70,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.9199999999999999,
                   "value": 0,
                   "ease": {
-                    "type": "spring",
-                    "mass": 1,
-                    "stiffness": 180,
-                    "damping": 28,
-                    "velocity": 0,
-                    "clamp": true
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
                   }
                 }
               ],
@@ -116,367 +211,39 @@
           "constraints": [],
           "bindings": {},
           "type": "text",
-          "text": "MOTION, WITHOUT DRIFT.",
-          "x": 32,
-          "y": 24,
-          "width": 576,
-          "height": 42,
-          "fontFamily": "Arial",
-          "fontSize": 28,
+          "text": "Motion has\nstructure.",
+          "x": 90,
+          "y": 190,
+          "width": 980,
+          "height": 300,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 150,
           "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#f8fafc",
+          "color": "#121c22",
+          "outlineWidth": 0,
           "align": "left",
-          "verticalAlign": "top",
-          "lineHeight": 1.15,
-          "letterSpacing": 0.5,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1
-        },
-        {
-          "id": "subtitle",
-          "start": 0,
-          "duration": 6,
-          "z": 11,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [],
-          "constraints": [],
-          "bindings": {},
-          "type": "text",
-          "text": "typed values · physical timing · seeded motion · live constraints",
-          "x": 34,
-          "y": 68,
-          "width": 572,
-          "height": 26,
-          "fontFamily": "Arial",
-          "fontSize": 13,
-          "fontWeight": 400,
-          "fontStyle": "normal",
-          "color": "#9aa4ba",
-          "align": "left",
-          "verticalAlign": "top",
-          "lineHeight": 1.15,
-          "letterSpacing": 0,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1
-        },
-        {
-          "id": "core",
-          "start": 0,
-          "duration": 6,
-          "z": 4,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "core-color",
-              "target": "fill",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": "#65fbd2",
-                  "ease": "linear"
-                },
-                {
-                  "at": 3,
-                  "value": "#65a8ff",
-                  "ease": "sine-in-out"
-                },
-                {
-                  "at": 6,
-                  "value": "#d587ff",
-                  "ease": "sine-in-out"
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "core-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": "linear"
-                },
-                {
-                  "at": 6,
-                  "value": 46,
-                  "ease": "sine-in-out"
-                }
-              ],
-              "operation": "add",
-              "extrapolate": "clamp",
-              "noise": {
-                "seed": 9,
-                "amplitude": 7,
-                "frequency": 0.42,
-                "octaves": 3,
-                "lacunarity": 2,
-                "gain": 0.5
-              },
-              "enabled": true
-            },
-            {
-              "id": "core-turn",
-              "target": "transform.rotation",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 350,
-                  "ease": "linear"
-                },
-                {
-                  "at": 6,
-                  "value": 10,
-                  "ease": "sine-in-out"
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "interpolation": "shortest-angle",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 130,
-          "y": 132,
-          "width": 92,
-          "height": 92,
-          "fill": "#65fbd2",
-          "stroke": "#d9fff5",
-          "strokeWidth": 2,
-          "radius": 0,
-          "progress": 1,
-          "shadow": {
-            "color": "#65fbd266",
-            "blur": 24,
-            "offsetX": 0,
-            "offsetY": 0
-          }
-        },
-        {
-          "id": "satellite",
-          "start": 0,
-          "duration": 6,
-          "z": 6,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [],
-          "parentId": "core",
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 252,
-          "y": 162,
-          "width": 24,
-          "height": 24,
-          "fill": "#f8fafc",
-          "strokeWidth": 0,
-          "radius": 0,
-          "progress": 1,
-          "shadow": {
-            "color": "#ffffff77",
-            "blur": 12,
-            "offsetX": 0,
-            "offsetY": 0
-          }
-        },
-        {
-          "id": "pointer",
-          "start": 0,
-          "duration": 6,
-          "z": 3,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [],
-          "constraints": [
-            {
-              "type": "maintain-distance",
-              "target": "core",
-              "distance": 118,
-              "angle": 155
-            },
-            {
-              "type": "look-at",
-              "target": "core",
-              "angleOffset": 0
-            }
-          ],
-          "bindings": {},
-          "type": "shape",
-          "shape": "line",
-          "x": 0,
-          "y": 0,
-          "width": 78,
-          "height": 0,
-          "stroke": "#65fbd2",
-          "strokeWidth": 2,
-          "radius": 0,
-          "progress": 1
-        },
-        {
-          "id": "status-bg",
-          "start": 0,
-          "duration": 6,
-          "z": 8,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [],
-          "constraints": [
-            {
-              "type": "anchor-to",
-              "target": "core",
-              "ownAnchor": "top-left",
-              "targetAnchor": "bottom-right",
-              "offsetX": 12,
-              "offsetY": 12
-            }
-          ],
-          "bindings": {},
-          "type": "shape",
-          "shape": "round-rect",
-          "x": 0,
-          "y": 0,
-          "width": 120,
-          "height": 24,
-          "fill": "#65fbd2",
-          "strokeWidth": 0,
-          "radius": 12,
-          "progress": 1
-        },
-        {
-          "id": "status",
-          "start": 0,
-          "duration": 6,
-          "z": 9,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [],
-          "constraints": [
-            {
-              "type": "anchor-to",
-              "target": "status-bg",
-              "ownAnchor": "center",
-              "targetAnchor": "center",
-              "offsetX": 0,
-              "offsetY": 0
-            }
-          ],
-          "bindings": {},
-          "type": "text",
-          "text": "DETERMINISTIC",
-          "x": 0,
-          "y": 0,
-          "width": 120,
-          "height": 24,
-          "fontFamily": "Arial",
-          "fontSize": 11,
-          "fontWeight": 700,
-          "fontStyle": "normal",
-          "color": "#07110e",
-          "align": "center",
           "verticalAlign": "middle",
-          "lineHeight": 1.15,
-          "letterSpacing": 0,
+          "horizontalMetrics": "ink",
+          "verticalMetrics": "cap-height",
+          "lineHeight": 1.02,
+          "letterSpacing": -2,
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
-          "countProgress": 1
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
-          "id": "route",
+          "id": "node-0",
           "start": 0,
-          "duration": 6,
           "z": 2,
           "visible": true,
           "transform": {
@@ -495,24 +262,63 @@
           "motion": [],
           "tracks": [
             {
-              "id": "route-control",
-              "target": "control1",
+              "id": "node-0-scale",
+              "target": "transform.scaleX",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": [
-                    170,
-                    244
-                  ],
-                  "ease": "linear"
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.35,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 0.72,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 },
                 {
                   "at": 6,
-                  "value": [
-                    220,
-                    218
-                  ],
-                  "ease": "sine-in-out"
+                  "value": 0.72,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 }
               ],
               "operation": "replace",
@@ -520,18 +326,52 @@
               "enabled": true
             },
             {
-              "id": "route-color",
-              "target": "stroke",
+              "id": "node-0-rotation",
+              "target": "transform.rotation",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": "#65fbd2",
-                  "ease": "linear"
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 },
                 {
                   "at": 6,
-                  "value": "#d587ff",
-                  "ease": "sine-in-out"
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 }
               ],
               "operation": "replace",
@@ -539,44 +379,372 @@
               "enabled": true
             }
           ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.18,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
           "constraints": [],
+          "stagger": {
+            "index": 0,
+            "count": 9,
+            "each": 0.07,
+            "from": "center",
+            "seed": 0,
+            "trail": 0.24
+          },
           "bindings": {},
           "type": "shape",
-          "shape": "bezier",
-          "x": 52,
-          "y": 302,
-          "width": 536,
-          "height": 0,
-          "stroke": "#65fbd2",
-          "strokeWidth": 3,
+          "shape": "ellipse",
+          "x": 1120,
+          "y": 210,
+          "width": 100,
+          "height": 100,
+          "fill": "#276ef1",
+          "strokeWidth": 0,
           "radius": 0,
-          "control1": [
-            170,
-            244
-          ],
-          "control2": [
-            412,
-            344
-          ],
-          "progress": {
-            "keyframes": [
-              {
-                "at": 0,
-                "value": 0,
-                "ease": "linear"
-              },
-              {
-                "at": 1.4,
-                "value": 1,
-                "ease": "cubic-out"
-              }
-            ]
-          }
+          "progress": 1
         },
         {
-          "id": "bar-1",
+          "id": "node-1",
           "start": 0,
-          "duration": 5,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "node-1-scale",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.40499999999999997,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 0.86,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 0.86,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "node-1-rotation",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8400000000000001,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.18,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
+          "constraints": [],
+          "stagger": {
+            "index": 1,
+            "count": 9,
+            "each": 0.07,
+            "from": "center",
+            "seed": 0,
+            "trail": 0.24
+          },
+          "bindings": {},
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 1310,
+          "y": 210,
+          "width": 100,
+          "height": 100,
+          "fill": "#ff4e88",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "node-2",
+          "start": 0,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "node-2-scale",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.45999999999999996,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "node-2-rotation",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.88,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.18,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
+          "constraints": [],
+          "stagger": {
+            "index": 2,
+            "count": 9,
+            "each": 0.07,
+            "from": "center",
+            "seed": 0,
+            "trail": 0.24
+          },
+          "bindings": {},
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 1500,
+          "y": 210,
+          "width": 100,
+          "height": 100,
+          "fill": "#276ef1",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "node-3",
+          "start": 0,
           "z": 5,
           "visible": true,
           "transform": {
@@ -595,18 +763,116 @@
           "motion": [],
           "tracks": [
             {
-              "id": "bar-in-1",
-              "target": "transform.opacity",
+              "id": "node-3-scale",
+              "target": "transform.scaleX",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0,
-                  "ease": "linear"
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 },
                 {
-                  "at": 0.7,
+                  "at": 0.515,
                   "value": 1,
-                  "ease": "cubic-out"
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 0.72,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 0.72,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "node-3-rotation",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.92,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 }
               ],
               "operation": "replace",
@@ -614,31 +880,38 @@
               "enabled": true
             }
           ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.18,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
           "constraints": [],
           "stagger": {
-            "index": 0,
-            "count": 5,
-            "each": 0.16,
+            "index": 3,
+            "count": 9,
+            "each": 0.07,
             "from": "center",
-            "seed": 4,
-            "trail": 0.3
+            "seed": 0,
+            "trail": 0.24
           },
           "bindings": {},
           "type": "shape",
-          "shape": "round-rect",
-          "x": 420,
-          "y": 126,
-          "width": 144,
-          "height": 12,
-          "fill": "#263149",
+          "shape": "ellipse",
+          "x": 1120,
+          "y": 400,
+          "width": 100,
+          "height": 100,
+          "fill": "#ff4e88",
           "strokeWidth": 0,
-          "radius": 6,
+          "radius": 0,
           "progress": 1
         },
         {
-          "id": "bar-2",
+          "id": "node-4",
           "start": 0,
-          "duration": 5,
           "z": 6,
           "visible": true,
           "transform": {
@@ -657,18 +930,116 @@
           "motion": [],
           "tracks": [
             {
-              "id": "bar-in-2",
-              "target": "transform.opacity",
+              "id": "node-4-scale",
+              "target": "transform.scaleX",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0,
-                  "ease": "linear"
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 },
                 {
-                  "at": 0.7,
+                  "at": 0.57,
                   "value": 1,
-                  "ease": "cubic-out"
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 0.86,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 0.86,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "node-4-rotation",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.9600000000000001,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 }
               ],
               "operation": "replace",
@@ -676,31 +1047,38 @@
               "enabled": true
             }
           ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.18,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
           "constraints": [],
           "stagger": {
-            "index": 1,
-            "count": 5,
-            "each": 0.16,
+            "index": 4,
+            "count": 9,
+            "each": 0.07,
             "from": "center",
-            "seed": 4,
-            "trail": 0.3
+            "seed": 0,
+            "trail": 0.24
           },
           "bindings": {},
           "type": "shape",
-          "shape": "round-rect",
-          "x": 420,
-          "y": 151,
-          "width": 112,
-          "height": 12,
-          "fill": "#33415f",
+          "shape": "ellipse",
+          "x": 1310,
+          "y": 400,
+          "width": 100,
+          "height": 100,
+          "fill": "#276ef1",
           "strokeWidth": 0,
-          "radius": 6,
+          "radius": 0,
           "progress": 1
         },
         {
-          "id": "bar-3",
+          "id": "node-5",
           "start": 0,
-          "duration": 5,
           "z": 7,
           "visible": true,
           "transform": {
@@ -719,18 +1097,116 @@
           "motion": [],
           "tracks": [
             {
-              "id": "bar-in-3",
-              "target": "transform.opacity",
+              "id": "node-5-scale",
+              "target": "transform.scaleX",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0,
-                  "ease": "linear"
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 },
                 {
-                  "at": 0.7,
+                  "at": 0.625,
                   "value": 1,
-                  "ease": "cubic-out"
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "node-5-rotation",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 }
               ],
               "operation": "replace",
@@ -738,31 +1214,38 @@
               "enabled": true
             }
           ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.18,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
           "constraints": [],
           "stagger": {
-            "index": 2,
-            "count": 5,
-            "each": 0.16,
+            "index": 5,
+            "count": 9,
+            "each": 0.07,
             "from": "center",
-            "seed": 4,
-            "trail": 0.3
+            "seed": 0,
+            "trail": 0.24
           },
           "bindings": {},
           "type": "shape",
-          "shape": "round-rect",
-          "x": 420,
-          "y": 176,
-          "width": 168,
-          "height": 12,
-          "fill": "#65fbd2",
+          "shape": "ellipse",
+          "x": 1500,
+          "y": 400,
+          "width": 100,
+          "height": 100,
+          "fill": "#ff4e88",
           "strokeWidth": 0,
-          "radius": 6,
+          "radius": 0,
           "progress": 1
         },
         {
-          "id": "bar-4",
+          "id": "node-6",
           "start": 0,
-          "duration": 5,
           "z": 8,
           "visible": true,
           "transform": {
@@ -781,18 +1264,116 @@
           "motion": [],
           "tracks": [
             {
-              "id": "bar-in-4",
-              "target": "transform.opacity",
+              "id": "node-6-scale",
+              "target": "transform.scaleX",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0,
-                  "ease": "linear"
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 },
                 {
-                  "at": 0.7,
+                  "at": 0.6799999999999999,
                   "value": 1,
-                  "ease": "cubic-out"
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 0.72,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 0.72,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "node-6-rotation",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.04,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 }
               ],
               "operation": "replace",
@@ -800,31 +1381,38 @@
               "enabled": true
             }
           ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.18,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
           "constraints": [],
           "stagger": {
-            "index": 3,
-            "count": 5,
-            "each": 0.16,
+            "index": 6,
+            "count": 9,
+            "each": 0.07,
             "from": "center",
-            "seed": 4,
-            "trail": 0.3
+            "seed": 0,
+            "trail": 0.24
           },
           "bindings": {},
           "type": "shape",
-          "shape": "round-rect",
-          "x": 420,
-          "y": 201,
-          "width": 126,
-          "height": 12,
-          "fill": "#33415f",
+          "shape": "ellipse",
+          "x": 1120,
+          "y": 590,
+          "width": 100,
+          "height": 100,
+          "fill": "#276ef1",
           "strokeWidth": 0,
-          "radius": 6,
+          "radius": 0,
           "progress": 1
         },
         {
-          "id": "bar-5",
+          "id": "node-7",
           "start": 0,
-          "duration": 5,
           "z": 9,
           "visible": true,
           "transform": {
@@ -843,18 +1431,417 @@
           "motion": [],
           "tracks": [
             {
-              "id": "bar-in-5",
+              "id": "node-7-scale",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.735,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 0.86,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 0.86,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "node-7-rotation",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.08,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.18,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
+          "constraints": [],
+          "stagger": {
+            "index": 7,
+            "count": 9,
+            "each": 0.07,
+            "from": "center",
+            "seed": 0,
+            "trail": 0.24
+          },
+          "bindings": {},
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 1310,
+          "y": 590,
+          "width": 100,
+          "height": 100,
+          "fill": "#ff4e88",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "node-8",
+          "start": 0,
+          "z": 10,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "node-8-scale",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.79,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "node-8-rotation",
+              "target": "transform.rotation",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.12,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.55,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 6,
+                  "value": 180,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "motionTrail": {
+            "duration": 0.16,
+            "samples": 4,
+            "opacity": 0.18,
+            "mode": "motion",
+            "offsetX": 0,
+            "offsetY": 0
+          },
+          "constraints": [],
+          "stagger": {
+            "index": 8,
+            "count": 9,
+            "each": 0.07,
+            "from": "center",
+            "seed": 0,
+            "trail": 0.24
+          },
+          "bindings": {},
+          "type": "shape",
+          "shape": "ellipse",
+          "x": 1500,
+          "y": 590,
+          "width": 100,
+          "height": 100,
+          "fill": "#276ef1",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "copy",
+          "start": 0,
+          "z": 11,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "copy-opacity",
               "target": "transform.opacity",
               "keyframes": [
                 {
                   "at": 0,
                   "value": 0,
-                  "ease": "linear"
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 },
                 {
-                  "at": 0.7,
+                  "at": 1.6,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.1,
                   "value": 1,
-                  "ease": "cubic-out"
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "copy-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 20,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.6,
+                  "value": 20,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.3200000000000003,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
                 }
               ],
               "operation": "replace",
@@ -863,25 +1850,86 @@
             }
           ],
           "constraints": [],
-          "stagger": {
-            "index": 4,
-            "count": 5,
-            "each": 0.16,
-            "from": "center",
-            "seed": 4,
-            "trail": 0.3
-          },
           "bindings": {},
-          "type": "shape",
-          "shape": "round-rect",
-          "x": 420,
-          "y": 226,
-          "width": 152,
-          "height": 12,
-          "fill": "#263149",
-          "strokeWidth": 0,
-          "radius": 6,
-          "progress": 1
+          "type": "text",
+          "text": "Keyframes  /  easing  /  stagger  /  trails",
+          "x": 100,
+          "y": 790,
+          "width": 1100,
+          "height": 70,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 33,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#121c22",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "footer",
+          "start": 0,
+          "z": 12,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "GENMOTION  /  ANIMATION KERNEL / 05",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#121c22",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {
@@ -900,7 +1948,8 @@
   ],
   "audio": [],
   "metadata": {
-    "example": "Deterministic animation kernel",
-    "features": "typed interpolation, springs, noise, stagger, hierarchy, constraints"
+    "publicExample": "true",
+    "duration": "6",
+    "provenance": "Original native vector artwork generated locally from this repository."
   }
 }

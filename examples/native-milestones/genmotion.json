@@ -2,181 +2,1047 @@
   "schemaVersion": 1,
   "id": "native-milestones",
   "title": "Native Milestones",
-  "width": 640,
-  "height": 360,
+  "width": 1920,
+  "height": 1080,
   "fps": 30,
-  "seed": 42,
+  "seed": 47,
+  "anchors": [],
   "parameters": [
-    { "id": "accent", "label": "Accent", "type": "color", "default": "#86efac" },
-    { "id": "message", "label": "Message", "type": "string", "default": "Native. Composable. Deterministic.", "maxLength": 60 }
-  ],
-  "variants": [
-    { "id": "mint", "label": "Mint", "values": { "accent": "#86efac" } },
-    { "id": "violet", "label": "Violet", "values": { "accent": "#a78bfa" } }
-  ],
-  "compositions": [
     {
-      "id": "pulse-badge",
-      "width": 180,
-      "height": 64,
-      "duration": 2,
-      "layers": [
-        {
-          "id": "badge-shell",
-          "type": "shape",
-          "shape": "round-rect",
-          "x": 0,
-          "y": 0,
-          "width": 180,
-          "height": 64,
-          "fill": "#86efac",
-          "radius": 20,
-          "bindings": { "fill": "accent" },
-          "tracks": [
-            { "id": "breathe", "target": "transform.scaleX", "operation": "replace", "extrapolate": "ping-pong", "keyframes": [{ "at": 0, "value": 0.96, "ease": "sine-in-out" }, { "at": 1, "value": 1.04, "ease": "sine-in-out" }] }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "transition-ring",
-      "width": 640,
-      "height": 360,
-      "duration": 0.6,
-      "layers": [
-        {
-          "id": "transition-ring-shape",
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 266,
-          "y": 126,
-          "width": 108,
-          "height": 108,
-          "stroke": "#f8fafc88",
-          "strokeWidth": 3,
-          "progress": { "keyframes": [{ "at": 0, "value": 0, "ease": "sine-out" }, { "at": 0.3, "value": 1, "ease": "sine-out" }, { "at": 0.6, "value": 0, "ease": "sine-in" }] }
-        }
-      ]
+      "id": "accent",
+      "label": "Accent",
+      "type": "color",
+      "default": "#ffc857"
     }
   ],
+  "parameterValues": {},
+  "variants": [
+    {
+      "id": "gold",
+      "label": "Gold",
+      "values": {
+        "accent": "#ffc857"
+      }
+    }
+  ],
+  "motionLibraryPins": {},
+  "compositions": [],
+  "captionStylePresets": [],
+  "captionPreviewLanguages": [],
+  "creativePreferences": [],
+  "mediaLedger": {
+    "version": 1,
+    "records": []
+  },
+  "restrictedAssetAcceptances": [],
+  "referenceSources": [],
+  "referenceAdaptationMap": {
+    "version": 1,
+    "entries": []
+  },
+  "referenceObservations": [],
+  "referencePreparations": [],
   "brand": {
-    "background": "#07090d",
-    "foreground": "#f8fafc",
-    "accent": "#86efac",
-    "muted": "#94a3b8",
-    "fonts": [],
-    "radius": 20,
-    "tone": ["precise", "native"]
+    "background": "#102938",
+    "foreground": "#f7f0df",
+    "accent": "#ffc857",
+    "muted": "#8a8a92",
+    "fonts": [
+      {
+        "family": "Inter",
+        "file": "assets/Inter.ttf"
+      }
+    ],
+    "radius": 24,
+    "tone": [
+      "editorial",
+      "precise",
+      "cinematic"
+    ]
   },
   "scenes": [
     {
-      "id": "path-system",
-      "purpose": "Show reusable composition and native path motion",
-      "duration": 2,
-      "background": "#07090d",
-      "transitionOut": { "type": "crossfade", "presentation": "iris", "duration": 0.6, "ease": "linear", "timing": "sine-in-out", "mode": "symmetric", "overlayCompositionId": "transition-ring" },
+      "id": "frame",
+      "purpose": "Establish native frames as authored decisions",
+      "duration": 3,
+      "background": "#102938",
       "layers": [
         {
-          "id": "badge-instance",
-          "type": "composition",
-          "compositionId": "pulse-badge",
-          "x": 230,
-          "y": 58,
-          "width": 180,
-          "height": 64,
-          "loop": true
-        },
-        {
-          "id": "vector-route",
-          "type": "shape",
-          "shape": "path",
-          "path": "M0 70 C100 -20 300 -20 500 70",
-          "x": 70,
-          "y": 140,
-          "width": 500,
-          "height": 90,
-          "stroke": "#86efac",
-          "strokeWidth": 5,
-          "bindings": { "stroke": "accent" },
-          "progress": { "keyframes": [{ "at": 0, "value": 0, "ease": "cubic-out" }, { "at": 1.6, "value": 1, "ease": "cubic-out" }] }
-        },
-        {
-          "id": "path-follower",
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 0,
-          "y": 0,
-          "width": 18,
-          "height": 18,
-          "fill": "#f8fafc",
-          "followPath": { "path": "M70 210 C170 120 370 120 570 210", "progress": { "keyframes": [{ "at": 0, "value": 0, "ease": "cubic-out" }, { "at": 1.6, "value": 1, "ease": "cubic-out" }] }, "orient": true, "offsetX": -9, "offsetY": -9 }
-        },
-        {
-          "id": "caption-one",
-          "type": "caption",
-          "x": 80,
-          "y": 280,
-          "width": 480,
-          "height": 54,
+          "id": "chapter",
+          "start": 0,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "01 / FRAME",
+          "x": 100,
+          "y": 90,
+          "width": 800,
+          "height": 55,
           "fontFamily": "Inter",
-          "fontFile": "Inter.ttf",
-          "fontSize": 26,
-          "fontWeight": 800,
-          "color": "#f8fafc",
-          "identity": "kinetic",
-          "highlightColor": "#86efac",
-          "highlightBackground": "#173b2c",
-          "highlightPadding": 7,
-          "highlightRadius": 5,
-          "outlineColor": "#020617",
-          "outlineWidth": 1,
-          "cues": [{ "id": "native", "start": 0, "end": 2, "text": "Reusable geometry follows one measured path.", "words": [{ "text": "geometry", "start": 0.55, "end": 1.15 }] }]
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 28,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#ffc857",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 5,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "title",
+          "start": 0,
+          "z": 1,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "title-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.2,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.7,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "title-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.2,
+                  "value": 80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.9199999999999999,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "A frame is\na decision.",
+          "x": 96,
+          "y": 250,
+          "width": 1500,
+          "height": 300,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 145,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f0df",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "horizontalMetrics": "ink",
+          "verticalMetrics": "cap-height",
+          "lineHeight": 1.02,
+          "letterSpacing": -2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "window",
+          "start": 0,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "window-scale",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.2,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.2,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 1120,
+          "y": 180,
+          "width": 600,
+          "height": 650,
+          "fill": "#173c50",
+          "stroke": "#4f8196",
+          "strokeWidth": 3,
+          "radius": 42,
+          "progress": 1
+        },
+        {
+          "id": "footer",
+          "start": 0,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "GENMOTION  /  NATIVE MILESTONES",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f0df",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
-      ]
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [],
+      "notes": []
     },
     {
       "id": "typed-output",
-      "purpose": "Show typed personalization and captions",
-      "duration": 2,
-      "background": "#0b1020",
-      "transitionIn": { "type": "crossfade", "presentation": "iris", "duration": 0.6, "ease": "linear", "timing": "sine-in-out", "mode": "symmetric", "overlayCompositionId": "transition-ring" },
+      "purpose": "Reveal an editable native timeline",
+      "duration": 3,
+      "background": "#102938",
       "layers": [
         {
-          "id": "headline",
+          "id": "chapter-b",
+          "start": 0,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
           "type": "text",
-          "text": "Native. Composable. Deterministic.",
-          "bindings": { "text": "message", "color": "accent" },
-          "x": 60,
+          "text": "02 / TIMELINE",
+          "x": 100,
           "y": 90,
-          "width": 520,
-          "height": 120,
-          "fontFamily": "Arial",
-          "fontSize": 45,
+          "width": 900,
+          "height": 55,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 28,
           "fontWeight": 700,
-          "color": "#86efac",
-          "align": "center",
+          "fontStyle": "normal",
+          "color": "#ffc857",
+          "outlineWidth": 0,
+          "align": "left",
           "verticalAlign": "middle",
-          "tracks": [{ "id": "settle", "target": "transform.y", "keyframes": [{ "at": 0, "value": 20, "ease": "cubic-out" }, { "at": 0.8, "value": 0, "ease": "cubic-out" }] }]
+          "lineHeight": 1.02,
+          "letterSpacing": 5,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         },
         {
-          "id": "caption-two",
-          "type": "caption",
-          "x": 110,
+          "id": "title-b",
+          "start": 0,
+          "z": 1,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "title-b-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.25,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.75,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "title-b-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.25,
+                  "value": 80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.97,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Every second\nstays editable.",
+          "x": 96,
           "y": 250,
-          "width": 420,
-          "height": 54,
+          "width": 1580,
+          "height": 300,
           "fontFamily": "Inter",
-          "fontFile": "Inter.ttf",
-          "fontSize": 24,
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 145,
           "fontWeight": 700,
-          "color": "#f8fafc",
-          "identity": "editorial",
-          "shadow": { "color": "#020617cc", "blur": 8, "offsetX": 0, "offsetY": 3 },
-          "cues": [{ "id": "delivery", "start": 0, "end": 2, "text": "One IR, from Studio to final pixels." }]
+          "fontStyle": "normal",
+          "color": "#f7f0df",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "horizontalMetrics": "ink",
+          "verticalMetrics": "cap-height",
+          "lineHeight": 1.02,
+          "letterSpacing": -2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "beat-0",
+          "start": 0,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "beat-0-scale",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.25,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 105,
+          "y": 690,
+          "width": 270,
+          "height": 82,
+          "fill": "#285066",
+          "strokeWidth": 0,
+          "radius": 20,
+          "progress": 1
+        },
+        {
+          "id": "beat-1",
+          "start": 0,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "beat-1-scale",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.37,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 435,
+          "y": 690,
+          "width": 270,
+          "height": 82,
+          "fill": "#285066",
+          "strokeWidth": 0,
+          "radius": 20,
+          "progress": 1
+        },
+        {
+          "id": "beat-2",
+          "start": 0,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "beat-2-scale",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.49,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 765,
+          "y": 690,
+          "width": 270,
+          "height": 82,
+          "fill": "#285066",
+          "strokeWidth": 0,
+          "radius": 20,
+          "progress": 1
+        },
+        {
+          "id": "beat-3",
+          "start": 0,
+          "z": 5,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "beat-3-scale",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.61,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 1095,
+          "y": 690,
+          "width": 270,
+          "height": 82,
+          "fill": "#285066",
+          "strokeWidth": 0,
+          "radius": 20,
+          "progress": 1
+        },
+        {
+          "id": "beat-4",
+          "start": 0,
+          "z": 6,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "beat-4-scale",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.73,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 1425,
+          "y": 690,
+          "width": 270,
+          "height": 82,
+          "fill": "#ffc857",
+          "strokeWidth": 0,
+          "radius": 20,
+          "progress": 1
+        },
+        {
+          "id": "footer-b",
+          "start": 0,
+          "z": 7,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "GENMOTION  /  NATIVE MILESTONES",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f0df",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
-      ]
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [],
+      "notes": []
     }
   ],
   "audio": [],
-  "metadata": { "capabilities": "compositions,parameters,paths,captions,transitions" }
+  "metadata": {
+    "publicExample": "true",
+    "duration": "6",
+    "provenance": "Original native vector artwork generated locally from this repository."
+  }
 }

@@ -2,37 +2,22 @@
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "duration": 8,
-  "codec": "h264",
-  "audio": null,
+  "duration": 7,
   "strictValidation": "passed",
   "fullDecode": "passed",
-  "nativeReviewFrames": [
-    0,
-    23,
-    59,
-    119,
-    179,
-    227,
-    239
-  ],
-  "alphaOutput": {
-    "mode": "flatten",
-    "background": [
-      0,
-      0,
-      0
-    ]
-  },
-  "renderId": "f7d15e214d8b786c",
-  "decodedFrames": 240,
-  "distinctDownsampledFrames": 167,
-  "minimumLumaRange": 139,
+  "decodedFrames": 210,
+  "distinctDownsampledFrames": 154,
+  "minimumLumaRange": 94,
   "randomSeekPixelEquality": true,
+  "timingChecks": {
+    "peakFrameDelta": 1.784861111111111,
+    "meanFrameDelta": 0.08076687931951099,
+    "finalSecondMeanDelta": 0.000041666666666666665
+  },
   "audioChecks": null,
   "sha256": {
-    "source": "440839df4823ebba9a1bcbfb24f21324c912818ea23cbc07888079e22ccef907",
-    "master": "e1b2ceaeddabaeeabe4f3d80e557ee2408655b81586586a451048b4ff580355c",
-    "contactSheet": "6bef24affebc99fa41004d36e08aa6dfaa9181b2719b3237cb7035852dae3a0c"
+    "source": "fb0a677a78cb6bf5eda49b19ee04e2cb1d19cc37f5b193398dc20db54d0b0f64",
+    "master": "adc0d9afcdf76eda3c14552e99fe18f521920d4edd7f22d6c4887fb55f056cf9",
+    "contactSheet": "8dec1f8354c947b6e09f0c03e1cf9f8f05249877021d32e0544adea463263e7e"
   }
 }

@@ -49,7 +49,7 @@ General agents can write animation code, but code generation alone gives them a 
 
 ## Public examples
 
-The [`examples/`](examples/) gallery contains eight complete, editable projects with local assets, strict validation, rendered masters, and inspected contact sheets:
+The [`examples/`](examples/) gallery contains eleven complete, editable projects with local assets, strict validation, rendered masters, and inspected contact sheets:
 
 - **Kinetic Type** demonstrates clipped typography, direct property tracks, custom easing, and scene rhythm.
 - **Data Pulse** demonstrates animated counters, converging signal fields, SVG path drawing, blend modes, and an editorial data-story resolve.
@@ -59,6 +59,9 @@ The [`examples/`](examples/) gallery contains eight complete, editable projects 
 - **Chromatic Orbit** builds a layered orbital sculpture with native ring geometry, gradient paint and independent rotation tracks.
 - **Route Study** draws an imaginary transit network with shared anchors, measured Bezier progress and timed station labels.
 - **Type / Beat** combines oversized typography, an original synthesized pulse, authored beat-synchronized geometry and karaoke captions.
+- **Caption Cinema** treats language-filtered captions as large editorial choreography with reusable style presets and word-level emphasis.
+- **Camera Flight** demonstrates establish, travel, settle and hold camera choreography with hierarchy-aware temporal sampling.
+- **Motion Lab** isolates motion blur, directional trails, glow and chromatic aberration in deterministic native pixels.
 
 Every project is reproducible with `npm run examples:build` and verified with `npm run examples:verify`; no remote render asset or external template is required.
 

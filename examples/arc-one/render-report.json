@@ -2,74 +2,27 @@
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "duration": 15,
-  "codec": "h264",
-  "audio": "aac",
+  "duration": 9,
   "strictValidation": "passed",
   "fullDecode": "passed",
-  "nativeReviewFrames": [
-    0,
-    44,
-    104,
-    105,
-    106,
-    112,
-    224,
-    230,
-    231,
-    232,
-    336,
-    359,
-    360,
-    361,
-    426,
-    449
-  ],
-  "alphaOutput": {
-    "mode": "flatten",
-    "background": [
-      0,
-      0,
-      0
-    ]
+  "decodedFrames": 270,
+  "distinctDownsampledFrames": 188,
+  "minimumLumaRange": 73,
+  "randomSeekPixelEquality": true,
+  "timingChecks": {
+    "peakFrameDelta": 4.235347222222222,
+    "meanFrameDelta": 0.26564642709624137,
+    "finalSecondMeanDelta": 0.0008819444444444444
   },
-  "renderId": "acb8f5ccabbe2c23",
-  "encodedBoundaryFrames": [
-    {
-      "frame": 104,
-      "sha256": "c2d7c70b3af6c87728fda6ebf3ad1fd2badd417716184ffc4fbd3063196bd34d"
-    },
-    {
-      "frame": 105,
-      "sha256": "f9fff3f873a85d7fa0552d5fc2d14630a73c377c4d5cdccb68514ad9b3243416"
-    },
-    {
-      "frame": 106,
-      "sha256": "6cedc887f2d9b9cb71cc1f437f870dd29cb31776e3f89a023ccb2bb19188279e"
-    },
-    {
-      "frame": 230,
-      "sha256": "6e02e2ca6df42e5d98e1be180563d6016be34dbdc971b1af282211242190d2d2"
-    },
-    {
-      "frame": 231,
-      "sha256": "fda25b0cdc2e7cce89a95ff896fcd528821c038293e1da7e0031c98d4ed2f2cb"
-    },
-    {
-      "frame": 232,
-      "sha256": "3803f3dee4524935eebe655f9bedea8dba6c3c1ccf4343f6e6059b6e30932aca"
-    },
-    {
-      "frame": 359,
-      "sha256": "73f79d4e8003f033530d0eea9fe9fcd0f377519607d78486030d86fc4f6a9ff7"
-    },
-    {
-      "frame": 360,
-      "sha256": "23ba7ddaeaa99d8c9f7054fea5299b0e283bfe52a1ad5da2b73d2f52939e5159"
-    },
-    {
-      "frame": 361,
-      "sha256": "d5d3d7e4b93886f24e48edaf61d441a2dbb0f035c0d14278fdba0f3cecebb5e4"
-    }
-  ]
+  "audioChecks": {
+    "peak": 0.031120263040065765,
+    "initial5msPeak": 0.000013703262993658427,
+    "final5msPeak": 3.444629896875995e-7,
+    "clipping": false
+  },
+  "sha256": {
+    "source": "a619291279edb7638c5dfa9218e215f4aca417ed42883b94556039b3173e60a5",
+    "master": "cec9698d70475e65391952629cdb14273fee93e0793e2d60d7f6cb150e9b7453",
+    "contactSheet": "fe85d9976413764663a863aa08092c39b4061cd6290e96058e12d9e0ea3b7354"
+  }
 }

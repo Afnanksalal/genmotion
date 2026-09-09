@@ -1,0 +1,13 @@
+{
+  "title": "Motion Lab",
+  "audience": "Motion designers and creative technologists",
+  "promise": "Make temporal sampling, blur and trails visually legible",
+  "proof": "The editable Creative IR, native master, inspected frames, and reproducible build script.",
+  "desiredAction": "Open the project in Studio and remix it.",
+  "duration": 7,
+  "sources": [
+    "Original local vector artwork and authored motion.",
+    "Bundled Inter font under the SIL Open Font License."
+  ],
+  "audio": "Intentionally silent."
+}

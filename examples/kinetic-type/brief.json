@@ -1,12 +1,13 @@
 {
   "title": "Kinetic Type",
-  "audience": "Motion designers evaluating Genmotion",
-  "promise": "Establish typography as the primary physical object.",
-  "proof": "The checked-in Creative IR renders with the native Genmotion pipeline.",
-  "desiredAction": "Inspect, remix, and render the source project.",
-  "mode": "kinetic-typography",
-  "duration": 12,
+  "audience": "Motion designers and creative technologists",
+  "promise": "Show typography behaving as composition and rhythm",
+  "proof": "The editable Creative IR, native master, inspected frames, and reproducible build script.",
+  "desiredAction": "Open the project in Studio and remix it.",
+  "duration": 8,
   "sources": [
-    "Creative IR and renderer output in this directory"
-  ]
+    "Original local vector artwork and authored motion.",
+    "Bundled Inter font under the SIL Open Font License."
+  ],
+  "audio": "Intentionally silent."
 }

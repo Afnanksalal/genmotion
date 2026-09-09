@@ -6,7 +6,7 @@ Genmotion uses a typed scene graph, native frames, revision-safe edits and a hum
 
 ## Baseline gaps
 
-These are historical planning observations, not claims about current completion. The [current gallery](../examples/README.md) contains eight examples; the five-example count below records the planning baseline.
+These are historical planning observations, not claims about current completion. The [current gallery](../examples/README.md) contains eleven examples; the five-example count below records the planning baseline.
 
 | Area | Genmotion baseline and gap | Requirement owner |
 | --- | --- | --- |

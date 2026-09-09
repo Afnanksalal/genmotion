@@ -1,18 +1,44 @@
 {
-  "selected": "arc-one-direction-a",
+  "selected": "arc-one-direction",
   "concepts": [
     {
-      "id": "arc-one-direction-a",
-      "hierarchy": "One dominant statement per scene",
-      "clarity": "Every scene has one readable proof",
-      "originality": "Native vectors and direct tracks, no borrowed template",
-      "brandFit": [
-        "precise",
-        "editorial",
-        "controlled"
+      "id": "arc-one-direction",
+      "referenceFamily": "Editorial graphic systems",
+      "borrow": [
+        "clear hierarchy",
+        "decisive pacing"
       ],
-      "rhythm": "Establish, travel, settle, hold",
-      "feasibility": "Runs without remote assets"
+      "avoid": [
+        "generic cards",
+        "decorative noise",
+        "interface imitation"
+      ],
+      "transform": [
+        "native geometry",
+        "one dominant move",
+        "readable final hold"
+      ],
+      "hierarchy": "Resolve an original product mark through one continuous arc",
+      "rhythm": "Build, breathe, resolve, hold",
+      "feasibility": "Local native vectors, type and deterministic tracks only"
+    },
+    {
+      "id": "arc-one-alternate",
+      "referenceFamily": "Physical signage and wayfinding",
+      "borrow": [
+        "spatial clarity",
+        "material restraint"
+      ],
+      "avoid": [
+        "literal signage recreation",
+        "brand imitation"
+      ],
+      "transform": [
+        "motion establishes reading order"
+      ],
+      "hierarchy": "One focal message supported by geometry",
+      "rhythm": "Establish, travel, settle",
+      "feasibility": "No remote assets or browser rendering"
     }
   ]
 }

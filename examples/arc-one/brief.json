@@ -1,12 +1,13 @@
 {
   "title": "Arc One",
-  "audience": "Motion designers evaluating Genmotion",
-  "promise": "Open with a restrained product promise.",
-  "proof": "The checked-in Creative IR renders with the native Genmotion pipeline.",
-  "desiredAction": "Inspect, remix, and render the source project.",
-  "mode": "product-launch",
-  "duration": 15,
+  "audience": "Motion designers and creative technologists",
+  "promise": "Resolve an original product mark through one continuous arc",
+  "proof": "The editable Creative IR, native master, inspected frames, and reproducible build script.",
+  "desiredAction": "Open the project in Studio and remix it.",
+  "duration": 9,
   "sources": [
-    "Creative IR and renderer output in this directory"
-  ]
+    "Original local vector artwork and authored motion.",
+    "Bundled Inter font under the SIL Open Font License."
+  ],
+  "audio": "Original synthesized audio generated locally by the suite builder."
 }

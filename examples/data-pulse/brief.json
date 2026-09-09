@@ -1,12 +1,13 @@
 {
   "title": "Data Pulse",
-  "audience": "Motion designers evaluating Genmotion",
-  "promise": "Make raw volume feel physical before revealing any conclusion.",
-  "proof": "The checked-in Creative IR renders with the native Genmotion pipeline.",
-  "desiredAction": "Inspect, remix, and render the source project.",
-  "mode": "data-sculpture",
-  "duration": 14,
+  "audience": "Motion designers and creative technologists",
+  "promise": "Transform raw signal into a legible conclusion",
+  "proof": "The editable Creative IR, native master, inspected frames, and reproducible build script.",
+  "desiredAction": "Open the project in Studio and remix it.",
+  "duration": 8,
   "sources": [
-    "Creative IR and renderer output in this directory"
-  ]
+    "Original local vector artwork and authored motion.",
+    "Bundled Inter font under the SIL Open Font License."
+  ],
+  "audio": "Intentionally silent."
 }

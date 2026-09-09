@@ -5,59 +5,8 @@
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "seed": 17,
-  "anchors": [
-    {
-      "id": "pulse-target",
-      "x": 1744,
-      "y": 494
-    },
-    {
-      "id": "flow-1-start",
-      "x": 430,
-      "y": 155
-    },
-    {
-      "id": "flow-2-start",
-      "x": 430,
-      "y": 220
-    },
-    {
-      "id": "flow-3-start",
-      "x": 430,
-      "y": 292
-    },
-    {
-      "id": "flow-4-start",
-      "x": 430,
-      "y": 370
-    },
-    {
-      "id": "flow-5-start",
-      "x": 430,
-      "y": 450
-    },
-    {
-      "id": "flow-6-start",
-      "x": 430,
-      "y": 585
-    },
-    {
-      "id": "flow-7-start",
-      "x": 430,
-      "y": 680
-    },
-    {
-      "id": "flow-8-start",
-      "x": 430,
-      "y": 790
-    },
-    {
-      "id": "flow-9-start",
-      "x": 430,
-      "y": 910
-    }
-  ],
+  "seed": 47,
+  "anchors": [],
   "parameters": [],
   "parameterValues": {},
   "variants": [],
@@ -79,1372 +28,34 @@
   "referenceObservations": [],
   "referencePreparations": [],
   "brand": {
-    "background": "#05070a",
-    "foreground": "#f5f1e8",
-    "accent": "#d7ff3f",
-    "muted": "#8f93a2",
+    "background": "#071923",
+    "foreground": "#f2fbfa",
+    "accent": "#d9ff58",
+    "muted": "#8a8a92",
     "fonts": [
       {
         "family": "Inter",
         "file": "assets/Inter.ttf"
       }
     ],
-    "radius": 28,
+    "radius": 24,
     "tone": [
-      "precise",
       "editorial",
-      "controlled"
+      "precise",
+      "cinematic"
     ]
   },
   "scenes": [
     {
-      "id": "noise-field",
-      "purpose": "Make raw volume feel physical before revealing any conclusion.",
-      "duration": 4.4,
-      "background": "#05070a",
+      "id": "analysis",
+      "purpose": "Transform raw signal into a legible conclusion",
+      "duration": 8,
+      "background": "#071923",
       "layers": [
         {
-          "id": "cyan-bloom",
+          "id": "eyebrow",
           "start": 0,
-          "duration": 4.4,
           "z": 0,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 48,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "cyan-bloom-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 120,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.4,
-                  "value": -80,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 1180,
-          "y": 100,
-          "width": 820,
-          "height": 820,
-          "fill": "#15d6cf24",
-          "strokeWidth": 0,
-          "radius": 0,
-          "progress": 1
-        },
-        {
-          "id": "violet-bloom",
-          "start": 0,
-          "duration": 4.4,
-          "z": 0,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 52,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "violet-bloom-drift",
-              "target": "transform.y",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 100,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.4,
-                  "value": -30,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "ellipse",
-          "x": -180,
-          "y": 580,
-          "width": 760,
-          "height": 620,
-          "fill": "#7957ff22",
-          "strokeWidth": 0,
-          "radius": 0,
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-1",
-          "start": 0,
-          "duration": 4.4,
-          "z": 1,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-1-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.2,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.4,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-1-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -35,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.4,
-                  "value": 30,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 185,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#735dff",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 20 C 130 80 240 20 380 54 S 650 108 820 58 S 1110 18 1380 45",
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-2",
-          "start": 0.035,
-          "duration": 4.365,
-          "z": 2,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-2-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.25,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.365,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-2-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -38,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.365,
-                  "value": 32,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 231,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#42e8e0",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 30 C 130 5 240 110 380 60 S 650 12 820 62 S 1110 110 1380 51",
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-3",
-          "start": 0.07,
-          "duration": 4.33,
-          "z": 3,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-3-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.3,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.33,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-3-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -41,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.33,
-                  "value": 34,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 277,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#735dff",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 40 C 130 80 240 110 380 66 S 650 108 820 66 S 1110 110 1380 57",
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-4",
-          "start": 0.10500000000000001,
-          "duration": 4.295,
-          "z": 4,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-4-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.35,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.295,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-4-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -44,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.295,
-                  "value": 36,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 323,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#42e8e0",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 50 C 130 5 240 20 380 72 S 650 12 820 70 S 1110 18 1380 63",
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-5",
-          "start": 0.14,
-          "duration": 4.260000000000001,
-          "z": 5,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-5-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.4,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.260000000000001,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-5-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -47,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.260000000000001,
-                  "value": 38,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 369,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#735dff",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 60 C 130 80 240 110 380 78 S 650 108 820 74 S 1110 110 1380 69",
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-6",
-          "start": 0.17500000000000002,
-          "duration": 4.2250000000000005,
-          "z": 6,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.95,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-6-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.45,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.2250000000000005,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-6-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -50,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.2250000000000005,
-                  "value": 40,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 415,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#d7ff3f",
-          "strokeWidth": 8,
-          "radius": 0,
-          "path": "M 0 70 C 130 5 240 110 380 84 S 650 12 820 78 S 1110 110 1380 75",
-          "progress": 1,
-          "shadow": {
-            "color": "#d7ff3f66",
-            "blur": 26,
-            "offsetX": 0,
-            "offsetY": 0
-          }
-        },
-        {
-          "id": "noise-trace-7",
-          "start": 0.21000000000000002,
-          "duration": 4.19,
-          "z": 7,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-7-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.5,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.19,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-7-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -53,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.19,
-                  "value": 42,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 461,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#735dff",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 80 C 130 80 240 20 380 90 S 650 108 820 82 S 1110 18 1380 81",
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-8",
-          "start": 0.24500000000000002,
-          "duration": 4.155,
-          "z": 8,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-8-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.55,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.155,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-8-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -56,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.155,
-                  "value": 44,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 507,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#42e8e0",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 90 C 130 5 240 110 380 96 S 650 12 820 86 S 1110 110 1380 87",
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-9",
-          "start": 0.28,
-          "duration": 4.12,
-          "z": 9,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-9-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.6,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.12,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-9-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -59,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.12,
-                  "value": 46,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 553,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#735dff",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 100 C 130 80 240 110 380 102 S 650 108 820 90 S 1110 110 1380 93",
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-10",
-          "start": 0.31500000000000006,
-          "duration": 4.085,
-          "z": 10,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-10-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.65,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.085,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-10-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -62,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.085,
-                  "value": 48,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 599,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#42e8e0",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 110 C 130 5 240 20 380 108 S 650 12 820 94 S 1110 18 1380 99",
-          "progress": 1
-        },
-        {
-          "id": "noise-trace-11",
-          "start": 0.35000000000000003,
-          "duration": 4.050000000000001,
-          "z": 11,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.24,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-trace-11-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.7,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.050000000000001,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "noise-trace-11-drift",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -65,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.050000000000001,
-                  "value": 50,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 380,
-          "y": 645,
-          "width": 1380,
-          "height": 170,
-          "stroke": "#735dff",
-          "strokeWidth": 3,
-          "radius": 0,
-          "path": "M 0 120 C 130 80 240 110 380 114 S 650 108 820 98 S 1110 110 1380 105",
-          "progress": 1
-        },
-        {
-          "id": "index-rule",
-          "start": 0,
-          "duration": 4.4,
-          "z": 20,
           "visible": true,
           "transform": {
             "x": 0,
@@ -1462,84 +73,7 @@
           "motion": [],
           "tracks": [
             {
-              "id": "index-rule-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.55,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.4,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "line",
-          "x": 132,
-          "y": 128,
-          "width": 94,
-          "height": 0,
-          "stroke": "#d7ff3f",
-          "strokeWidth": 7,
-          "radius": 0,
-          "progress": 1
-        },
-        {
-          "id": "raw-label",
-          "start": 0,
-          "duration": 4.4,
-          "z": 21,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "raw-label-in",
+              "id": "eyebrow-opacity",
               "target": "transform.opacity",
               "keyframes": [
                 {
@@ -1554,8 +88,8 @@
                   }
                 },
                 {
-                  "at": 0.55,
-                  "value": 1,
+                  "at": 0.1,
+                  "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1565,8 +99,50 @@
                   }
                 },
                 {
-                  "at": 4.4,
+                  "at": 0.6,
                   "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "eyebrow-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.1,
+                  "value": 18,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.82,
+                  "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1584,22 +160,22 @@
           "constraints": [],
           "bindings": {},
           "type": "text",
-          "text": "RAW EVENTS / SECOND",
-          "x": 255,
-          "y": 85,
-          "width": 760,
-          "height": 90,
+          "text": "SIGNAL STUDY  /  LIVE FIELD",
+          "x": 100,
+          "y": 90,
+          "width": 1200,
+          "height": 48,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
-          "fontSize": 32,
-          "fontWeight": 650,
+          "fontSize": 25,
+          "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#b8b5ae",
+          "color": "#6df7df",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
-          "lineHeight": 1,
-          "letterSpacing": 6,
+          "lineHeight": 1.02,
+          "letterSpacing": 4,
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
@@ -1613,10 +189,9 @@
           "notations": []
         },
         {
-          "id": "raw-count",
+          "id": "count",
           "start": 0,
-          "duration": 4.4,
-          "z": 22,
+          "z": 1,
           "visible": true,
           "transform": {
             "x": 0,
@@ -1634,8 +209,8 @@
           "motion": [],
           "tracks": [
             {
-              "id": "raw-count-up",
-              "target": "countProgress",
+              "id": "count-opacity",
+              "target": "transform.opacity",
               "keyframes": [
                 {
                   "at": 0,
@@ -1649,8 +224,8 @@
                   }
                 },
                 {
-                  "at": 2.4,
-                  "value": 1,
+                  "at": 0.2,
+                  "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1660,7 +235,7 @@
                   }
                 },
                 {
-                  "at": 4.4,
+                  "at": 0.7,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1676,12 +251,12 @@
               "enabled": true
             },
             {
-              "id": "raw-count-rise",
+              "id": "count-y",
               "target": "transform.y",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 90,
+                  "value": 80,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1691,8 +266,8 @@
                   }
                 },
                 {
-                  "at": 0.9,
-                  "value": 0,
+                  "at": 0.2,
+                  "value": 80,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -1702,7 +277,7 @@
                   }
                 },
                 {
-                  "at": 4.4,
+                  "at": 0.9199999999999999,
                   "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
@@ -1721,31 +296,69 @@
           "constraints": [],
           "bindings": {},
           "type": "text",
-          "text": "2438901",
-          "x": 112,
-          "y": 690,
-          "width": 1660,
-          "height": 290,
+          "text": "98.7",
+          "x": 92,
+          "y": 175,
+          "width": 1060,
+          "height": 260,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
           "fontSize": 238,
-          "fontWeight": 780,
+          "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#f7f5ef",
+          "color": "#f2fbfa",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
-          "lineHeight": 1,
-          "letterSpacing": -14,
+          "horizontalMetrics": "ink",
+          "verticalMetrics": "cap-height",
+          "lineHeight": 1.02,
+          "letterSpacing": -2,
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
           "countFrom": 0,
-          "countProgress": 1,
+          "countProgress": {
+            "keyframes": [
+              {
+                "at": 0,
+                "value": 0,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 2.4,
+                "value": 1,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 8,
+                "value": 1,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              }
+            ]
+          },
           "numberFormat": {
-            "decimals": 0,
+            "decimals": 1,
             "prefix": "",
-            "suffix": "",
+            "suffix": "%",
             "grouping": true
           },
           "blockPadding": 0,
@@ -1755,1218 +368,11 @@
           "runs": [],
           "timedWords": [],
           "notations": []
-        }
-      ],
-      "transitionIn": {
-        "type": "cut",
-        "duration": 0,
-        "ease": "linear"
-      },
-      "transitionOut": {
-        "type": "cut",
-        "duration": 0,
-        "ease": "linear"
-      },
-      "referenceDecisions": [
-        {
-          "referenceId": "editorial-monument",
-          "borrow": [
-            "decisive typographic hierarchy",
-            "one dominant move per beat"
-          ],
-          "avoid": [
-            "serif imitation",
-            "constant ornamental motion"
-          ],
-          "transform": [
-            "use sparse geometry and generous holds"
-          ]
         },
         {
-          "referenceId": "product-theater",
-          "borrow": [
-            "controlled detail-led pacing",
-            "focused camera hierarchy"
-          ],
-          "avoid": [
-            "interface reconstruction",
-            "brand imitation"
-          ],
-          "transform": [
-            "express material and depth with native vector geometry"
-          ]
-        }
-      ],
-      "notes": [
-        "The field is intentionally abstract: it conveys volume without imitating a dashboard."
-      ]
-    },
-    {
-      "id": "coherence",
-      "purpose": "Collapse many competing traces into one legible direction.",
-      "duration": 5.2,
-      "background": "#080b12",
-      "layers": [
-        {
-          "id": "field-glow",
+          "id": "label",
           "start": 0,
-          "duration": 5.2,
-          "z": 0,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 62,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "field-glow-push",
-              "target": "transform.scaleX",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0.78,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 2.1,
-                  "value": 1.06,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 5.2,
-                  "value": 1.06,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "field-glow-push-y",
-              "target": "transform.scaleY",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0.78,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 2.1,
-                  "value": 1.06,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 5.2,
-                  "value": 1.06,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 980,
-          "y": 90,
-          "width": 900,
-          "height": 900,
-          "fill": "#38e8d72b",
-          "strokeWidth": 0,
-          "radius": 0,
-          "progress": 1
-        },
-        {
-          "id": "flow-1",
-          "start": 0,
-          "duration": 5.2,
           "z": 2,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.38,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "flow-1-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.45,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 5.2,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "stroke": "#745cff",
-          "strokeWidth": 4,
-          "radius": 0,
-          "startAnchor": "flow-1-start",
-          "endAnchor": "pulse-target",
-          "control1": [
-            790,
-            155
-          ],
-          "control2": [
-            1340,
-            494
-          ],
-          "progress": 1
-        },
-        {
-          "id": "flow-2",
-          "start": 0.045,
-          "duration": 5.155,
-          "z": 3,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.38,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "flow-2-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.53,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 5.155,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "stroke": "#745cff",
-          "strokeWidth": 4,
-          "radius": 0,
-          "startAnchor": "flow-2-start",
-          "endAnchor": "pulse-target",
-          "control1": [
-            798,
-            220
-          ],
-          "control2": [
-            1333,
-            494
-          ],
-          "progress": 1
-        },
-        {
-          "id": "flow-3",
-          "start": 0.09,
-          "duration": 5.11,
-          "z": 4,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.38,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "flow-3-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.6099999999999999,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 5.11,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "stroke": "#745cff",
-          "strokeWidth": 4,
-          "radius": 0,
-          "startAnchor": "flow-3-start",
-          "endAnchor": "pulse-target",
-          "control1": [
-            806,
-            292
-          ],
-          "control2": [
-            1326,
-            494
-          ],
-          "progress": 1
-        },
-        {
-          "id": "flow-4",
-          "start": 0.135,
-          "duration": 5.065,
-          "z": 5,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.38,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "flow-4-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.69,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 5.065,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "stroke": "#745cff",
-          "strokeWidth": 4,
-          "radius": 0,
-          "startAnchor": "flow-4-start",
-          "endAnchor": "pulse-target",
-          "control1": [
-            814,
-            370
-          ],
-          "control2": [
-            1319,
-            494
-          ],
-          "progress": 1
-        },
-        {
-          "id": "flow-5",
-          "start": 0.18,
-          "duration": 5.0200000000000005,
-          "z": 6,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "flow-5-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.77,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 5.0200000000000005,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "stroke": "#d7ff3f",
-          "strokeWidth": 10,
-          "radius": 0,
-          "startAnchor": "flow-5-start",
-          "endAnchor": "pulse-target",
-          "control1": [
-            822,
-            450
-          ],
-          "control2": [
-            1312,
-            494
-          ],
-          "progress": 1,
-          "shadow": {
-            "color": "#d7ff3f88",
-            "blur": 34,
-            "offsetX": 0,
-            "offsetY": 0
-          }
-        },
-        {
-          "id": "flow-6",
-          "start": 0.22499999999999998,
-          "duration": 4.9750000000000005,
-          "z": 7,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.38,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "flow-6-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.85,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.9750000000000005,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "stroke": "#38e8d7",
-          "strokeWidth": 4,
-          "radius": 0,
-          "startAnchor": "flow-6-start",
-          "endAnchor": "pulse-target",
-          "control1": [
-            830,
-            585
-          ],
-          "control2": [
-            1305,
-            494
-          ],
-          "progress": 1
-        },
-        {
-          "id": "flow-7",
-          "start": 0.27,
-          "duration": 4.93,
-          "z": 8,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.38,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "flow-7-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.93,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.93,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "stroke": "#38e8d7",
-          "strokeWidth": 4,
-          "radius": 0,
-          "startAnchor": "flow-7-start",
-          "endAnchor": "pulse-target",
-          "control1": [
-            838,
-            680
-          ],
-          "control2": [
-            1298,
-            494
-          ],
-          "progress": 1
-        },
-        {
-          "id": "flow-8",
-          "start": 0.315,
-          "duration": 4.885,
-          "z": 9,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.38,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "flow-8-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 2.01,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.885,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "stroke": "#38e8d7",
-          "strokeWidth": 4,
-          "radius": 0,
-          "startAnchor": "flow-8-start",
-          "endAnchor": "pulse-target",
-          "control1": [
-            846,
-            790
-          ],
-          "control2": [
-            1291,
-            494
-          ],
-          "progress": 1
-        },
-        {
-          "id": "flow-9",
-          "start": 0.36,
-          "duration": 4.84,
-          "z": 10,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 0.38,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "screen",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "flow-9-draw",
-              "target": "progress",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 2.09,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.84,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "bezier",
-          "x": 0,
-          "y": 0,
-          "width": 0,
-          "height": 0,
-          "stroke": "#38e8d7",
-          "strokeWidth": 4,
-          "radius": 0,
-          "startAnchor": "flow-9-start",
-          "endAnchor": "pulse-target",
-          "control1": [
-            854,
-            910
-          ],
-          "control2": [
-            1284,
-            494
-          ],
-          "progress": 1
-        },
-        {
-          "id": "pulse-ring-outer",
-          "start": 0,
-          "duration": 5.2,
-          "z": 14,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "pulse-ring-scale",
-              "target": "transform.scaleX",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0.01,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.75,
-                  "value": 1.2,
-                  "ease": {
-                    "type": "spring",
-                    "mass": 1,
-                    "stiffness": 150,
-                    "damping": 22,
-                    "velocity": 0
-                  }
-                },
-                {
-                  "at": 5.2,
-                  "value": 1.2,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "pulse-ring-scale-y",
-              "target": "transform.scaleY",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0.01,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.75,
-                  "value": 1.2,
-                  "ease": {
-                    "type": "spring",
-                    "mass": 1,
-                    "stiffness": 150,
-                    "damping": 22,
-                    "velocity": 0
-                  }
-                },
-                {
-                  "at": 5.2,
-                  "value": 1.2,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 0,
-          "y": 0,
-          "width": 112,
-          "height": 112,
-          "fill": "#00000000",
-          "stroke": "#d7ff3f",
-          "strokeWidth": 5,
-          "radius": 0,
-          "centerAnchor": "pulse-target",
-          "progress": 1,
-          "shadow": {
-            "color": "#d7ff3f99",
-            "blur": 28,
-            "offsetX": 0,
-            "offsetY": 0
-          }
-        },
-        {
-          "id": "pulse-core",
-          "start": 0,
-          "duration": 5.2,
-          "z": 15,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "pulse-core-scale",
-              "target": "transform.scaleX",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0.01,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.55,
-                  "value": 1,
-                  "ease": {
-                    "type": "spring",
-                    "mass": 1,
-                    "stiffness": 150,
-                    "damping": 22,
-                    "velocity": 0
-                  }
-                },
-                {
-                  "at": 5.2,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "pulse-core-scale-y",
-              "target": "transform.scaleY",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0.01,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 1.55,
-                  "value": 1,
-                  "ease": {
-                    "type": "spring",
-                    "mass": 1,
-                    "stiffness": 150,
-                    "damping": 22,
-                    "velocity": 0
-                  }
-                },
-                {
-                  "at": 5.2,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 0,
-          "y": 0,
-          "width": 40,
-          "height": 40,
-          "fill": "#f5f1e8",
-          "strokeWidth": 0,
-          "radius": 0,
-          "centerAnchor": "pulse-target",
-          "progress": 1
-        },
-        {
-          "id": "find",
-          "start": 0,
-          "duration": 5.2,
-          "z": 20,
           "visible": true,
           "transform": {
             "x": 0,
@@ -2986,531 +392,22 @@
           "constraints": [],
           "bindings": {},
           "type": "text",
-          "text": "FIND",
+          "text": "SIGNAL COHERENCE",
           "x": 110,
-          "y": 120,
-          "width": 650,
-          "height": 210,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 180,
-          "fontWeight": 820,
-          "fontStyle": "normal",
-          "color": "#f7f5ef",
-          "outlineWidth": 0,
-          "align": "left",
-          "verticalAlign": "middle",
-          "lineHeight": 1,
-          "letterSpacing": -9,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
-        },
-        {
-          "id": "the",
-          "start": 0.45,
-          "duration": 4.75,
-          "z": 20,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "the-in",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -130,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.72,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.75,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "text",
-          "text": "THE",
-          "x": 110,
-          "y": 325,
-          "width": 650,
-          "height": 210,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 180,
-          "fontWeight": 820,
-          "fontStyle": "normal",
-          "color": "#8886a2",
-          "outlineWidth": 0,
-          "align": "left",
-          "verticalAlign": "middle",
-          "lineHeight": 1,
-          "letterSpacing": -9,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
-        },
-        {
-          "id": "pulse",
-          "start": 0.9,
-          "duration": 4.3,
-          "z": 20,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "pulse-in",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -130,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.72,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.3,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "text",
-          "text": "PULSE",
-          "x": 110,
-          "y": 530,
-          "width": 850,
-          "height": 230,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 180,
-          "fontWeight": 820,
-          "fontStyle": "normal",
-          "color": "#d7ff3f",
-          "outlineWidth": 0,
-          "align": "left",
-          "verticalAlign": "middle",
-          "lineHeight": 1,
-          "letterSpacing": -9,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
-        },
-        {
-          "id": "coherence-note",
-          "start": 1.85,
-          "duration": 3.35,
-          "z": 20,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "coherence-note-in",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.45,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 3.35,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "text",
-          "text": "MILLIONS OF EVENTS. ONE DIRECTION.",
-          "x": 122,
-          "y": 850,
-          "width": 980,
-          "height": 70,
+          "y": 430,
+          "width": 760,
+          "height": 55,
           "fontFamily": "Inter",
           "fontFile": "assets/Inter.ttf",
           "fontSize": 29,
-          "fontWeight": 620,
+          "fontWeight": 700,
           "fontStyle": "normal",
-          "color": "#aaa8b6",
+          "color": "#6df7df",
           "outlineWidth": 0,
           "align": "left",
           "verticalAlign": "middle",
-          "lineHeight": 1,
-          "letterSpacing": 4,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
-        }
-      ],
-      "transitionIn": {
-        "type": "cut",
-        "duration": 0,
-        "ease": "linear"
-      },
-      "transitionOut": {
-        "type": "cut",
-        "duration": 0,
-        "ease": "linear"
-      },
-      "referenceDecisions": [
-        {
-          "referenceId": "editorial-monument",
-          "borrow": [
-            "decisive typographic hierarchy",
-            "one dominant move per beat"
-          ],
-          "avoid": [
-            "serif imitation",
-            "constant ornamental motion"
-          ],
-          "transform": [
-            "use sparse geometry and generous holds"
-          ]
-        },
-        {
-          "referenceId": "product-theater",
-          "borrow": [
-            "controlled detail-led pacing",
-            "focused camera hierarchy"
-          ],
-          "avoid": [
-            "interface reconstruction",
-            "brand imitation"
-          ],
-          "transform": [
-            "express material and depth with native vector geometry"
-          ]
-        }
-      ],
-      "notes": [
-        "All traces converge on one luminous focal point; no chart chrome or card UI is used."
-      ]
-    },
-    {
-      "id": "direction",
-      "purpose": "Resolve the data story as a bold editorial conclusion.",
-      "duration": 4.4,
-      "background": "#f1eee5",
-      "layers": [
-        {
-          "id": "acid-slice",
-          "start": 0,
-          "duration": 4.4,
-          "z": 0,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "acid-slice-in",
-              "target": "transform.x",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": -1920,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.8,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.4,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "shape",
-          "shape": "path",
-          "x": 0,
-          "y": 585,
-          "width": 1920,
-          "height": 350,
-          "fill": "#d7ff3f",
-          "strokeWidth": 0,
-          "radius": 0,
-          "path": "M 0 120 L 1920 0 L 1920 230 L 0 350 Z",
-          "progress": 1
-        },
-        {
-          "id": "noise-word",
-          "start": 0,
-          "duration": 4.4,
-          "z": 2,
-          "visible": true,
-          "transform": {
-            "x": 0,
-            "y": 0,
-            "scaleX": 1,
-            "scaleY": 1,
-            "rotation": 0,
-            "opacity": 1,
-            "blur": 0,
-            "anchorX": 0.5,
-            "anchorY": 0.5
-          },
-          "blendMode": "source-over",
-          "tags": [],
-          "motion": [],
-          "tracks": [
-            {
-              "id": "noise-word-in",
-              "target": "transform.y",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 170,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.75,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 4.4,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
-          "constraints": [],
-          "bindings": {},
-          "type": "text",
-          "text": "NOISE",
-          "x": 105,
-          "y": 55,
-          "width": 1260,
-          "height": 330,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 286,
-          "fontWeight": 850,
-          "fontStyle": "normal",
-          "color": "#0a0b0d",
-          "outlineWidth": 0,
-          "align": "left",
-          "verticalAlign": "middle",
-          "lineHeight": 1,
-          "letterSpacing": -17,
+          "lineHeight": 1.02,
+          "letterSpacing": 5,
           "fit": "shrink",
           "reveal": "none",
           "revealProgress": 1,
@@ -3524,9 +421,8 @@
           "notations": []
         },
         {
-          "id": "becomes-word",
-          "start": 0.65,
-          "duration": 3.75,
+          "id": "field",
+          "start": 0,
           "z": 3,
           "visible": true,
           "transform": {
@@ -3543,85 +439,108 @@
           "blendMode": "source-over",
           "tags": [],
           "motion": [],
-          "tracks": [
-            {
-              "id": "becomes-word-in",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 0.45,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 3.75,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            }
-          ],
+          "tracks": [],
           "constraints": [],
           "bindings": {},
-          "type": "text",
-          "text": "BECOMES",
-          "x": 118,
-          "y": 390,
-          "width": 800,
-          "height": 130,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 82,
-          "fontWeight": 620,
-          "fontStyle": "normal",
-          "color": "#656258",
-          "outlineWidth": 0,
-          "align": "left",
-          "verticalAlign": "middle",
-          "lineHeight": 1,
-          "letterSpacing": 8,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
+          "type": "shape",
+          "shape": "area-chart",
+          "x": 100,
+          "y": 590,
+          "width": 1720,
+          "height": 300,
+          "fill": "#153e46",
+          "gradientFill": {
+            "type": "linear",
+            "angle": 90,
+            "center": [
+              0.5,
+              0.5
+            ],
+            "radius": 0.5,
+            "stops": [
+              {
+                "offset": 0,
+                "color": "#4fffe355"
+              },
+              {
+                "offset": 1,
+                "color": "#07192300"
+              }
+            ]
+          },
+          "stroke": "#6df7df",
+          "strokeWidth": 8,
+          "radius": 0,
+          "samples": [
+            0.18,
+            0.24,
+            0.2,
+            0.34,
+            0.3,
+            0.48,
+            0.42,
+            0.65,
+            0.6,
+            0.78,
+            0.7,
+            0.9,
+            0.84,
+            0.96,
+            0.92,
+            1
+          ],
+          "progress": {
+            "keyframes": [
+              {
+                "at": 0,
+                "value": 0,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 0.55,
+                "value": 0,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 2.8,
+                "value": 1,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              },
+              {
+                "at": 8,
+                "value": 1,
+                "ease": {
+                  "type": "cubic-bezier",
+                  "x1": 0.22,
+                  "y1": 1,
+                  "x2": 0.36,
+                  "y2": 1
+                }
+              }
+            ]
+          }
         },
         {
-          "id": "direction-word",
-          "start": 0.95,
-          "duration": 3.45,
+          "id": "pulse",
+          "start": 0,
           "z": 4,
           "visible": true,
           "transform": {
@@ -3640,12 +559,12 @@
           "motion": [],
           "tracks": [
             {
-              "id": "direction-word-open",
-              "target": "letterSpacing",
+              "id": "pulse-x",
+              "target": "transform.x",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": -38,
+                  "value": -900,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -3655,8 +574,8 @@
                   }
                 },
                 {
-                  "at": 0.85,
-                  "value": -14,
+                  "at": 2.85,
+                  "value": -900,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -3666,28 +585,8 @@
                   }
                 },
                 {
-                  "at": 3.45,
-                  "value": -14,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                }
-              ],
-              "operation": "replace",
-              "extrapolate": "clamp",
-              "enabled": true
-            },
-            {
-              "id": "direction-word-in",
-              "target": "transform.opacity",
-              "keyframes": [
-                {
-                  "at": 0,
-                  "value": 0,
+                  "at": 4.65,
+                  "value": 760,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -3697,19 +596,8 @@
                   }
                 },
                 {
-                  "at": 0.45,
-                  "value": 1,
-                  "ease": {
-                    "type": "cubic-bezier",
-                    "x1": 0.22,
-                    "y1": 1,
-                    "x2": 0.36,
-                    "y2": 1
-                  }
-                },
-                {
-                  "at": 3.45,
-                  "value": 1,
+                  "at": 8,
+                  "value": 760,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -3724,41 +612,32 @@
               "enabled": true
             }
           ],
+          "motionBlur": {
+            "shutterAngle": 180,
+            "samples": 4
+          },
           "constraints": [],
           "bindings": {},
-          "type": "text",
-          "text": "DIRECTION.",
-          "x": 105,
-          "y": 630,
-          "width": 1690,
-          "height": 325,
-          "fontFamily": "Inter",
-          "fontFile": "assets/Inter.ttf",
-          "fontSize": 248,
-          "fontWeight": 850,
-          "fontStyle": "normal",
-          "color": "#0a0b0d",
-          "outlineWidth": 0,
-          "align": "left",
-          "verticalAlign": "middle",
-          "lineHeight": 1,
-          "letterSpacing": -14,
-          "fit": "shrink",
-          "reveal": "none",
-          "revealProgress": 1,
-          "countProgress": 1,
-          "blockPadding": 0,
-          "blockRadius": 0,
-          "linePadding": 0,
-          "lineRadius": 0,
-          "runs": [],
-          "timedWords": [],
-          "notations": []
+          "type": "shape",
+          "shape": "line",
+          "x": 1010,
+          "y": 540,
+          "width": 0,
+          "height": 390,
+          "stroke": "#d9ff58",
+          "strokeWidth": 5,
+          "radius": 0,
+          "progress": 1,
+          "shadow": {
+            "color": "#d9ff58aa",
+            "blur": 22,
+            "offsetX": 0,
+            "offsetY": 0
+          }
         },
         {
-          "id": "closing-dot",
-          "start": 1.35,
-          "duration": 3.05,
+          "id": "resolve",
+          "start": 0,
           "z": 5,
           "visible": true,
           "transform": {
@@ -3777,12 +656,12 @@
           "motion": [],
           "tracks": [
             {
-              "id": "closing-dot-in",
-              "target": "transform.scaleX",
+              "id": "resolve-opacity",
+              "target": "transform.opacity",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.01,
+                  "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -3792,18 +671,18 @@
                   }
                 },
                 {
-                  "at": 0.48,
-                  "value": 1,
+                  "at": 4.5,
+                  "value": 0,
                   "ease": {
-                    "type": "spring",
-                    "mass": 1,
-                    "stiffness": 150,
-                    "damping": 22,
-                    "velocity": 0
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
                   }
                 },
                 {
-                  "at": 3.05,
+                  "at": 5,
                   "value": 1,
                   "ease": {
                     "type": "cubic-bezier",
@@ -3819,12 +698,12 @@
               "enabled": true
             },
             {
-              "id": "closing-dot-in-y",
-              "target": "transform.scaleY",
+              "id": "resolve-y",
+              "target": "transform.y",
               "keyframes": [
                 {
                   "at": 0,
-                  "value": 0.01,
+                  "value": 30,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -3834,19 +713,19 @@
                   }
                 },
                 {
-                  "at": 0.48,
-                  "value": 1,
+                  "at": 4.5,
+                  "value": 30,
                   "ease": {
-                    "type": "spring",
-                    "mass": 1,
-                    "stiffness": 150,
-                    "damping": 22,
-                    "velocity": 0
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
                   }
                 },
                 {
-                  "at": 3.05,
-                  "value": 1,
+                  "at": 5.22,
+                  "value": 0,
                   "ease": {
                     "type": "cubic-bezier",
                     "x1": 0.22,
@@ -3863,16 +742,85 @@
           ],
           "constraints": [],
           "bindings": {},
-          "type": "shape",
-          "shape": "ellipse",
-          "x": 1752,
-          "y": 860,
-          "width": 74,
-          "height": 74,
-          "fill": "#745cff",
-          "strokeWidth": 0,
-          "radius": 0,
-          "progress": 1
+          "type": "text",
+          "text": "NOISE → PATTERN → DECISION",
+          "x": 104,
+          "y": 900,
+          "width": 1500,
+          "height": 54,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 30,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#d9ff58",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "footer",
+          "start": 0,
+          "z": 6,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "GENMOTION  /  DATA PULSE / 02",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#6df7df",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
         }
       ],
       "transitionIn": {
@@ -3885,46 +833,14 @@
         "duration": 0,
         "ease": "linear"
       },
-      "referenceDecisions": [
-        {
-          "referenceId": "editorial-monument",
-          "borrow": [
-            "decisive typographic hierarchy",
-            "one dominant move per beat"
-          ],
-          "avoid": [
-            "serif imitation",
-            "constant ornamental motion"
-          ],
-          "transform": [
-            "use sparse geometry and generous holds"
-          ]
-        },
-        {
-          "referenceId": "product-theater",
-          "borrow": [
-            "controlled detail-led pacing",
-            "focused camera hierarchy"
-          ],
-          "avoid": [
-            "interface reconstruction",
-            "brand imitation"
-          ],
-          "transform": [
-            "express material and depth with native vector geometry"
-          ]
-        }
-      ],
-      "notes": [
-        "The conclusion finishes moving before 2 seconds and holds cleanly through the end."
-      ]
+      "referenceDecisions": [],
+      "notes": []
     }
   ],
   "audio": [],
   "metadata": {
     "publicExample": "true",
-    "selectedConcept": "data-pulse-direction-a",
-    "family": "data-sculpture",
-    "duration": "14"
+    "duration": "8",
+    "provenance": "Original native vector artwork generated locally from this repository."
   }
 }

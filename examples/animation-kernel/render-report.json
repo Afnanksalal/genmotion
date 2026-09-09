@@ -3,26 +3,21 @@
   "height": 1080,
   "fps": 30,
   "duration": 6,
-  "codec": "h264",
-  "audio": null,
   "strictValidation": "passed",
   "fullDecode": "passed",
-  "nativeReviewFrames": [
-    0,
-    17,
-    44,
-    89,
-    134,
-    170,
-    179
-  ],
-  "alphaOutput": {
-    "mode": "flatten",
-    "background": [
-      0,
-      0,
-      0
-    ]
+  "decodedFrames": 180,
+  "distinctDownsampledFrames": 115,
+  "minimumLumaRange": 95,
+  "randomSeekPixelEquality": true,
+  "timingChecks": {
+    "peakFrameDelta": 3.4608333333333334,
+    "meanFrameDelta": 0.15486072315332086,
+    "finalSecondMeanDelta": 0
   },
-  "renderId": "3c30e1cd271095db"
+  "audioChecks": null,
+  "sha256": {
+    "source": "c7a9bfcfa763d5621b44d4b6c2452b0d8b25e339b2cd54eaae61cc4f14932a24",
+    "master": "bde6b3d5396611cc0d5378e28ca0045ff4ac34bdcbaa86d90c8736bd3e0fdb04",
+    "contactSheet": "1fe00be095f97f6ef55c23b5def8fdb9420026c3efa88a08a58019e39786370c"
+  }
 }

@@ -1,231 +1,131 @@
-import { mkdirSync, readFileSync, copyFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { projectSchema } from '../dist/ir/schema.js';
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const sharedFont = join(root, 'examples', '_shared', 'fonts', 'Inter.ttf');
-const sharedLicense = join(root, 'examples', '_shared', 'fonts', 'OFL.txt');
-const ease = { type: 'cubic-bezier', x1: 0.22, y1: 1, x2: 0.36, y2: 1 };
-const spring = { type: 'spring', mass: 1, stiffness: 150, damping: 22, velocity: 0 };
-const cut = { type: 'cut', duration: 0, ease: 'linear' };
+const root = resolve(import.meta.dirname, '..');
+const fontSource = join(root, 'examples', '_shared', 'fonts');
+const ease = { type: 'cubic-bezier', x1: .22, y1: 1, x2: .36, y2: 1 };
+const animated = points => ({ keyframes: points.map(([at, value]) => ({ at, value, ease })) });
+const track = (id, target, points) => ({ id, target, ...animated(points) });
+const enter = (id, at = .1, distance = 48) => [track(`${id}-opacity`, 'transform.opacity', [[0, 0], [at, 0], [at + .5, 1]]), track(`${id}-y`, 'transform.y', [[0, distance], [at, distance], [at + .72, 0]])];
+const text = (id, value, x, y, width, height, fontSize, color, extra = {}) => ({ id, type: 'text', text: value, x, y, width, height, fontFamily: 'Inter', fontFile: 'assets/Inter.ttf', fontSize, fontWeight: 700, color, fit: 'shrink', verticalAlign: 'middle', lineHeight: 1.02, ...(fontSize > 84 ? { horizontalMetrics: 'ink', verticalMetrics: 'cap-height', letterSpacing: -2 } : {}), ...extra });
+const shape = (id, kind, x, y, width, height, fill, extra = {}) => ({ id, type: 'shape', shape: kind, x, y, width, height, fill, ...extra });
+const scene = (id, purpose, duration, background, layers, extra = {}) => ({ id, purpose, duration, background, layers: layers.map((layer, z) => ({ ...layer, z })), ...extra });
+const footer = (label, color) => text('footer', `GENMOTION  /  ${label}`, 96, 984, 1728, 34, 20, color, { letterSpacing: 3 });
+const base = (id, title, duration, background, foreground, accent, scenes, extra = {}) => projectSchema.parse({ schemaVersion: 1, id, title, width: 1920, height: 1080, fps: 30, seed: 47, brand: { background, foreground, accent, muted: '#8a8a92', fonts: [{ family: 'Inter', file: 'assets/Inter.ttf' }], radius: 24, tone: ['editorial', 'precise', 'cinematic'] }, scenes, metadata: { publicExample: 'true', duration: String(duration), provenance: 'Original native vector artwork generated locally from this repository.' }, ...extra });
 
-function track(id, target, points, operation = 'replace', extrapolate = 'clamp') {
-  return { id, target, keyframes: points.map(([at, value, pointEase = ease]) => ({ at, value, ease: pointEase })), operation, extrapolate, enabled: true };
+function kineticType() {
+  const bg = '#f2ede3', ink = '#141312', red = '#e94032';
+  return base('kinetic-type', 'Kinetic Type', 8, bg, ink, red, [scene('statement', 'Show typography behaving as composition and rhythm', 8, bg, [
+    shape('rule', 'rect', 96, 90, 1728, 8, red, { tracks: [track('rule-width', 'transform.scaleX', [[0, .02], [.55, 1], [8, 1]])], transform: { anchorX: 0, anchorY: .5 } }),
+    text('small', 'WORDS ARE PHYSICAL', 100, 120, 900, 60, 28, red, { letterSpacing: 5, tracks: enter('small', .25, 20) }),
+    text('kinetic', 'KINETIC', 88, 230, 1600, 240, 222, ink, { tracks: [...enter('kinetic', .25, 90), track('kinetic-x', 'transform.x', [[0, -70], [1.05, 0], [2.5, 0], [3.15, 210], [4.45, 210], [5.15, 0], [8, 0]])] }),
+    text('type', 'TYPE', 90, 455, 1080, 260, 250, red, { tracks: [...enter('type', .45, 120), track('type-scale', 'transform.scaleX', [[0, .4], [1.25, 1], [2.5, 1], [3.15, 1.45], [4.45, 1.45], [5.15, 1], [8, 1]])] }),
+    text('phrase', 'Scale changes meaning.\nTiming changes the sentence.', 106, 785, 1060, 115, 38, ink, { fontWeight: 500, lineHeight: 1.25, tracks: enter('phrase', 1.05, 28) }), footer('KINETIC TYPE / 01', ink),
+  ])]);
 }
 
-function base(id, duration, z = 0, options = {}) {
-  return {
-    id, start: options.start ?? 0, duration, z, visible: true,
-    transform: { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, opacity: 1, blur: 0, anchorX: 0.5, anchorY: 0.5, ...(options.transform ?? {}) },
-    blendMode: options.blendMode ?? 'source-over', tags: options.tags ?? [], motion: options.motion ?? [], tracks: options.tracks ?? [],
-    ...(options.clip ? { clip: options.clip } : {}),
-    ...(options.motionBlur ? { motionBlur: options.motionBlur } : {}), ...(options.motionTrail ? { motionTrail: options.motionTrail } : {}),
-  };
+function dataPulse() {
+  const bg = '#071923', cyan = '#6df7df', lime = '#d9ff58', white = '#f2fbfa';
+  return base('data-pulse', 'Data Pulse', 8, bg, white, lime, [scene('analysis', 'Transform raw signal into a legible conclusion', 8, bg, [
+    text('eyebrow', 'SIGNAL STUDY  /  LIVE FIELD', 100, 90, 1200, 48, 25, cyan, { letterSpacing: 4, tracks: enter('eyebrow', .1, 18) }),
+    text('count', '98.7', 92, 175, 1060, 260, 238, white, { countFrom: 0, countProgress: animated([[0, 0], [2.4, 1], [8, 1]]), numberFormat: { decimals: 1, suffix: '%', grouping: true }, tracks: enter('count', .2, 80) }),
+    text('label', 'SIGNAL COHERENCE', 110, 430, 760, 55, 29, cyan, { letterSpacing: 5 }),
+    shape('field', 'area-chart', 100, 590, 1720, 300, '#153e46', { samples: [.18,.24,.2,.34,.3,.48,.42,.65,.6,.78,.7,.9,.84,.96,.92,1], stroke: cyan, strokeWidth: 8, progress: animated([[0, 0], [.55, 0], [2.8, 1], [8, 1]]), gradientFill: { type: 'linear', angle: 90, stops: [{ offset: 0, color: '#4fffe355' }, { offset: 1, color: '#07192300' }] } }),
+    shape('pulse', 'line', 1010, 540, 0, 390, undefined, { stroke: lime, strokeWidth: 5, tracks: [track('pulse-x', 'transform.x', [[0, -900], [2.85, -900], [4.65, 760], [8, 760]])], motionBlur: { shutterAngle: 180, samples: 4 }, shadow: { color: '#d9ff58aa', blur: 22, offsetX: 0, offsetY: 0 } }),
+    text('resolve', 'NOISE → PATTERN → DECISION', 104, 900, 1500, 54, 30, lime, { letterSpacing: 3, tracks: enter('resolve', 4.5, 30) }), footer('DATA PULSE / 02', cyan),
+  ])]);
 }
 
-function shape(id, duration, z, geometry, options = {}) {
-  return { ...base(id, duration, z, options), type: 'shape', strokeWidth: 0, radius: 0, progress: 1, ...geometry, ...(options.shadow ? { shadow: options.shadow } : {}) };
+function arcOne() {
+  const bg = '#111113', ivory = '#f4efe5', orange = '#ff6846', violet = '#806dff';
+  return base('arc-one', 'Arc One', 9, bg, ivory, orange, [scene('identity', 'Resolve an original product mark through one continuous arc', 9, bg, [
+    text('kicker', 'ONE GESTURE. ONE SYSTEM.', 100, 90, 1300, 60, 28, '#aaa4b7', { letterSpacing: 4, tracks: enter('kicker', .1, 20) }),
+    shape('halo', 'ring', 1040, 90, 690, 690, orange, { innerRadius: .91, gradientFill: { type: 'linear', angle: 32, stops: [{ offset: 0, color: orange }, { offset: .5, color: violet }, { offset: 1, color: '#56ddd3' }] }, tracks: [track('halo-rotation', 'transform.rotation', [[0, -130], [2.8, 0], [5.7, 24], [9, 24]]), track('halo-scale', 'transform.scaleX', [[0, .15], [1.55, 1], [9, 1]])], motionBlur: { shutterAngle: 180, samples: 5 }, shadow: { color: '#806dff88', blur: 60, offsetX: 0, offsetY: 20 } }),
+    shape('core', 'ellipse', 1250, 300, 270, 270, '#17171b', { stroke: ivory, strokeWidth: 3, tracks: enter('core', 1.2, 60) }),
+    text('title', 'ARC\nONE', 90, 250, 860, 420, 210, ivory, { lineHeight: .78, tracks: [...enter('title', .25, 90), track('title-x', 'transform.x', [[0, -90], [1.1, 0], [5.2, 0], [6, 60], [9, 60]])] }),
+    text('copy', 'A native product identity built from geometry,\nlight, timing, and a clean final hold.', 104, 760, 920, 110, 35, '#aaa4b7', { fontWeight: 500, lineHeight: 1.3, tracks: enter('copy', 1.5, 28) }), footer('ARC ONE / 03', '#aaa4b7'),
+  ])], { audio: [{ id: 'arc-bed', src: 'assets/original-bed.wav', kind: 'music', volume: .72, fadeIn: .35, fadeOut: 1.2 }] });
 }
 
-function text(id, duration, z, copy, box, options = {}) {
-  return {
-    ...base(id, duration, z, options), type: 'text', text: copy, fontFamily: 'Inter', fontFile: 'assets/Inter.ttf',
-    fontSize: options.fontSize ?? 96, fontWeight: options.fontWeight ?? 700, fontStyle: 'normal', color: options.color ?? '#f7f5ef',
-    align: options.align ?? 'left', verticalAlign: options.verticalAlign ?? 'middle', lineHeight: options.lineHeight ?? 1,
-    letterSpacing: options.letterSpacing ?? -2, fit: 'shrink', reveal: options.reveal ?? 'none', revealProgress: 1, countProgress: 1,
-    ...(options.countFrom !== undefined ? { countFrom: options.countFrom } : {}),
-    ...(options.numberFormat ? { numberFormat: options.numberFormat } : {}),
-    ...(options.runs ? { runs: options.runs } : {}), ...(options.timedWords ? { timedWords: options.timedWords } : {}), ...(options.currentWordStyle ? { currentWordStyle: options.currentWordStyle } : {}), ...(options.textPath ? { textPath: options.textPath } : {}), ...(options.notations ? { notations: options.notations } : {}),
-    ...box,
-  };
+function nativeMilestones() {
+  const bg = '#102938', cream = '#f7f0df', gold = '#ffc857';
+  const a = [text('chapter', '01 / FRAME', 100, 90, 800, 55, 28, gold, { letterSpacing: 5 }), text('title', 'A frame is\na decision.', 96, 250, 1500, 300, 145, cream, { tracks: enter('title', .2, 80) }), shape('window', 'round-rect', 1120, 180, 600, 650, '#173c50', { radius: 42, stroke: '#4f8196', strokeWidth: 3, tracks: [track('window-scale', 'transform.scaleX', [[0, .2], [1.2, 1], [3, 1]])] }), footer('NATIVE MILESTONES', cream)];
+  const b = [text('chapter-b', '02 / TIMELINE', 100, 90, 900, 55, 28, gold, { letterSpacing: 5 }), text('title-b', 'Every second\nstays editable.', 96, 250, 1580, 300, 145, cream, { tracks: enter('title-b', .25, 80) }), ...[0,1,2,3,4].map(i => shape(`beat-${i}`, 'round-rect', 105 + i * 330, 690, 270, 82, i === 4 ? gold : '#285066', { radius: 20, tracks: [track(`beat-${i}-scale`, 'transform.scaleY', [[0, .1], [.25 + i * .12, 1], [3, 1]])] })), { ...footer('NATIVE MILESTONES', cream), id: 'footer-b' }];
+  return base('native-milestones', 'Native Milestones', 6, bg, cream, gold, [scene('frame', 'Establish native frames as authored decisions', 3, bg, a), scene('typed-output', 'Reveal an editable native timeline', 3, bg, b)], { parameters: [{ id: 'accent', label: 'Accent', type: 'color', default: gold }], variants: [{ id: 'gold', label: 'Gold', values: { accent: gold } }] });
 }
 
-function scene(id, purpose, duration, background, layers, transitionIn = cut, transitionOut = cut, notes = []) {
-  return {
-    id, purpose, duration, background, layers, transitionIn, transitionOut,
-    referenceDecisions: [
-      { referenceId: 'editorial-monument', borrow: ['decisive typographic hierarchy', 'one dominant move per beat'], avoid: ['serif imitation', 'constant ornamental motion'], transform: ['use sparse geometry and generous holds'] },
-      { referenceId: 'product-theater', borrow: ['controlled detail-led pacing', 'focused camera hierarchy'], avoid: ['interface reconstruction', 'brand imitation'], transform: ['express material and depth with native vector geometry'] },
-    ],
-    notes,
-  };
+function animationKernel() {
+  const bg = '#f5f5f2', ink = '#121c22', blue = '#276ef1', pink = '#ff4e88';
+  const nodes = Array.from({ length: 9 }, (_, i) => shape(`node-${i}`, 'ellipse', 1120 + (i % 3) * 190, 210 + Math.floor(i / 3) * 190, 100, 100, i % 2 ? pink : blue, { stagger: { index: i, count: 9, each: .07, from: 'center', trail: .24 }, tracks: [track(`node-${i}-scale`, 'transform.scaleX', [[0, .05], [.35 + i * .055, 1], [2.6, 1], [3.55, .72 + (i % 3) * .14], [6, .72 + (i % 3) * .14]]), track(`node-${i}-rotation`, 'transform.rotation', [[0, -80], [.8 + i * .04, 0], [3.55, 180], [6, 180]])], motionTrail: { duration: .16, samples: 4, opacity: .18 } }));
+  return base('animation-kernel', 'Animation Kernel', 6, bg, ink, blue, [scene('kernel', 'Expose the structure behind authored motion', 6, bg, [text('label', 'ANIMATION KERNEL', 96, 82, 1000, 50, 25, blue, { letterSpacing: 5 }), text('title', 'Motion has\nstructure.', 90, 190, 980, 300, 150, ink, { tracks: enter('title', .2, 70) }), ...nodes, text('copy', 'Keyframes  /  easing  /  stagger  /  trails', 100, 790, 1100, 70, 33, ink, { letterSpacing: 2, tracks: enter('copy', 1.6, 20) }), footer('ANIMATION KERNEL / 05', ink)])]);
 }
 
-function project(id, title, background, foreground, accent, scenes, metadata = {}, audio = [], anchors = []) {
-  return projectSchema.parse({
-    schemaVersion: 1, id, title, width: 1920, height: 1080, fps: 30, seed: 17,
-    brand: { background, foreground, accent, muted: '#8f93a2', fonts: [{ family: 'Inter', file: 'assets/Inter.ttf' }], radius: 28, tone: ['precise', 'editorial', 'controlled'] },
-    anchors, scenes, audio,
-    metadata: { publicExample: 'true', selectedConcept: `${id}-direction-a`, ...metadata },
-  });
+function chromaticOrbit() {
+  const bg = '#171024', ivory = '#f7f1ff', acid = '#dfff64';
+  const rings = Array.from({ length: 12 }, (_, i) => { const d = 700 - i * 42; return shape(`orbit-${i}`, 'ring', 1180 - d / 2, 500 - d / 2, d, d, acid, { innerRadius: .91, gradientFill: { type: 'linear', angle: i * 31, stops: [{ offset: 0, color: acid }, { offset: .5, color: '#ff5cab' }, { offset: 1, color: '#736bff' }] }, transform: { scaleY: .64, rotation: -35 }, tracks: [track(`orbit-${i}-rotation`, 'transform.rotation', [[0, -125 - i * 7], [1.35 + i * .055, -35 + i * 4], [3.8, -12 + i * 4], [7, -12 + i * 4]]), track(`orbit-${i}-scale`, 'transform.scaleX', [[0, .08], [.65 + i * .055, 1], [7, 1]])], motionBlur: { shutterAngle: 140, samples: 4 } }); });
+  return base('chromatic-orbit', 'Chromatic Orbit', 7, bg, ivory, acid, [scene('orbit', 'Build one luminous body from independent trajectories', 7, bg, [text('label', 'FORM / LIGHT / COLOR', 96, 88, 900, 50, 27, '#bbb1d4', { letterSpacing: 5 }), text('title', 'CHROMATIC\nORBIT', 90, 250, 900, 330, 140, ivory, { lineHeight: .9, tracks: enter('title', .15, 80) }), text('copy', 'Twelve paths resolve\ninto one luminous body.', 102, 680, 720, 120, 36, '#bbb1d4', { fontWeight: 500, lineHeight: 1.25, tracks: enter('copy', .85, 30) }), ...rings, footer('CHROMATIC ORBIT / 06', '#bbb1d4')])]);
 }
 
-const kinetic = project('kinetic-type', 'Kinetic Type', '#09090b', '#f5f3ea', '#ff5c35', [
-  scene('make-space', 'Establish typography as the primary physical object.', 4, '#09090b', [
-    shape('orange-rail', 4, 0, { shape: 'round-rect', x: 122, y: 154, width: 18, height: 772, fill: '#ff5c35', radius: 9 }, { tracks: [track('rail-draw', 'height', [[0, 1], [0.8, 772], [4, 772]])] }),
-    text('move', 4, 2, 'MOVE', { x: 190, y: 190, width: 1530, height: 480 }, { fontSize: 330, fontWeight: 850, letterSpacing: -16, clip: { x: 170, y: 190, width: 1580, height: 490, radius: 0 }, runs: [{ start: 0, end: 1, style: { color: '#ff5c35' } }], notations: [{ id: 'move-mark', type: 'rough-underline', start: 0, end: 4, color: '#ff5c35', width: 10, padding: 8, seed: 17, progress: { keyframes: [{ at: .7, value: 0 }, { at: 1.4, value: 1, ease }] } }], motionBlur: { shutterAngle: 150, samples: 4 }, tracks: [track('move-rise', 'transform.y', [[0, 350], [1.05, 0, spring], [4, 0]]), track('move-open', 'letterSpacing', [[0, -48], [1.3, -16], [4, -16]])] }),
-    text('sub', 3.2, 3, 'Motion starts with hierarchy.', { x: 205, y: 730, width: 1120, height: 120 }, { start: 0.8, fontSize: 54, fontWeight: 450, letterSpacing: 0, color: '#b3b1aa', tracks: [track('sub-in', 'transform.opacity', [[0, 0], [0.5, 1], [3.2, 1]])] }),
-  ], cut, cut, ['The headline settles by 1.3 seconds and holds for comprehension.']),
-  scene('build-rhythm', 'Turn type into a paced sequence rather than a static title.', 4, '#ff5c35', [
-    shape('black-band', 4, 0, { shape: 'rect', x: 0, y: 760, width: 1920, height: 320, fill: '#f5f3ea' }),
-    text('type', 4, 2, 'TYPE', { x: 130, y: 100, width: 1600, height: 250 }, { fontSize: 190, color: '#09090b', letterSpacing: -8, tracks: [] }),
-    text('becomes', 3.35, 2, 'BECOMES', { x: 130, y: 365, width: 1600, height: 250 }, { start: 0.65, fontSize: 190, color: '#09090b', letterSpacing: -8, tracks: [track('becomes-slide', 'transform.x', [[0, 280], [0.75, 0], [3.35, 0]])] }),
-    text('rhythm', 2.65, 2, 'RHYTHM', { x: 130, y: 770, width: 1600, height: 220 }, { start: 1.35, fontSize: 190, color: '#09090b', letterSpacing: -8, tracks: [track('rhythm-rise', 'transform.y', [[0, 190], [0.7, 0], [2.65, 0]])] }),
-  ], cut, cut),
-  scene('resolve', 'Resolve on a concise statement with a stable final hold.', 4, '#f5f3ea', [
-    shape('period', 4, 0, { shape: 'ellipse', x: 1545, y: 682, width: 118, height: 118, fill: '#ff5c35' }, { tracks: [track('period-scale', 'transform.scaleX', [[0, 0.01], [0.65, 1, spring], [4, 1]]), track('period-scale-y', 'transform.scaleY', [[0, 0.01], [0.65, 1, spring], [4, 1]])] }),
-    text('make-time', 4, 2, 'MAKE TIME\nVISIBLE', { x: 210, y: 235, width: 1420, height: 590 }, { fontSize: 230, color: '#09090b', lineHeight: 0.88, letterSpacing: -11, tracks: [] }),
-    text('signature', 3.1, 3, 'GENMOTION / PUBLIC EXAMPLE 01', { x: 220, y: 900, width: 1000, height: 55 }, { start: 0.9, fontSize: 28, fontWeight: 550, color: '#4b4b4f', letterSpacing: 3, tracks: [track('signature-in', 'transform.opacity', [[0, 0], [0.4, 1], [3.1, 1]])] }),
-  ], cut, cut, ['The final layout is fully settled for more than two seconds.']),
-], { family: 'kinetic-typography', duration: '12' });
-
-const pulseAnchor = { x: 1744, y: 494 };
-const pulseStreamStartX = 430;
-const pulseStreamStartYs = [155, 220, 292, 370, 450, 585, 680, 790, 910];
-const pulseAnchors = [
-  { id: 'pulse-target', ...pulseAnchor },
-  ...pulseStreamStartYs.map((y, index) => ({ id: `flow-${index + 1}-start`, x: pulseStreamStartX, y })),
-];
-
-const dataPulse = project('data-pulse', 'Data Pulse', '#05070a', '#f5f1e8', '#d7ff3f', [
-  scene('noise-field', 'Make raw volume feel physical before revealing any conclusion.', 4.4, '#05070a', [
-    shape('cyan-bloom', 4.4, 0, { shape: 'ellipse', x: 1180, y: 100, width: 820, height: 820, fill: '#15d6cf24' }, { blendMode: 'screen', transform: { blur: 48 }, tracks: [track('cyan-bloom-drift', 'transform.x', [[0, 120], [4.4, -80]])] }),
-    shape('violet-bloom', 4.4, 0, { shape: 'ellipse', x: -180, y: 580, width: 760, height: 620, fill: '#7957ff22' }, { blendMode: 'screen', transform: { blur: 52 }, tracks: [track('violet-bloom-drift', 'transform.y', [[0, 100], [4.4, -30]])] }),
-    ...Array.from({ length: 11 }, (_, index) => shape(`noise-trace-${index + 1}`, 4.4 - index * 0.035, 1 + index, {
-      shape: 'path', path: `M 0 ${20 + index * 10} C 130 ${index % 2 ? 5 : 80} 240 ${index % 3 ? 110 : 20} 380 ${54 + index * 6} S 650 ${index % 2 ? 12 : 108} 820 ${58 + index * 4} S 1110 ${index % 3 ? 110 : 18} 1380 ${45 + index * 6}`,
-      x: 380, y: 185 + index * 46, width: 1380, height: 170, stroke: index === 5 ? '#d7ff3f' : (index % 2 ? '#42e8e0' : '#735dff'), strokeWidth: index === 5 ? 8 : 3,
-    }, { start: index * 0.035, blendMode: 'screen', transform: { opacity: index === 5 ? 0.95 : 0.24 }, tracks: [track(`noise-trace-${index + 1}-draw`, 'progress', [[0, 0], [1.2 + index * 0.05, 1], [4.4 - index * 0.035, 1]]), track(`noise-trace-${index + 1}-drift`, 'transform.x', [[0, -35 - index * 3], [4.4 - index * 0.035, 30 + index * 2]])], ...(index === 5 ? { shadow: { color: '#d7ff3f66', blur: 26, offsetX: 0, offsetY: 0 } } : {}) })),
-    shape('index-rule', 4.4, 20, { shape: 'line', x: 132, y: 128, width: 94, height: 0, stroke: '#d7ff3f', strokeWidth: 7 }, { tracks: [track('index-rule-draw', 'progress', [[0, 0], [0.55, 1], [4.4, 1]])] }),
-    text('raw-label', 4.4, 21, 'RAW EVENTS / SECOND', { x: 255, y: 85, width: 760, height: 90 }, { fontSize: 32, fontWeight: 650, color: '#b8b5ae', letterSpacing: 6, tracks: [track('raw-label-in', 'transform.opacity', [[0, 0], [0.55, 1], [4.4, 1]])] }),
-    text('raw-count', 4.4, 22, '2438901', { x: 112, y: 690, width: 1660, height: 290 }, { fontSize: 238, fontWeight: 780, letterSpacing: -14, countFrom: 0, numberFormat: { decimals: 0, prefix: '', suffix: '', grouping: true }, tracks: [track('raw-count-up', 'countProgress', [[0, 0], [2.4, 1], [4.4, 1]]), track('raw-count-rise', 'transform.y', [[0, 90], [0.9, 0], [4.4, 0]])] }),
-  ], cut, cut, ['The field is intentionally abstract: it conveys volume without imitating a dashboard.']),
-  scene('coherence', 'Collapse many competing traces into one legible direction.', 5.2, '#080b12', [
-    shape('field-glow', 5.2, 0, { shape: 'ellipse', x: 980, y: 90, width: 900, height: 900, fill: '#38e8d72b' }, { blendMode: 'screen', transform: { blur: 62 }, tracks: [track('field-glow-push', 'transform.scaleX', [[0, 0.78], [2.1, 1.06], [5.2, 1.06]]), track('field-glow-push-y', 'transform.scaleY', [[0, 0.78], [2.1, 1.06], [5.2, 1.06]])] }),
-    ...pulseStreamStartYs.map((startY, index) => {
-      const controlA = 360 + index * 8;
-      const controlB = 910 - index * 7;
-      return shape(`flow-${index + 1}`, 5.2 - index * 0.045, 2 + index, {
-        shape: 'bezier', x: 0, y: 0, width: 0, height: 0,
-        startAnchor: `flow-${index + 1}-start`, endAnchor: 'pulse-target',
-        control1: [pulseStreamStartX + controlA, startY], control2: [pulseStreamStartX + controlB, pulseAnchor.y],
-        stroke: index === 4 ? '#d7ff3f' : (index < 4 ? '#745cff' : '#38e8d7'), strokeWidth: index === 4 ? 10 : 4,
-      }, { start: index * 0.045, blendMode: 'screen', transform: { opacity: index === 4 ? 1 : 0.38 }, tracks: [track(`flow-${index + 1}-draw`, 'progress', [[0, 0], [1.45 + index * 0.08, 1], [5.2 - index * 0.045, 1]])], ...(index === 4 ? { shadow: { color: '#d7ff3f88', blur: 34, offsetX: 0, offsetY: 0 } } : {}) });
-    }),
-    shape('pulse-ring-outer', 5.2, 14, { shape: 'ellipse', x: 0, y: 0, width: 112, height: 112, centerAnchor: 'pulse-target', fill: '#00000000', stroke: '#d7ff3f', strokeWidth: 5 }, { tracks: [track('pulse-ring-scale', 'transform.scaleX', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]]), track('pulse-ring-scale-y', 'transform.scaleY', [[0, 0.01], [1.75, 1.2, spring], [5.2, 1.2]])], shadow: { color: '#d7ff3f99', blur: 28, offsetX: 0, offsetY: 0 } }),
-    shape('pulse-core', 5.2, 15, { shape: 'ellipse', x: 0, y: 0, width: 40, height: 40, centerAnchor: 'pulse-target', fill: '#f5f1e8' }, { tracks: [track('pulse-core-scale', 'transform.scaleX', [[0, 0.01], [1.55, 1, spring], [5.2, 1]]), track('pulse-core-scale-y', 'transform.scaleY', [[0, 0.01], [1.55, 1, spring], [5.2, 1]])] }),
-    text('find', 5.2, 20, 'FIND', { x: 110, y: 120, width: 650, height: 210 }, { fontSize: 180, fontWeight: 820, letterSpacing: -9, tracks: [] }),
-    text('the', 4.75, 20, 'THE', { x: 110, y: 325, width: 650, height: 210 }, { start: 0.45, fontSize: 180, fontWeight: 820, color: '#8886a2', letterSpacing: -9, tracks: [track('the-in', 'transform.x', [[0, -130], [0.72, 0], [4.75, 0]])] }),
-    text('pulse', 4.3, 20, 'PULSE', { x: 110, y: 530, width: 850, height: 230 }, { start: 0.9, fontSize: 180, fontWeight: 820, color: '#d7ff3f', letterSpacing: -9, tracks: [track('pulse-in', 'transform.x', [[0, -130], [0.72, 0], [4.3, 0]])] }),
-    text('coherence-note', 3.35, 20, 'MILLIONS OF EVENTS. ONE DIRECTION.', { x: 122, y: 850, width: 980, height: 70 }, { start: 1.85, fontSize: 29, fontWeight: 620, color: '#aaa8b6', letterSpacing: 4, tracks: [track('coherence-note-in', 'transform.opacity', [[0, 0], [0.45, 1], [3.35, 1]])] }),
-  ], cut, cut, ['All traces converge on one luminous focal point; no chart chrome or card UI is used.']),
-  scene('direction', 'Resolve the data story as a bold editorial conclusion.', 4.4, '#f1eee5', [
-    shape('acid-slice', 4.4, 0, { shape: 'path', path: 'M 0 120 L 1920 0 L 1920 230 L 0 350 Z', x: 0, y: 585, width: 1920, height: 350, fill: '#d7ff3f' }, { tracks: [track('acid-slice-in', 'transform.x', [[0, -1920], [0.8, 0], [4.4, 0]])] }),
-    text('noise-word', 4.4, 2, 'NOISE', { x: 105, y: 55, width: 1260, height: 330 }, { fontSize: 286, fontWeight: 850, color: '#0a0b0d', letterSpacing: -17, tracks: [track('noise-word-in', 'transform.y', [[0, 170], [0.75, 0], [4.4, 0]])] }),
-    text('becomes-word', 3.75, 3, 'BECOMES', { x: 118, y: 390, width: 800, height: 130 }, { start: 0.65, fontSize: 82, fontWeight: 620, color: '#656258', letterSpacing: 8, tracks: [track('becomes-word-in', 'transform.opacity', [[0, 0], [0.45, 1], [3.75, 1]])] }),
-    text('direction-word', 3.45, 4, 'DIRECTION.', { x: 105, y: 630, width: 1690, height: 325 }, { start: 0.95, fontSize: 248, fontWeight: 850, color: '#0a0b0d', letterSpacing: -14, tracks: [track('direction-word-open', 'letterSpacing', [[0, -38], [0.85, -14], [3.45, -14]]), track('direction-word-in', 'transform.opacity', [[0, 0], [0.45, 1], [3.45, 1]])] }),
-    shape('closing-dot', 3.05, 5, { shape: 'ellipse', x: 1752, y: 860, width: 74, height: 74, fill: '#745cff' }, { start: 1.35, tracks: [track('closing-dot-in', 'transform.scaleX', [[0, 0.01], [0.48, 1, spring], [3.05, 1]]), track('closing-dot-in-y', 'transform.scaleY', [[0, 0.01], [0.48, 1, spring], [3.05, 1]])] }),
-  ], cut, cut, ['The conclusion finishes moving before 2 seconds and holds cleanly through the end.']),
-], { family: 'data-sculpture', duration: '14' }, [], pulseAnchors);
-
-const arcOne = project('arc-one', 'Arc One', '#07090d', '#f4f6f8', '#5fa8ff', [
-  scene('promise', 'Open with a restrained product promise.', 3.5, '#07090d', [
-    shape('halo', 3.5, 0, { shape: 'ellipse', x: 620, y: 230, width: 680, height: 680, fill: '#102746', stroke: '#5fa8ff55', strokeWidth: 3 }, { blendMode: 'screen', tracks: [track('halo-breathe', 'transform.scaleX', [[0, 0.72], [1.5, 1], [3.5, 1]]), track('halo-breathe-y', 'transform.scaleY', [[0, 0.72], [1.5, 1], [3.5, 1]])] }),
-    text('promise-copy', 3.5, 2, 'Sound, shaped.', { x: 300, y: 430, width: 1320, height: 220 }, { fontSize: 142, align: 'center', letterSpacing: -6, clip: { x: 280, y: 430, width: 1360, height: 230, radius: 0 }, tracks: [track('promise-rise', 'transform.y', [[0, 160], [0.95, 0], [3.5, 0]])] }),
-  ], cut, cut),
-  scene('object', 'Reveal an original vector speaker silhouette and material system.', 4.2, '#090c12', [
-    shape('speaker-shadow', 4.2, 0, { shape: 'ellipse', x: 560, y: 842, width: 800, height: 90, fill: '#00000099' }, { tracks: [track('shadow-in', 'transform.opacity', [[0, 0], [0.9, 1], [4.2, 1]])] }),
-    shape('speaker-body', 4.2, 2, { shape: 'round-rect', x: 670, y: 140, width: 580, height: 720, fill: '#b7bcc5', stroke: '#f8fafc', strokeWidth: 3, radius: 86, shadow: { color: '#000000aa', blur: 70, offsetX: 0, offsetY: 30 } }, { tracks: [track('body-scale', 'transform.scaleX', [[0, 0.78], [1.1, 1, spring], [4.2, 1]]), track('body-scale-y', 'transform.scaleY', [[0, 0.78], [1.1, 1, spring], [4.2, 1]]), track('body-tilt', 'transform.rotation', [[0, -8], [1.2, 0], [4.2, 0]])] }),
-    shape('speaker-grille', 4.2, 3, { shape: 'path', path: 'M 30 0 L 550 0 Q 580 0 580 30 L 580 520 Q 580 550 550 550 L 30 550 Q 0 550 0 520 L 0 30 Q 0 0 30 0 M 84 88 L 496 88 M 84 156 L 496 156 M 84 224 L 496 224 M 84 292 L 496 292 M 84 360 L 496 360 M 84 428 L 496 428', x: 670, y: 190, width: 580, height: 550, fill: '#151a23', stroke: '#697385', strokeWidth: 4 }, { tracks: [track('grille-draw', 'progress', [[0.45, 0], [1.65, 1], [4.2, 1]])] }),
-    text('product-name', 3.1, 4, 'ARC ONE', { x: 120, y: 830, width: 450, height: 70 }, { start: 1.1, fontSize: 40, fontWeight: 650, letterSpacing: 6, color: '#5fa8ff', tracks: [track('name-in', 'transform.opacity', [[0, 0], [0.5, 1], [3.1, 1]])] }),
-  ], cut, cut),
-  scene('details', 'Show three product attributes with a controlled macro push.', 4.3, '#dfe3e8', [
-    shape('detail-body', 4.3, 0, { shape: 'round-rect', x: 930, y: -180, width: 950, height: 1320, fill: '#9ea6b2', stroke: '#ffffff', strokeWidth: 4, radius: 130, shadow: { color: '#52607066', blur: 80, offsetX: -20, offsetY: 30 } }, { tracks: [track('macro-push', 'transform.scaleX', [[0, 0.94], [1.25, 1.08], [4.3, 1.08]]), track('macro-push-y', 'transform.scaleY', [[0, 0.94], [1.25, 1.08], [4.3, 1.08]])] }),
-    text('detail-one', 4.3, 2, 'SEAMLESS\nALUMINUM', { x: 120, y: 145, width: 750, height: 250 }, { fontSize: 92, color: '#111720', lineHeight: 0.92, letterSpacing: -3, tracks: [] }),
-    text('detail-two', 3.55, 2, 'SPATIAL AUDIO', { x: 120, y: 500, width: 760, height: 95 }, { start: 0.75, fontSize: 54, color: '#35506f', letterSpacing: 2, tracks: [track('detail-two-in', 'transform.x', [[0, -80], [0.55, 0], [3.55, 0]])] }),
-    text('detail-three', 2.75, 2, '30-HOUR BATTERY', { x: 120, y: 630, width: 760, height: 95 }, { start: 1.55, fontSize: 54, color: '#35506f', letterSpacing: 2, tracks: [track('detail-three-in', 'transform.x', [[0, -80], [0.55, 0], [2.75, 0]])] }),
-  ], cut, cut),
-  scene('lockup', 'End with a completely stable product lockup.', 3, '#07090d', [
-    shape('lockup-mark', 3, 0, { shape: 'path', path: 'M 50 0 L 100 86 L 50 172 L 0 86 Z', x: 885, y: 230, width: 150, height: 172, fill: '#5fa8ff' }, { tracks: [track('mark-in', 'transform.scaleX', [[0, 0.01], [0.55, 1, spring], [3, 1]]), track('mark-in-y', 'transform.scaleY', [[0, 0.01], [0.55, 1, spring], [3, 1]])] }),
-    text('arc-lockup', 3, 2, 'Arc One', { x: 360, y: 450, width: 1200, height: 220 }, { fontSize: 160, align: 'center', letterSpacing: -6, tracks: [] }),
-    text('arc-tagline', 2.45, 2, 'Hear the space between.', { x: 520, y: 680, width: 880, height: 80 }, { start: 0.55, fontSize: 44, fontWeight: 450, align: 'center', letterSpacing: 0, color: '#9ea9b9', tracks: [track('tagline-in', 'transform.opacity', [[0, 0], [0.35, 1], [2.45, 1]])] }),
-  ], cut, cut, ['All animation finishes by 0.9 seconds, leaving a stable 2.1-second hold.']),
-], { family: 'product-launch', duration: '15', soundtrack: 'deterministic-original' }, [
-  { id: 'original-bed', src: 'assets/original-bed.wav', start: 0, trimStart: 0, duration: 15, volume: 0.42, pan: 0, fadeIn: 0.35, fadeOut: 0.8, muted: false, solo: false, loop: false, duckUnderVoice: false, kind: 'music' },
-]);
-
-function writeWav(path, seconds = 15, sampleRate = 48_000) {
-  const frames = seconds * sampleRate;
-  const data = Buffer.alloc(frames * 4);
-  const chord = [110, 138.59, 164.81, 220];
-  for (let index = 0; index < frames; index += 1) {
-    const t = index / sampleRate;
-    const beat = t * 2;
-    const step = Math.floor(beat) % 8;
-    const bass = Math.sin(2 * Math.PI * chord[Math.floor(t / 3.75) % chord.length] * t) * 0.12;
-    const pulsePhase = beat - Math.floor(beat);
-    const kick = Math.sin(2 * Math.PI * (62 - pulsePhase * 24) * t) * Math.exp(-pulsePhase * 16) * (step % 2 === 0 ? 0.42 : 0);
-    const hatPhase = (t * 8) % 1;
-    const noise = (((index * 16807) % 2147483647) / 1073741823.5 - 1) * Math.exp(-hatPhase * 30) * 0.045;
-    const envelope = Math.min(1, t / 0.35, (seconds - t) / 0.8);
-    const sample = Math.max(-1, Math.min(1, (bass + kick + noise) * envelope));
-    const left = Math.round(sample * 32767);
-    const right = Math.round((sample * 0.92 + Math.sin(2 * Math.PI * 277.18 * t) * 0.025) * envelope * 32767);
-    data.writeInt16LE(left, index * 4);
-    data.writeInt16LE(right, index * 4 + 2);
-  }
-  const header = Buffer.alloc(44);
-  header.write('RIFF', 0); header.writeUInt32LE(36 + data.length, 4); header.write('WAVEfmt ', 8);
-  header.writeUInt32LE(16, 16); header.writeUInt16LE(1, 20); header.writeUInt16LE(2, 22);
-  header.writeUInt32LE(sampleRate, 24); header.writeUInt32LE(sampleRate * 4, 28); header.writeUInt16LE(4, 32); header.writeUInt16LE(16, 34);
-  header.write('data', 36); header.writeUInt32LE(data.length, 40);
-  writeFileSync(path, Buffer.concat([header, data]));
+function routeStudy() {
+  const paper = '#f1ecdf', ink = '#17312c', green = '#16826a', orange = '#ef6844';
+  const anchors = [{ id: 'west', x: 180, y: 700 }, { id: 'central', x: 960, y: 530 }, { id: 'east', x: 1710, y: 410 }, { id: 'south', x: 1370, y: 820 }];
+  const layers = [text('label', 'AN IMAGINARY CITY, CONNECTED.', 98, 82, 1500, 52, 27, green, { letterSpacing: 4 }), text('title', 'Every route\nfinds a rhythm.', 92, 170, 1080, 250, 110, ink, { lineHeight: .95, tracks: enter('title', .15, 70) }), shape('west-line', 'bezier', 180, 700, 780, 170, undefined, { startAnchor: 'west', endAnchor: 'central', control1: [520,700], control2: [620,530], stroke: green, strokeWidth: 18, progress: animated([[0,0],[.55,0],[1.8,1],[7,1]]) }), shape('east-line', 'bezier', 960, 530, 750, 120, undefined, { startAnchor: 'central', endAnchor: 'east', control1: [1300,530], control2: [1380,410], stroke: green, strokeWidth: 18, progress: animated([[0,0],[1.85,0],[3.1,1],[7,1]]) }), shape('south-line', 'bezier', 960, 530, 410, 290, undefined, { startAnchor: 'central', endAnchor: 'south', control1: [1220,530], control2: [1100,820], stroke: orange, strokeWidth: 18, progress: animated([[0,0],[3.15,0],[4.4,1],[7,1]]) })];
+  for (const [i, anchor] of anchors.entries()) { const arrival = [.55, 1.8, 3.1, 4.4][i]; layers.push(shape(`station-${i}`, 'ellipse', anchor.x - 18, anchor.y - 18, 36, 36, paper, { centerAnchor: anchor.id, stroke: ink, strokeWidth: 7, tracks: enter(`station-${i}`, arrival, 20) }), text(`station-label-${i}`, ['WEST BANK','CENTRAL','EAST GARDEN','SOUTH PIER'][i], anchor.x - 100, anchor.y + (i === 1 ? -90 : 40), 200, 42, 22, ink, { align: 'center', letterSpacing: 1, tracks: enter(`station-label-${i}`, arrival + .18, 16) })); }
+  layers.push(footer('ROUTE STUDY / 07', ink));
+  return base('route-study', 'Route Study', 7, paper, ink, green, [scene('network', 'Draw a semantic network through shared geometry anchors', 7, paper, layers)], { anchors });
 }
 
-const projects = [
-  ['kinetic-type', kinetic],
-  ['data-pulse', dataPulse],
-  ['arc-one', arcOne],
-];
-
-for (const [directory, value] of projects) {
-  const target = join(root, 'examples', directory);
-  mkdirSync(join(target, 'assets'), { recursive: true });
-  mkdirSync(join(target, '.genmotion'), { recursive: true });
-  copyFileSync(sharedFont, join(target, 'assets', 'Inter.ttf'));
-  copyFileSync(sharedLicense, join(target, 'assets', 'OFL.txt'));
-  writeFileSync(join(target, 'genmotion.json'), `${JSON.stringify(value, null, 2)}\n`);
-  writeFileSync(join(target, 'brief.json'), `${JSON.stringify({ title: value.title, audience: 'Motion designers evaluating Genmotion', promise: value.scenes[0].purpose, proof: 'The checked-in Creative IR renders with the native Genmotion pipeline.', desiredAction: 'Inspect, remix, and render the source project.', mode: value.metadata.family, duration: Number(value.metadata.duration), sources: ['Creative IR and renderer output in this directory'] }, null, 2)}\n`);
-  const concepts = directory === 'data-pulse'
-    ? {
-      selected: value.metadata.selectedConcept,
-      concepts: [
-        {
-          id: value.metadata.selectedConcept,
-          referenceFamily: 'Scientific signal art and oscilloscope photography',
-          borrow: ['continuous luminous traces', 'phase convergence', 'light as evidence'],
-          avoid: ['literal dashboard chrome', 'HUD decoration', 'generic bar charts'],
-          transform: ['turn raw events into a cinematic field that physically converges on one pulse'],
-          hierarchy: 'One large typographic command is anchored by a full-frame signal sculpture',
-          rhythm: 'Accumulate, converge, resolve, hold',
-          feasibility: 'Native paths, blend modes, shadows, typography, and direct tracks only',
-        },
-        {
-          id: 'data-pulse-direction-b',
-          referenceFamily: 'Swiss editorial posters and kinetic title design',
-          borrow: ['decisive scale contrast', 'asymmetric grid', 'hard color interruption'],
-          avoid: ['corporate presentation cards', 'template typography', 'decorative microcopy'],
-          transform: ['use an acid diagonal and monumental type as the final analytical conclusion'],
-          hierarchy: 'The final statement occupies the frame as an editorial object',
-          rhythm: 'Hard typographic arrival followed by a generous stable hold',
-          feasibility: 'Native vector geometry and text tracks only',
-        },
-      ],
-    }
-    : { selected: value.metadata.selectedConcept, concepts: [{ id: value.metadata.selectedConcept, hierarchy: 'One dominant statement per scene', clarity: 'Every scene has one readable proof', originality: 'Native vectors and direct tracks, no borrowed template', brandFit: value.brand.tone, rhythm: 'Establish, travel, settle, hold', feasibility: 'Runs without remote assets' }] };
-  writeFileSync(join(target, '.genmotion', 'concepts.json'), `${JSON.stringify(concepts, null, 2)}\n`);
+function typeBeat() {
+  const bg = '#ed623e', ink = '#171716', cream = '#fff5df';
+  const layers = [text('label', 'A SMALL STUDY IN TIMING', 96, 85, 1200, 48, 27, ink, { letterSpacing: 5 }), text('make', 'MAKE', 82, 220, 1060, 200, 205, ink, { tracks: enter('make', .1, 80) }), text('it', 'IT', 84, 405, 520, 200, 205, cream, { tracks: enter('it', .55, 100) }), text('move', 'MOVE.', 82, 590, 1100, 210, 205, ink, { tracks: enter('move', 1, 120) })];
+  for (let i = 0; i < 5; i++) { const points = [[0,.18]]; for (let b = 0; b < 10; b++) { const at = .2 + b * .5; points.push([at,.18],[at+.07,.45+((b+i)%4)*.18],[at+.24,.18]); } points.push([7,.18]); layers.push(shape(`meter-${i}`, 'round-rect', 1270 + i * 96, 280, 58, 500, cream, { radius: 30, tracks: [track(`meter-${i}-pulse`, 'transform.scaleY', points)], motionBlur: { shutterAngle: 140, samples: 4 } })); }
+  layers.push({ id: 'caption', type: 'caption', x: 1030, y: 805, width: 790, height: 125, fontFamily: 'Inter', fontFile: 'assets/Inter.ttf', fontSize: 68, fontWeight: 800, color: cream, highlightColor: cream, highlightBackground: ink, highlightPadding: 10, highlightRadius: 12, identity: 'kinetic', highlightMode: 'current-word', showSpeaker: false, padding: 10, radius: 12, cues: [{ id: 'build', start: 1, end: 2, text: 'BUILD.', words: [{ text: 'BUILD.', start: 1, end: 2 }] }, { id: 'breathe', start: 2, end: 3.5, text: 'BREATHE.', words: [{ text: 'BREATHE.', start: 2, end: 3.5 }] }, { id: 'resolve', start: 3.5, end: 5.15, text: 'RESOLVE.', words: [{ text: 'RESOLVE.', start: 3.5, end: 5.15 }] }] }, footer('TYPE / BEAT / 08', ink));
+  return base('type-beat', 'Type / Beat', 7, bg, ink, cream, [scene('beat', 'Synchronize type, geometry, captions and original sound', 7, bg, layers)], { audio: [{ id: 'pulse', src: 'assets/original-pulse.wav', kind: 'music', volume: .75, fadeIn: .08, fadeOut: .8 }] });
 }
 
-writeWav(join(root, 'examples', 'arc-one', 'assets', 'original-bed.wav'));
-console.log(`Built ${projects.length} reproducible public example projects.`);
-await import('./build-gallery-examples.mjs');
+function captionCinema() {
+  const bg = '#090b10', white = '#f7f4ed', blue = '#79a7ff', amber = '#ffc45b';
+  const cues = [
+    { id: 'c1', start: .35, end: 2.05, text: 'Typography can carry the cut.', words: [{ text: 'Typography', start: .35, end: .8 }, { text: 'can', start: .8, end: 1.02 }, { text: 'carry', start: 1.02, end: 1.38 }, { text: 'the', start: 1.38, end: 1.55 }, { text: 'cut.', start: 1.55, end: 2.05 }] },
+    { id: 'c2', start: 2.35, end: 4.35, text: 'Emphasis becomes choreography.', words: [{ text: 'Emphasis', start: 2.35, end: 2.9 }, { text: 'becomes', start: 2.9, end: 3.4 }, { text: 'choreography.', start: 3.4, end: 4.35 }] },
+    { id: 'c3', start: 4.7, end: 7.45, text: 'Captions belong inside the composition.', words: [{ text: 'Captions', start: 4.7, end: 5.25 }, { text: 'belong', start: 5.25, end: 5.7 }, { text: 'inside', start: 5.7, end: 6.12 }, { text: 'the', start: 6.12, end: 6.3 }, { text: 'composition.', start: 6.3, end: 7.45 }] },
+  ];
+  const layers = [shape('beam-a', 'rect', -200, 160, 2320, 140, blue, { transform: { rotation: -8, opacity: .12 }, tracks: [track('beam-a-x', 'transform.x', [[0,-500],[3.3,0],[8,260]])], motionBlur: { shutterAngle: 150, samples: 4 } }), shape('beam-b', 'rect', -200, 720, 2320, 120, amber, { transform: { rotation: 7, opacity: .1 }, tracks: [track('beam-b-x', 'transform.x', [[0,400],[4,0],[8,-300]])], motionBlur: { shutterAngle: 150, samples: 4 } }), text('label', 'CAPTION CINEMA', 95, 85, 900, 54, 26, blue, { letterSpacing: 6 }), text('ghost', 'VOICE\nBECOMES\nFORM', 90, 205, 1640, 540, 170, '#63739c', { lineHeight: .82, tracks: [track('ghost-scale', 'transform.scaleX', [[0,.84],[2.35,1],[4.7,1.06],[8,1.06]])] }), { id: 'captions', type: 'caption', language: 'en', trackName: 'English editorial', stylePresetId: 'cinema', x: 150, y: 660, width: 1620, height: 250, fontFamily: 'Inter', fontFile: 'assets/Inter.ttf', fontSize: 72, fontWeight: 800, color: white, highlightColor: bg, highlightBackground: amber, highlightPadding: 12, highlightRadius: 14, identity: 'editorial', highlightMode: 'current-word', enter: { type: 'slide-up', duration: .22, distance: 28, ease }, exit: { type: 'fade', duration: .16, distance: 0, ease: 'cubic-out' }, showSpeaker: false, padding: 22, radius: 18, maxLines: 2, safeArea: true, cues }, footer('CAPTION CINEMA / 09', '#79859a')];
+  return base('caption-cinema', 'Caption Cinema', 8, bg, white, amber, [scene('caption-stage', 'Treat captions as immersive editorial motion', 8, bg, layers)], { captionStylePresets: [{ id: 'cinema', name: 'Cinema', style: { color: white, highlightColor: bg, highlightBackground: amber, fontSize: 72, fontWeight: 800, padding: 22, radius: 18 } }], captionPreviewLanguages: ['en'] });
+}
+
+function cameraFlight() {
+  const bg = '#dbe7e2', ink = '#102522', green = '#3bb78f', orange = '#ff6b45';
+  const world = shape('world', 'round-rect', 240, 150, 1440, 760, '#edf3ef', { radius: 54, stroke: '#abc7bc', strokeWidth: 3, tracks: [track('world-x', 'transform.x', [[0,0],[.8,0],[2.4,-220],[3,-220],[4.55,180],[5.2,180],[7,180]]), track('world-y', 'transform.y', [[0,0],[.8,0],[2.4,100],[3,100],[4.55,-70],[5.2,-70],[7,-70]]), track('world-scale-x', 'transform.scaleX', [[0,.86],[.8,1],[2.4,1.38],[3,1.38],[4.55,1.12],[5.2,1.12],[7,1.12]]), track('world-scale-y', 'transform.scaleY', [[0,.86],[.8,1],[2.4,1.38],[3,1.38],[4.55,1.12],[5.2,1.12],[7,1.12]])], motionBlur: { shutterAngle: 140, samples: 4 }, shadow: { color: '#10252233', blur: 45, offsetX: 0, offsetY: 20 } });
+  const tiles = Array.from({ length: 18 }, (_, i) => shape(`tile-${i}`, 'round-rect', 330 + (i % 6) * 210, 250 + Math.floor(i / 6) * 190, 150, 120, i === 8 ? orange : i === 15 ? green : '#c8dbd3', { radius: 24, parentId: 'world', tracks: [track(`tile-${i}-opacity`, 'transform.opacity', [[0,.15],[.3+i*.03,1],[7,1]])] }));
+  return base('camera-flight', 'Camera Flight', 7, bg, ink, green, [scene('flight', 'Demonstrate a continuous establish, travel, settle and hold camera move', 7, bg, [world, ...tiles, text('label', 'ESTABLISH  →  TRAVEL  →  SETTLE  →  HOLD', 95, 72, 1450, 48, 24, ink, { letterSpacing: 4 }), text('focus', 'CAMERA\nWITH INTENT', 104, 690, 900, 190, 78, ink, { lineHeight: .9, tracks: enter('focus', 3.9, 28) }), footer('CAMERA FLIGHT / 10', ink)])]);
+}
+
+function motionLab() {
+  const bg = '#07070a', white = '#f4f2eb', neon = '#caff4a', magenta = '#ff4e9e';
+  const layers = [text('label', 'TEMPORAL STUDY', 96, 82, 900, 52, 26, neon, { letterSpacing: 6 }), text('title', 'SPEED\nLEAVES\nA TRACE.', 92, 180, 980, 510, 145, white, { lineHeight: .83, tracks: enter('title', .2, 80) }), shape('runner', 'spark', 1120, 410, 180, 180, neon, { tracks: [track('runner-x', 'transform.x', [[0,-500],[.65,-500],[1.65,450],[2.35,220],[3.1,500],[4.05,-280],[5.15,360],[7,360]]), track('runner-rotation', 'transform.rotation', [[0,0],[1.65,260],[3.1,520],[5.15,900],[7,900]])], motionBlur: { shutterAngle: 160, samples: 4 }, effects: [{ id: 'glow', type: 'glow', amount: .85, radius: 24 }, { id: 'aberration', type: 'chromatic-aberration', amount: .18 }] }), shape('trail-dot', 'ellipse', 1170, 650, 72, 72, magenta, { tracks: [track('trail-x', 'transform.x', [[0,-420],[.8,-420],[2.5,420],[3.5,420],[4.8,-180],[7,-180]])], motionTrail: { duration: .16, samples: 4, opacity: .3 } }), shape('gate-a', 'rect', 1080, 210, 10, 620, magenta, { transform: { opacity: .5 } }), shape('gate-b', 'rect', 1570, 210, 10, 620, neon, { transform: { opacity: .5 } }), text('copy', 'Temporal samples. Directional trails.\nOne deterministic frame.', 1090, 790, 670, 100, 34, '#9e9dad', { fontWeight: 500, lineHeight: 1.25, tracks: enter('copy', 4.55, 25) }), footer('MOTION LAB / 11', '#777783')];
+  return base('motion-lab', 'Motion Lab', 7, bg, white, neon, [scene('trace', 'Make temporal sampling, blur and trails visually legible', 7, bg, layers)]);
+}
+
+function writeAudio(file, seconds, pulse = false) {
+  const rate = 48000, frames = rate * seconds, wav = Buffer.alloc(44 + frames * 4);
+  wav.write('RIFF'); wav.writeUInt32LE(wav.length - 8, 4); wav.write('WAVEfmt ', 8); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(2, 22); wav.writeUInt32LE(rate, 24); wav.writeUInt32LE(rate * 4, 28); wav.writeUInt16LE(4, 32); wav.writeUInt16LE(16, 34); wav.write('data', 36); wav.writeUInt32LE(frames * 4, 40);
+  for (let n = 0; n < frames; n++) { const t = n / rate; let v = .025 * Math.sin(2 * Math.PI * 55 * t) + .018 * Math.sin(2 * Math.PI * 82.41 * t); if (pulse) for (let b = 0; b < seconds * 2; b++) { const d = t - (.2 + b * .5); if (d >= 0 && d < .32) v += .32 * Math.sin(2 * Math.PI * (62 + b % 3 * 18) * d) * Math.exp(-d * 18); } v *= Math.min(1, t * 8, (seconds - t) * 5); const sample = Math.round(Math.max(-.85, Math.min(.85, v)) * 32767); wav.writeInt16LE(sample, 44 + n * 4); wav.writeInt16LE(sample, 46 + n * 4); }
+  writeFileSync(file, wav);
+}
+
+const projects = [kineticType(), dataPulse(), arcOne(), nativeMilestones(), animationKernel(), chromaticOrbit(), routeStudy(), typeBeat(), captionCinema(), cameraFlight(), motionLab()];
+for (const project of projects) {
+  const dir = join(root, 'examples', project.id);
+  mkdirSync(join(dir, 'assets'), { recursive: true }); mkdirSync(join(dir, '.genmotion'), { recursive: true });
+  if (!existsSync(join(dir, 'assets', 'Inter.ttf'))) copyFileSync(join(fontSource, 'Inter.ttf'), join(dir, 'assets', 'Inter.ttf'));
+  if (!existsSync(join(dir, 'assets', 'OFL.txt'))) copyFileSync(join(fontSource, 'OFL.txt'), join(dir, 'assets', 'OFL.txt'));
+  if (project.id === 'arc-one') writeAudio(join(dir, 'assets', 'original-bed.wav'), 9);
+  if (project.id === 'type-beat') writeAudio(join(dir, 'assets', 'original-pulse.wav'), 7, true);
+  writeFileSync(join(dir, 'genmotion.json'), `${JSON.stringify(project, null, 2)}\n`);
+  writeFileSync(join(dir, 'brief.json'), `${JSON.stringify({ title: project.title, audience: 'Motion designers and creative technologists', promise: project.scenes[0].purpose, proof: 'The editable Creative IR, native master, inspected frames, and reproducible build script.', desiredAction: 'Open the project in Studio and remix it.', duration: Number(project.metadata.duration), sources: ['Original local vector artwork and authored motion.', 'Bundled Inter font under the SIL Open Font License.'], audio: project.audio.length ? 'Original synthesized audio generated locally by the suite builder.' : 'Intentionally silent.' }, null, 2)}\n`);
+  writeFileSync(join(dir, '.genmotion', 'concepts.json'), `${JSON.stringify({ selected: `${project.id}-direction`, concepts: [{ id: `${project.id}-direction`, referenceFamily: 'Editorial graphic systems', borrow: ['clear hierarchy', 'decisive pacing'], avoid: ['generic cards', 'decorative noise', 'interface imitation'], transform: ['native geometry', 'one dominant move', 'readable final hold'], hierarchy: project.scenes[0].purpose, rhythm: 'Build, breathe, resolve, hold', feasibility: 'Local native vectors, type and deterministic tracks only' }, { id: `${project.id}-alternate`, referenceFamily: 'Physical signage and wayfinding', borrow: ['spatial clarity', 'material restraint'], avoid: ['literal signage recreation', 'brand imitation'], transform: ['motion establishes reading order'], hierarchy: 'One focal message supported by geometry', rhythm: 'Establish, travel, settle', feasibility: 'No remote assets or browser rendering' }] }, null, 2)}\n`);
+}
+writeFileSync(join(root, 'examples', 'manifest.json'), `${JSON.stringify(projects.map(project => ({ id: project.id, title: project.title, duration: Number(project.metadata.duration), audio: project.audio.length > 0 })), null, 2)}\n`);
+console.log(`Built ${projects.length} fresh public example projects.`);

@@ -1,0 +1,623 @@
+{
+  "schemaVersion": 1,
+  "id": "caption-cinema",
+  "title": "Caption Cinema",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "seed": 47,
+  "anchors": [],
+  "parameters": [],
+  "parameterValues": {},
+  "variants": [],
+  "motionLibraryPins": {},
+  "compositions": [],
+  "captionStylePresets": [
+    {
+      "id": "cinema",
+      "name": "Cinema",
+      "style": {
+        "color": "#f7f4ed",
+        "highlightColor": "#090b10",
+        "highlightBackground": "#ffc45b",
+        "fontSize": 72,
+        "fontWeight": 800,
+        "padding": 22,
+        "radius": 18
+      }
+    }
+  ],
+  "captionPreviewLanguages": [
+    "en"
+  ],
+  "creativePreferences": [],
+  "mediaLedger": {
+    "version": 1,
+    "records": []
+  },
+  "restrictedAssetAcceptances": [],
+  "referenceSources": [],
+  "referenceAdaptationMap": {
+    "version": 1,
+    "entries": []
+  },
+  "referenceObservations": [],
+  "referencePreparations": [],
+  "brand": {
+    "background": "#090b10",
+    "foreground": "#f7f4ed",
+    "accent": "#ffc45b",
+    "muted": "#8a8a92",
+    "fonts": [
+      {
+        "family": "Inter",
+        "file": "assets/Inter.ttf"
+      }
+    ],
+    "radius": 24,
+    "tone": [
+      "editorial",
+      "precise",
+      "cinematic"
+    ]
+  },
+  "scenes": [
+    {
+      "id": "caption-stage",
+      "purpose": "Treat captions as immersive editorial motion",
+      "duration": 8,
+      "background": "#090b10",
+      "layers": [
+        {
+          "id": "beam-a",
+          "start": 0,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": -8,
+            "opacity": 0.12,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "beam-a-x",
+              "target": "transform.x",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": -500,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3.3,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 8,
+                  "value": 260,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "motionBlur": {
+            "shutterAngle": 150,
+            "samples": 4
+          },
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "rect",
+          "x": -200,
+          "y": 160,
+          "width": 2320,
+          "height": 140,
+          "fill": "#79a7ff",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "beam-b",
+          "start": 0,
+          "z": 1,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 7,
+            "opacity": 0.1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "beam-b-x",
+              "target": "transform.x",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 400,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 8,
+                  "value": -300,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "motionBlur": {
+            "shutterAngle": 150,
+            "samples": 4
+          },
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "rect",
+          "x": -200,
+          "y": 720,
+          "width": 2320,
+          "height": 120,
+          "fill": "#ffc45b",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "label",
+          "start": 0,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "CAPTION CINEMA",
+          "x": 95,
+          "y": 85,
+          "width": 900,
+          "height": 54,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 26,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#79a7ff",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 6,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "ghost",
+          "start": 0,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "ghost-scale",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.84,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 2.35,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4.7,
+                  "value": 1.06,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 8,
+                  "value": 1.06,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "VOICE\nBECOMES\nFORM",
+          "x": 90,
+          "y": 205,
+          "width": 1640,
+          "height": 540,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 170,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#63739c",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "horizontalMetrics": "ink",
+          "verticalMetrics": "cap-height",
+          "lineHeight": 0.82,
+          "letterSpacing": -2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "captions",
+          "start": 0,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "caption",
+          "language": "en",
+          "trackName": "English editorial",
+          "defaultTrack": true,
+          "stylePresetId": "cinema",
+          "enter": {
+            "type": "slide-up",
+            "duration": 0.22,
+            "distance": 28,
+            "ease": {
+              "type": "cubic-bezier",
+              "x1": 0.22,
+              "y1": 1,
+              "x2": 0.36,
+              "y2": 1
+            }
+          },
+          "exit": {
+            "type": "fade",
+            "duration": 0.16,
+            "distance": 0,
+            "ease": "cubic-out"
+          },
+          "direction": "ltr",
+          "highlightMode": "current-word",
+          "showSpeaker": false,
+          "x": 150,
+          "y": 660,
+          "width": 1620,
+          "height": 250,
+          "cues": [
+            {
+              "id": "c1",
+              "start": 0.35,
+              "end": 2.05,
+              "text": "Typography can carry the cut.",
+              "words": [
+                {
+                  "text": "Typography",
+                  "start": 0.35,
+                  "end": 0.8
+                },
+                {
+                  "text": "can",
+                  "start": 0.8,
+                  "end": 1.02
+                },
+                {
+                  "text": "carry",
+                  "start": 1.02,
+                  "end": 1.38
+                },
+                {
+                  "text": "the",
+                  "start": 1.38,
+                  "end": 1.55
+                },
+                {
+                  "text": "cut.",
+                  "start": 1.55,
+                  "end": 2.05
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "start": 2.35,
+              "end": 4.35,
+              "text": "Emphasis becomes choreography.",
+              "words": [
+                {
+                  "text": "Emphasis",
+                  "start": 2.35,
+                  "end": 2.9
+                },
+                {
+                  "text": "becomes",
+                  "start": 2.9,
+                  "end": 3.4
+                },
+                {
+                  "text": "choreography.",
+                  "start": 3.4,
+                  "end": 4.35
+                }
+              ]
+            },
+            {
+              "id": "c3",
+              "start": 4.7,
+              "end": 7.45,
+              "text": "Captions belong inside the composition.",
+              "words": [
+                {
+                  "text": "Captions",
+                  "start": 4.7,
+                  "end": 5.25
+                },
+                {
+                  "text": "belong",
+                  "start": 5.25,
+                  "end": 5.7
+                },
+                {
+                  "text": "inside",
+                  "start": 5.7,
+                  "end": 6.12
+                },
+                {
+                  "text": "the",
+                  "start": 6.12,
+                  "end": 6.3
+                },
+                {
+                  "text": "composition.",
+                  "start": 6.3,
+                  "end": 7.45
+                }
+              ]
+            }
+          ],
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 72,
+          "fontWeight": 800,
+          "color": "#f7f4ed",
+          "highlightColor": "#090b10",
+          "identity": "editorial",
+          "highlightBackground": "#ffc45b",
+          "highlightPadding": 12,
+          "highlightRadius": 14,
+          "outlineWidth": 0,
+          "radius": 18,
+          "padding": 22,
+          "align": "center",
+          "lineHeight": 1.12,
+          "letterSpacing": 0,
+          "maxLines": 2,
+          "safeArea": true
+        },
+        {
+          "id": "footer",
+          "start": 0,
+          "z": 5,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "GENMOTION  /  CAPTION CINEMA / 09",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#79859a",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        }
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [],
+      "notes": []
+    }
+  ],
+  "audio": [],
+  "metadata": {
+    "publicExample": "true",
+    "duration": "8",
+    "provenance": "Original native vector artwork generated locally from this repository."
+  }
+}

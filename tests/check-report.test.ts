@@ -18,7 +18,7 @@ describe('native check report', () => {
     expect(report.sections.find((section) => section.id === 'motion')).toMatchObject({ status: 'incomplete', complete: false });
   });
   it('returns code-aware, non-mutating repair guidance for current findings', async () => {
-    const loaded = await loadProject('examples/native-milestones');
+    const loaded = await loadProject('examples/caption-cinema');
     const caption = loaded.project.scenes.flatMap(scene => scene.layers).find(layer => layer.type === 'caption');
     if (!caption || caption.type !== 'caption') throw new Error('Caption fixture missing');
     caption.x = 0; caption.safeArea = true;

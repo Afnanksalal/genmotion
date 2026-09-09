@@ -2,59 +2,22 @@
   "width": 1920,
   "height": 1080,
   "fps": 30,
-  "duration": 14,
-  "codec": "h264",
-  "audio": null,
+  "duration": 8,
   "strictValidation": "passed",
   "fullDecode": "passed",
-  "nativeReviewFrames": [
-    0,
-    41,
-    104,
-    131,
-    132,
-    133,
-    209,
-    287,
-    288,
-    289,
-    314,
-    398,
-    419
-  ],
-  "alphaOutput": {
-    "mode": "flatten",
-    "background": [
-      0,
-      0,
-      0
-    ]
+  "decodedFrames": 240,
+  "distinctDownsampledFrames": 145,
+  "minimumLumaRange": 139,
+  "randomSeekPixelEquality": true,
+  "timingChecks": {
+    "peakFrameDelta": 7.256111111111111,
+    "meanFrameDelta": 0.7804939562993966,
+    "finalSecondMeanDelta": 0
   },
-  "renderId": "d5f03ee67e815292",
-  "encodedBoundaryFrames": [
-    {
-      "frame": 131,
-      "sha256": "9c16a60b4c2e7c3b0626b2b42c834b570fe92e881196817b0323d66d848fd7a5"
-    },
-    {
-      "frame": 132,
-      "sha256": "f00074325b763f872da397b3c746cd0a20f870f743dc3455183819b5fd7f0c40"
-    },
-    {
-      "frame": 133,
-      "sha256": "055f7dfe822cf67eabaa13b3dcccaa906acb40a5054da336e4c2d454de3956ec"
-    },
-    {
-      "frame": 287,
-      "sha256": "f03f69a18a87fe3e15424dded4f02bf39764637afce8d1991d3de6706ac550f7"
-    },
-    {
-      "frame": 288,
-      "sha256": "126f048036d9d0db387390332e9eddc0a8cdbbb985e3bf3db8f9c6a6e3ed00c4"
-    },
-    {
-      "frame": 289,
-      "sha256": "9546a689a3dbba36c520ac04eaa69cde989820ff9542b8af26acb58fdccf62a3"
-    }
-  ]
+  "audioChecks": null,
+  "sha256": {
+    "source": "6acff89cb2cef950c4dbef56773244f8376b21a68df6aee26f80403a8ad32f58",
+    "master": "56a384ed638ee4a287907987adc6f9c79b27faa191e5b5b68dd34b57cc5f72da",
+    "contactSheet": "23e5fc413904d1ba19e14064512026f6e5853fd024efb9edbf5bf15fefc63dfd"
+  }
 }

@@ -6,7 +6,8 @@ import { loadProject } from '../dist/ir/loader.js';
 import { runProcess } from '../dist/engine/process.js';
 
 GlobalFonts.registerFromPath(path.resolve('examples/_shared/fonts/Inter.ttf'), 'QA Inter');
-const ids = ['kinetic-type', 'data-pulse', 'arc-one', 'native-milestones', 'animation-kernel', 'chromatic-orbit', 'route-study', 'type-beat'];
+const manifest = JSON.parse(await readFile(path.resolve('examples/manifest.json'), 'utf8'));
+const ids = manifest.map(example => example.id);
 for (const id of ids) {
   const directory = path.resolve('examples', id), loaded = await loadProject(directory), fps = loaded.project.fps;
   const frames = [], boundaries = []; let elapsed = 0;
