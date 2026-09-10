@@ -2222,7 +2222,7 @@
           "progress": 1
         },
         {
-          "id": "footer-chromatic-orbit-06",
+          "id": "footer",
           "start": 0,
           "z": 15,
           "visible": true,

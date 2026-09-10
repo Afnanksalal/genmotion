@@ -11,7 +11,7 @@ const enter = (id, at = .1, distance = 48) => [track(`${id}-opacity`, 'transform
 const text = (id, value, x, y, width, height, fontSize, color, extra = {}) => ({ id, type: 'text', text: value, x, y, width, height, fontFamily: 'Inter', fontFile: 'assets/Inter.ttf', fontSize, fontWeight: 700, color, fit: 'shrink', verticalAlign: 'middle', lineHeight: 1.02, ...(fontSize > 84 ? { horizontalMetrics: 'ink', verticalMetrics: 'cap-height', letterSpacing: -2 } : {}), ...extra });
 const shape = (id, kind, x, y, width, height, fill, extra = {}) => ({ id, type: 'shape', shape: kind, x, y, width, height, fill, ...extra });
 const scene = (id, purpose, duration, background, layers, extra = {}) => ({ id, purpose, duration, background, layers: layers.map((layer, z) => ({ ...layer, z })), ...extra });
-const footer = (label, color) => text(`footer-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`, `GENMOTION  /  ${label}`, 96, 984, 1728, 34, 20, color, { letterSpacing: 3 });
+const footer = (label, color) => text('footer', `GENMOTION  /  ${label}`, 96, 984, 1728, 34, 20, color, { letterSpacing: 3 });
 const base = (id, title, duration, background, foreground, accent, scenes, extra = {}) => projectSchema.parse({ schemaVersion: 1, id, title, width: 1920, height: 1080, fps: 30, seed: 47, brand: { background, foreground, accent, muted: '#8a8a92', fonts: [{ family: 'Inter', file: 'assets/Inter.ttf' }], radius: 24, tone: ['editorial', 'precise', 'cinematic'] }, scenes, metadata: { publicExample: 'true', duration: String(duration), provenance: 'Original native vector artwork generated locally from this repository.' }, ...extra });
 
 function kineticType() {
@@ -109,96 +109,6 @@ function motionLab() {
   return base('motion-lab', 'Motion Lab', 7, bg, white, neon, [scene('trace', 'Make temporal sampling, blur and trails visually legible', 7, bg, layers)], { audio: [{ id: 'motion-bed', src: 'assets/motion-bed.wav', kind: 'music', volume: .66, fadeIn: .08, fadeOut: .8 }] });
 }
 
-const uiCard = (id, x, y, width, height, fill = '#ffffff', extra = {}) => shape(id, 'round-rect', x, y, width, height, fill, { radius: 24, ...extra });
-const pill = (id, value, x, y, width, fill, color) => ({
-  ...uiCard(`${id}-bg`, x, y, width, 54, fill, { radius: 27 }),
-  children: undefined,
-  companion: text(id, value, x + 22, y + 7, width - 44, 40, 20, color, { letterSpacing: 1.2, align: 'center' }),
-});
-
-function launchStarter() {
-  const bg = '#070a12', white = '#f7f8fb', blue = '#6f7cff', cyan = '#5eead4', muted = '#9aa3b7';
-  const p = pill('status', 'LIVE WORKSPACE', 1305, 118, 330, '#192137', cyan);
-  return base('product-launch-starter', 'Product Launch Starter', 14, bg, white, blue, [
-    scene('hook', 'Open on a sharp customer problem and name the product in the first three seconds', 3, bg, [
-      text('eyebrow', 'INTRODUCING NORTHSTAR', 105, 90, 1100, 48, 25, cyan, { letterSpacing: 5, tracks: enter('eyebrow', .08, 16) }),
-      text('headline', 'Launch work.\nLose the chaos.', 96, 225, 1500, 390, 174, white, { lineHeight: .86, tracks: enter('headline', .2, 100) }),
-      text('sub', 'One command center for every release.', 110, 720, 1160, 64, 38, muted, { fontWeight: 500, tracks: enter('sub', .8, 24) }),
-      shape('beam', 'rect', 1460, -180, 230, 1440, blue, { transform: { rotation: 18, opacity: .65 }, tracks: [track('beam-x', 'transform.x', [[0, 380], [.2, 380], [1.2, 0], [3, -80]])], motionBlur: { shutterAngle: 150, samples: 4 } }),
-      footer('PRODUCT LAUNCH / HOOK', muted),
-    ]),
-    scene('product', 'Reveal the product surface and orient the viewer before feature motion begins', 4, '#0d1220', [
-      text('label', 'EVERY RELEASE. ONE VIEW.', 98, 72, 1050, 46, 24, cyan, { letterSpacing: 4 }),
-      uiCard('app', 170, 150, 1580, 760, '#f6f7fb', { shadow: { color: '#00000088', blur: 55, offsetX: 0, offsetY: 25 }, tracks: [track('app-scale', 'transform.scaleX', [[0,.82],[.75,1],[4,1]]), track('app-scale-y', 'transform.scaleY', [[0,.82],[.75,1],[4,1]])], motionBlur: { shutterAngle: 120, samples: 3 } }),
-      uiCard('sidebar', 198, 180, 310, 700, '#141a29', { radius: 18 }),
-      text('logo', 'NORTHSTAR', 235, 220, 230, 40, 24, white, { letterSpacing: 3 }),
-      ...['Overview','Releases','Environments','Approvals'].map((value, i) => text(`nav-${i}`, value, 240, 340 + i * 74, 220, 38, 21, i === 1 ? cyan : muted, { fontWeight: i === 1 ? 700 : 500 })),
-      text('app-title', 'September release', 560, 225, 620, 70, 48, '#111827'),
-      uiCard('metric-a', 560, 340, 330, 170, '#e8ebff', { tracks: enter('metric-a', .8, 28) }),
-      text('metric-a-label', 'READY', 590, 365, 260, 35, 19, '#5963dc', { letterSpacing: 3 }),
-      text('metric-a-value', '18', 585, 400, 250, 85, 66, '#111827'),
-      uiCard('metric-b', 925, 340, 330, 170, '#defaf4', { tracks: enter('metric-b', 1.05, 28) }),
-      text('metric-b-label', 'APPROVED', 955, 365, 260, 35, 19, '#16836f', { letterSpacing: 3 }),
-      text('metric-b-value', '12', 950, 400, 250, 85, 66, '#111827'),
-      uiCard('activity', 560, 550, 1030, 250, '#ffffff', { stroke: '#e3e6ee', strokeWidth: 2 }),
-      ...[0,1,2].map(i => shape(`activity-${i}`, 'round-rect', 600, 585 + i * 61, 780 - i * 70, 20, i === 0 ? blue : '#d9deeb', { radius: 10, tracks: [track(`activity-${i}-width`, 'transform.scaleX', [[0,.05],[1.2+i*.22,1],[4,1]])], transform: { anchorX: 0, anchorY: .5 } })),
-      p, { ...p.companion, id: 'status-label' }, footer('PRODUCT LAUNCH / PRODUCT', muted),
-    ]),
-    scene('proof', 'Connect three feature claims to visible product evidence', 4, bg, [
-      text('proof-title', 'From plan to shipped.', 96, 100, 1500, 110, 82, white, { tracks: enter('proof-title', .1, 35) }),
-      ...[
-        ['01','PLAN','Map owners, risk, and timing.'],
-        ['02','APPROVE','Move decisions into one queue.'],
-        ['03','SHIP','Publish with a verified record.'],
-      ].flatMap(([num, title, copy], i) => [
-        uiCard(`proof-card-${i}`, 96 + i * 584, 300, 535, 470, i === 1 ? '#171d31' : '#101624', { stroke: i === 1 ? blue : '#252d42', strokeWidth: 2, tracks: enter(`proof-card-${i}`, .25 + i * .18, 55) }),
-        text(`proof-num-${i}`, num, 135 + i * 584, 340, 160, 60, 26, i === 2 ? cyan : blue, { letterSpacing: 4 }),
-        text(`proof-name-${i}`, title, 135 + i * 584, 450, 450, 80, 54, white),
-        text(`proof-copy-${i}`, copy, 135 + i * 584, 580, 420, 100, 29, muted, { fontWeight: 500, lineHeight: 1.3 }),
-      ]), footer('PRODUCT LAUNCH / PROOF', muted),
-    ]),
-    scene('cta', 'Hold a clean product lockup and one action long enough to read', 3, blue, [
-      text('cta-mark', 'N', 865, 160, 190, 190, 150, white, { align: 'center', tracks: [track('cta-mark-scale', 'transform.scaleX', [[0,.15],[.65,1],[3,1]]), track('cta-mark-scale-y', 'transform.scaleY', [[0,.15],[.65,1],[3,1]])] }),
-      text('cta-title', 'NORTHSTAR', 410, 410, 1100, 130, 108, white, { align: 'center', letterSpacing: 6, tracks: enter('cta-title', .3, 36) }),
-      text('cta-copy', 'Make the next release your calmest.', 410, 570, 1100, 60, 37, white, { align: 'center', fontWeight: 500 }),
-      uiCard('cta-button', 710, 700, 500, 92, white, { radius: 46, tracks: enter('cta-button', .8, 24) }),
-      text('cta-button-label', 'START A RELEASE', 760, 721, 400, 50, 24, blue, { align: 'center', letterSpacing: 3 }),
-    ]),
-  ], { parameters: [{ id: 'productName', label: 'Product name', type: 'string', default: 'NORTHSTAR' }, { id: 'accent', label: 'Accent', type: 'color', default: blue }, { id: 'cta', label: 'Call to action', type: 'string', default: 'START A RELEASE' }], variants: [{ id: 'default', label: 'Launch', values: { productName: 'NORTHSTAR', accent: blue, cta: 'START A RELEASE' } }], audio: [{ id: 'launch-bed', src: 'assets/launch-bed.wav', kind: 'music', volume: .72, fadeIn: .08, fadeOut: .9 }] });
-}
-
-function walkthroughStarter() {
-  const bg = '#f3f0e9', ink = '#17181a', purple = '#7656ff', pale = '#e6defd', green = '#24a780';
-  let chromeIndex = 0;
-  const chrome = () => { const prefix = `chrome-${chromeIndex++}`; return [uiCard(`${prefix}-browser`, 180, 145, 1560, 780, '#ffffff', { shadow: { color: '#17181a33', blur: 45, offsetX: 0, offsetY: 20 } }), shape(`${prefix}-bar`, 'rect', 180, 145, 1560, 72, '#ece9f2'), ...[0,1,2].map(i => shape(`${prefix}-dot-${i}`, 'ellipse', 220 + i * 34, 171, 18, 18, ['#ff675f','#ffc34d','#36c861'][i])), uiCard(`${prefix}-address`, 470, 163, 780, 38, '#ffffff', { radius: 19 }), text(`${prefix}-url`, 'app.relay.test / automations', 500, 167, 720, 28, 18, '#77727e', { fontWeight: 500 })]; };
-  return base('feature-walkthrough-starter', 'Feature Walkthrough Starter', 15, bg, ink, purple, [
-    scene('setup', 'Introduce the workflow and show the real interface context', 3, bg, [text('label', 'FEATURE WALKTHROUGH', 98, 72, 900, 46, 23, purple, { letterSpacing: 5 }), text('headline', 'Build an automation\nin under a minute.', 92, 230, 1200, 270, 128, ink, { lineHeight: .92, tracks: enter('headline', .15, 70) }), text('step', 'Three steps. No setup maze.', 100, 610, 900, 60, 36, '#68626e', { fontWeight: 500, tracks: enter('step', .75, 24) }), shape('cursor', 'spark', 1470, 420, 100, 100, purple, { tracks: [track('cursor-x', 'transform.x', [[0,260],[.5,260],[1.45,0],[3,-80]]), track('cursor-y', 'transform.y', [[0,180],[.5,180],[1.45,0],[3,-80]])], motionBlur: { shutterAngle: 150, samples: 4 } }), footer('RELAY / WALKTHROUGH', ink)]),
-    scene('choose-trigger', 'Step one: demonstrate a concrete user action with a focused camera crop', 4, '#ddd7ef', [...chrome(), uiCard('sidebar', 220, 250, 300, 620, '#f6f4f9'), text('nav', 'AUTOMATIONS\n\nRUNS\n\nCONNECTIONS', 260, 290, 230, 300, 21, '#706b78', { lineHeight: 2.2 }), text('step-one', '1  Choose a trigger', 590, 285, 730, 68, 46, ink), uiCard('trigger-card', 590, 400, 940, 220, '#f1edff', { stroke: purple, strokeWidth: 3, tracks: enter('trigger-card', .3, 35) }), text('trigger-icon', '↗', 635, 445, 100, 100, 72, purple, { align: 'center' }), text('trigger-name', 'New customer signed up', 780, 440, 650, 60, 35, ink), text('trigger-copy', 'Starts instantly from your product event.', 780, 510, 650, 45, 24, '#726d78', { fontWeight: 500 }), uiCard('continue', 1240, 710, 290, 72, purple, { radius: 36 }), text('continue-label', 'CONTINUE', 1280, 726, 210, 40, 21, '#ffffff', { align: 'center', letterSpacing: 2 }), shape('cursor-action', 'spark', 1360, 720, 72, 72, ink, { tracks: [track('cursor-action-x', 'transform.x', [[0,-420],[1.2,-420],[2.1,0],[4,0]]), track('cursor-action-y', 'transform.y', [[0,-180],[1.2,-180],[2.1,0],[4,0]])], motionBlur: { shutterAngle: 120, samples: 3 } }), footer('STEP 01 / TRIGGER', ink)]),
-    scene('configure', 'Step two: explain the meaningful setting while the value visibly changes', 4, '#e5f2ed', [...chrome(), text('step-two', '2  Set the action', 280, 285, 720, 68, 46, ink), uiCard('action-panel', 280, 390, 1360, 330, '#ffffff', { stroke: '#c7ddd5', strokeWidth: 2 }), text('action-label', 'SEND TO', 330, 435, 280, 35, 19, green, { letterSpacing: 3 }), text('action-value', 'Customer success', 330, 490, 700, 65, 42, ink), shape('divider', 'rect', 330, 585, 1260, 2, '#dbe7e2'), text('delay-label', 'WAIT BEFORE SENDING', 330, 625, 420, 35, 19, '#777d7a', { letterSpacing: 2 }), text('delay-value', '5 minutes', 1160, 615, 390, 55, 34, ink, { align: 'right', tracks: [track('delay-scale', 'transform.scaleX', [[0,.8],[.5,1],[4,1]])] }), shape('progress', 'round-rect', 330, 745, 0, 18, green, { radius: 9, tracks: [track('progress-width', 'width', [[0,1],[2.4,1260],[4,1260]])] }), footer('STEP 02 / ACTION', ink)]),
-    scene('result', 'Close on the completed outcome and a reusable next action', 4, '#11131a', [text('done-label', 'AUTOMATION LIVE', 100, 100, 900, 48, 24, '#72e6bb', { letterSpacing: 5, tracks: enter('done-label', .1, 20) }), text('done-title', 'Every signup gets\nthe right follow-up.', 92, 250, 1420, 280, 130, '#ffffff', { lineHeight: .9, tracks: enter('done-title', .2, 70) }), uiCard('done-stat', 1280, 235, 470, 470, '#202530', { stroke: '#343b4c', strokeWidth: 2 }), text('done-stat-value', '100%', 1340, 330, 350, 120, 100, '#72e6bb', { align: 'center' }), text('done-stat-label', 'ON-TIME RUNS', 1340, 475, 350, 45, 22, '#aeb6c8', { align: 'center', letterSpacing: 3 }), text('done-copy', 'Duplicate this flow, replace the trigger,\nand make it yours.', 110, 700, 1050, 110, 34, '#aeb6c8', { fontWeight: 500, lineHeight: 1.3 }), footer('RELAY / READY TO REMIX', '#aeb6c8')]),
-  ], { parameters: [{ id: 'featureName', label: 'Feature name', type: 'string', default: 'AUTOMATIONS' }, { id: 'accent', label: 'Accent', type: 'color', default: purple }], variants: [{ id: 'purple', label: 'Purple', values: { accent: purple } }, { id: 'green', label: 'Green', values: { accent: green } }], audio: [{ id: 'walkthrough-bed', src: 'assets/walkthrough-bed.wav', kind: 'music', volume: .58, fadeIn: .15, fadeOut: .9 }] });
-}
-
-function demoStarter() {
-  const bg = '#0b1020', white = '#f7f7fb', aqua = '#63f2d0', amber = '#ffca68', muted = '#a8b0c3';
-  return base('product-demo-starter', 'Product Demo Starter', 15, bg, white, aqua, [
-    scene('problem', 'Start with the painful before-state in one concrete sentence', 3, bg, [text('pre', 'BEFORE PULSE', 100, 85, 800, 48, 23, amber, { letterSpacing: 5 }), text('problem-title', 'Three dashboards.\nZero shared context.', 92, 245, 1030, 280, 122, white, { lineHeight: .9, tracks: enter('problem-title', .15, 70) }), ...[0,1,2].map(i => uiCard(`old-${i}`, 1180 + i * 120, 360 + i * 95, 470, 300, ['#252c42','#1c2538','#141c2d'][i], { stroke: '#39435f', strokeWidth: 2, transform: { rotation: -10 + i * 7 }, tracks: enter(`old-${i}`, .35 + i * .14, 80) })), footer('PRODUCT DEMO / PROBLEM', muted)]),
-    scene('input', 'Show the exact input instead of describing an abstract capability', 4, '#10182b', [text('input-step', 'ASK ONE QUESTION', 98, 78, 900, 44, 23, aqua, { letterSpacing: 5 }), uiCard('command', 180, 260, 1560, 260, '#ffffff', { shadow: { color: '#00000088', blur: 50, offsetX: 0, offsetY: 25 }, tracks: enter('command', .15, 45) }), text('prompt', 'Which accounts need attention today?', 255, 325, 1300, 90, 52, '#111827'), shape('send', 'ellipse', 1585, 325, 92, 92, aqua), text('send-arrow', '→', 1600, 335, 62, 62, 45, '#0b1020', { align: 'center' }), text('input-copy', 'Pulse joins product usage, tickets, and revenue\ninto one answer with evidence.', 190, 660, 1280, 120, 37, muted, { fontWeight: 500, lineHeight: 1.3, tracks: enter('input-copy', 1.25, 28) }), footer('PRODUCT DEMO / INPUT', muted)]),
-    scene('answer', 'Reveal the answer in ranked, actionable form with visible proof', 5, '#eef3f2', [text('answer-label', 'TODAY / 09:42', 100, 70, 800, 44, 22, '#257967', { letterSpacing: 4 }), text('answer-title', '3 accounts need attention', 98, 140, 1280, 85, 65, '#111827'), ...[['Atlas','Usage down 28%','HIGH'],['Clover','Two open blockers','HIGH'],['Mori','Renewal in 9 days','WATCH']].flatMap(([name, reason, risk], i) => [uiCard(`account-${i}`, 100, 290 + i * 190, 1720, 150, '#ffffff', { stroke: '#d8e3df', strokeWidth: 2, tracks: enter(`account-${i}`, .25 + i * .22, 34) }), text(`account-name-${i}`, name, 155, 325 + i * 190, 340, 55, 36, '#111827'), text(`account-reason-${i}`, reason, 540, 330 + i * 190, 620, 45, 28, '#5e6667', { fontWeight: 500 }), uiCard(`risk-${i}`, 1430, 332 + i * 190, 260, 52, i < 2 ? '#ffe3cf' : '#e6e2ff', { radius: 26 }), text(`risk-label-${i}`, risk, 1470, 338 + i * 190, 180, 40, 20, i < 2 ? '#b54b20' : '#614ac7', { align: 'center', letterSpacing: 2 })]), footer('PRODUCT DEMO / ANSWER', '#697372')]),
-    scene('payoff', 'State the business result and give one next step', 3, aqua, [text('payoff-small', 'FROM SIGNAL TO ACTION', 100, 100, 1000, 48, 24, '#17352f', { letterSpacing: 5 }), text('payoff-title', 'Know where to act.\nBefore customers ask.', 94, 260, 1600, 300, 132, '#0b1020', { lineHeight: .9, tracks: enter('payoff-title', .15, 80) }), text('payoff-cta', 'TRY PULSE WITH YOUR DATA  →', 105, 755, 1100, 60, 28, '#17352f', { letterSpacing: 3, tracks: enter('payoff-cta', .9, 24) })]),
-  ], { parameters: [{ id: 'productName', label: 'Product name', type: 'string', default: 'PULSE' }, { id: 'question', label: 'Demo question', type: 'string', default: 'Which accounts need attention today?' }], variants: [{ id: 'default', label: 'Customer health', values: { productName: 'PULSE', question: 'Which accounts need attention today?' } }], audio: [{ id: 'demo-bed', src: 'assets/demo-bed.wav', kind: 'music', volume: .63, fadeIn: .12, fadeOut: .8 }] });
-}
-
-function trailerStarter() {
-  const black = '#050607', white = '#f6f4ed', red = '#ff4d3d', steel = '#8490a5';
-  return base('cinematic-trailer-starter', 'Cinematic Trailer Starter', 12, black, white, red, [
-    scene('cold-open', 'Create intrigue with a spare cold open and controlled silence', 2.5, black, [text('date', 'THIS FALL', 560, 430, 800, 90, 68, steel, { align: 'center', letterSpacing: 14, tracks: enter('date', .25, 20) }), shape('hairline', 'rect', 760, 560, 400, 3, red, { tracks: [track('hairline-grow', 'transform.scaleX', [[0,.2],[1.4,1],[2.5,1]])] })]),
-    scene('world', 'Establish the world with a cinematic camera move and one visual motif', 3.5, '#090d14', [shape('sun', 'ellipse', 1260, 230, 420, 420, red, { shadow: { color: '#ff4d3daa', blur: 80, offsetX: 0, offsetY: 0 }, tracks: [track('sun-scale', 'transform.scaleX', [[0,.65],[3.5,1.1]]), track('sun-scale-y', 'transform.scaleY', [[0,.65],[3.5,1.1]])] }), ...Array.from({ length: 10 }, (_, i) => shape(`horizon-${i}`, 'rect', -200, 550 + i * 58, 2400, 2, '#39445a', { transform: { rotation: i % 2 ? -4 : 4, opacity: .6 }, tracks: [track(`horizon-${i}-y`, 'transform.y', [[0,220-i*18],[3.5,-80-i*5]])], motionBlur: { shutterAngle: 130, samples: 3 } })), text('world-copy', 'THE SIGNAL WAS ALWAYS THERE', 105, 160, 1050, 60, 30, white, { letterSpacing: 6, tracks: enter('world-copy', .45, 30) }), footer('TRAILER / WORLD', steel)]),
-    scene('escalation', 'Escalate with three beat-driven title cards and accelerating motion', 3.5, red, [text('word-a', 'FIND', 90, 110, 1500, 220, 210, black, { tracks: [track('word-a-x', 'transform.x', [[0,-80],[.55,0],[1.1,0],[1.35,300],[3.5,300]])], motionBlur: { shutterAngle: 160, samples: 4 } }), text('word-b', 'THE', 90, 370, 1050, 190, 170, black, { tracks: [track('word-b-x', 'transform.x', [[0,400],[1.05,400],[1.55,0],[2.05,0],[2.35,-80],[3.5,-80]])], motionBlur: { shutterAngle: 160, samples: 4 } }), text('word-c', 'SOURCE', 90, 610, 1650, 240, 220, black, { tracks: [track('word-c-scale', 'transform.scaleX', [[0,.5],[2.05,.5],[2.7,1],[3.5,1]])], motionBlur: { shutterAngle: 160, samples: 4 } })]),
-    scene('title', 'Resolve on a memorable title, release line, and long final hold', 2.5, black, [text('title-small', 'A GENMOTION TRAILER TEMPLATE', 500, 220, 920, 45, 21, steel, { align: 'center', letterSpacing: 5, tracks: enter('title-small', .1, 16) }), text('trailer-title', 'DEEP SIGNAL', 250, 370, 1420, 160, 126, white, { align: 'center', letterSpacing: 7, tracks: enter('trailer-title', .25, 35) }), shape('title-rule', 'rect', 710, 570, 500, 5, red), text('release', 'TRAILER OUT NOW', 560, 650, 800, 60, 29, red, { align: 'center', letterSpacing: 6 }), text('url-final', 'YOURPRODUCT.COM', 610, 840, 700, 42, 22, steel, { align: 'center', letterSpacing: 4 })]),
-  ], { parameters: [{ id: 'title', label: 'Trailer title', type: 'string', default: 'DEEP SIGNAL' }, { id: 'release', label: 'Release line', type: 'string', default: 'TRAILER OUT NOW' }, { id: 'accent', label: 'Accent', type: 'color', default: red }], variants: [{ id: 'red', label: 'Signal red', values: { title: 'DEEP SIGNAL', release: 'TRAILER OUT NOW', accent: red } }], audio: [{ id: 'trailer-bed', src: 'assets/trailer-bed.wav', kind: 'music', volume: .76, fadeIn: .1, fadeOut: 1 }] });
-}
-
 function writeAudio(file, seconds, profile = 'ambient') {
   const rate = 48000, frames = rate * seconds, wav = Buffer.alloc(44 + frames * 4);
   wav.write('RIFF'); wav.writeUInt32LE(wav.length - 8, 4); wav.write('WAVEfmt ', 8); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(2, 22); wav.writeUInt32LE(rate, 24); wav.writeUInt32LE(rate * 4, 28); wav.writeUInt16LE(4, 32); wav.writeUInt16LE(16, 34); wav.write('data', 36); wav.writeUInt32LE(frames * 4, 40);
@@ -228,7 +138,7 @@ function writeAudio(file, seconds, profile = 'ambient') {
   writeFileSync(file, wav);
 }
 
-const projects = [launchStarter(), walkthroughStarter(), demoStarter(), trailerStarter(), kineticType(), dataPulse(), arcOne(), nativeMilestones(), animationKernel(), chromaticOrbit(), routeStudy(), typeBeat(), captionCinema(), cameraFlight(), motionLab()];
+const projects = [kineticType(), dataPulse(), arcOne(), nativeMilestones(), animationKernel(), chromaticOrbit(), routeStudy(), typeBeat(), captionCinema(), cameraFlight(), motionLab()];
 for (const project of projects) {
   const dir = join(root, 'examples', project.id);
   mkdirSync(join(dir, 'assets'), { recursive: true }); mkdirSync(join(dir, '.genmotion'), { recursive: true });
@@ -240,13 +150,9 @@ for (const project of projects) {
   if (project.id === 'chromatic-orbit') writeAudio(join(dir, 'assets', 'orbit-bed.wav'), 7, 'orbit');
   if (project.id === 'camera-flight') writeAudio(join(dir, 'assets', 'camera-bed.wav'), 7, 'camera');
   if (project.id === 'motion-lab') writeAudio(join(dir, 'assets', 'motion-bed.wav'), 7, 'motion');
-  if (project.id === 'product-launch-starter') writeAudio(join(dir, 'assets', 'launch-bed.wav'), 14, 'motion');
-  if (project.id === 'feature-walkthrough-starter') writeAudio(join(dir, 'assets', 'walkthrough-bed.wav'), 15, 'ambient');
-  if (project.id === 'product-demo-starter') writeAudio(join(dir, 'assets', 'demo-bed.wav'), 15, 'orbit');
-  if (project.id === 'cinematic-trailer-starter') writeAudio(join(dir, 'assets', 'trailer-bed.wav'), 12, 'beat');
   writeFileSync(join(dir, 'genmotion.json'), `${JSON.stringify(project, null, 2)}\n`);
-  writeFileSync(join(dir, 'brief.json'), `${JSON.stringify({ title: project.title, audience: project.id.endsWith('-starter') ? 'Teams creating product marketing, launches, demos, walkthroughs, and trailers' : 'Motion designers and creative technologists', promise: project.scenes[0].purpose, proof: 'The editable Creative IR, native master, inspected frames, and reproducible build script.', desiredAction: 'Open the project in Studio, replace the fictional product copy, tune the exposed parameters, and render.', duration: Number(project.metadata.duration), templateRole: project.id.endsWith('-starter') ? project.id.replace('-starter', '') : 'technical-study', replacementGuide: project.id.endsWith('-starter') ? ['Replace fictional product and claims.', 'Replace interface text and metrics with truthful product evidence.', 'Tune brand colors through exposed parameters and variants.', 'Retiming scene durations keeps every layer editable.'] : [], sources: ['Original local vector artwork and authored motion.', 'Bundled Inter font under the SIL Open Font License.'], audio: project.audio.length ? 'Original synthesized audio generated locally by the suite builder.' : 'Intentionally silent.' }, null, 2)}\n`);
+  writeFileSync(join(dir, 'brief.json'), `${JSON.stringify({ title: project.title, audience: 'Motion designers and creative technologists', promise: project.scenes[0].purpose, proof: 'The editable Creative IR, native master, inspected frames, and reproducible build script.', desiredAction: 'Open the project in Studio and remix it.', duration: Number(project.metadata.duration), sources: ['Original local vector artwork and authored motion.', 'Bundled Inter font under the SIL Open Font License.'], audio: project.audio.length ? 'Original synthesized audio generated locally by the suite builder.' : 'Intentionally silent.' }, null, 2)}\n`);
   writeFileSync(join(dir, '.genmotion', 'concepts.json'), `${JSON.stringify({ selected: `${project.id}-direction`, concepts: [{ id: `${project.id}-direction`, referenceFamily: 'Editorial graphic systems', borrow: ['clear hierarchy', 'decisive pacing'], avoid: ['generic cards', 'decorative noise', 'interface imitation'], transform: ['native geometry', 'one dominant move', 'readable final hold'], hierarchy: project.scenes[0].purpose, rhythm: 'Build, breathe, resolve, hold', feasibility: 'Local native vectors, type and deterministic tracks only' }, { id: `${project.id}-alternate`, referenceFamily: 'Physical signage and wayfinding', borrow: ['spatial clarity', 'material restraint'], avoid: ['literal signage recreation', 'brand imitation'], transform: ['motion establishes reading order'], hierarchy: 'One focal message supported by geometry', rhythm: 'Establish, travel, settle', feasibility: 'No remote assets or browser rendering' }] }, null, 2)}\n`);
 }
-writeFileSync(join(root, 'examples', 'manifest.json'), `${JSON.stringify(projects.map(project => ({ id: project.id, title: project.title, duration: Number(project.metadata.duration), audio: project.audio.length > 0, kind: project.id.endsWith('-starter') ? 'starter' : 'study' })), null, 2)}\n`);
+writeFileSync(join(root, 'examples', 'manifest.json'), `${JSON.stringify(projects.map(project => ({ id: project.id, title: project.title, duration: Number(project.metadata.duration), audio: project.audio.length > 0 })), null, 2)}\n`);
 console.log(`Built ${projects.length} fresh public example projects.`);

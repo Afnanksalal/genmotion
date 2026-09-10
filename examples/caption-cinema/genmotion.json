@@ -549,7 +549,7 @@
           "safeArea": true
         },
         {
-          "id": "footer-caption-cinema-09",
+          "id": "footer",
           "start": 0,
           "z": 5,
           "visible": true,

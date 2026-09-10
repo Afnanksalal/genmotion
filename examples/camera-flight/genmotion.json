@@ -2015,7 +2015,7 @@
           "notations": []
         },
         {
-          "id": "footer-camera-flight-10",
+          "id": "footer",
           "start": 0,
           "z": 21,
           "visible": true,

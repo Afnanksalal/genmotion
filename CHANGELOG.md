@@ -2,8 +2,6 @@
 
 ## 2.10.0
 
-- Reframed the public gallery around four practical, editable starter deliverables: a product launch, feature walkthrough, product demo and cinematic trailer, each with a complete story, exposed parameters, local soundtrack, rendered 1080p master and frame-level QA.
-- Improved contrast validation by measuring text against the nearest containing shape behind it, allowing real interface panels to receive accurate accessibility findings.
 - Added a canonical typed capability registry that generates focused documentation, schemas and executable examples and fails the repository gate on SDK/CLI/MCP/Studio/skill drift.
 - Added focused caption, audio, reference-adaptation and delivery skill packages with explicit contracts, lazy host loading, durable resumable step state and executable examples.
 - Added version-safe project upgrades with runtime/library pin checks, bounded migration, representative native-frame validation, immutable backup and atomic rollback across every product surface.

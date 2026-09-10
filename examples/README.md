@@ -1,19 +1,6 @@
 # Public examples
 
-The gallery contains fifteen complete, editable Creative IR projects. Four outcome-led starters are the recommended entry points; eleven focused studies remain available when an author needs to inspect one technique in isolation. Every directory includes the authored project, local font and license, creative brief, two contrastive concept directions, a high-quality 1920×1080 H.264 master, a contact sheet, representative native review frames, and a render attestation.
-
-## Start with a deliverable
-
-| Starter | What it produces | Story structure | Source | Master |
-| --- | --- | --- | --- | --- |
-| Product Launch Starter | Social launch film for a fictional release platform | Problem hook → product reveal → three proof points → CTA | [`product-launch-starter/genmotion.json`](product-launch-starter/genmotion.json) | [`product-launch-starter.mp4`](product-launch-starter/product-launch-starter.mp4) |
-| Feature Walkthrough Starter | Step-by-step interface walkthrough for a fictional automation feature | Outcome → trigger → configuration → result | [`feature-walkthrough-starter/genmotion.json`](feature-walkthrough-starter/genmotion.json) | [`feature-walkthrough-starter.mp4`](feature-walkthrough-starter/feature-walkthrough-starter.mp4) |
-| Product Demo Starter | Use-case demo for a fictional customer intelligence product | Pain → exact user input → evidence-backed answer → payoff | [`product-demo-starter/genmotion.json`](product-demo-starter/genmotion.json) | [`product-demo-starter.mp4`](product-demo-starter/product-demo-starter.mp4) |
-| Cinematic Trailer Starter | Short announcement trailer with a durable title lockup | Cold open → world → escalation → title and release line | [`cinematic-trailer-starter/genmotion.json`](cinematic-trailer-starter/genmotion.json) | [`cinematic-trailer-starter.mp4`](cinematic-trailer-starter/cinematic-trailer-starter.mp4) |
-
-Each starter exposes product, copy, or accent parameters and at least one named variant. Its `brief.json` includes a replacement guide so the fictional claims are deliberately swapped for truthful product evidence before delivery.
-
-## Focused technical studies
+The gallery contains eleven complete, editable Creative IR projects. Every directory includes the authored project, local font and license, creative brief, two contrastive concept directions, a high-quality 1920×1080 H.264 master, a contact sheet, representative native review frames, and a render attestation.
 
 | Project | Native feature focus | Source | Master |
 | --- | --- | --- | --- |
@@ -29,25 +16,7 @@ Each starter exposes product, copy, or accent parameters and at least one named 
 | Camera Flight | Establish, travel, settle and hold camera choreography with hierarchy-aware blur and a paced launch bed | [`camera-flight/genmotion.json`](camera-flight/genmotion.json) | [`camera-flight.mp4`](camera-flight/camera-flight.mp4) |
 | Motion Lab | Motion blur, independent trails, glow, chromatic aberration and a high-energy electronic bed | [`motion-lab/genmotion.json`](motion-lab/genmotion.json) | [`motion-lab.mp4`](motion-lab/motion-lab.mp4) |
 
-## Starter render evidence
-
-### Product Launch Starter
-
-![Product Launch Starter contact sheet](product-launch-starter/contact-sheet.png)
-
-### Feature Walkthrough Starter
-
-![Feature Walkthrough Starter contact sheet](feature-walkthrough-starter/contact-sheet.png)
-
-### Product Demo Starter
-
-![Product Demo Starter contact sheet](product-demo-starter/contact-sheet.png)
-
-### Cinematic Trailer Starter
-
-![Cinematic Trailer Starter contact sheet](cinematic-trailer-starter/contact-sheet.png)
-
-## Study render evidence
+## Render evidence
 
 ### Kinetic Type
 
@@ -101,7 +70,7 @@ npm run examples:build
 npm run examples:verify
 ```
 
-`examples:build` recreates all fifteen authored JSON projects, concept records, briefs and deterministic original audio without network access. Checked-in masters are rendered with `genmotion render --quality high`; `examples:verify` validates every project, evaluates the transformed bounds of every visible text and caption layer at every timeline frame, verifies Type / Beat's visual peaks against its 120 BPM audio transients, checks each starter's multi-scene narrative, parameters, variants and soundtrack, probes every master, checks every review artifact, decodes the motion studies, checks deterministic seeking, and measures audio edges.
+`examples:build` recreates all eleven authored JSON projects, concept records, briefs and deterministic original audio without network access. Checked-in masters are rendered with `genmotion render --quality high`; `examples:verify` validates every project, evaluates the transformed bounds of every visible text and caption layer at every timeline frame, verifies Type / Beat's visual peaks against its 120 BPM audio transients, probes every master, checks every review artifact, asserts the three new feature contracts, decodes the motion studies, checks deterministic seeking, and measures audio edges.
 
 The native boundary frames for Native Milestones are stored in `native-milestones/review/`. The frame before the 3-second cut shows the complete outgoing composition; the boundary and following frame show the incoming composition advancing without a blank or backward jump.
 

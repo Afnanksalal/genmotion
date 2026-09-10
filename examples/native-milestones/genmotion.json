@@ -334,7 +334,7 @@
           "progress": 1
         },
         {
-          "id": "footer-native-milestones",
+          "id": "footer",
           "start": 0,
           "z": 3,
           "visible": true,

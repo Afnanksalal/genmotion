@@ -3,10 +3,8 @@
   "audience": "Motion designers and creative technologists",
   "promise": "Draw a semantic network through shared geometry anchors",
   "proof": "The editable Creative IR, native master, inspected frames, and reproducible build script.",
-  "desiredAction": "Open the project in Studio, replace the fictional product copy, tune the exposed parameters, and render.",
+  "desiredAction": "Open the project in Studio and remix it.",
   "duration": 7,
-  "templateRole": "technical-study",
-  "replacementGuide": [],
   "sources": [
     "Original local vector artwork and authored motion.",
     "Bundled Inter font under the SIL Open Font License."

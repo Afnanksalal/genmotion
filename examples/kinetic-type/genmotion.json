@@ -849,7 +849,7 @@
           "notations": []
         },
         {
-          "id": "footer-kinetic-type-01",
+          "id": "footer",
           "start": 0,
           "z": 5,
           "visible": true,
