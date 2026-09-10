@@ -3,20 +3,20 @@
 ## Artifact
 
 - Project: `examples/genmotion-launch-film/genmotion.json`
-- Review master: `renders/Genmotion-Launch-Story-v13.mp4`
+- High-quality master: `renders/Genmotion-Launch-Story-v13.mp4`
 - Authored duration: 45.453 seconds
 - Encoded duration: 45.466667 seconds
-- Review dimensions: 960×540
+- Delivery dimensions: 2560×1440
 - Frame rate: 30 fps
 - Video/audio: H.264 and AAC
-- Encoded SHA-256: `76249267c376920aadc92cd478fdef7a9ba5c0e08ae4de8983855c27001b58cb`
+- Encoded SHA-256: `814bdd2cd10ab95ef4a2049022de1691aa5c5abf1ad6f31bdf897bd8b2e07987`
 
 ## Completed checks
 
 - Strict project validation completed with zero findings.
 - The encoded master fully decoded.
-- Six dense contact sheets sampled the encoded master at two frames per second.
-- All six sheets were visually inspected.
+- Six dense timing sheets sampled the review edit at two frames per second and were visually inspected.
+- `qa/Genmotion-Launch-Story-v13-1440p-contact-sheet.jpg` was generated from and visually checked against the final 2560×1440 encode.
 - The pre-slide contains only `EVERY LAYER MOVES THE STORY` and holds independently.
 - The diagonal capability composition follows the pre-slide and remains contained.
 - `DIRECT. INSPECT. REVISE.` persists across multiple sampled frames.
@@ -27,4 +27,4 @@
 
 ## Status and limit
 
-This is the canonical review master. It is not the 1920×1080 delivery render. Dense encoded sampling and strict validation were completed; final release acceptance still requires a complete real-time audiovisual watch and the high-resolution delivery render to pass the same checks.
+This is the canonical high-quality master. It was rendered natively at 2560×1440, probed, fully decoded, and visually inspected through its encoded contact sheet. The two Studio captures retain the detail available in their frozen source images; vector graphics, bundled type, and the logo are rasterized at delivery resolution.

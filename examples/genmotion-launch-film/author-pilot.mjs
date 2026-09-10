@@ -242,6 +242,7 @@ if (editorCopy) {
 for (const scene of project.scenes) {
   scene.layers = scene.layers.filter(layer => !(layer.type === 'shape' && layer.shape === 'line') && !layer.id.startsWith('editor-marker-'));
   for (const layer of scene.layers) {
+    delete layer.motionBlur;
     if (layer.id === 'payoff-one-ir') layer.align = 'right';
     if (layer.id === 'payoff-native') layer.align = 'left';
     if (layer.id === 'payoff-verified') layer.align = 'center';

@@ -513,10 +513,6 @@
           ],
           "constraints": [],
           "bindings": {},
-          "motionBlur": {
-            "shutterAngle": 150,
-            "samples": 4
-          },
           "type": "text",
           "text": "MOTION /\nUNDER DIRECTION",
           "x": 102,
@@ -827,10 +823,6 @@
               "color": "#000000"
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 170,
-            "samples": 4
-          },
           "type": "shape",
           "shape": "rect",
           "x": 1000,
@@ -972,10 +964,6 @@
               "color": "#000000"
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 170,
-            "samples": 4
-          },
           "type": "shape",
           "shape": "rect",
           "x": 1105,
@@ -1117,10 +1105,6 @@
               "color": "#000000"
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 170,
-            "samples": 4
-          },
           "type": "shape",
           "shape": "rect",
           "x": 1210,
@@ -1262,10 +1246,6 @@
               "color": "#000000"
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 170,
-            "samples": 4
-          },
           "type": "shape",
           "shape": "rect",
           "x": 1315,
@@ -1407,10 +1387,6 @@
               "color": "#000000"
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 170,
-            "samples": 4
-          },
           "type": "shape",
           "shape": "rect",
           "x": 1420,
@@ -3147,10 +3123,6 @@
               "color": "#000000"
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 144,
-            "samples": 5
-          },
           "type": "image",
           "src": "assets/studio-editor.png",
           "x": 285,
@@ -3678,10 +3650,6 @@
           "constraints": [],
           "bindings": {},
           "effects": [],
-          "motionBlur": {
-            "shutterAngle": 150,
-            "samples": 4
-          },
           "type": "text",
           "text": "TYPE",
           "x": 440,
@@ -3862,10 +3830,6 @@
           "constraints": [],
           "bindings": {},
           "effects": [],
-          "motionBlur": {
-            "shutterAngle": 150,
-            "samples": 4
-          },
           "type": "text",
           "text": "PATHS",
           "x": 590,
@@ -4054,10 +4018,6 @@
               "radius": 20
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 150,
-            "samples": 4
-          },
           "type": "text",
           "text": "CAMERA",
           "x": 740,
@@ -4238,10 +4198,6 @@
           "constraints": [],
           "bindings": {},
           "effects": [],
-          "motionBlur": {
-            "shutterAngle": 150,
-            "samples": 4
-          },
           "type": "text",
           "text": "BLUR",
           "x": 890,
@@ -4422,10 +4378,6 @@
           "constraints": [],
           "bindings": {},
           "effects": [],
-          "motionBlur": {
-            "shutterAngle": 150,
-            "samples": 4
-          },
           "type": "text",
           "text": "AUDIO",
           "x": 1040,
@@ -4798,10 +4750,6 @@
               "radius": 24
             }
           ],
-          "motionBlur": {
-            "shutterAngle": 170,
-            "samples": 5
-          },
           "type": "shape",
           "shape": "rect",
           "x": 485,
