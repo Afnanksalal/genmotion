@@ -7,14 +7,10 @@
 <p align="center"><strong>Native motion design for agents.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/Afnanksalal/genmotion/releases/download/v2.10.0/Genmotion-Launch-Story-v13.mp4">
-    <img src="examples/genmotion-launch-film/qa/Genmotion-Launch-Story-v13-1440p-contact-sheet.jpg" width="920" alt="Frames from the Genmotion launch film">
-  </a>
+  <video src="https://cdn.jsdelivr.net/gh/Afnanksalal/genmotion@main/examples/genmotion-launch-film/renders/Genmotion-Launch-Story-v13.mp4" controls playsinline preload="metadata" poster="examples/genmotion-launch-film/qa/Genmotion-Launch-Story-v13-1440p-contact-sheet.jpg" width="920"></video>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Afnanksalal/genmotion/releases/download/v2.10.0/Genmotion-Launch-Story-v13.mp4"><strong>Watch the 1440p Genmotion launch film</strong></a>
-  ·
   <a href="examples/genmotion-launch-film/">Explore the editable project</a>
 </p>
 
