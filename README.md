@@ -6,6 +6,18 @@
 
 <p align="center"><strong>Native motion design for agents.</strong></p>
 
+<p align="center">
+  <a href="https://github.com/Afnanksalal/genmotion/releases/download/v2.10.0/Genmotion-Launch-Story-v13.mp4">
+    <img src="examples/genmotion-launch-film/qa/Genmotion-Launch-Story-v13-1440p-contact-sheet.jpg" width="920" alt="Frames from the Genmotion launch film">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Afnanksalal/genmotion/releases/download/v2.10.0/Genmotion-Launch-Story-v13.mp4"><strong>Watch the 1440p Genmotion launch film</strong></a>
+  ·
+  <a href="examples/genmotion-launch-film/">Explore the editable project</a>
+</p>
+
 Genmotion is an agent-native motion design engine and visual editor. Hermes ACP, Codex, or Claude authors the actual scene graph, timing, vector geometry, keyframes, custom easing, media, and sound through structured local tools; humans can then direct every layer and phase in Studio. Native Skia frame workers stream the accepted composition directly into FFmpeg.
 
 High-quality export means actual delivery resolution, not a low-resolution canvas with a better codec setting. `high` renders vector, type, and procedural layers at a minimum 1920-pixel long edge and encodes H.264 at CRF 14. `standard` targets at least 1280 pixels, while `draft` preserves the project's native working size. Every master is probed after encode for dimensions, frame rate, and duration.
