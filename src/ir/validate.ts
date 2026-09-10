@@ -367,7 +367,13 @@ export async function validateProject(loaded: LoadedProject): Promise<Finding[]>
         const positionedY = box.y + (hasDependency ? evaluateNumber(positioned.transform.y, inspectionTime) : 0);
         if (box.width + positionedX > project.width || box.height + positionedY > project.height || positionedX < 0 || positionedY < 0) findings.push({ code: 'TEXT_OUTSIDE_FRAME', severity: 'error', message: `${layer.id} extends beyond the frame.`, location });
         const backingTarget = layer.constraints.find((constraint) => constraint.type === 'anchor-to')?.target;
-        const backing = backingTarget ? scene.layers.find((candidate) => candidate.id === backingTarget) : undefined;
+        const layerIndex = scene.layers.findIndex((candidate) => candidate.id === layer.id);
+        const geometricBacking = scene.layers.slice(0, Math.max(0, layerIndex)).reverse().find((candidate) => {
+          if (candidate.type !== 'shape' || !candidate.fill) return false;
+          const candidateBox = layerBox(candidate);
+          return positionedX >= candidateBox.x && positionedY >= candidateBox.y && positionedX + box.width <= candidateBox.x + candidateBox.width && positionedY + box.height <= candidateBox.y + candidateBox.height;
+        });
+        const backing = backingTarget ? scene.layers.find((candidate) => candidate.id === backingTarget) : geometricBacking;
         const ratio = contrast(layer.color, backing?.type === 'shape' && backing.fill ? backing.fill : scene.background);
         if (ratio !== undefined && ratio < 3) findings.push({ code: 'TEXT_CONTRAST', severity: 'warning', message: `${layer.id} has only ${ratio.toFixed(2)}:1 contrast against the scene background. Verify its actual backing surface.`, location });
         if (positionedX < project.width * 0.02 || positionedY < project.height * 0.02 || positionedX + box.width > project.width * 0.98 || positionedY + box.height > project.height * 0.98) findings.push({ code: 'TEXT_SAFE_AREA', severity: 'warning', message: `${layer.id} approaches the delivery safe edge.`, location });

@@ -49,7 +49,14 @@ General agents can write animation code, but code generation alone gives them a 
 
 ## Public examples
 
-The [`examples/`](examples/) gallery contains eleven complete, editable projects with local assets, strict validation, rendered masters, and inspected contact sheets:
+The [`examples/`](examples/) gallery contains fifteen complete, editable projects with local assets, strict validation, rendered masters, and inspected contact sheets. Start with the four practical deliverables:
+
+- **Product Launch Starter** combines a problem hook, product UI reveal, feature proof and final CTA.
+- **Feature Walkthrough Starter** demonstrates a complete trigger-to-result interface workflow.
+- **Product Demo Starter** turns one user question into visible evidence and a business payoff.
+- **Cinematic Trailer Starter** combines a cold open, world-building camera move, kinetic escalation and title lockup.
+
+The focused studies remain available for inspecting individual techniques:
 
 - **Kinetic Type** demonstrates clipped typography, direct property tracks, custom easing, and scene rhythm.
 - **Data Pulse** demonstrates animated counters, converging signal fields, SVG path drawing, blend modes, and an editorial data-story resolve.

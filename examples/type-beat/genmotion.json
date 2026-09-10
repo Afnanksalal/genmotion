@@ -3099,7 +3099,7 @@
           "safeArea": true
         },
         {
-          "id": "footer",
+          "id": "footer-type-beat-08",
           "start": 0,
           "z": 10,
           "visible": true,

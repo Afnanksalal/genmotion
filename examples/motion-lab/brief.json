@@ -3,8 +3,10 @@
   "audience": "Motion designers and creative technologists",
   "promise": "Make temporal sampling, blur and trails visually legible",
   "proof": "The editable Creative IR, native master, inspected frames, and reproducible build script.",
-  "desiredAction": "Open the project in Studio and remix it.",
+  "desiredAction": "Open the project in Studio, replace the fictional product copy, tune the exposed parameters, and render.",
   "duration": 7,
+  "templateRole": "technical-study",
+  "replacementGuide": [],
   "sources": [
     "Original local vector artwork and authored motion.",
     "Bundled Inter font under the SIL Open Font License."

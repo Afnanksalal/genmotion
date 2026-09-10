@@ -1,0 +1,20 @@
+{
+  "title": "Product Demo Starter",
+  "audience": "Teams creating product marketing, launches, demos, walkthroughs, and trailers",
+  "promise": "Start with the painful before-state in one concrete sentence",
+  "proof": "The editable Creative IR, native master, inspected frames, and reproducible build script.",
+  "desiredAction": "Open the project in Studio, replace the fictional product copy, tune the exposed parameters, and render.",
+  "duration": 15,
+  "templateRole": "product-demo",
+  "replacementGuide": [
+    "Replace fictional product and claims.",
+    "Replace interface text and metrics with truthful product evidence.",
+    "Tune brand colors through exposed parameters and variants.",
+    "Retiming scene durations keeps every layer editable."
+  ],
+  "sources": [
+    "Original local vector artwork and authored motion.",
+    "Bundled Inter font under the SIL Open Font License."
+  ],
+  "audio": "Original synthesized audio generated locally by the suite builder."
+}

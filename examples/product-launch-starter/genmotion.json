@@ -1,0 +1,3589 @@
+{
+  "schemaVersion": 1,
+  "id": "product-launch-starter",
+  "title": "Product Launch Starter",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "seed": 47,
+  "anchors": [],
+  "parameters": [
+    {
+      "id": "productName",
+      "label": "Product name",
+      "type": "string",
+      "default": "NORTHSTAR"
+    },
+    {
+      "id": "accent",
+      "label": "Accent",
+      "type": "color",
+      "default": "#6f7cff"
+    },
+    {
+      "id": "cta",
+      "label": "Call to action",
+      "type": "string",
+      "default": "START A RELEASE"
+    }
+  ],
+  "parameterValues": {},
+  "variants": [
+    {
+      "id": "default",
+      "label": "Launch",
+      "values": {
+        "productName": "NORTHSTAR",
+        "accent": "#6f7cff",
+        "cta": "START A RELEASE"
+      }
+    }
+  ],
+  "motionLibraryPins": {},
+  "compositions": [],
+  "captionStylePresets": [],
+  "captionPreviewLanguages": [],
+  "creativePreferences": [],
+  "mediaLedger": {
+    "version": 1,
+    "records": []
+  },
+  "restrictedAssetAcceptances": [],
+  "referenceSources": [],
+  "referenceAdaptationMap": {
+    "version": 1,
+    "entries": []
+  },
+  "referenceObservations": [],
+  "referencePreparations": [],
+  "brand": {
+    "background": "#070a12",
+    "foreground": "#f7f8fb",
+    "accent": "#6f7cff",
+    "muted": "#8a8a92",
+    "fonts": [
+      {
+        "family": "Inter",
+        "file": "assets/Inter.ttf"
+      }
+    ],
+    "radius": 24,
+    "tone": [
+      "editorial",
+      "precise",
+      "cinematic"
+    ]
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "purpose": "Open on a sharp customer problem and name the product in the first three seconds",
+      "duration": 3,
+      "background": "#070a12",
+      "layers": [
+        {
+          "id": "eyebrow",
+          "start": 0,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "eyebrow-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.08,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.58,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "eyebrow-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 16,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.08,
+                  "value": 16,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.7999999999999999,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "INTRODUCING NORTHSTAR",
+          "x": 105,
+          "y": 90,
+          "width": 1100,
+          "height": 48,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 25,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#5eead4",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 5,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "headline",
+          "start": 0,
+          "z": 1,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "headline-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.2,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.7,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "headline-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 100,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.2,
+                  "value": 100,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.9199999999999999,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Launch work.\nLose the chaos.",
+          "x": 96,
+          "y": 225,
+          "width": 1500,
+          "height": 390,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 174,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f8fb",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "horizontalMetrics": "ink",
+          "verticalMetrics": "cap-height",
+          "lineHeight": 0.86,
+          "letterSpacing": -2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "sub",
+          "start": 0,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "sub-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "sub-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 24,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8,
+                  "value": 24,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.52,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "One command center for every release.",
+          "x": 110,
+          "y": 720,
+          "width": 1160,
+          "height": 64,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 38,
+          "fontWeight": 500,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "beam",
+          "start": 0,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 18,
+            "opacity": 0.65,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "beam-x",
+              "target": "transform.x",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 380,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.2,
+                  "value": 380,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.2,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": -80,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "motionBlur": {
+            "shutterAngle": 150,
+            "samples": 4
+          },
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "rect",
+          "x": 1460,
+          "y": -180,
+          "width": 230,
+          "height": 1440,
+          "fill": "#6f7cff",
+          "strokeWidth": 0,
+          "radius": 0,
+          "progress": 1
+        },
+        {
+          "id": "footer-product-launch-hook",
+          "start": 0,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "GENMOTION  /  PRODUCT LAUNCH / HOOK",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        }
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [],
+      "notes": []
+    },
+    {
+      "id": "product",
+      "purpose": "Reveal the product surface and orient the viewer before feature motion begins",
+      "duration": 4,
+      "background": "#0d1220",
+      "layers": [
+        {
+          "id": "label",
+          "start": 0,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "EVERY RELEASE. ONE VIEW.",
+          "x": 98,
+          "y": 72,
+          "width": 1050,
+          "height": 46,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 24,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#5eead4",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 4,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "app",
+          "start": 0,
+          "z": 1,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "app-scale",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.82,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.75,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "app-scale-y",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.82,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.75,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "motionBlur": {
+            "shutterAngle": 120,
+            "samples": 3
+          },
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 170,
+          "y": 150,
+          "width": 1580,
+          "height": 760,
+          "fill": "#f6f7fb",
+          "strokeWidth": 0,
+          "radius": 24,
+          "progress": 1,
+          "shadow": {
+            "color": "#00000088",
+            "blur": 55,
+            "offsetX": 0,
+            "offsetY": 25
+          }
+        },
+        {
+          "id": "sidebar",
+          "start": 0,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 198,
+          "y": 180,
+          "width": 310,
+          "height": 700,
+          "fill": "#141a29",
+          "strokeWidth": 0,
+          "radius": 18,
+          "progress": 1
+        },
+        {
+          "id": "logo",
+          "start": 0,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "NORTHSTAR",
+          "x": 235,
+          "y": 220,
+          "width": 230,
+          "height": 40,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 24,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f8fb",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "nav-0",
+          "start": 0,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Overview",
+          "x": 240,
+          "y": 340,
+          "width": 220,
+          "height": 38,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 21,
+          "fontWeight": 500,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "nav-1",
+          "start": 0,
+          "z": 5,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Releases",
+          "x": 240,
+          "y": 414,
+          "width": 220,
+          "height": 38,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 21,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#5eead4",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "nav-2",
+          "start": 0,
+          "z": 6,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Environments",
+          "x": 240,
+          "y": 488,
+          "width": 220,
+          "height": 38,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 21,
+          "fontWeight": 500,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "nav-3",
+          "start": 0,
+          "z": 7,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Approvals",
+          "x": 240,
+          "y": 562,
+          "width": 220,
+          "height": 38,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 21,
+          "fontWeight": 500,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "app-title",
+          "start": 0,
+          "z": 8,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "September release",
+          "x": 560,
+          "y": 225,
+          "width": 620,
+          "height": 70,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 48,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#111827",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "metric-a",
+          "start": 0,
+          "z": 9,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "metric-a-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "metric-a-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 28,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8,
+                  "value": 28,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.52,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 560,
+          "y": 340,
+          "width": 330,
+          "height": 170,
+          "fill": "#e8ebff",
+          "strokeWidth": 0,
+          "radius": 24,
+          "progress": 1
+        },
+        {
+          "id": "metric-a-label",
+          "start": 0,
+          "z": 10,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "READY",
+          "x": 590,
+          "y": 365,
+          "width": 260,
+          "height": 35,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 19,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#5963dc",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "metric-a-value",
+          "start": 0,
+          "z": 11,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "18",
+          "x": 585,
+          "y": 400,
+          "width": 250,
+          "height": 85,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 66,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#111827",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "metric-b",
+          "start": 0,
+          "z": 12,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "metric-b-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.05,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.55,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "metric-b-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 28,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.05,
+                  "value": 28,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.77,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 925,
+          "y": 340,
+          "width": 330,
+          "height": 170,
+          "fill": "#defaf4",
+          "strokeWidth": 0,
+          "radius": 24,
+          "progress": 1
+        },
+        {
+          "id": "metric-b-label",
+          "start": 0,
+          "z": 13,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "APPROVED",
+          "x": 955,
+          "y": 365,
+          "width": 260,
+          "height": 35,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 19,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#16836f",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "metric-b-value",
+          "start": 0,
+          "z": 14,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "12",
+          "x": 950,
+          "y": 400,
+          "width": 250,
+          "height": 85,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 66,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#111827",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "activity",
+          "start": 0,
+          "z": 15,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 560,
+          "y": 550,
+          "width": 1030,
+          "height": 250,
+          "fill": "#ffffff",
+          "stroke": "#e3e6ee",
+          "strokeWidth": 2,
+          "radius": 24,
+          "progress": 1
+        },
+        {
+          "id": "activity-0",
+          "start": 0,
+          "z": 16,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "activity-0-width",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.2,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 600,
+          "y": 585,
+          "width": 780,
+          "height": 20,
+          "fill": "#6f7cff",
+          "strokeWidth": 0,
+          "radius": 10,
+          "progress": 1
+        },
+        {
+          "id": "activity-1",
+          "start": 0,
+          "z": 17,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "activity-1-width",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.42,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 600,
+          "y": 646,
+          "width": 710,
+          "height": 20,
+          "fill": "#d9deeb",
+          "strokeWidth": 0,
+          "radius": 10,
+          "progress": 1
+        },
+        {
+          "id": "activity-2",
+          "start": 0,
+          "z": 18,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "activity-2-width",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.05,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.64,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 4,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 600,
+          "y": 707,
+          "width": 640,
+          "height": 20,
+          "fill": "#d9deeb",
+          "strokeWidth": 0,
+          "radius": 10,
+          "progress": 1
+        },
+        {
+          "id": "status-bg",
+          "start": 0,
+          "z": 19,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 1305,
+          "y": 118,
+          "width": 330,
+          "height": 54,
+          "fill": "#192137",
+          "strokeWidth": 0,
+          "radius": 27,
+          "progress": 1
+        },
+        {
+          "id": "status-label",
+          "start": 0,
+          "z": 20,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "LIVE WORKSPACE",
+          "x": 1327,
+          "y": 125,
+          "width": 286,
+          "height": 40,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#5eead4",
+          "outlineWidth": 0,
+          "align": "center",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 1.2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "footer-product-launch-product",
+          "start": 0,
+          "z": 21,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "GENMOTION  /  PRODUCT LAUNCH / PRODUCT",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        }
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [],
+      "notes": []
+    },
+    {
+      "id": "proof",
+      "purpose": "Connect three feature claims to visible product evidence",
+      "duration": 4,
+      "background": "#070a12",
+      "layers": [
+        {
+          "id": "proof-title",
+          "start": 0,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "proof-title-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.1,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.6,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "proof-title-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 35,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.1,
+                  "value": 35,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.82,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "From plan to shipped.",
+          "x": 96,
+          "y": 100,
+          "width": 1500,
+          "height": 110,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 82,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f8fb",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "proof-card-0",
+          "start": 0,
+          "z": 1,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "proof-card-0-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.25,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.75,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "proof-card-0-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 55,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.25,
+                  "value": 55,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.97,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 96,
+          "y": 300,
+          "width": 535,
+          "height": 470,
+          "fill": "#101624",
+          "stroke": "#252d42",
+          "strokeWidth": 2,
+          "radius": 24,
+          "progress": 1
+        },
+        {
+          "id": "proof-num-0",
+          "start": 0,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "01",
+          "x": 135,
+          "y": 340,
+          "width": 160,
+          "height": 60,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 26,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#6f7cff",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 4,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "proof-name-0",
+          "start": 0,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "PLAN",
+          "x": 135,
+          "y": 450,
+          "width": 450,
+          "height": 80,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 54,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f8fb",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "proof-copy-0",
+          "start": 0,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Map owners, risk, and timing.",
+          "x": 135,
+          "y": 580,
+          "width": 420,
+          "height": 100,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 29,
+          "fontWeight": 500,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.3,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "proof-card-1",
+          "start": 0,
+          "z": 5,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "proof-card-1-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.43,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.9299999999999999,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "proof-card-1-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 55,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.43,
+                  "value": 55,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.15,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 680,
+          "y": 300,
+          "width": 535,
+          "height": 470,
+          "fill": "#171d31",
+          "stroke": "#6f7cff",
+          "strokeWidth": 2,
+          "radius": 24,
+          "progress": 1
+        },
+        {
+          "id": "proof-num-1",
+          "start": 0,
+          "z": 6,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "02",
+          "x": 719,
+          "y": 340,
+          "width": 160,
+          "height": 60,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 26,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#6f7cff",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 4,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "proof-name-1",
+          "start": 0,
+          "z": 7,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "APPROVE",
+          "x": 719,
+          "y": 450,
+          "width": 450,
+          "height": 80,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 54,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f8fb",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "proof-copy-1",
+          "start": 0,
+          "z": 8,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Move decisions into one queue.",
+          "x": 719,
+          "y": 580,
+          "width": 420,
+          "height": 100,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 29,
+          "fontWeight": 500,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.3,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "proof-card-2",
+          "start": 0,
+          "z": 9,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "proof-card-2-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.61,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.1099999999999999,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "proof-card-2-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 55,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.61,
+                  "value": 55,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.33,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 1264,
+          "y": 300,
+          "width": 535,
+          "height": 470,
+          "fill": "#101624",
+          "stroke": "#252d42",
+          "strokeWidth": 2,
+          "radius": 24,
+          "progress": 1
+        },
+        {
+          "id": "proof-num-2",
+          "start": 0,
+          "z": 10,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "03",
+          "x": 1303,
+          "y": 340,
+          "width": 160,
+          "height": 60,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 26,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#5eead4",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 4,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "proof-name-2",
+          "start": 0,
+          "z": 11,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "SHIP",
+          "x": 1303,
+          "y": 450,
+          "width": 450,
+          "height": 80,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 54,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f8fb",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "proof-copy-2",
+          "start": 0,
+          "z": 12,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Publish with a verified record.",
+          "x": 1303,
+          "y": 580,
+          "width": 420,
+          "height": 100,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 29,
+          "fontWeight": 500,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.3,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "footer-product-launch-proof",
+          "start": 0,
+          "z": 13,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "GENMOTION  /  PRODUCT LAUNCH / PROOF",
+          "x": 96,
+          "y": 984,
+          "width": 1728,
+          "height": 34,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 20,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#9aa3b7",
+          "outlineWidth": 0,
+          "align": "left",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        }
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [],
+      "notes": []
+    },
+    {
+      "id": "cta",
+      "purpose": "Hold a clean product lockup and one action long enough to read",
+      "duration": 3,
+      "background": "#6f7cff",
+      "layers": [
+        {
+          "id": "cta-mark",
+          "start": 0,
+          "z": 0,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "cta-mark-scale",
+              "target": "transform.scaleX",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.15,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.65,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "cta-mark-scale-y",
+              "target": "transform.scaleY",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0.15,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.65,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "N",
+          "x": 865,
+          "y": 160,
+          "width": 190,
+          "height": 190,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 150,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f8fb",
+          "outlineWidth": 0,
+          "align": "center",
+          "verticalAlign": "middle",
+          "horizontalMetrics": "ink",
+          "verticalMetrics": "cap-height",
+          "lineHeight": 1.02,
+          "letterSpacing": -2,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "cta-title",
+          "start": 0,
+          "z": 1,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "cta-title-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.3,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "cta-title-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 36,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.3,
+                  "value": 36,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.02,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "NORTHSTAR",
+          "x": 410,
+          "y": 410,
+          "width": 1100,
+          "height": 130,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 108,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#f7f8fb",
+          "outlineWidth": 0,
+          "align": "center",
+          "verticalAlign": "middle",
+          "horizontalMetrics": "ink",
+          "verticalMetrics": "cap-height",
+          "lineHeight": 1.02,
+          "letterSpacing": 6,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "cta-copy",
+          "start": 0,
+          "z": 2,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "Make the next release your calmest.",
+          "x": 410,
+          "y": 570,
+          "width": 1100,
+          "height": 60,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 37,
+          "fontWeight": 500,
+          "fontStyle": "normal",
+          "color": "#f7f8fb",
+          "outlineWidth": 0,
+          "align": "center",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 0,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        },
+        {
+          "id": "cta-button",
+          "start": 0,
+          "z": 3,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [
+            {
+              "id": "cta-button-opacity",
+              "target": "transform.opacity",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.3,
+                  "value": 1,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            },
+            {
+              "id": "cta-button-y",
+              "target": "transform.y",
+              "keyframes": [
+                {
+                  "at": 0,
+                  "value": 24,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 0.8,
+                  "value": 24,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                },
+                {
+                  "at": 1.52,
+                  "value": 0,
+                  "ease": {
+                    "type": "cubic-bezier",
+                    "x1": 0.22,
+                    "y1": 1,
+                    "x2": 0.36,
+                    "y2": 1
+                  }
+                }
+              ],
+              "operation": "replace",
+              "extrapolate": "clamp",
+              "enabled": true
+            }
+          ],
+          "constraints": [],
+          "bindings": {},
+          "type": "shape",
+          "shape": "round-rect",
+          "x": 710,
+          "y": 700,
+          "width": 500,
+          "height": 92,
+          "fill": "#f7f8fb",
+          "strokeWidth": 0,
+          "radius": 46,
+          "progress": 1
+        },
+        {
+          "id": "cta-button-label",
+          "start": 0,
+          "z": 4,
+          "visible": true,
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0,
+            "opacity": 1,
+            "blur": 0,
+            "anchorX": 0.5,
+            "anchorY": 0.5
+          },
+          "blendMode": "source-over",
+          "tags": [],
+          "motion": [],
+          "tracks": [],
+          "constraints": [],
+          "bindings": {},
+          "type": "text",
+          "text": "START A RELEASE",
+          "x": 760,
+          "y": 721,
+          "width": 400,
+          "height": 50,
+          "fontFamily": "Inter",
+          "fontFile": "assets/Inter.ttf",
+          "fontSize": 24,
+          "fontWeight": 700,
+          "fontStyle": "normal",
+          "color": "#6f7cff",
+          "outlineWidth": 0,
+          "align": "center",
+          "verticalAlign": "middle",
+          "lineHeight": 1.02,
+          "letterSpacing": 3,
+          "fit": "shrink",
+          "reveal": "none",
+          "revealProgress": 1,
+          "countProgress": 1,
+          "blockPadding": 0,
+          "blockRadius": 0,
+          "linePadding": 0,
+          "lineRadius": 0,
+          "runs": [],
+          "timedWords": [],
+          "notations": []
+        }
+      ],
+      "transitionIn": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "transitionOut": {
+        "type": "cut",
+        "duration": 0,
+        "ease": "linear"
+      },
+      "referenceDecisions": [],
+      "notes": []
+    }
+  ],
+  "audio": [
+    {
+      "id": "launch-bed",
+      "src": "assets/launch-bed.wav",
+      "start": 0,
+      "trimStart": 0,
+      "volume": 0.72,
+      "fadeIn": 0.08,
+      "fadeOut": 0.9,
+      "loop": false,
+      "duckUnderVoice": false,
+      "muted": false,
+      "solo": false,
+      "pan": 0,
+      "balance": 0,
+      "locked": false,
+      "kind": "music"
+    }
+  ],
+  "metadata": {
+    "publicExample": "true",
+    "duration": "14",
+    "provenance": "Original native vector artwork generated locally from this repository."
+  }
+}

@@ -772,7 +772,7 @@
           "notations": []
         },
         {
-          "id": "footer",
+          "id": "footer-data-pulse-02",
           "start": 0,
           "z": 6,
           "visible": true,

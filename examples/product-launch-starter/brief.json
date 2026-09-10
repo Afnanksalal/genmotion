@@ -1,0 +1,20 @@
+{
+  "title": "Product Launch Starter",
+  "audience": "Teams creating product marketing, launches, demos, walkthroughs, and trailers",
+  "promise": "Open on a sharp customer problem and name the product in the first three seconds",
+  "proof": "The editable Creative IR, native master, inspected frames, and reproducible build script.",
+  "desiredAction": "Open the project in Studio, replace the fictional product copy, tune the exposed parameters, and render.",
+  "duration": 14,
+  "templateRole": "product-launch",
+  "replacementGuide": [
+    "Replace fictional product and claims.",
+    "Replace interface text and metrics with truthful product evidence.",
+    "Tune brand colors through exposed parameters and variants.",
+    "Retiming scene durations keeps every layer editable."
+  ],
+  "sources": [
+    "Original local vector artwork and authored motion.",
+    "Bundled Inter font under the SIL Open Font License."
+  ],
+  "audio": "Original synthesized audio generated locally by the suite builder."
+}

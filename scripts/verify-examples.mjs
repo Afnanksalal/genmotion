@@ -10,7 +10,9 @@ import { layerIsActive } from '../dist/engine/timeline.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const examples = JSON.parse(await readFile(join(root, 'examples', 'manifest.json'), 'utf8'));
-if (examples.length !== 11 || new Set(examples.map(item => item.id)).size !== examples.length) throw new Error('The public gallery must contain eleven unique examples.');
+if (examples.length !== 15 || new Set(examples.map(item => item.id)).size !== examples.length) throw new Error('The public gallery must contain fifteen unique examples.');
+const starterIds = ['product-launch-starter', 'feature-walkthrough-starter', 'product-demo-starter', 'cinematic-trailer-starter'];
+for (const id of starterIds) if (!examples.some(example => example.id === id && example.kind === 'starter')) throw new Error(`Missing outcome-led starter template: ${id}`);
 
 for (const example of examples) {
   const directory = join(root, 'examples', example.id);
@@ -70,5 +72,13 @@ const pulseWav = await readFile(join(root, 'examples', 'type-beat', 'assets', 'o
 const sampleRate = pulseWav.readUInt32LE(24), channels = pulseWav.readUInt16LE(22), dataOffset = pulseWav.indexOf(Buffer.from('data')) + 8;
 const rms = (start, end) => { let sum = 0, count = 0; for (let sample = Math.floor(start * sampleRate); sample < Math.floor(end * sampleRate); sample++) { const value = pulseWav.readInt16LE(dataOffset + sample * channels * 2) / 32768; sum += value * value; count++; } return Math.sqrt(sum / count); };
 for (const beat of beatTimes) if (rms(beat, beat + .07) < rms(beat - .18, beat - .11) * 4) throw new Error(`Type Beat lacks a strong audio transient at ${beat}s.`);
+
+for (const id of starterIds) {
+  const project = (await loadProject(join(root, 'examples', id))).project;
+  if (project.scenes.length < 4) throw new Error(`${id} must tell a multi-scene story.`);
+  if (!project.parameters.length || !project.variants.length) throw new Error(`${id} must expose reusable starter parameters and a renderable variant.`);
+  if (!project.audio.length) throw new Error(`${id} must ship with a paced local soundtrack.`);
+  if (!project.scenes.every(scene => scene.purpose && scene.purpose.length >= 24)) throw new Error(`${id} must document the narrative job of every scene.`);
+}
 
 await import('./verify-gallery-examples.mjs');

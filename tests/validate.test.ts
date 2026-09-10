@@ -55,6 +55,25 @@ describe('production validation findings', () => {
     expect(findings).toContainEqual(expect.objectContaining({ code: 'DURATION_EXCESSIVE', severity: 'warning' }));
   });
 
+  it('checks text contrast against the nearest containing shape behind it', async () => {
+    const loaded = await loadProject(path.resolve('tests/fixtures/basic'));
+    const project = structuredClone(loaded.project);
+    const scene = project.scenes[0]!;
+    const source = scene.layers.find((layer) => layer.type === 'text');
+    if (!source || source.type !== 'text') throw new Error('Expected a text fixture.');
+    scene.background = '#101010';
+    const panel = {
+      ...structuredClone(scene.layers.find((layer) => layer.type === 'shape')!),
+      id: 'light-panel', type: 'shape' as const, shape: 'rect' as const,
+      x: 20, y: 20, width: 280, height: 140, fill: '#ffffff', tracks: [],
+    };
+    const label = { ...structuredClone(source), id: 'panel-label', x: 40, y: 50, width: 240, height: 70, color: '#101010', tracks: [] };
+    scene.layers = [panel, label];
+
+    const findings = await validateProject({ ...loaded, project, sourceProject: project });
+    expect(findings).not.toContainEqual(expect.objectContaining({ code: 'TEXT_CONTRAST', location: 'scenes.0.layers.1' }));
+  });
+
   it('rejects conflicting transition definitions on the same scene boundary', async () => {
     const loaded = await loadProject(path.resolve('tests/fixtures/basic'));
     const project = structuredClone(loaded.project);

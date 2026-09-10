@@ -1,0 +1,28 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "duration": 12,
+  "strictValidation": "passed",
+  "fullDecode": "passed",
+  "decodedFrames": 360,
+  "distinctDownsampledFrames": 223,
+  "minimumLumaRange": 25,
+  "randomSeekPixelEquality": true,
+  "timingChecks": {
+    "peakFrameDelta": 104.11826388888889,
+    "meanFrameDelta": 0.7778300061900344,
+    "finalSecondMeanDelta": 0
+  },
+  "audioChecks": {
+    "peak": 0.3415898382663727,
+    "initial5msPeak": 0.0001473751908633858,
+    "final5msPeak": 7.385193612208241e-8,
+    "clipping": false
+  },
+  "sha256": {
+    "source": "8938b5388ccfa1231ae62937b1dc3ab1b6ba1b86ce02ff9ac296b3c02982401b",
+    "master": "f723e337e3c3c83e466eda515808ac32d6116f1cb60c25056e486a420b790ac5",
+    "contactSheet": "a81415143ecfb331a746f91f7a48c82f7b25c8aaae8f09a5edab0ead259e6859"
+  }
+}

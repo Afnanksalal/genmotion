@@ -1,68 +1,107 @@
 [
   {
+    "id": "product-launch-starter",
+    "title": "Product Launch Starter",
+    "duration": 14,
+    "audio": true,
+    "kind": "starter"
+  },
+  {
+    "id": "feature-walkthrough-starter",
+    "title": "Feature Walkthrough Starter",
+    "duration": 15,
+    "audio": true,
+    "kind": "starter"
+  },
+  {
+    "id": "product-demo-starter",
+    "title": "Product Demo Starter",
+    "duration": 15,
+    "audio": true,
+    "kind": "starter"
+  },
+  {
+    "id": "cinematic-trailer-starter",
+    "title": "Cinematic Trailer Starter",
+    "duration": 12,
+    "audio": true,
+    "kind": "starter"
+  },
+  {
     "id": "kinetic-type",
     "title": "Kinetic Type",
     "duration": 8,
-    "audio": true
+    "audio": true,
+    "kind": "study"
   },
   {
     "id": "data-pulse",
     "title": "Data Pulse",
     "duration": 8,
-    "audio": false
+    "audio": false,
+    "kind": "study"
   },
   {
     "id": "arc-one",
     "title": "Arc One",
     "duration": 9,
-    "audio": true
+    "audio": true,
+    "kind": "study"
   },
   {
     "id": "native-milestones",
     "title": "Native Milestones",
     "duration": 6,
-    "audio": false
+    "audio": false,
+    "kind": "study"
   },
   {
     "id": "animation-kernel",
     "title": "Animation Kernel",
     "duration": 6,
-    "audio": false
+    "audio": false,
+    "kind": "study"
   },
   {
     "id": "chromatic-orbit",
     "title": "Chromatic Orbit",
     "duration": 7,
-    "audio": true
+    "audio": true,
+    "kind": "study"
   },
   {
     "id": "route-study",
     "title": "Route Study",
     "duration": 7,
-    "audio": false
+    "audio": false,
+    "kind": "study"
   },
   {
     "id": "type-beat",
     "title": "Type / Beat",
     "duration": 7,
-    "audio": true
+    "audio": true,
+    "kind": "study"
   },
   {
     "id": "caption-cinema",
     "title": "Caption Cinema",
     "duration": 8,
-    "audio": false
+    "audio": false,
+    "kind": "study"
   },
   {
     "id": "camera-flight",
     "title": "Camera Flight",
     "duration": 7,
-    "audio": true
+    "audio": true,
+    "kind": "study"
   },
   {
     "id": "motion-lab",
     "title": "Motion Lab",
     "duration": 7,
-    "audio": true
+    "audio": true,
+    "kind": "study"
   }
 ]
