@@ -208,6 +208,8 @@ See [parameters and configurations](docs/PARAMETERS.md) for structured values an
 
 The exhaustive, version-controlled capability program is tracked in [docs/NATIVE-CAPABILITY-BACKLOG.md](docs/NATIVE-CAPABILITY-BACKLOG.md). It defines Genmotion's native motion-design and agentic compositing requirements while preserving the native-rendering and single-IR guardrails. Partial or Studio-only implementations remain unchecked.
 
+Examples and delivery renders follow the repository's [motion production and visual QA standard](docs/MOTION-PRODUCTION-QA.md), which records recurring composition, containment, typography, timing, audio, transition, encoded-output, and documentation failures and the evidence required to prevent them.
+
 ## Skills
 
 The repository ships an Agent Skill at [`skills/genmotion`](skills/genmotion) and a Claude Code discovery entry at [`.claude/skills/genmotion`](.claude/skills/genmotion). The same workflow can be installed for Codex or Claude Code. The separate [Product Demo Video Skill](https://github.com/Afnanksalal/product-demo-video-skill) uses Genmotion for every constructed motion scene while retaining Playwright for real product capture and FFmpeg for raw-footage cleanup.

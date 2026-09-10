@@ -1,0 +1,29 @@
+{
+  "id": "genmotion-launch-film",
+  "title": "Genmotion — Native Motion for Agents",
+  "mode": "launch",
+  "audience": "motion designers, creative developers, and product teams",
+  "promise": "Direct a real motion system through one editable native scene graph",
+  "proof": [
+    "Studio edits the same Creative IR used by the native renderer and FFmpeg export"
+  ],
+  "desiredAction": "Create your first Genmotion project",
+  "duration": 45.453,
+  "energy": "energetic",
+  "brand": {
+    "background": "#0b0d10",
+    "foreground": "#f5f7fa",
+    "accent": "#60a5fa",
+    "muted": "#a3abb8",
+    "primaryFont": "Inter",
+    "displayFont": "Inter",
+    "tone": [
+      "clear",
+      "confident",
+      "human"
+    ]
+  },
+  "requiredScenes": [],
+  "forbiddenClaims": [],
+  "assets": []
+}
