@@ -6,9 +6,7 @@
 
 <p align="center"><strong>Native motion design for agents.</strong></p>
 
-<p align="center">
-  <video src="https://cdn.jsdelivr.net/gh/Afnanksalal/genmotion@main/examples/genmotion-launch-film/renders/Genmotion-Launch-Story-v13.mp4" controls playsinline preload="metadata" poster="examples/genmotion-launch-film/qa/Genmotion-Launch-Story-v13-1440p-contact-sheet.jpg" width="920"></video>
-</p>
+https://github.com/user-attachments/assets/c46c9837-1062-4d79-ba65-c3dca9b530c2
 
 <p align="center">
   <a href="examples/genmotion-launch-film/">Explore the editable project</a>
