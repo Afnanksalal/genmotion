@@ -9,9 +9,9 @@ This example is a 45.453-second product launch film authored and rendered with G
 - `STORYBOARD.md` — current shot and timing contract.
 - `BRIEF.md` — audience, promise, proof, and creative constraints.
 - `AUDIO-PLAN.md` — music provenance and cue strategy.
-- `renders/Genmotion-Launch-Story-v13.mp4` — current 2560×1440 high-quality master.
-- `qa/Genmotion-Launch-Story-v13-1440p-contact-sheet.jpg` — contact sheet generated from the high-quality encoded master.
-- `qa/v13-dense-final/` — dense timing and boundary sheets retained from review.
+- `renders/Genmotion-Launch-Story.mp4` — current 2560×1440 high-quality master.
+- `qa/Genmotion-Launch-Story-1440p-contact-sheet.jpg` — contact sheet generated from the high-quality encoded master.
+- `qa/dense-final/` — dense timing and boundary sheets retained from review.
 - `QA-REPORT.md` — validation, decode, and visual-review evidence.
 
 The checked-in video is rendered directly at 2560×1440 with the high-quality H.264 profile and an opaque delivery frame.

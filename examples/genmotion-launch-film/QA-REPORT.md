@@ -3,7 +3,7 @@
 ## Artifact
 
 - Project: `examples/genmotion-launch-film/genmotion.json`
-- High-quality master: `renders/Genmotion-Launch-Story-v13.mp4`
+- High-quality master: `renders/Genmotion-Launch-Story.mp4`
 - Authored duration: 45.453 seconds
 - Encoded duration: 45.466667 seconds
 - Delivery dimensions: 2560×1440
@@ -16,7 +16,7 @@
 - Strict project validation completed with zero findings.
 - The encoded master fully decoded.
 - Six dense timing sheets sampled the review edit at two frames per second and were visually inspected.
-- `qa/Genmotion-Launch-Story-v13-1440p-contact-sheet.jpg` was generated from and visually checked against the final 2560×1440 encode.
+- `qa/Genmotion-Launch-Story-1440p-contact-sheet.jpg` was generated from and visually checked against the final 2560×1440 encode.
 - The pre-slide contains only `EVERY LAYER MOVES THE STORY` and holds independently.
 - The diagonal capability composition follows the pre-slide and remains contained.
 - `DIRECT. INSPECT. REVISE.` persists across multiple sampled frames.

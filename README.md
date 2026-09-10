@@ -6,7 +6,7 @@
 
 <p align="center"><strong>Native motion design for agents.</strong></p>
 
-https://github.com/user-attachments/assets/c46c9837-1062-4d79-ba65-c3dca9b530c2
+https://github.com/user-attachments/assets/db472a7c-7852-42de-857a-9f625179986f
 
 <p align="center">
   <a href="examples/genmotion-launch-film/">Explore the editable project</a>
